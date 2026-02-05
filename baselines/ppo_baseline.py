@@ -208,19 +208,81 @@ def train_until_success(
     return agent, results
 
 
+def main():
+    """Main training script with command-line arguments"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description='Train Pure PPO Baseline')
+    parser.add_argument('--total-timesteps', type=int, default=200000,
+                        help='Total timesteps for training (default: 200000)')
+    parser.add_argument('--save-path', type=str, default='./models/ppo/ppo_baseline',
+                        help='Path to save the trained model')
+    parser.add_argument('--log-dir', type=str, default='./logs/ppo/',
+                        help='Directory for tensorboard logs')
+    parser.add_argument('--n-envs', type=int, default=4,
+                        help='Number of parallel environments')
+    parser.add_argument('--eval-episodes', type=int, default=100,
+                        help='Number of evaluation episodes')
+    parser.add_argument('--box-mass', type=float, default=1.0,
+                        help='Box mass for environment')
+    
+    args = parser.parse_args()
+    
+    print("="*60)
+    print("🚀 TRAINING PURE PPO BASELINE")
+    print("="*60)
+    print(f"Total timesteps: {args.total_timesteps}")
+    print(f"Parallel environments: {args.n_envs}")
+    print(f"Save path: {args.save_path}")
+    print(f"Log directory: {args.log_dir}")
+    print("="*60)
+    
+    try:
+        # Create environment
+        if args.n_envs > 1:
+            env = SubprocVecEnv([
+                lambda: make_push_box_env(box_mass=args.box_mass)
+                for _ in range(args.n_envs)
+            ])
+        else:
+            env = DummyVecEnv([lambda: make_push_box_env(box_mass=args.box_mass)])
+        
+        # Create agent
+        agent = PurePPOAgent(env, verbose=1)
+        
+        # Train
+        print("\n🏋️  Starting training...")
+        callback = SuccessTrackingCallback(check_freq=1000, verbose=1)
+        agent.train(total_timesteps=args.total_timesteps, callback=callback)
+        
+        # Save model
+        print(f"\n💾 Saving model to {args.save_path}...")
+        os.makedirs(os.path.dirname(args.save_path), exist_ok=True)
+        agent.save(args.save_path)
+        
+        # Evaluate
+        print(f"\n📊 Evaluating on {args.eval_episodes} episodes...")
+        eval_env = DummyVecEnv([lambda: make_push_box_env(box_mass=args.box_mass)])
+        results = agent.evaluate(eval_env, n_episodes=args.eval_episodes)
+        
+        print("\n" + "="*60)
+        print("✅ TRAINING COMPLETE")
+        print("="*60)
+        print(f"Success rate: {results['success_rate']:.2%}")
+        print(f"Mean reward: {results['mean_reward']:.2f}")
+        print(f"Std reward: {results['std_reward']:.2f}")
+        if callback.episodes_to_success:
+            print(f"Episodes to first success: {callback.episodes_to_success}")
+        print("="*60)
+        
+        return 0
+        
+    except Exception as e:
+        print(f"\n❌ ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
+
+
 if __name__ == "__main__":
-    # Test Pure PPO baseline
-    print("Testing Pure PPO Baseline Implementation")
-    
-    # Create environment
-    env = DummyVecEnv([make_push_box_env(box_mass=1.0)])
-    
-    # Quick test (short training for verification)
-    agent, results = train_until_success(
-        env,
-        max_episodes=100,
-        max_timesteps=10000,
-        success_threshold=0.5
-    )
-    
-    print("\n✅ Pure PPO Baseline Test Passed!")
+    exit(main())
