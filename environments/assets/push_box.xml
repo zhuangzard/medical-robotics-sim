@@ -1,0 +1,63 @@
+<mujoco model="push_box">
+  <compiler angle="degree" coordinate="local" inertiafromgeom="true"/>
+  
+  <option timestep="0.002" integrator="Euler" gravity="0 0 -9.81">
+    <flag warmstart="enable"/>
+  </option>
+  
+  <visual>
+    <global offwidth="1280" offheight="720"/>
+    <quality shadowsize="4096"/>
+    <map force="0.1" zfar="30"/>
+  </visual>
+  
+  <asset>
+    <texture builtin="gradient" height="100" rgb1="0.3 0.5 0.7" rgb2="0.1 0.2 0.3" type="skybox" width="100"/>
+    <texture builtin="flat" height="1278" mark="cross" markrgb="1 1 1" name="texgeom" random="0.01" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" type="cube" width="127"/>
+    <texture builtin="checker" height="100" name="texplane" rgb1="0.2 0.2 0.2" rgb2="0.3 0.3 0.3" type="2d" width="100"/>
+    <material name="MatPlane" reflectance="0.3" shininess="0.5" specular="0.5" texrepeat="3 3" texture="texplane"/>
+    <material name="geom" texture="texgeom" texuniform="true"/>
+  </asset>
+  
+  <default>
+    <joint armature="0.01" damping="0.1" limited="true"/>
+    <geom conaffinity="1" condim="3" contype="1" friction="0.3 0.005 0.0001" margin="0.001" material="geom" rgba="0.8 0.6 0.4 1"/>
+  </default>
+  
+  <worldbody>
+    <!-- Ground plane -->
+    <light directional="true" diffuse="0.8 0.8 0.8" pos="0 0 3" dir="0 0 -1"/>
+    <light directional="true" diffuse="0.4 0.4 0.4" pos="0 0 3" dir="1 1 -1"/>
+    <geom name="floor" type="plane" size="3 3 0.1" rgba="0.8 0.8 0.8 1" material="MatPlane"/>
+    
+    <!-- Robot arm base (fixed to ground) -->
+    <body name="arm_base" pos="0 0 0.5">
+      <geom name="base_geom" type="cylinder" size="0.05 0.02" rgba="0.3 0.3 0.3 1"/>
+      <body name="upper_arm" pos="0 0 0.02">
+        <joint name="shoulder" type="hinge" axis="0 0 1" range="-180 180" damping="0.5"/>
+        <geom name="upper_arm_geom" type="capsule" fromto="0 0 0 0.3 0 0" size="0.025" rgba="0.5 0.5 0.8 1"/>
+        <body name="forearm" pos="0.3 0 0">
+          <joint name="elbow" type="hinge" axis="0 0 1" range="-180 180" damping="0.5"/>
+          <geom name="forearm_geom" type="capsule" fromto="0 0 0 0.3 0 0" size="0.025" rgba="0.5 0.5 0.8 1"/>
+          <site name="endeffector" pos="0.3 0 0" size="0.02" rgba="1 0.5 0 0.8"/>
+        </body>
+      </body>
+    </body>
+    
+    <!-- Box (target object to push) -->
+    <body name="box" pos="0.5 0 0.05">
+      <freejoint name="box_freejoint"/>
+      <geom name="box_geom" type="box" size="0.05 0.05 0.05" mass="1.0" rgba="0.2 0.8 0.2 1" friction="0.3 0.005 0.0001"/>
+      <site name="box_center" pos="0 0 0" size="0.01" rgba="0 1 0 1"/>
+    </body>
+    
+    <!-- Goal marker (visual only) -->
+    <site name="goal" pos="1.0 0.5 0.05" size="0.06" rgba="1 0 0 0.4" type="sphere"/>
+  </worldbody>
+  
+  <actuator>
+    <!-- Torque control for arm joints -->
+    <motor name="shoulder_motor" joint="shoulder" gear="1.0" ctrllimited="true" ctrlrange="-10 10"/>
+    <motor name="elbow_motor" joint="elbow" gear="1.0" ctrllimited="true" ctrlrange="-10 10"/>
+  </actuator>
+</mujoco>

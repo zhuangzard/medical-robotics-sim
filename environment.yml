@@ -1,0 +1,29 @@
+name: physics-robot
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pytorch=2.1.0
+  - torchvision
+  - torchaudio
+  - cpuonly  # For Mac M1/M2 compatibility
+  - pip
+  - pip:
+    - torch-geometric
+    - torch-scatter
+    - torch-sparse
+    - gym==0.26.2
+    - mujoco==2.3.7
+    - dm_control==1.0.14
+    - stable-baselines3==2.1.0
+    - wandb
+    - matplotlib
+    - seaborn
+    - opencv-python
+    - hydra-core
+    - omegaconf
+    - pytest
+    - black
+    - flake8

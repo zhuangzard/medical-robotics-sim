@@ -1,0 +1,72 @@
+# Week 1 Experiment Configuration
+# For ICRA 2027 / CoRL 2026 Paper
+
+experiment:
+  name: "week1_push_box"
+  seed: 42
+  description: "Verify 12.5x sample efficiency and 95% OOD generalization"
+  
+environment:
+  name: "PushBox-v0"
+  max_episode_steps: 100
+  render: false
+  
+physics_core:
+  # EdgeFrame parameters
+  edge_hidden_dim: 64
+  
+  # DynamicalGNN parameters
+  node_dim: 6  # position (3) + velocity (3)
+  hidden_dim: 128
+  n_message_passing: 3
+  output_dim: 3  # acceleration (3)
+  
+  # Integration
+  integrator: "symplectic"  # or "rk4"
+  dt: 0.01
+  
+training:
+  # Algorithm
+  algorithm: "PPO"
+  
+  # Sample efficiency experiment
+  total_timesteps_baseline: 10000  # Pure PPO baseline
+  total_timesteps_physics: 800     # Physics-informed (12.5x less)
+  
+  # PPO hyperparameters
+  learning_rate: 0.0003
+  n_steps: 2048
+  batch_size: 64
+  n_epochs: 10
+  gamma: 0.99
+  gae_lambda: 0.95
+  clip_range: 0.2
+  ent_coef: 0.01
+  vf_coef: 0.5
+  max_grad_norm: 0.5
+  
+  # Physics loss weights
+  energy_loss_weight: 0.1
+  momentum_loss_weight: 0.1
+  
+logging:
+  wandb_project: "physics-robot-week1"
+  wandb_entity: null  # Set to your W&B username
+  log_interval: 100
+  save_interval: 1000
+  eval_interval: 500
+  
+  # Metrics to track
+  track_conservation: true
+  track_sample_efficiency: true
+  track_ood_generalization: true
+  
+checkpoints:
+  save_dir: "models/checkpoints"
+  save_best: true
+  save_last: true
+  
+results:
+  figures_dir: "results/figures"
+  tables_dir: "results/tables"
+  save_trajectories: true
