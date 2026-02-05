@@ -386,15 +386,25 @@ class PushBoxEnv(gym.Env):
         # Get contact information from MuJoCo
         for i in range(self.data.ncon):
             contact = self.data.contact[i]
-            geom1 = self.model.geom_names[contact.geom1]
-            geom2 = self.model.geom_names[contact.geom2]
+            
+            # Use correct MuJoCo API to get geometry names
+            geom1_name = mujoco.mj_id2name(
+                self.model, 
+                mujoco.mjtObj.mjOBJ_GEOM, 
+                contact.geom1
+            )
+            geom2_name = mujoco.mj_id2name(
+                self.model, 
+                mujoco.mjtObj.mjOBJ_GEOM, 
+                contact.geom2
+            )
             
             # Check if contact involves arm and box
             arm_geoms = ['upper_arm_geom', 'forearm_geom']
             box_geom = 'box_geom'
             
-            if (geom1 in arm_geoms and geom2 == box_geom) or \
-               (geom2 in arm_geoms and geom1 == box_geom):
+            if (geom1_name in arm_geoms and geom2_name == box_geom) or \
+               (geom2_name in arm_geoms and geom1_name == box_geom):
                 return True
         
         return False
