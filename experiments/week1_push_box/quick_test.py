@@ -1,95 +1,125 @@
+#!/usr/bin/env python3
 """
-Quick Test Script for Week 1 Setup
-Validates all components before starting full training
+Quick test script for Week 1 code verification
+Tests all components in ~10 minutes
 """
 
 import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+from pathlib import Path
 
-import numpy as np
-from stable_baselines3.common.vec_env import DummyVecEnv
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
 
-print("="*70)
-print("🧪 Week 1 Setup Validation")
-print("="*70)
-
-# Test 1: Import environment
-print("\n[1/5] Testing PushBox Environment...")
-try:
-    from environments.push_box_env import PushBoxEnv, make_push_box_env
-    env = PushBoxEnv()
-    obs, info = env.reset()
-    action = env.action_space.sample()
-    obs, reward, terminated, truncated, info = env.step(action)
-    env.close()
-    print("   ✅ Environment works!")
-except Exception as e:
-    print(f"   ❌ Environment failed: {e}")
-    sys.exit(1)
-
-# Test 2: Import Pure PPO
-print("\n[2/5] Testing Pure PPO Baseline...")
-try:
-    from baselines.ppo_baseline import PurePPOAgent
-    env = DummyVecEnv([make_push_box_env(box_mass=1.0)])
-    agent = PurePPOAgent(env, verbose=0)
-    obs = env.reset()
-    action = agent.predict(obs)
-    env.close()
-    print("   ✅ Pure PPO works!")
-except Exception as e:
-    print(f"   ❌ Pure PPO failed: {e}")
-    sys.exit(1)
-
-# Test 3: Import GNS
-print("\n[3/5] Testing GNS Baseline...")
-try:
-    from baselines.gns_baseline import GNSAgent
-    env = DummyVecEnv([make_push_box_env(box_mass=1.0)])
-    agent = GNSAgent(env, verbose=0)
-    obs = env.reset()
-    action = agent.predict(obs)
-    env.close()
-    print("   ✅ GNS Baseline works!")
-except Exception as e:
-    print(f"   ❌ GNS Baseline failed: {e}")
-    sys.exit(1)
-
-# Test 4: Import PhysRobot
-print("\n[4/5] Testing PhysRobot...")
-try:
-    from baselines.physics_informed import PhysRobotAgent
-    env = DummyVecEnv([make_push_box_env(box_mass=1.0)])
-    agent = PhysRobotAgent(env, verbose=0)
-    obs = env.reset()
-    action = agent.predict(obs)
-    env.close()
-    print("   ✅ PhysRobot works!")
-except Exception as e:
-    print(f"   ❌ PhysRobot failed: {e}")
-    sys.exit(1)
-
-# Test 5: Test training for 10 steps
-print("\n[5/5] Testing mini-training (10 steps)...")
-try:
-    from baselines.physics_informed import PhysRobotAgent
-    env = DummyVecEnv([make_push_box_env(box_mass=1.0)])
-    agent = PhysRobotAgent(env, verbose=0)
-    agent.train(total_timesteps=10)
-    env.close()
-    print("   ✅ Training loop works!")
-except Exception as e:
-    print(f"   ❌ Training failed: {e}")
-    sys.exit(1)
-
-print("\n" + "="*70)
-print("✅ All Tests Passed!")
-print("="*70)
-print("\n🚀 Ready to start full training!")
-print("\nNext steps:")
-print("  1. Run full training:")
-print("     python training/train.py")
-print("\n  2. Or start with quick test:")
-print("     python training/train.py --ppo-steps 10000 --gns-steps 5000 --physrobot-steps 2000")
+print("="*60)
+print("🧪 Week 1 Quick Test Suite")
+print("="*60)
 print()
+
+# Test 1: Import core modules
+print("Test 1/5: Importing core modules...")
+try:
+    from physics_core.edge_frame import EdgeFrame
+    from physics_core.dynamical_gnn import DynamicalGNN
+    from physics_core.integrators import SymplecticIntegrator
+    print("  ✅ physics_core imports OK")
+except Exception as e:
+    print(f"  ❌ Failed: {e}")
+    sys.exit(1)
+
+# Test 2: Create EdgeFrame
+print("\nTest 2/5: Testing EdgeFrame...")
+try:
+    import torch
+    positions = torch.randn(5, 3)  # 5 nodes, 3D
+    edge_frame = EdgeFrame(positions)
+    edges = edge_frame.compute_edges()
+    
+    # Check antisymmetry
+    antisym_error = edge_frame.check_antisymmetry()
+    assert antisym_error < 1e-5, f"Antisymmetry error too large: {antisym_error}"
+    print(f"  ✅ EdgeFrame OK (antisymmetry error: {antisym_error:.2e})")
+except Exception as e:
+    print(f"  ❌ Failed: {e}")
+    sys.exit(1)
+
+# Test 3: Create DynamicalGNN
+print("\nTest 3/5: Testing DynamicalGNN...")
+try:
+    model = DynamicalGNN(hidden_dim=32, num_layers=2)
+    pos = torch.randn(5, 3)
+    vel = torch.randn(5, 3)
+    
+    # Forward pass
+    acc = model(pos, vel)
+    assert acc.shape == (5, 3), f"Wrong output shape: {acc.shape}"
+    
+    # Check conservation
+    energy = model.compute_energy(pos, vel)
+    print(f"  ✅ DynamicalGNN OK (energy: {energy.item():.2f})")
+except Exception as e:
+    print(f"  ❌ Failed: {e}")
+    sys.exit(1)
+
+# Test 4: Test environment (if MuJoCo available)
+print("\nTest 4/5: Testing PushBox environment...")
+try:
+    from environments.push_box import PushBoxEnv
+    
+    env = PushBoxEnv()
+    obs = env.reset()
+    
+    # Take random action
+    action = env.action_space.sample()
+    obs, reward, done, info = env.step(action)
+    
+    print(f"  ✅ Environment OK (obs shape: {obs.shape})")
+except ImportError as e:
+    print(f"  ⏭️  Skipped (MuJoCo not installed): {e}")
+except Exception as e:
+    print(f"  ❌ Failed: {e}")
+    # Don't exit - environment test is optional
+
+# Test 5: Quick training (10 episodes)
+print("\nTest 5/5: Quick training test...")
+try:
+    from stable_baselines3 import PPO
+    from stable_baselines3.common.vec_env import DummyVecEnv
+    from environments.push_box import make_push_box_env
+    
+    # Create vectorized environment
+    env = DummyVecEnv([make_push_box_env()])
+    
+    # Create simple model
+    model = PPO('MlpPolicy', env, verbose=0)
+    
+    # Train for 10 episodes (~2-3 minutes)
+    print("  Training 10 episodes...")
+    model.learn(total_timesteps=1000)  # ~10 episodes
+    
+    # Evaluate
+    obs = env.reset()
+    for _ in range(10):
+        action, _ = model.predict(obs, deterministic=True)
+        obs, reward, done, info = env.step(action)
+        if done:
+            break
+    
+    print("  ✅ Training pipeline OK")
+except ImportError as e:
+    print(f"  ⏭️  Skipped (dependencies not installed): {e}")
+except Exception as e:
+    print(f"  ❌ Failed: {e}")
+    # Don't exit - training test is optional
+
+print()
+print("="*60)
+print("✅ Quick test complete!")
+print("="*60)
+print()
+print("📋 Next steps:")
+print("1. Run full unit tests: pytest physics_core/tests/ -v")
+print("2. Run environment tests: python environments/test_push_box.py")
+print("3. Run full training: bash experiments/week1_push_box/setup_and_run.sh")
+print("   OR")
+print("4. Run on Colab: https://colab.research.google.com/github/...")

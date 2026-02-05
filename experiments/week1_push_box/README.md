@@ -1,283 +1,207 @@
-# Week 1: PushBox Experiments
+# Week 1: PushBox 实验
 
-**Goal**: Generate paper data for Section 4.1
-- **Table 1**: Sample Efficiency Comparison
-- **Figure 2**: OOD Generalization
+**目标**: 验证 PhysRobot 的样本效率和 OOD 泛化能力
 
 ---
 
-## Quick Start
+## 📁 文件结构
 
-### 1. Install Dependencies
+```
+week1_push_box/
+├── notebooks/
+│   └── train_colab.ipynb     ✅ Colab 训练 notebook
+├── analyze_results.py         分析实验结果
+├── quick_test.py              快速测试
+├── setup_and_run.sh           完整训练脚本
+├── results/                   实验结果（训练后生成）
+└── README.md                  本文件
+```
+
+---
+
+## 🚀 运行训练
+
+### 方案 A: Colab 训练（推荐）⭐
+
+**一键打开**:
+```
+https://colab.research.google.com/github/zhuangzard/medical-robotics-sim/blob/main/experiments/week1_push_box/notebooks/train_colab.ipynb
+```
+
+**步骤**:
+1. Runtime → Change runtime type → GPU (V100)
+2. Runtime → Run all
+3. 等待 8-10 小时
+
+**优势**:
+- ✅ 免费 V100/A100 GPU
+- ✅ 可以关机
+- ✅ 自动保存到 Drive
+- ✅ 无需本地环境
+
+---
+
+### 方案 B: 本地训练
+
+**前提**: 需要安装 conda 环境
 
 ```bash
-cd ~/.openclaw/workspace/medical-robotics-sim
-pip install -r requirements.txt
+cd medical-robotics-sim
+
+# 1. 创建环境
+conda env create -f environment.yml
+conda activate physics-robot
+
+# 2. 快速测试（10 分钟）
+cd experiments/week1_push_box
+python quick_test.py
+
+# 3. 完整训练（8-12 小时）
+bash setup_and_run.sh
 ```
 
-### 2. Run Complete Experiment Pipeline
+---
+
+## 🧪 测试代码
+
+### Level 1: 单元测试（30 秒）
 
 ```bash
-# Full training (8-12 hours)
-python training/train.py \
-  --ppo-steps 200000 \
-  --gns-steps 80000 \
-  --physrobot-steps 16000 \
-  --n-envs 4
+# 测试核心模块
+cd medical-robotics-sim
+pytest physics_core/tests/ -v
 
-# OOD generalization test
-python training/eval.py --ood-test
-
-# Conservation validation
-python training/eval.py --validate-physics
-
-# Generate figures and report
-python experiments/week1_push_box/analyze_results.py
+# 预期: 所有测试通过
+# EdgeFrame antisymmetry < 1e-5
+# Conservation errors < 0.1%
 ```
 
-### 3. Quick Test (5 minutes)
+### Level 2: 环境测试（2 分钟）
 
 ```bash
-# Test with reduced steps
-python training/train.py \
-  --ppo-steps 10000 \
-  --gns-steps 5000 \
-  --physrobot-steps 2000 \
-  --n-envs 2
+# 测试 PushBox 环境
+python environments/test_push_box.py
+
+# 预期: 6/6 tests passed
+# - Environment initialization
+# - Random policy
+# - Mass variation (OOD)
+# - Rendering
+# - Data collection
+# - Success condition
+```
+
+### Level 3: 快速训练（10 分钟）
+
+```bash
+cd experiments/week1_push_box
+python quick_test.py
+
+# 预期:
+# - 训练 10 episodes
+# - 验证数据流
+# - 生成简单报告
 ```
 
 ---
 
-## Experiment Structure
-
-```
-medical-robotics-sim/
-├── environments/
-│   ├── push_box_env.py          # PushBox Gym environment
-│   └── assets/
-│       └── push_box.xml         # MuJoCo scene
-│
-├── baselines/
-│   ├── ppo_baseline.py          # Pure PPO (Baseline 1)
-│   ├── gns_baseline.py          # GNS (Baseline 2)
-│   └── physics_informed.py      # PhysRobot (Ours)
-│
-├── training/
-│   ├── train.py                 # Main training script
-│   └── eval.py                  # OOD & conservation tests
-│
-├── experiments/week1_push_box/
-│   ├── analyze_results.py       # Generate figures & report
-│   └── README.md                # This file
-│
-├── data/                        # Generated data
-│   ├── week1_training_results.json
-│   ├── ood_generalization.json
-│   ├── ood_generalization.csv
-│   └── conservation_validation.json
-│
-├── models/                      # Trained models
-│   ├── pure_ppo_final.zip
-│   ├── gns_final.zip
-│   └── physrobot_final.zip
-│
-└── results/                     # Paper outputs
-    ├── figures/
-    │   ├── ood_generalization.png
-    │   └── conservation_validation.png
-    ├── tables/
-    │   ├── sample_efficiency.md
-    │   └── sample_efficiency.tex
-    └── WEEK1_FINAL_REPORT.md
-```
-
----
-
-## Methods Comparison
-
-### Baseline 1: Pure PPO
-- Standard MLP policy
-- No physics constraints
-- **Expected**: 5000 ± 800 episodes to success
-
-### Baseline 2: GNS
-- Graph Network Simulator
-- Learns physics but NO conservation guarantees
-- **Expected**: 2000 ± 400 episodes (2.5x improvement)
-
-### PhysRobot (Ours)
-- Hybrid: PPO + Dynami-CAL physics core
-- Enforces momentum conservation via antisymmetric edge frames
-- **Expected**: 400 ± 100 episodes (12.5x improvement)
-
----
-
-## Expected Outputs
+## 📊 预期结果
 
 ### Table 1: Sample Efficiency Comparison
 
-| Method | Episodes to Success | Relative Improvement |
-|--------|---------------------|----------------------|
-| Pure PPO | 5000 ± 800 | 1.0x (baseline) |
-| GNS | 2000 ± 400 | 2.5x |
-| **PhysRobot (Ours)** | **400 ± 100** | **12.5x** |
+| Method | Episodes to Success | Improvement |
+|--------|---------------------|-------------|
+| Pure PPO | ~5000 | 1.0x |
+| GNS | ~2000 | 2.5x |
+| **PhysRobot** | **~400** | **12.5x** ✅ |
 
 ### Figure 2: OOD Generalization
 
-Plot showing success rate vs. box mass for all three methods.
-
-**Key Finding**: PhysRobot maintains high performance on unseen masses due to physics constraints.
-
----
-
-## Validation Checklist
-
-- [ ] All three methods train successfully
-- [ ] PhysRobot achieves >10x sample efficiency (target: 12.5x)
-- [ ] OOD generalization >80% average (target: 95%)
-- [ ] Conservation error <0.1%
-- [ ] Figure 2 and Table 1 generated
+- X 轴: Box mass (0.5x → 2.0x)
+- Y 轴: Success rate
+- PhysRobot: >95% across all masses
+- Pure PPO: Drops to ~40% at 2.0x
 
 ---
 
-## Troubleshooting
+## 📁 结果位置
 
-### Issue: MuJoCo not found
+### Colab 训练
 
+**Drive 路径**:
+```
+/MyDrive/medical-robotics-results/YYYYMMDD_HHMMSS/
+├── results/
+│   ├── tables/
+│   │   ├── sample_efficiency.md
+│   │   └── sample_efficiency.tex
+│   ├── figures/
+│   │   ├── ood_generalization.png
+│   │   └── conservation_validation.png
+│   └── WEEK1_FINAL_REPORT.md
+├── models/
+│   ├── pure_ppo_final.zip
+│   ├── gns_final.zip
+│   └── physrobot_final.zip
+├── data/
+└── summary.json
+```
+
+### 本地训练
+
+**项目路径**:
+```
+medical-robotics-sim/experiments/week1_push_box/results/
+```
+
+---
+
+## 🎓 学习要点
+
+### 从 `physics_core/` 学到:
+- 反对称 EdgeFrame 如何保证动量守恒
+- GNN 在物理系统中的应用
+- Symplectic 积分器 vs 普通积分器
+
+### 从 `environments/` 学到:
+- MuJoCo 物理引擎使用
+- Gymnasium 环境设计
+- OOD 测试方法
+
+### 从 `training/` 学到:
+- PPO 训练流程
+- Baseline 对比实验设计
+- 论文数据生成
+
+---
+
+## 🐛 常见问题
+
+### Q: Colab "mount failed" 错误
+
+**A**: Notebook 已修复，会自动处理:
+- 检测 Drive 是否已挂载
+- 失败时使用本地存储
+- 不影响训练
+
+### Q: 本地训练 OOM
+
+**A**: 减小 batch size:
 ```bash
-pip install mujoco>=3.0.0
+# 修改 training/config.yaml
+batch_size: 32  # 改为 16 或 8
 ```
 
-### Issue: PyTorch Geometric errors
+### Q: 测试失败
 
+**A**: 检查依赖:
 ```bash
-pip install torch-geometric torch-scatter torch-sparse
-```
-
-### Issue: Training too slow
-
-Reduce environment count or timesteps:
-
-```bash
-python training/train.py \
-  --ppo-steps 50000 \
-  --gns-steps 20000 \
-  --physrobot-steps 5000 \
-  --n-envs 2
-```
-
-### Issue: Out of memory
-
-Use single environment:
-
-```bash
-python training/train.py --n-envs 1
+conda activate physics-robot
+pip install -r requirements.txt
 ```
 
 ---
 
-## Performance Benchmarks
-
-**Hardware**: Apple M1 Max, 32GB RAM
-
-| Method | Training Time | Timesteps | Episodes to Success |
-|--------|---------------|-----------|---------------------|
-| Pure PPO | ~2-3 hours | 200,000 | ~5000 |
-| GNS | ~1-2 hours | 80,000 | ~2000 |
-| PhysRobot | ~20-30 min | 16,000 | ~400 |
-
-**Note**: Actual times vary based on hardware and environment count.
-
----
-
-## Code Architecture
-
-### Environment (push_box_env.py)
-
-```python
-class PushBoxEnv(gym.Env):
-    """
-    2-DOF robot arm pushes box to goal
-    
-    Observation: [joints(4), ee_pos(3), box_pos(3), box_vel(3), goal(3)]
-    Action: [shoulder_torque, elbow_torque]
-    Reward: -distance + 100 (success bonus)
-    """
-```
-
-### PhysRobot Core (physics_informed.py)
-
-```python
-class DynamiCALGraphNet(MessagePassing):
-    """
-    Key Innovation: Antisymmetric edge frames
-    
-    Force decomposition: F_ij = f1*e1 + f2*e2 + f3*e3
-    
-    Where e1, e2, e3 are edge-local basis vectors.
-    Antisymmetry: F_ij = -F_ji (automatic!)
-    
-    Result: Σ F = 0 (momentum conservation)
-    """
-```
-
----
-
-## Advanced Usage
-
-### Custom Box Mass Training
-
-```python
-from environments.push_box_env import make_push_box_env
-
-# Train on 2kg box
-env = make_push_box_env(box_mass=2.0)
-```
-
-### Resume Training
-
-```python
-from baselines.physics_informed import PhysRobotAgent
-
-agent = PhysRobotAgent(env)
-agent.load("./models/physrobot_checkpoint.zip")
-agent.train(total_timesteps=10000)
-```
-
-### Export for Paper
-
-All figures are saved at 300 DPI in `results/figures/`:
-- `ood_generalization.png` → Figure 2
-- `conservation_validation.png` → Supplementary
-
-LaTeX table available at:
-- `results/tables/sample_efficiency.tex` → Table 1
-
----
-
-## Citation
-
-If you use this code, please cite:
-
-```bibtex
-@article{physrobot2026,
-  title={Physics-Informed Robotics: Learning with Conservation Laws},
-  author={Your Name},
-  journal={arXiv preprint},
-  year={2026}
-}
-```
-
----
-
-## Contact
-
-**Project**: medical-robotics-sim  
-**Week**: 1 (PushBox Experiments)  
-**Status**: Implementation Complete ✅
-
-For issues or questions, see main project README.
-
----
-
-**Last Updated**: 2026-02-05
+**创建时间**: 2026-02-05  
+**预计训练时间**: 8-10 小时 (Colab Pro V100)  
+**目标会议**: ICRA 2027 / CoRL 2026
