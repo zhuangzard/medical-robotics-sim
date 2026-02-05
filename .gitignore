@@ -28,7 +28,9 @@ env/
 
 # Jupyter Notebook
 .ipynb_checkpoints
-*.ipynb
+# Allow Colab notebooks
+!notebooks/*.ipynb
+!colab/*.ipynb
 
 # PyCharm
 .idea/
