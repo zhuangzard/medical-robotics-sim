@@ -28,6 +28,7 @@ env/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*.ipynb
 
 # PyCharm
 .idea/
@@ -35,46 +36,91 @@ env/
 # VS Code
 .vscode/
 
-# Data files
-data/raw/*.pkl
-data/raw/*.h5
-data/raw/*.csv
-data/processed/*.pkl
-data/processed/*.h5
-
-# Model checkpoints
-models/checkpoints/*.pth
-models/checkpoints/*.pt
-!models/checkpoints/.gitkeep
-
-# Logs
-logs/*.log
-logs/*.txt
-*.log
-
-# Wandb
-wandb/
-
-# Results (keep structure, ignore large files)
-results/figures/*.png
-results/figures/*.pdf
-results/tables/*.csv
-!results/figures/.gitkeep
-!results/tables/.gitkeep
-
-# OS
+# macOS
 .DS_Store
-Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Conda
+*.conda
+.conda/
+
+# Data files (keep structure, ignore large files)
+# Simulation outputs
+data/simulations/**/*.pkl
+data/simulations/**/*.npy
+data/simulations/**/*.npz
+data/experiments/outputs/**/*.pkl
+data/experiments/outputs/**/*.npy
+
+# BUT preserve small metadata/config files
+!data/**/config.json
+!data/**/metadata.yaml
+!data/**/README.md
+
+# Models (keep small checkpoints, ignore large trained models)
+models/**/*.pth
+models/**/*.ckpt
+models/**/*.h5
+models/**/*.pb
+# Preserve configs
+!models/**/config.json
+!models/**/model_card.md
+
+# Logs (keep recent, ignore old)
+logs/**/*.log
+logs/**/*.out
+logs/**/*.err
+# Preserve structure
+!logs/README.md
+
+# Results (keep summaries, ignore raw data)
+results/**/*.csv
+results/**/*.pkl
+# Preserve reports
+!results/**/*.md
+!results/**/*.json
 
 # Temporary files
 *.tmp
-*.bak
+*.temp
 *.swp
+*.swo
 *~
 
-# MuJoCo
-*.mjkey
+# Cache
+.cache/
+.pytest_cache/
 
-# Experiment outputs
-experiments/*/trajectories/*.pkl
-experiments/*/videos/*.mp4
+# MuJoCo
+*.mjb
+
+# Ignore SLURM outputs (if running on cluster)
+slurm-*.out
+
+# Ignore compressed archives (recreate if needed)
+*.tar.gz
+*.zip
+*.7z
+
+# But NEVER ignore these critical files:
+!README.md
+!MILESTONES.md
+!EXPERIMENT_LOG.md
+!WEEK*_PROGRESS.md
+!*_REPORT.md
+!*_PLAN.md
+!environment.yml
+!requirements.txt
+!setup.py
+!*.py
+!*.sh
+!*.yaml
+!*.yml
+!*.md
+!*.txt
+
+# Protect all documentation
+!docs/**
+!research/**/*.md
+!research/**/*.pdf
