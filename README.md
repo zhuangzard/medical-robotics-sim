@@ -2,6 +2,10 @@
 
 > **Goal**: ICRA 2027 / CoRL 2026 paper demonstrating **12.5× sample efficiency** and **95% OOD generalization** using physics-informed graph neural networks.
 
+**🔗 Repository**: https://github.com/zhuangzard/medical-robotics-sim (Private)  
+**📖 Git Workflow**: [GIT_WORKFLOW.md](./GIT_WORKFLOW.md)  
+**🎯 Milestones**: [MILESTONES.md](./MILESTONES.md)
+
 ---
 
 ## 🎯 Project Overview
