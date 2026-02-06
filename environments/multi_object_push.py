@@ -18,7 +18,6 @@ import numpy as np
 import gymnasium as gym
 from gymnasium import spaces
 from typing import Optional, Dict, Any, Tuple, List
-import torch
 
 
 class MultiObjectPushEnv(gym.Env):
@@ -519,7 +518,7 @@ class MultiObjectPushEnv(gym.Env):
     
     # ========== Graph Construction (for Dynami-CAL) ==========
     
-    def build_graph(self) -> Dict[str, 'torch.Tensor']:
+    def build_graph(self) -> Dict[str, Any]:
         """
         Construct PyG-compatible graph from current state.
         
@@ -528,7 +527,10 @@ class MultiObjectPushEnv(gym.Env):
             - pos: Node positions [N_nodes, 2]
             - edge_index: Fully connected edges [2, N_edges]
             - edge_attr: Edge features [N_edges, 5] (rel_pos_x, rel_pos_y, dist, rel_vel_x, rel_vel_y)
+        
+        Requires torch. Returns numpy arrays if torch is not available.
         """
+        import torch
         # ---- Node features ----
         # Node 0: robot
         node_features = [np.concatenate([
@@ -578,7 +580,7 @@ class MultiObjectPushEnv(gym.Env):
             'edge_attr': torch.tensor(edge_attr, dtype=torch.float32),
         }
     
-    def build_graph_3d(self) -> Dict[str, 'torch.Tensor']:
+    def build_graph_3d(self) -> Dict[str, Any]:
         """
         Construct 3D-compatible graph for physics_core modules.
         
@@ -590,7 +592,10 @@ class MultiObjectPushEnv(gym.Env):
             - velocities: [N, 3]
             - edge_index: [2, E]
             - masses: [N]
+        
+        Requires torch.
         """
+        import torch
         N = self.n_nodes
         
         # Pad to 3D
