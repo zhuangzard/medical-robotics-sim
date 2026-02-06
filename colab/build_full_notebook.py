@@ -80,8 +80,9 @@ cells.append(code_cell([
     "import os\n",
     "drive.mount('/content/drive')\n",
     "SAVE_DIR = '/content/drive/MyDrive/medical_robotics_week1'\n",
-    "os.makedirs(SAVE_DIR, exist_ok=True)\n",
-    "print(f'💾 {SAVE_DIR}')\n"
+    "for _d in ['', 'models', 'results', 'logs']:\n",
+    "    os.makedirs(f'{SAVE_DIR}/{_d}' if _d else SAVE_DIR, exist_ok=True)\n",
+    "print(f'💾 {SAVE_DIR} (+ models/ results/ logs/)')\n"
 ]))
 
 # Environment (inline XML + clean code)
