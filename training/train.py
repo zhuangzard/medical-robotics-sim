@@ -156,7 +156,7 @@ def train_single_method(
     
     # Save model
     os.makedirs(save_dir, exist_ok=True)
-    model_path = os.path.join(save_dir, f"{method_name.lower()}_final.zip")
+    model_path = os.path.join(save_dir, f"{method_name.lower().replace(' ', '_')}_final.zip")
     agent.save(model_path)
     
     # Compile results

@@ -56,20 +56,21 @@ def evaluate_ood_generalization(
         distances = []
         
         for episode in range(n_episodes_per_mass):
-            obs, info = env.reset()
+            obs = env.reset()
             done = False
             episode_reward = 0
             
             while not done:
                 action = agent.predict(obs, deterministic=True)
-                obs, reward, terminated, truncated, info = env.step(action)
-                episode_reward += reward
-                done = terminated or truncated
+                obs, reward, dones, infos = env.step(action)
+                episode_reward += reward[0]
+                done = dones[0]
+                info = infos[0]
             
             rewards.append(episode_reward)
-            distances.append(info['distance_to_goal'])
+            distances.append(info.get('distance_to_goal', 999))
             
-            if info['success']:
+            if info.get('success', False):
                 success_count += 1
         
         success_rate = success_count / n_episodes_per_mass
@@ -152,7 +153,7 @@ def collect_trajectory(agent, env):
     Returns:
         dict with positions, velocities, forces over time
     """
-    obs, info = env.reset()
+    obs = env.reset()
     
     trajectory = {
         'positions': [],
@@ -174,9 +175,9 @@ def collect_trajectory(agent, env):
         trajectory['velocities'].append(box_vel)
         trajectory['actions'].append(action[0])
         
-        # Step
-        obs, reward, terminated, truncated, info = env.step(action)
-        done = terminated or truncated
+        # Step (VecEnv API: returns obs, reward, dones, infos)
+        obs, reward, dones, infos = env.step(action)
+        done = dones[0]
         trajectory['timesteps'] += 1
     
     # Convert to numpy arrays
