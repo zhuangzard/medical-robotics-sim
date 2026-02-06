@@ -1,0 +1,3221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MuJoCo 物理引擎完全学习教程</title>
+
+<!-- KaTeX for math -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+
+<!-- highlight.js for code -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-dark.min.css" id="hljs-dark">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/atom-one-light.min.css" id="hljs-light" disabled>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/python.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/xml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/languages/bash.min.js"></script>
+
+<style>
+/* ============================================================
+   CSS Variables — Light / Dark Theme
+   ============================================================ */
+:root {
+  --bg: #ffffff;
+  --bg-secondary: #f6f8fa;
+  --bg-sidebar: #f0f2f5;
+  --text: #1a1a2e;
+  --text-secondary: #555;
+  --text-muted: #888;
+  --border: #e0e0e0;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --code-bg: #f4f4f8;
+  --shadow: rgba(0,0,0,0.05);
+  --box-def-bg: #e8f0fe;
+  --box-def-border: #2563eb;
+  --box-thm-bg: #e6f9e6;
+  --box-thm-border: #16a34a;
+  --box-ex-bg: #fff8e1;
+  --box-ex-border: #f59e0b;
+  --box-warn-bg: #fee2e2;
+  --box-warn-border: #dc2626;
+  --toc-active: #2563eb;
+  --link: #2563eb;
+  --sidebar-width: 280px;
+  --header-height: 56px;
+}
+
+[data-theme="dark"] {
+  --bg: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-sidebar: #151d30;
+  --text: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: #334155;
+  --accent: #60a5fa;
+  --accent-hover: #93bbfd;
+  --code-bg: #1e293b;
+  --shadow: rgba(0,0,0,0.3);
+  --box-def-bg: #172554;
+  --box-def-border: #3b82f6;
+  --box-thm-bg: #052e16;
+  --box-thm-border: #22c55e;
+  --box-ex-bg: #422006;
+  --box-ex-border: #f59e0b;
+  --box-warn-bg: #450a0a;
+  --box-warn-border: #ef4444;
+  --toc-active: #60a5fa;
+  --link: #60a5fa;
+}
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-height) + 16px); }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.8;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ============================================================
+   Header
+   ============================================================ */
+.site-header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--header-height);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px; z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+.site-header h1 {
+  font-size: 1.15rem; font-weight: 700;
+  background: linear-gradient(135deg, var(--accent), #a78bfa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.header-controls { display: flex; gap: 12px; align-items: center; }
+.theme-toggle {
+  background: none; border: 1px solid var(--border); border-radius: 8px;
+  padding: 6px 14px; cursor: pointer; color: var(--text); font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.menu-toggle {
+  display: none; background: none; border: none; font-size: 1.4rem;
+  cursor: pointer; color: var(--text);
+}
+
+/* ============================================================
+   Sidebar
+   ============================================================ */
+.sidebar {
+  position: fixed; top: var(--header-height); left: 0;
+  width: var(--sidebar-width); height: calc(100vh - var(--header-height));
+  background: var(--bg-sidebar); border-right: 1px solid var(--border);
+  overflow-y: auto; padding: 20px 0; z-index: 900;
+  transition: transform 0.3s;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sidebar .toc-title {
+  font-size: 0.75rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--text-muted); padding: 0 20px; margin-bottom: 10px;
+}
+.sidebar ul { list-style: none; }
+.sidebar > ul > li { margin-bottom: 4px; }
+.sidebar a {
+  display: block; padding: 5px 20px; font-size: 0.82rem; color: var(--text-secondary);
+  text-decoration: none; border-left: 3px solid transparent; transition: all 0.2s;
+}
+.sidebar a:hover { color: var(--accent); background: rgba(37,99,235,0.05); }
+.sidebar a.active {
+  color: var(--toc-active); border-left-color: var(--toc-active);
+  background: rgba(37,99,235,0.08); font-weight: 600;
+}
+.sidebar .chapter-title {
+  font-weight: 700; font-size: 0.85rem; color: var(--text);
+  padding: 10px 20px 5px; margin-top: 6px;
+}
+.sidebar .sub-list a { padding-left: 36px; font-size: 0.78rem; }
+
+/* ============================================================
+   Main Content
+   ============================================================ */
+.main-content {
+  margin-left: var(--sidebar-width); margin-top: var(--header-height);
+  padding: 40px 60px 120px;
+  max-width: 920px;
+}
+
+h2 {
+  font-size: 1.8rem; font-weight: 800; margin: 60px 0 20px;
+  padding-bottom: 10px; border-bottom: 2px solid var(--border);
+  color: var(--text);
+}
+h2:first-of-type { margin-top: 0; }
+h3 { font-size: 1.25rem; font-weight: 700; margin: 36px 0 14px; color: var(--text); }
+h4 { font-size: 1.05rem; font-weight: 600; margin: 24px 0 10px; color: var(--text-secondary); }
+
+p { margin: 12px 0; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+ul, ol { margin: 10px 0 10px 24px; }
+li { margin: 4px 0; }
+
+img { max-width: 100%; border-radius: 8px; }
+
+/* ============================================================
+   Code Blocks
+   ============================================================ */
+pre {
+  background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px 20px; overflow-x: auto;
+  margin: 16px 0; font-size: 0.85rem; line-height: 1.6;
+  position: relative;
+}
+pre code { background: none; padding: 0; font-size: inherit; }
+code {
+  background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+  font-size: 0.88em; font-family: "Fira Code", "SF Mono", "Menlo", monospace;
+}
+.code-label {
+  position: absolute; top: 8px; right: 12px; font-size: 0.7rem;
+  color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;
+  font-family: sans-serif;
+}
+
+/* ============================================================
+   Highlight Boxes
+   ============================================================ */
+.box {
+  border-left: 4px solid; border-radius: 0 8px 8px 0;
+  padding: 16px 20px; margin: 20px 0;
+}
+.box-title {
+  font-weight: 700; margin-bottom: 6px; font-size: 0.95rem;
+  display: flex; align-items: center; gap: 6px;
+}
+.box.def  { background: var(--box-def-bg); border-color: var(--box-def-border); }
+.box.thm  { background: var(--box-thm-bg); border-color: var(--box-thm-border); }
+.box.ex   { background: var(--box-ex-bg);  border-color: var(--box-ex-border); }
+.box.warn { background: var(--box-warn-bg); border-color: var(--box-warn-border); }
+
+/* ============================================================
+   Tables
+   ============================================================ */
+table {
+  width: 100%; border-collapse: collapse; margin: 16px 0;
+  font-size: 0.88rem;
+}
+th, td {
+  border: 1px solid var(--border); padding: 10px 14px; text-align: left;
+}
+th { background: var(--bg-secondary); font-weight: 600; }
+tr:nth-child(even) { background: var(--bg-secondary); }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main-content { margin-left: 0; padding: 24px 20px 100px; }
+  .menu-toggle { display: block; }
+}
+
+/* ============================================================
+   Print
+   ============================================================ */
+@media print {
+  .site-header, .sidebar, .theme-toggle, .menu-toggle { display: none !important; }
+  .main-content { margin-left: 0; padding: 0; }
+}
+
+/* ============================================================
+   Utilities
+   ============================================================ */
+.muted { color: var(--text-muted); }
+.small { font-size: 0.85rem; }
+.center { text-align: center; }
+.mt-0 { margin-top: 0; }
+
+/* diagram */
+.diagram {
+  background: var(--bg-secondary); border: 1px solid var(--border);
+  border-radius: 8px; padding: 20px; margin: 20px 0;
+  font-family: "Fira Code", monospace; font-size: 0.82rem;
+  line-height: 1.5; overflow-x: auto; white-space: pre;
+}
+
+/* back to top */
+.back-top {
+  position: fixed; bottom: 30px; right: 30px;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--accent); color: #fff; border: none;
+  font-size: 1.2rem; cursor: pointer; opacity: 0;
+  transition: opacity 0.3s; z-index: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.back-top.show { opacity: 1; }
+
+/* progress bar */
+.progress-bar {
+  position: fixed; top: var(--header-height); left: 0;
+  height: 3px; background: linear-gradient(90deg, var(--accent), #a78bfa);
+  z-index: 999; transition: width 0.1s;
+}
+</style>
+</head>
+<body data-theme="dark">
+
+<!-- Progress bar -->
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+
+<!-- Header -->
+<header class="site-header">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <button class="menu-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+    <h1>🤖 MuJoCo 物理引擎完全学习教程</h1>
+  </div>
+  <div class="header-controls">
+    <span class="muted small" id="readingTime"></span>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙 / ☀️</button>
+  </div>
+</header>
+
+<!-- Sidebar -->
+<nav class="sidebar" id="sidebar">
+  <div class="toc-title">📑 目录导航</div>
+  <ul>
+    <li><a href="#intro">引言：为什么要学 MuJoCo</a></li>
+
+    <li class="chapter-title">第一章：物理仿真基础</li>
+    <ul class="sub-list">
+      <li><a href="#ch1-what">1.1 什么是物理仿真</a></li>
+      <li><a href="#ch1-compare">1.2 物理引擎对比</a></li>
+      <li><a href="#ch1-why-mujoco">1.3 MuJoCo 的优势</a></li>
+      <li><a href="#ch1-install">1.4 安装和配置</a></li>
+    </ul>
+
+    <li class="chapter-title">第二章：核心概念</li>
+    <ul class="sub-list">
+      <li><a href="#ch2-mjcf">2.1 MJCF 模型语言</a></li>
+      <li><a href="#ch2-mjmodel">2.2 MjModel 静态模型</a></li>
+      <li><a href="#ch2-mjdata">2.3 MjData 动态数据</a></li>
+      <li><a href="#ch2-step">2.4 仿真循环 mj_step()</a></li>
+      <li><a href="#ch2-timestep">2.5 时间步长</a></li>
+      <li><a href="#ch2-integrator">2.6 积分器</a></li>
+    </ul>
+
+    <li class="chapter-title">第三章：MJCF XML 完全指南</li>
+    <ul class="sub-list">
+      <li><a href="#ch3-root">3.1 根元素与 compiler</a></li>
+      <li><a href="#ch3-option">3.2 option 仿真选项</a></li>
+      <li><a href="#ch3-visual">3.3 visual 渲染设置</a></li>
+      <li><a href="#ch3-asset">3.4 asset 资产系统</a></li>
+      <li><a href="#ch3-default">3.5 default 默认参数</a></li>
+      <li><a href="#ch3-worldbody">3.6 worldbody 物体层次</a></li>
+      <li><a href="#ch3-actuator">3.7 actuator 执行器</a></li>
+      <li><a href="#ch3-sensor">3.8 sensor 传感器</a></li>
+      <li><a href="#ch3-full">3.9 完整 XML 解读</a></li>
+    </ul>
+
+    <li class="chapter-title">第四章：Python API</li>
+    <ul class="sub-list">
+      <li><a href="#ch4-load">4.1 模型加载</a></li>
+      <li><a href="#ch4-data">4.2 数据访问</a></li>
+      <li><a href="#ch4-name2id">4.3 名称到 ID</a></li>
+      <li><a href="#ch4-sim">4.4 仿真步进</a></li>
+      <li><a href="#ch4-collision">4.5 碰撞检测</a></li>
+      <li><a href="#ch4-render">4.6 渲染</a></li>
+    </ul>
+
+    <li class="chapter-title">第五章：机器人建模</li>
+    <ul class="sub-list">
+      <li><a href="#ch5-chain">5.1 关节链建模</a></li>
+      <li><a href="#ch5-2dof">5.2 2-DOF 机械臂</a></li>
+      <li><a href="#ch5-freebody">5.3 自由体 freejoint</a></li>
+      <li><a href="#ch5-contact">5.4 接触物理</a></li>
+      <li><a href="#ch5-inertia">5.5 质量与惯性</a></li>
+    </ul>
+
+    <li class="chapter-title">第六章：Gymnasium 封装</li>
+    <ul class="sub-list">
+      <li><a href="#ch6-interface">6.1 gym.Env 接口</a></li>
+      <li><a href="#ch6-obs">6.2 观察空间设计</a></li>
+      <li><a href="#ch6-action">6.3 动作空间设计</a></li>
+      <li><a href="#ch6-reward">6.4 奖励函数设计</a></li>
+      <li><a href="#ch6-term">6.5 终止条件</a></li>
+      <li><a href="#ch6-vec">6.6 并行环境</a></li>
+      <li><a href="#ch6-debug">6.7 环境调试</a></li>
+    </ul>
+
+    <li class="chapter-title">第七章：高级主题</li>
+    <ul class="sub-list">
+      <li><a href="#ch7-flex">7.1 软体仿真</a></li>
+      <li><a href="#ch7-tendon">7.2 肌腱 Tendon</a></li>
+      <li><a href="#ch7-sensor">7.3 传感器系统</a></li>
+      <li><a href="#ch7-dr">7.4 域随机化</a></li>
+      <li><a href="#ch7-parallel">7.5 并行仿真</a></li>
+      <li><a href="#ch7-sim2real">7.6 Sim-to-Real</a></li>
+      <li><a href="#ch7-medical">7.7 医疗机器人仿真</a></li>
+    </ul>
+
+    <li class="chapter-title">第八章：实践</li>
+    <ul class="sub-list">
+      <li><a href="#ch8-scratch">8.1 从零创建场景</a></li>
+      <li><a href="#ch8-viewer">8.2 可视化与调试</a></li>
+      <li><a href="#ch8-experiment">8.3 物理参数实验</a></li>
+      <li><a href="#ch8-new-env">8.4 构建新环境</a></li>
+    </ul>
+
+    <li class="chapter-title">附录</li>
+    <ul class="sub-list">
+      <li><a href="#appendix-xml">A. XML 标签速查</a></li>
+      <li><a href="#appendix-api">B. Python API 速查</a></li>
+      <li><a href="#appendix-errors">C. 常见错误</a></li>
+      <li><a href="#appendix-links">D. 官方链接</a></li>
+    </ul>
+  </ul>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content">
+
+<!-- ================================================================== -->
+<!-- 引言                                                                -->
+<!-- ================================================================== -->
+<h2 id="intro">引言：为什么要学 MuJoCo</h2>
+
+<p>欢迎来到 <strong>MuJoCo（Multi-Joint dynamics with Contact）</strong>完全学习教程！本教程将带你从零开始，深入理解这个被 DeepMind、OpenAI、UC Berkeley 等顶级机构广泛使用的物理仿真引擎。</p>
+
+<p>我们不做空洞的概念罗列，而是用一个<strong>真实的项目</strong>贯穿始终：<strong>PushBox — 一个 2-DOF 机械臂推箱子的强化学习环境</strong>。这是我们医疗机器人仿真项目的第一步，你将看到每个 MuJoCo 概念如何在实际代码中落地。</p>
+
+<div class="box def">
+  <div class="box-title">💡 本教程的目标读者</div>
+  <ul>
+    <li>有一定 Python 基础的工程师或研究生</li>
+    <li>想用 MuJoCo 做机器人仿真 + 强化学习研究</li>
+    <li>希望理解底层原理而不是只会调 API</li>
+    <li>未来想做 sim-to-real（仿真到现实迁移）</li>
+  </ul>
+</div>
+
+<div class="box ex">
+  <div class="box-title">🎯 PushBox 任务简介</div>
+  <p>一个固定在桌面上的 2 自由度机械臂（shoulder + elbow），需要通过施加关节力矩来推动一个绿色方块到达红色目标位置。</p>
+  <ul>
+    <li><strong>机械臂</strong>：2 个铰链关节，上臂 0.4m + 前臂 0.3m，总臂展 0.7m</li>
+    <li><strong>箱子</strong>：0.1m×0.1m×0.1m 的方块，质量 0.5kg，具有 6-DOF 自由度</li>
+    <li><strong>目标</strong>：位于 (0.5, 0.3) 的红色半透明球体标记</li>
+    <li><strong>控制</strong>：2 维连续力矩控制 [-10, 10] Nm</li>
+  </ul>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- 第一章：物理仿真基础                                                  -->
+<!-- ================================================================== -->
+<h2 id="ch1">第一章：物理仿真基础</h2>
+
+<h3 id="ch1-what">1.1 什么是物理仿真？为什么不直接用真实机器人？</h3>
+
+<p>物理仿真（Physics Simulation）是在计算机中模拟真实世界物理规律的过程。它需要解答一个核心问题：<strong>给定物体的当前状态（位置、速度）和外力，下一时刻物体会在哪里？</strong></p>
+
+<div class="box def">
+  <div class="box-title">📐 定义：物理仿真</div>
+  <p>物理仿真是一个离散时间积分过程。给定系统状态 $\mathbf{s}_t = (\mathbf{q}, \dot{\mathbf{q}})$（广义坐标及其速度）和控制输入 $\mathbf{u}_t$，仿真器计算下一时刻的状态：</p>
+  <p>$$\mathbf{s}_{t+1} = f(\mathbf{s}_t, \mathbf{u}_t, \Delta t)$$</p>
+  <p>其中 $\Delta t$ 是时间步长，$f$ 是动力学方程的数值积分。</p>
+</div>
+
+<p><strong>为什么不直接用真实机器人？</strong> 这个问题的答案决定了整个仿真领域存在的价值：</p>
+
+<table>
+<tr><th>维度</th><th>真实机器人</th><th>物理仿真</th></tr>
+<tr><td><strong>速度</strong></td><td>1× 实时（1秒就是1秒）</td><td>1000-10000× 实时</td></tr>
+<tr><td><strong>安全性</strong></td><td>可能损坏设备或伤人</td><td>随便撞，零成本</td></tr>
+<tr><td><strong>可重复性</strong></td><td>传感器噪声、磨损等导致不完全可重复</td><td>相同种子 → 完全相同轨迹</td></tr>
+<tr><td><strong>并行性</strong></td><td>一台机器人 = 一个环境</td><td>一台电脑 = 数千个并行环境</td></tr>
+<tr><td><strong>成本</strong></td><td>$$$（硬件 + 维护）</td><td>$ （计算资源）</td></tr>
+<tr><td><strong>数据获取</strong></td><td>完美状态信息难以获取</td><td>可以读取任何物理量</td></tr>
+<tr><td><strong>参数调节</strong></td><td>需要重新设计/制造</td><td>改个数字重新运行</td></tr>
+</table>
+
+<h4>Sim-to-Real（仿真到现实迁移）</h4>
+
+<p>当然，仿真不是万能的。仿真和现实之间存在 <strong>Sim-to-Real Gap</strong>（仿真-现实差距），主要来自：</p>
+
+<ol>
+  <li><strong>模型误差</strong>：几何参数、质量参数不够精确</li>
+  <li><strong>接触模型简化</strong>：真实世界的摩擦、形变极为复杂</li>
+  <li><strong>传感器差异</strong>：仿真中传感器是完美的，现实中有噪声和延迟</li>
+  <li><strong>执行器差异</strong>：真实电机有齿轮间隙、非线性摩擦等</li>
+</ol>
+
+<p>应对策略包括：</p>
+<ul>
+  <li><strong>Domain Randomization（域随机化）</strong>：在仿真中随机化物理参数，迫使策略学会泛化</li>
+  <li><strong>System Identification（系统辨识）</strong>：精确测量真实系统参数并反映到仿真中</li>
+  <li><strong>Fine-tuning</strong>：在仿真中预训练，在真实机器人上微调</li>
+</ul>
+
+<div class="box thm">
+  <div class="box-title">✅ Sim-to-Real 的黄金法则</div>
+  <p>仿真越精确，迁移越容易。MuJoCo 之所以流行，正是因为它在<strong>接触物理</strong>这个最容易出现 sim-to-real gap 的领域做得特别好。</p>
+</div>
+
+
+<h3 id="ch1-compare">1.2 常见物理引擎对比</h3>
+
+<p>市面上有许多物理引擎，各有特长。以下是主流选择的详细对比：</p>
+
+<table>
+<tr><th>引擎</th><th>开发者</th><th>许可</th><th>接触处理</th><th>GPU加速</th><th>RL集成</th><th>学习曲线</th></tr>
+<tr><td><strong>MuJoCo</strong></td><td>DeepMind</td><td>Apache 2.0</td><td>⭐⭐⭐⭐⭐</td><td>MJX (JAX)</td><td>⭐⭐⭐⭐⭐</td><td>中</td></tr>
+<tr><td><strong>PyBullet</strong></td><td>Erwin Coumans</td><td>zlib</td><td>⭐⭐⭐</td><td>❌</td><td>⭐⭐⭐⭐</td><td>低</td></tr>
+<tr><td><strong>Isaac Sim</strong></td><td>NVIDIA</td><td>EULA</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐</td><td>高</td></tr>
+<tr><td><strong>PhysX 5</strong></td><td>NVIDIA</td><td>BSD 3</td><td>⭐⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐</td><td>高</td></tr>
+<tr><td><strong>Drake</strong></td><td>MIT/TRI</td><td>BSD 3</td><td>⭐⭐⭐⭐</td><td>❌</td><td>⭐⭐</td><td>高</td></tr>
+</table>
+
+<p><strong>MuJoCo</strong> — 全称 Multi-Joint dynamics with Contact，由 Emo Todorov 在华盛顿大学开发，2021 年被 DeepMind 收购并开源。擅长精确的接触力计算，是 RL 社区的事实标准。采用凸优化方法求解接触力，保证物理一致性。</p>
+
+<p><strong>PyBullet</strong> — Bullet 物理引擎的 Python 封装。入门简单，社区资源多，但接触处理精度不如 MuJoCo，且没有 GPU 加速。适合教学和快速原型。</p>
+
+<p><strong>Isaac Sim</strong> — NVIDIA 的全栈机器人仿真平台，基于 Omniverse 和 PhysX 5。GPU 原生并行仿真，单卡可跑上万个环境。缺点是需要 NVIDIA GPU，且体系庞大、学习成本高。</p>
+
+<p><strong>PhysX 5</strong> — NVIDIA 开源的底层物理引擎。Isaac Sim 的基础。支持 GPU 大规模并行，但直接使用需要较多底层知识。</p>
+
+<p><strong>Drake</strong> — MIT 和 Toyota Research Institute 开发。强调数学严谨性（优化、控制理论），内置轨迹优化和模型预测控制。不太适合大规模 RL 训练。</p>
+
+<div class="box ex">
+  <div class="box-title">🔍 如何选择？</div>
+  <ul>
+    <li><strong>做 RL 研究</strong> → MuJoCo（社区最大，benchmark 最多）</li>
+    <li><strong>快速原型</strong> → PyBullet（最简单）</li>
+    <li><strong>大规模并行训练</strong> → Isaac Sim / IsaacGym（GPU 并行）</li>
+    <li><strong>控制理论/优化</strong> → Drake（数学工具完备）</li>
+    <li><strong>我们的项目</strong> → MuJoCo（接触精度好，适合医疗机器人）</li>
+  </ul>
+</div>
+
+
+<h3 id="ch1-why-mujoco">1.3 MuJoCo 的核心优势</h3>
+
+<p>MuJoCo 之所以成为 RL 社区的首选引擎，有几个关键原因：</p>
+
+<h4>1. 卓越的接触处理</h4>
+<p>MuJoCo 使用<strong>凸优化</strong>来求解接触力，而非传统的脉冲方法或罚函数方法。这意味着：</p>
+<ul>
+  <li>物体不会穿透——接触约束被精确满足</li>
+  <li>堆叠物体稳定——不会像某些引擎那样"抖动"</li>
+  <li>摩擦力正确——库仑摩擦模型的精确实现</li>
+</ul>
+
+<div class="box def">
+  <div class="box-title">📐 MuJoCo 接触力求解</div>
+  <p>MuJoCo 将接触力求解建模为一个<strong>线性互补问题 (LCP)</strong>或等价的凸优化问题：</p>
+  <p>$$\min_{\mathbf{f}} \frac{1}{2} \mathbf{f}^T A \mathbf{f} + \mathbf{b}^T \mathbf{f} \quad \text{s.t.} \quad \mathbf{f} \in \mathcal{C}$$</p>
+  <p>其中 $\mathbf{f}$ 是接触力，$A$ 是接触矩阵，$\mathcal{C}$ 是摩擦锥约束集合。这比脉冲方法（PyBullet）更精确，比罚函数方法更稳定。</p>
+</div>
+
+<h4>2. 极高的仿真速度</h4>
+<p>在 CPU 上，MuJoCo 可以达到：</p>
+<ul>
+  <li>简单模型（我们的 PushBox）：约 <strong>10,000,000 步/秒</strong>（单核）</li>
+  <li>复杂人形机器人（30+ DOF）：约 <strong>500,000 步/秒</strong></li>
+  <li>MJX（JAX 后端）在 GPU 上：再快 10-100 倍</li>
+</ul>
+
+<h4>3. 可微分仿真（MJX）</h4>
+<p>MuJoCo 3.0+ 引入了 MJX —— 基于 JAX 的可微分后端。这意味着你可以<strong>对整个仿真过程求梯度</strong>，实现：</p>
+<ul>
+  <li>基于梯度的策略优化（比 RL 的采样效率更高）</li>
+  <li>系统辨识（从观测数据反推物理参数）</li>
+  <li>轨迹优化（直接优化控制序列）</li>
+</ul>
+
+<h4>4. 开源且社区活跃</h4>
+<p>2021 年 DeepMind 将 MuJoCo 开源后，社区爆发增长：</p>
+<ul>
+  <li>Gymnasium (OpenAI Gym)：标准 RL benchmark 几乎都基于 MuJoCo</li>
+  <li>dm_control：DeepMind 的控制任务套件</li>
+  <li>robosuite, metaworld：机器人操作 benchmark</li>
+  <li>MuJoCo Menagerie：开源机器人模型库（包括真实机器人的高精度模型）</li>
+</ul>
+
+
+<h3 id="ch1-install">1.4 安装和配置</h3>
+
+<p>MuJoCo 3.x 的安装非常简单，不再需要下载单独的二进制文件或设置许可证（2.x 时代的痛苦）：</p>
+
+<pre><code class="language-bash"><span class="code-label">BASH</span># 安装 MuJoCo（推荐 3.x 版本）
+pip install mujoco
+
+# 验证安装
+python -c "import mujoco; print(f'MuJoCo version: {mujoco.__version__}')"
+# 输出: MuJoCo version: 3.2.x
+
+# 可选：安装可视化工具
+pip install mujoco-viewer   # 第三方轻量级查看器
+
+# 可选：安装 MJX（GPU 加速，需要 JAX）
+pip install mujoco-mjx
+pip install jax[cuda12]     # 如果有 NVIDIA GPU</code></pre>
+
+<div class="box warn">
+  <div class="box-title">⚠️ 版本注意事项</div>
+  <ul>
+    <li><strong>MuJoCo 3.x</strong>（当前推荐）：纯 Python 绑定，安装简单，API 更 Pythonic</li>
+    <li><strong>MuJoCo 2.x</strong>：需要 <code>mujoco-py</code> 封装，安装复杂，已不推荐</li>
+    <li>如果你看到教程提到 <code>mujoco-py</code>、<code>mj_activate()</code>、许可证文件，那是旧版 API</li>
+    <li>Gymnasium 1.0+ 已默认使用 MuJoCo 3.x 绑定</li>
+  </ul>
+</div>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span># 完整的环境依赖（我们项目使用的版本）
+# requirements.txt
+mujoco>=3.1.0
+gymnasium>=1.0.0
+numpy>=1.24
+stable-baselines3>=2.3.0
+
+# 安装所有依赖
+pip install -r requirements.txt</code></pre>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span># 快速验证：加载一个内置模型
+import mujoco
+import numpy as np
+
+# MuJoCo 自带一些测试 XML
+xml = """
+&lt;mujoco&gt;
+  &lt;worldbody&gt;
+    &lt;light pos="0 0 3"/&gt;
+    &lt;body pos="0 0 1"&gt;
+      &lt;freejoint/&gt;
+      &lt;geom type="sphere" size="0.1"/&gt;
+    &lt;/body&gt;
+    &lt;geom type="plane" size="5 5 0.1"/&gt;
+  &lt;/worldbody&gt;
+&lt;/mujoco&gt;
+"""
+
+model = mujoco.MjModel.from_xml_string(xml)
+data = mujoco.MjData(model)
+
+# 仿真 1 秒
+for _ in range(500):  # 500 步 × 0.002s = 1.0s
+    mujoco.mj_step(model, data)
+
+# 球从 z=1.0 自由落体
+print(f"球的最终高度: {data.qpos[2]:.4f} m")
+print(f"球的速度: {data.qvel[2]:.4f} m/s")
+# 球应该落到地面并停下（z ≈ 0.1，球的半径）</code></pre>
+
+
+<!-- ================================================================== -->
+<!-- 第二章：核心概念                                                      -->
+<!-- ================================================================== -->
+<h2 id="ch2">第二章：MuJoCo 核心概念</h2>
+
+<h3 id="ch2-mjcf">2.1 MJCF — MuJoCo 的模型描述语言</h3>
+
+<p>MJCF（MuJoCo Configuration Format）是 MuJoCo 使用的 XML 格式，用于描述整个仿真世界：物体、关节、材质、传感器、执行器等一切。</p>
+
+<div class="box def">
+  <div class="box-title">📐 MJCF vs URDF</div>
+  <p>你可能听说过 <strong>URDF</strong>（Unified Robot Description Format），ROS 社区的标准格式。MuJoCo 也可以加载 URDF，但 MJCF 更强大：</p>
+  <table>
+    <tr><th>特性</th><th>MJCF</th><th>URDF</th></tr>
+    <tr><td>接触参数</td><td>✅ 完整（摩擦、刚度、阻尼）</td><td>❌ 有限</td></tr>
+    <tr><td>执行器</td><td>✅ 多种类型</td><td>❌ 仅基本传动</td></tr>
+    <tr><td>肌腱</td><td>✅</td><td>❌</td></tr>
+    <tr><td>默认值继承</td><td>✅ 层级默认系统</td><td>❌</td></tr>
+    <tr><td>传感器</td><td>✅ 内置</td><td>❌ 需要插件</td></tr>
+    <tr><td>可视化设置</td><td>✅ 内置</td><td>❌ 外部</td></tr>
+  </table>
+</div>
+
+<p>一个最简 MJCF 文件只需要几行：</p>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;mujoco&gt;
+  &lt;worldbody&gt;
+    &lt;geom type="plane" size="5 5 0.1"/&gt;  &lt;!-- 地面 --&gt;
+  &lt;/worldbody&gt;
+&lt;/mujoco&gt;</code></pre>
+
+<p>这就创建了一个只有地面的空世界。MJCF 的核心思想是<strong>层级结构</strong>——物体通过父子关系组织，关节定义了子物体相对于父物体的自由度。</p>
+
+
+<h3 id="ch2-mjmodel">2.2 MjModel — 编译后的静态模型</h3>
+
+<p>当你加载 MJCF 文件时，MuJoCo 会<strong>编译</strong>它，生成一个 <code>MjModel</code> 对象。这个对象包含所有<strong>不会在仿真过程中改变的信息</strong>：</p>
+
+<div class="box def">
+  <div class="box-title">📐 MjModel 包含什么</div>
+  <ul>
+    <li><strong>几何信息</strong>：物体的形状、大小、颜色</li>
+    <li><strong>运动学信息</strong>：关节类型、关节范围、父子关系</li>
+    <li><strong>动力学参数</strong>：质量、惯性、摩擦系数、阻尼</li>
+    <li><strong>执行器参数</strong>：增益、力矩范围、传动比</li>
+    <li><strong>全局选项</strong>：时间步长、积分器类型、重力向量</li>
+    <li><strong>渲染资源</strong>：纹理、材质、光源</li>
+  </ul>
+  <p>关键：MjModel 在加载后<strong>基本不变</strong>（虽然技术上可以修改某些参数，如 body_mass）。</p>
+</div>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>import mujoco
+
+# 从文件加载
+model = mujoco.MjModel.from_xml_path("push_box.xml")
+
+# 查看模型基本信息
+print(f"自由度 (nv): {model.nv}")          # 广义速度维度
+print(f"广义坐标 (nq): {model.nq}")        # 广义坐标维度
+print(f"物体数 (nbody): {model.nbody}")     # body 数量（含 world）
+print(f"关节数 (njnt): {model.njnt}")       # 关节数量
+print(f"几何体 (ngeom): {model.ngeom}")     # geom 数量
+print(f"执行器 (nu): {model.nu}")           # 执行器数量
+print(f"时间步长: {model.opt.timestep}")     # 仿真时间步长
+
+# 对于我们的 PushBox 模型：
+# nv = 8  (2 hinge + 6 freejoint)
+# nq = 9  (2 hinge角度 + 3 位置 + 4 四元数)
+# nbody = 5 (world + arm_base + upper_arm + forearm + box)
+# njnt = 3  (shoulder + elbow + box_freejoint)
+# nu = 2   (shoulder_motor + elbow_motor)</code></pre>
+
+
+<h3 id="ch2-mjdata">2.3 MjData — 运行时动态数据</h3>
+
+<p><code>MjData</code> 是仿真运行时的<strong>所有动态数据</strong>的容器。每一步仿真都会更新它：</p>
+
+<div class="box def">
+  <div class="box-title">📐 MjData 包含什么</div>
+  <ul>
+    <li><strong>qpos</strong>：广义坐标（关节角度 + 自由体位置/姿态）</li>
+    <li><strong>qvel</strong>：广义速度（关节角速度 + 自由体线速度/角速度）</li>
+    <li><strong>ctrl</strong>：控制输入（你发给执行器的命令）</li>
+    <li><strong>xpos, xquat</strong>：每个 body 的笛卡尔位置和姿态</li>
+    <li><strong>site_xpos</strong>：每个 site 的位置</li>
+    <li><strong>qfrc_applied</strong>：外部施加的力</li>
+    <li><strong>contact</strong>：当前时刻的接触信息</li>
+    <li><strong>sensordata</strong>：传感器读数</li>
+    <li><strong>time</strong>：当前仿真时间</li>
+  </ul>
+</div>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>data = mujoco.MjData(model)
+
+# ===== 核心状态量 =====
+
+# qpos: 广义坐标 — 对于 PushBox:
+# [shoulder_angle, elbow_angle, box_x, box_y, box_z, box_qw, box_qx, box_qy, box_qz]
+#  ^---hinge关节---^            ^---freejoint 位置---^  ^---freejoint 四元数---^
+print(f"qpos shape: {data.qpos.shape}")  # (9,)
+
+# qvel: 广义速度 — 注意维度不同于 qpos！
+# [shoulder_vel, elbow_vel, box_vx, box_vy, box_vz, box_wx, box_wy, box_wz]
+#  ^--hinge角速度-^          ^--线速度--^           ^--角速度--^
+print(f"qvel shape: {data.qvel.shape}")  # (8,)  ← 四元数的速度是3维角速度，不是4维
+
+# ctrl: 控制输入
+data.ctrl[0] = 5.0   # shoulder_motor 力矩
+data.ctrl[1] = -3.0  # elbow_motor 力矩
+
+# ===== 计算量（需要先调用 mj_forward 或 mj_step）=====
+mujoco.mj_forward(model, data)
+
+# xpos: 每个 body 的世界坐标位置
+for i in range(model.nbody):
+    name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, i)
+    print(f"  {name}: {data.xpos[i]}")
+
+# site_xpos: 每个 site 的位置
+ee_site_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, "endeffector")
+print(f"末端执行器位置: {data.site_xpos[ee_site_id]}")</code></pre>
+
+<div class="box warn">
+  <div class="box-title">⚠️ qpos 和 qvel 的维度不同！</div>
+  <p>这是 MuJoCo 初学者最常见的困惑：</p>
+  <ul>
+    <li><strong>hinge/slide 关节</strong>：qpos 1 维，qvel 1 维（一致）</li>
+    <li><strong>ball 关节</strong>：qpos 4 维（四元数），qvel 3 维（角速度）</li>
+    <li><strong>free 关节</strong>：qpos 7 维（3位置 + 4四元数），qvel 6 维（3线速度 + 3角速度）</li>
+  </ul>
+  <p>这是因为四元数有 4 个分量但只有 3 个自由度（受 $\|\mathbf{q}\| = 1$ 约束）。所以 <code>nq ≠ nv</code> 是正常的！在 PushBox 中：<code>nq = 9</code>, <code>nv = 8</code>。</p>
+</div>
+
+
+<h3 id="ch2-step">2.4 仿真循环 — mj_step() 到底做了什么</h3>
+
+<p><code>mj_step()</code> 是 MuJoCo 仿真的核心。每次调用它，仿真前进一个时间步。但内部实际上发生了很多事情：</p>
+
+<div class="diagram">
+mj_step(model, data) 内部流程：
+┌─────────────────────────────────────────────────────────────────┐
+│  1. mj_step1(model, data)    — 计算阶段                         │
+│     ├── mj_forward(model, data)                                  │
+│     │   ├── mj_kinematics()    → 计算正运动学 (qpos → xpos)      │
+│     │   ├── mj_comPos()        → 计算质心位置                     │
+│     │   ├── mj_tendon()        → 计算肌腱长度/力                  │
+│     │   ├── mj_transmission()  → 执行器力 → 关节力               │
+│     │   ├── mj_crb()           → 复合刚体惯性                    │
+│     │   ├── mj_factorM()       → 分解质量矩阵                    │
+│     │   └── mj_collision()     → 碰撞检测                       │
+│     │       └── mj_makeConstraint()  → 构建约束                  │
+│     └── mj_fwdConstraint()     → 求解接触力（凸优化）             │
+│                                                                   │
+│  2. mj_step2(model, data)    — 积分阶段                         │
+│     ├── mj_fwdAcceleration()   → 计算加速度 (M⁻¹(f - c))        │
+│     └── mj_Euler() / mj_RK4() → 数值积分更新 qpos, qvel          │
+│         data.time += timestep                                     │
+└─────────────────────────────────────────────────────────────────┘
+</div>
+
+<p>核心运动方程是<strong>拉格朗日方程</strong>：</p>
+
+<p>$$M(\mathbf{q})\ddot{\mathbf{q}} + \mathbf{c}(\mathbf{q}, \dot{\mathbf{q}}) = \boldsymbol{\tau} + J^T \mathbf{f}_{\text{contact}}$$</p>
+
+<p>其中：</p>
+<ul>
+  <li>$M(\mathbf{q})$ — 广义质量矩阵（取决于当前构型）</li>
+  <li>$\mathbf{c}(\mathbf{q}, \dot{\mathbf{q}})$ — 科氏力 + 离心力 + 重力</li>
+  <li>$\boldsymbol{\tau}$ — 执行器力矩（来自 <code>data.ctrl</code>）</li>
+  <li>$J^T \mathbf{f}_{\text{contact}}$ — 接触力通过雅可比矩阵映射到关节空间</li>
+</ul>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span># 标准仿真循环
+import mujoco
+import numpy as np
+
+model = mujoco.MjModel.from_xml_path("push_box.xml")
+data = mujoco.MjData(model)
+
+# 仿真 5 秒
+duration = 5.0
+n_steps = int(duration / model.opt.timestep)
+
+trajectory = []
+
+for step in range(n_steps):
+    # 1. 设置控制输入（你的策略/控制器）
+    data.ctrl[0] = 2.0 * np.sin(data.time * 2.0)  # shoulder 力矩
+    data.ctrl[1] = 1.0 * np.cos(data.time * 3.0)   # elbow 力矩
+    
+    # 2. 前进一步
+    mujoco.mj_step(model, data)
+    
+    # 3. 读取状态
+    if step % 100 == 0:  # 每 100 步记录
+        ee_pos = data.site_xpos[0].copy()  # 末端位置
+        trajectory.append(ee_pos)
+        
+print(f"仿真完成: {data.time:.2f}s, {n_steps} 步")
+print(f"记录了 {len(trajectory)} 个末端位置点")</code></pre>
+
+
+<h3 id="ch2-timestep">2.5 时间步长的选择</h3>
+
+<p>时间步长 <code>timestep</code> 是仿真中最重要的参数之一。选得太大会不稳定，选得太小会浪费计算：</p>
+
+<div class="box def">
+  <div class="box-title">📐 时间步长的物理含义</div>
+  <p>时间步长 $\Delta t$ 决定了仿真的时间分辨率。MuJoCo 使用<strong>离散时间积分</strong>，将连续的微分方程：</p>
+  <p>$$\dot{\mathbf{q}} = \mathbf{v}, \quad M\dot{\mathbf{v}} = \mathbf{f}$$</p>
+  <p>近似为：</p>
+  <p>$$\mathbf{q}_{t+1} = \mathbf{q}_t + \Delta t \cdot \mathbf{v}_t, \quad \mathbf{v}_{t+1} = \mathbf{v}_t + \Delta t \cdot M^{-1}\mathbf{f}_t$$</p>
+  <p>$\Delta t$ 越大，近似误差越大。当误差积累超过系统能补偿的范围时，仿真就会"爆炸"。</p>
+</div>
+
+<table>
+<tr><th>时间步长</th><th>仿真速度</th><th>稳定性</th><th>适用场景</th></tr>
+<tr><td>0.0001s</td><td>很慢</td><td>极高</td><td>精密接触、刚体碰撞</td></tr>
+<tr><td>0.001s</td><td>慢</td><td>高</td><td>需要精确接触的任务</td></tr>
+<tr><td><strong>0.002s</strong></td><td>适中</td><td>好</td><td><strong>我们的 PushBox（推荐）</strong></td></tr>
+<tr><td>0.005s</td><td>快</td><td>一般</td><td>简单任务、粗略仿真</td></tr>
+<tr><td>0.01s</td><td>很快</td><td>差</td><td>仅适用于无接触的简单系统</td></tr>
+</table>
+
+<div class="box warn">
+  <div class="box-title">⚠️ 如何判断时间步长是否合适</div>
+  <ul>
+    <li><strong>物体穿透地面</strong>：步长太大，碰撞检测跟不上</li>
+    <li><strong>能量持续增加</strong>：系统在"加速"（而没有外力），数值不稳定的信号</li>
+    <li><strong>关节角度/速度爆炸</strong>：出现 NaN 或极大值</li>
+    <li><strong>经验法则</strong>：从 0.002s 开始，如果不稳定就减半，如果太慢就加倍</li>
+  </ul>
+</div>
+
+<p>在我们的 PushBox 环境中，<code>timestep=0.002</code> 是一个好的平衡点。每个 RL 步（<code>env.step()</code>）内部执行 5 次 <code>mj_step()</code>，所以一个 RL 步对应 0.01 秒的仿真时间。</p>
+
+
+<h3 id="ch2-integrator">2.6 积分器 — Euler, RK4, implicit</h3>
+
+<p>积分器决定了如何从当前状态计算下一时刻的状态。MuJoCo 提供三种积分器：</p>
+
+<h4>Semi-implicit Euler（半隐式欧拉）— 默认</h4>
+<p>最简单快速的积分器。先更新速度，再用新速度更新位置：</p>
+<p>$$\mathbf{v}_{t+1} = \mathbf{v}_t + \Delta t \cdot \mathbf{a}_t$$</p>
+<p>$$\mathbf{q}_{t+1} = \mathbf{q}_t + \Delta t \cdot \mathbf{v}_{t+1}$$</p>
+<p>注意这里用的是<strong>更新后的</strong> $\mathbf{v}_{t+1}$ 来计算位置，这就是"半隐式"的含义，比显式欧拉稳定得多。</p>
+
+<h4>RK4（四阶龙格-库塔）</h4>
+<p>经典的高阶积分方法，每步需要 4 次函数求值：</p>
+<p>$$\mathbf{k}_1 = f(\mathbf{s}_t), \quad \mathbf{k}_2 = f(\mathbf{s}_t + \tfrac{\Delta t}{2}\mathbf{k}_1)$$</p>
+<p>$$\mathbf{k}_3 = f(\mathbf{s}_t + \tfrac{\Delta t}{2}\mathbf{k}_2), \quad \mathbf{k}_4 = f(\mathbf{s}_t + \Delta t \cdot \mathbf{k}_3)$$</p>
+<p>$$\mathbf{s}_{t+1} = \mathbf{s}_t + \frac{\Delta t}{6}(\mathbf{k}_1 + 2\mathbf{k}_2 + 2\mathbf{k}_3 + \mathbf{k}_4)$$</p>
+<p>更精确（4阶精度 vs Euler 的 1 阶），但慢约 4 倍。适合<strong>没有频繁接触</strong>的场景（如空中运动）。</p>
+
+<h4>Implicit（隐式积分）</h4>
+<p>MuJoCo 3.x 新增的隐式中点法。最稳定，特别适合<strong>刚性系统</strong>（大阻尼、硬弹簧）。速度介于 Euler 和 RK4 之间。</p>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;!-- 在 MJCF 中选择积分器 --&gt;
+&lt;option integrator="Euler"/&gt;      &lt;!-- 默认，最快 --&gt;
+&lt;option integrator="RK4"/&gt;        &lt;!-- 最精确，无接触时推荐 --&gt;
+&lt;option integrator="implicit"/&gt;   &lt;!-- 最稳定，刚性系统推荐 --&gt;
+&lt;option integrator="implicitfast"/&gt;  &lt;!-- 隐式的快速近似 --&gt;</code></pre>
+
+<div class="box thm">
+  <div class="box-title">✅ 积分器选择建议</div>
+  <table>
+    <tr><th>场景</th><th>推荐积分器</th><th>原因</th></tr>
+    <tr><td>一般机器人任务（有接触）</td><td>Euler</td><td>快且足够稳定</td></tr>
+    <tr><td>精密轨迹跟踪</td><td>RK4</td><td>高精度</td></tr>
+    <tr><td>刚性系统（大阻尼/刚度）</td><td>implicit</td><td>不会因刚度大而不稳定</td></tr>
+    <tr><td>RL 训练（需要大量仿真）</td><td>Euler</td><td>速度是第一优先级</td></tr>
+  </table>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- 第三章：MJCF XML 完全指南                                             -->
+<!-- ================================================================== -->
+<h2 id="ch3">第三章：MJCF XML 完全指南</h2>
+
+<p>这一章我们将<strong>逐行解读</strong>我们 PushBox 项目的 MJCF 文件。理解 XML 是使用 MuJoCo 的基础——你的仿真世界在 XML 中定义，Python 代码只是在操纵它。</p>
+
+
+<h3 id="ch3-root">3.1 根元素与 compiler</h3>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;mujoco model="push_box"&gt;
+  &lt;compiler angle="degree" coordinate="local" inertiafromgeom="true"/&gt;
+  ...
+&lt;/mujoco&gt;</code></pre>
+
+<h4><code>&lt;mujoco&gt;</code> — 根元素</h4>
+<p>所有 MJCF 文件的根。<code>model</code> 属性是模型名称，仅用于标识。</p>
+
+<h4><code>&lt;compiler&gt;</code> — 编译器配置</h4>
+<p>控制 MJCF 如何被<strong>解析和编译</strong>成内部数据结构：</p>
+
+<table>
+<tr><th>属性</th><th>我们的值</th><th>说明</th></tr>
+<tr><td><code>angle</code></td><td><code>"degree"</code></td><td>XML 中的角度单位。<code>"degree"</code> 表示所有角度值（如关节范围 <code>range="-180 180"</code>）用度数。默认是弧度 <code>"radian"</code>。内部计算始终使用弧度。</td></tr>
+<tr><td><code>coordinate</code></td><td><code>"local"</code></td><td>body 的 <code>pos</code> 属性是相对于<strong>父 body</strong> 的局部坐标。如果是 <code>"global"</code> 则是世界坐标。<code>"local"</code> 更直观——子 body 的位置天然相对于父 body 描述。</td></tr>
+<tr><td><code>inertiafromgeom</code></td><td><code>"true"</code></td><td>自动从 geom 的形状和密度计算惯性张量。无需手动指定每个 body 的惯性——MuJoCo 会帮你算。</td></tr>
+</table>
+
+<div class="box ex">
+  <div class="box-title">🔍 角度单位的影响</div>
+  <p>当 <code>angle="degree"</code> 时：</p>
+  <ul>
+    <li>XML 中：<code>range="-180 180"</code> → 这是度数</li>
+    <li>Python 中：<code>data.qpos[0]</code> → 这始终是<strong>弧度</strong>！</li>
+  </ul>
+  <p>这是一个常见的困惑来源。XML 用度数让人阅读方便，但 API 中所有角度都是弧度。</p>
+</div>
+
+
+<h3 id="ch3-option">3.2 option — 仿真选项</h3>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;option timestep="0.002" integrator="Euler" gravity="0 0 -9.81"&gt;
+  &lt;flag warmstart="enable"/&gt;
+&lt;/option&gt;</code></pre>
+
+<p><code>&lt;option&gt;</code> 控制仿真的全局物理参数：</p>
+
+<table>
+<tr><th>属性</th><th>我们的值</th><th>说明</th></tr>
+<tr><td><code>timestep</code></td><td><code>"0.002"</code></td><td>仿真时间步长 = 2ms = 500Hz。平衡了稳定性和速度。</td></tr>
+<tr><td><code>integrator</code></td><td><code>"Euler"</code></td><td>半隐式欧拉积分器。RL 训练的首选（最快）。</td></tr>
+<tr><td><code>gravity</code></td><td><code>"0 0 -9.81"</code></td><td>重力加速度向量。<code>z=-9.81</code> 表示 z 轴向上是正方向，重力向下。你也可以设为 <code>"0 0 0"</code> 模拟太空环境。</td></tr>
+</table>
+
+<h4><code>&lt;flag warmstart="enable"/&gt;</code></h4>
+<p>Warmstart 是一个优化技巧：用上一步的接触力解作为这一步的初始猜测，加速求解器收敛。对于有<strong>持续接触</strong>的场景（如推箱子），效果显著。</p>
+
+
+<h3 id="ch3-visual">3.3 visual — 渲染设置</h3>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;visual&gt;
+  &lt;global offwidth="1280" offheight="720"/&gt;
+  &lt;quality shadowsize="4096"/&gt;
+  &lt;map force="0.1" zfar="30"/&gt;
+&lt;/visual&gt;</code></pre>
+
+<p>视觉设置不影响物理仿真，只影响渲染：</p>
+
+<table>
+<tr><th>标签</th><th>属性</th><th>说明</th></tr>
+<tr><td><code>&lt;global&gt;</code></td><td><code>offwidth, offheight</code></td><td>离屏渲染分辨率。用于 <code>render_mode="rgb_array"</code> 时获取图像。1280×720 是合理的默认值。</td></tr>
+<tr><td><code>&lt;quality&gt;</code></td><td><code>shadowsize</code></td><td>阴影贴图分辨率。4096 给出清晰的阴影，但会增加渲染开销。训练时可以降低或关闭。</td></tr>
+<tr><td><code>&lt;map&gt;</code></td><td><code>force</code></td><td>力可视化的缩放因子。在 viewer 中按 'C' 键可以看到接触力箭头。</td></tr>
+<tr><td><code>&lt;map&gt;</code></td><td><code>zfar</code></td><td>远裁剪面距离。物体超过这个距离就不渲染了。</td></tr>
+</table>
+
+
+<h3 id="ch3-asset">3.4 asset — 资产系统（纹理和材质）</h3>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;asset&gt;
+  &lt;!-- 天空盒：背景的渐变色 --&gt;
+  &lt;texture builtin="gradient" height="100" 
+           rgb1="0.3 0.5 0.7" rgb2="0.1 0.2 0.3" 
+           type="skybox" width="100"/&gt;
+  
+  &lt;!-- 几何体纹理：用于默认物体表面 --&gt;
+  &lt;texture builtin="flat" height="1278" mark="cross" markrgb="1 1 1" 
+           name="texgeom" random="0.01" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" 
+           type="cube" width="127"/&gt;
+  
+  &lt;!-- 棋盘格纹理：用于地面 --&gt;
+  &lt;texture builtin="checker" height="100" name="texplane" 
+           rgb1="0.2 0.2 0.2" rgb2="0.3 0.3 0.3" 
+           type="2d" width="100"/&gt;
+  
+  &lt;!-- 地面材质 --&gt;
+  &lt;material name="MatPlane" reflectance="0.3" shininess="0.5" 
+            specular="0.5" texrepeat="3 3" texture="texplane"/&gt;
+  
+  &lt;!-- 几何体默认材质 --&gt;
+  &lt;material name="geom" texture="texgeom" texuniform="true"/&gt;
+&lt;/asset&gt;</code></pre>
+
+<p>MuJoCo 的资产系统分为两层：<strong>纹理（texture）</strong> 和 <strong>材质（material）</strong>。</p>
+
+<div class="box def">
+  <div class="box-title">📐 纹理 vs 材质</div>
+  <ul>
+    <li><strong>纹理 (texture)</strong>：原始图像数据。可以是内置模式（checker, gradient, flat）或外部图片文件。</li>
+    <li><strong>材质 (material)</strong>：将纹理与光照属性结合。<code>shininess</code>（光泽度）、<code>specular</code>（高光强度）、<code>reflectance</code>（反射率）等控制物体在光照下的外观。</li>
+    <li>纹理可以被多个材质引用，材质可以被多个 geom 引用。</li>
+  </ul>
+</div>
+
+<p>内置纹理类型：</p>
+<ul>
+  <li><code>builtin="checker"</code> — 棋盘格（地面经典选择）</li>
+  <li><code>builtin="gradient"</code> — 渐变色（天空盒常用）</li>
+  <li><code>builtin="flat"</code> — 纯色/带标记（物体表面）</li>
+</ul>
+
+
+<h3 id="ch3-default">3.5 default — 默认参数系统</h3>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;default&gt;
+  &lt;joint armature="0.01" damping="0.1" limited="true"/&gt;
+  &lt;geom conaffinity="1" condim="3" contype="1" 
+        friction="0.5 0.005 0.0001" margin="0.001" 
+        material="geom" rgba="0.8 0.6 0.4 1"/&gt;
+&lt;/default&gt;</code></pre>
+
+<p>MuJoCo 的默认系统非常强大——你可以在一个地方设置所有同类元素的默认参数，避免到处重复。</p>
+
+<h4>关节默认 <code>&lt;joint&gt;</code></h4>
+
+<table>
+<tr><th>属性</th><th>值</th><th>说明</th></tr>
+<tr><td><code>armature</code></td><td><code>0.01</code></td><td>等效转动惯量。模拟电机转子的惯性，有助于数值稳定性。物理意义：反映在关节对角线上的质量矩阵附加项。</td></tr>
+<tr><td><code>damping</code></td><td><code>0.1</code></td><td>关节阻尼系数。产生与速度成正比的阻力 $\tau_d = -d \cdot \dot{q}$。防止关节无限加速。</td></tr>
+<tr><td><code>limited</code></td><td><code>"true"</code></td><td>启用关节限位。需要配合各关节的 <code>range</code> 属性使用。</td></tr>
+</table>
+
+<h4>几何体默认 <code>&lt;geom&gt;</code></h4>
+
+<table>
+<tr><th>属性</th><th>值</th><th>说明</th></tr>
+<tr><td><code>contype</code></td><td><code>1</code></td><td>碰撞类型掩码。两个 geom 只有在 <code>(geom1.contype &amp; geom2.conaffinity) || (geom2.contype &amp; geom1.conaffinity)</code> 时才会碰撞。</td></tr>
+<tr><td><code>conaffinity</code></td><td><code>1</code></td><td>碰撞亲和掩码。配合 contype 实现选择性碰撞。设置不同的位掩码可以让某些物体"穿过"彼此。</td></tr>
+<tr><td><code>condim</code></td><td><code>3</code></td><td>接触维度。<code>3</code> = 1 法向力 + 2 切向摩擦力（最常用）。<code>1</code> = 无摩擦。<code>4</code> = 加扭转摩擦。<code>6</code> = 完整接触（含滚动摩擦）。</td></tr>
+<tr><td><code>friction</code></td><td><code>"0.5 0.005 0.0001"</code></td><td>三个摩擦系数：<strong>滑动摩擦 0.5</strong>（切向力/法向力比值上限）、<strong>扭转摩擦 0.005</strong>、<strong>滚动摩擦 0.0001</strong></td></tr>
+<tr><td><code>margin</code></td><td><code>0.001</code></td><td>碰撞检测间距。当两个 geom 的距离小于 margin 时就认为"可能接触"。有助于提前检测碰撞，避免穿透。</td></tr>
+<tr><td><code>material</code></td><td><code>"geom"</code></td><td>默认材质。所有没有指定材质的 geom 都用这个。</td></tr>
+<tr><td><code>rgba</code></td><td><code>"0.8 0.6 0.4 1"</code></td><td>默认颜色（RGBA，棕色调）。如果 geom 指定了自己的 rgba，会覆盖此默认值。</td></tr>
+</table>
+
+<div class="box def">
+  <div class="box-title">📐 摩擦系数 friction 详解</div>
+  <p>MuJoCo 的摩擦模型比简单的库仑摩擦更丰富。三个系数分别控制：</p>
+  <ol>
+    <li><strong>滑动摩擦 (sliding)</strong> $\mu_s = 0.5$：最重要的参数。切向摩擦力 ≤ $\mu_s \times$ 法向力。0.5 是金属/塑料的典型值。</li>
+    <li><strong>扭转摩擦 (torsional)</strong> $\mu_t = 0.005$：阻止物体在接触面上旋转的力矩。通常很小。</li>
+    <li><strong>滚动摩擦 (rolling)</strong> $\mu_r = 0.0001$：阻止球体滚动的力矩。通常极小。</li>
+  </ol>
+  <p>两个接触 geom 的摩擦系数取<strong>较大值</strong>（而非平均值），这符合摩擦的物理直觉——粗糙表面决定摩擦力。</p>
+</div>
+
+
+<h3 id="ch3-worldbody">3.6 worldbody — 物体层次结构</h3>
+
+<p><code>&lt;worldbody&gt;</code> 是所有物体的根容器。MuJoCo 使用<strong>树形结构</strong>组织物体，这与机器人的运动链天然对应：</p>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;worldbody&gt;
+  &lt;!-- 光源 --&gt;
+  &lt;light directional="true" diffuse="0.8 0.8 0.8" pos="0 0 3" dir="0 0 -1"/&gt;
+  &lt;light directional="true" diffuse="0.4 0.4 0.4" pos="0 0 3" dir="1 1 -1"/&gt;
+  
+  &lt;!-- 地面 --&gt;
+  &lt;geom name="floor" type="plane" size="3 3 0.1" 
+        rgba="0.8 0.8 0.8 1" material="MatPlane"/&gt;
+  
+  &lt;!-- 机器人手臂 --&gt;
+  &lt;body name="arm_base" pos="0 0 0.02"&gt;
+    &lt;geom name="base_geom" type="cylinder" size="0.05 0.02" rgba="0.3 0.3 0.3 1"/&gt;
+    &lt;body name="upper_arm" pos="0 0 0.02"&gt;
+      &lt;joint name="shoulder" type="hinge" axis="0 0 1" 
+             range="-180 180" damping="0.5"/&gt;
+      &lt;geom name="upper_arm_geom" type="capsule" 
+            fromto="0 0 0 0.4 0 0" size="0.025" rgba="0.5 0.5 0.8 1"/&gt;
+      &lt;body name="forearm" pos="0.4 0 0"&gt;
+        &lt;joint name="elbow" type="hinge" axis="0 0 1" 
+               range="-180 180" damping="0.5"/&gt;
+        &lt;geom name="forearm_geom" type="capsule" 
+              fromto="0 0 0 0.3 0 0" size="0.025" rgba="0.5 0.5 0.8 1"/&gt;
+        &lt;site name="endeffector" pos="0.3 0 0" size="0.03" rgba="1 0.5 0 0.8"/&gt;
+      &lt;/body&gt;
+    &lt;/body&gt;
+  &lt;/body&gt;
+  
+  &lt;!-- 可推动的箱子 --&gt;
+  &lt;body name="box" pos="0.35 0 0.05"&gt;
+    &lt;freejoint name="box_freejoint"/&gt;
+    &lt;geom name="box_geom" type="box" size="0.05 0.05 0.05" 
+          mass="0.5" rgba="0.2 0.8 0.2 1" friction="0.5 0.005 0.0001"/&gt;
+    &lt;site name="box_center" pos="0 0 0" size="0.01" rgba="0 1 0 1"/&gt;
+  &lt;/body&gt;
+  
+  &lt;!-- 目标标记 --&gt;
+  &lt;site name="goal" pos="0.5 0.3 0.02" size="0.06" 
+        rgba="1 0 0 0.4" type="sphere"/&gt;
+&lt;/worldbody&gt;</code></pre>
+
+<p>让我们逐一解析关键元素：</p>
+
+<h4><code>&lt;light&gt;</code> — 光源</h4>
+<p>我们用了两个方向光：</p>
+<ul>
+  <li>第一个：从正上方向下照射 (<code>dir="0 0 -1"</code>)，亮度高 (<code>diffuse="0.8 0.8 0.8"</code>)，作为主光源</li>
+  <li>第二个：从侧上方照射 (<code>dir="1 1 -1"</code>)，亮度较低，填补阴影，增加立体感</li>
+</ul>
+
+<h4><code>&lt;geom&gt;</code> — 碰撞/可视几何体</h4>
+
+<p>Geom 是 MuJoCo 中最基本的"可见可碰"单元。常用类型：</p>
+
+<table>
+<tr><th>type</th><th>形状</th><th>size 含义</th><th>PushBox 中的使用</th></tr>
+<tr><td><code>plane</code></td><td>无限平面</td><td>半长、半宽、网格间距</td><td>地面 <code>floor</code></td></tr>
+<tr><td><code>box</code></td><td>长方体</td><td>半长 x、半长 y、半长 z</td><td>绿色箱子 <code>box_geom</code>（0.1m 立方体）</td></tr>
+<tr><td><code>sphere</code></td><td>球体</td><td>半径</td><td>目标标记 <code>goal</code></td></tr>
+<tr><td><code>capsule</code></td><td>胶囊体</td><td>半径；用 <code>fromto</code> 定义两端</td><td>手臂连杆</td></tr>
+<tr><td><code>cylinder</code></td><td>圆柱体</td><td>半径、半高</td><td>手臂基座 <code>base_geom</code></td></tr>
+<tr><td><code>ellipsoid</code></td><td>椭球体</td><td>三个半轴</td><td>（未使用）</td></tr>
+<tr><td><code>mesh</code></td><td>三角网格</td><td>引用 mesh 资产</td><td>（复杂模型使用）</td></tr>
+</table>
+
+<div class="box ex">
+  <div class="box-title">🔍 fromto vs pos+size</div>
+  <p>Capsule 和 cylinder 有两种定义方式：</p>
+  <pre><code class="language-xml">&lt;!-- 方式1: fromto —— 指定两端点坐标，size 只给半径 --&gt;
+&lt;geom type="capsule" fromto="0 0 0 0.4 0 0" size="0.025"/&gt;
+&lt;!-- 从 (0,0,0) 到 (0.4,0,0)，半径 0.025 → 长 0.4m 的胶囊 --&gt;
+
+&lt;!-- 方式2: pos + size —— 中心位置 + 半径和半长 --&gt;
+&lt;geom type="capsule" pos="0.2 0 0" size="0.025 0.2"/&gt;
+&lt;!-- 中心在 (0.2,0,0)，半径 0.025，半长 0.2 → 同一个胶囊 --&gt;</code></pre>
+  <p><code>fromto</code> 更直观，适合定义连杆（从一个关节到另一个关节）。</p>
+</div>
+
+<h4><code>&lt;body&gt;</code> — 刚体</h4>
+<p>Body 是刚体的容器，不直接参与碰撞（那是 geom 的工作）。Body 的作用是：</p>
+<ul>
+  <li>建立<strong>父子层级关系</strong>（树形运动链）</li>
+  <li>通过 <code>pos</code> 定义相对于父 body 的位置偏移</li>
+  <li>作为 joint、geom、site 的挂载点</li>
+</ul>
+
+<p>我们手臂的层级结构：</p>
+
+<div class="diagram">
+world (不可移动的全局参考系)
+├── floor (geom)
+├── arm_base (body, pos="0 0 0.02")          ← 基座，固定在地面上方 2cm
+│   ├── base_geom (cylinder)                  ← 基座外观
+│   └── upper_arm (body, pos="0 0 0.02")      ← 上臂，在基座上方 2cm
+│       ├── shoulder (hinge joint, z轴)       ← 肩关节，绕 z 轴旋转
+│       ├── upper_arm_geom (capsule, 0→0.4m)  ← 上臂连杆，长 0.4m
+│       └── forearm (body, pos="0.4 0 0")     ← 前臂，在上臂末端
+│           ├── elbow (hinge joint, z轴)      ← 肘关节，绕 z 轴旋转
+│           ├── forearm_geom (capsule, 0→0.3m) ← 前臂连杆，长 0.3m
+│           └── endeffector (site, 0.3 0 0)   ← 末端执行器标记点
+├── box (body, pos="0.35 0 0.05")             ← 箱子，初始位置
+│   ├── box_freejoint (freejoint)             ← 6-DOF 自由度
+│   ├── box_geom (box)                        ← 碰撞几何
+│   └── box_center (site)                     ← 中心标记
+└── goal (site, pos="0.5 0.3 0.02")           ← 目标标记（纯视觉）
+</div>
+
+<h4><code>&lt;joint&gt;</code> — 关节</h4>
+
+<p>关节定义了子 body 相对于父 body 可以如何运动：</p>
+
+<table>
+<tr><th>类型</th><th>自由度</th><th>qpos 维度</th><th>qvel 维度</th><th>说明</th></tr>
+<tr><td><code>hinge</code></td><td>1</td><td>1（角度）</td><td>1（角速度）</td><td>绕指定轴旋转。我们的 shoulder 和 elbow 都是 hinge。</td></tr>
+<tr><td><code>slide</code></td><td>1</td><td>1（位移）</td><td>1（速度）</td><td>沿指定轴平移。用于线性导轨。</td></tr>
+<tr><td><code>ball</code></td><td>3</td><td>4（四元数）</td><td>3（角速度）</td><td>球关节，3 轴旋转自由度。如肩球关节。</td></tr>
+<tr><td><code>free</code></td><td>6</td><td>7（3位置+4四元数）</td><td>6（3线速度+3角速度）</td><td>完全自由。用于不与其他物体固连的对象（如我们的箱子）。</td></tr>
+</table>
+
+<p>我们手臂的关节：</p>
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;!-- shoulder: 肩关节 --&gt;
+&lt;joint name="shoulder" 
+       type="hinge"           &lt;!-- 铰链关节 --&gt;
+       axis="0 0 1"           &lt;!-- 绕 z 轴旋转（俯视看是水平面上的旋转） --&gt;
+       range="-180 180"       &lt;!-- 旋转范围：±180° (因为 angle="degree") --&gt;
+       damping="0.5"/&gt;        &lt;!-- 覆盖默认的 0.1，用更大的阻尼 --&gt;
+
+&lt;!-- elbow: 肘关节 --&gt;
+&lt;joint name="elbow" 
+       type="hinge" 
+       axis="0 0 1" 
+       range="-180 180" 
+       damping="0.5"/&gt;</code></pre>
+
+<p>注意 <code>damping="0.5"</code> <strong>覆盖了</strong> default 中的 <code>damping="0.1"</code>。子元素的显式属性始终优先于默认值。</p>
+
+<h4><code>&lt;site&gt;</code> — 虚拟标记点</h4>
+
+<p>Site 是"虚拟的"——它没有质量，不参与碰撞，只是一个<strong>位置标记</strong>：</p>
+<ul>
+  <li><code>endeffector</code>：标记手臂末端的位置，用于计算距离（通过 <code>data.site_xpos</code>）</li>
+  <li><code>box_center</code>：标记箱子中心（也可以直接用 qpos）</li>
+  <li><code>goal</code>：目标位置标记（可视化用的半透明红色球，也用于距离计算）</li>
+</ul>
+
+<p>Site 的典型用途：</p>
+<ul>
+  <li><strong>传感器挂载点</strong>：力传感器、触觉传感器放在 site 上</li>
+  <li><strong>观测计算</strong>：通过 <code>data.site_xpos</code> 获取特定位置</li>
+  <li><strong>可视化</strong>：标记关键位置（如目标、末端执行器）</li>
+  <li><strong>等式约束</strong>：weld 约束可以用 site 定义</li>
+</ul>
+
+<h4><code>&lt;freejoint&gt;</code> — 自由关节</h4>
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;body name="box" pos="0.35 0 0.05"&gt;
+  &lt;freejoint name="box_freejoint"/&gt;  &lt;!-- 6 自由度 --&gt;
+  &lt;geom name="box_geom" type="box" size="0.05 0.05 0.05" mass="0.5" .../&gt;
+&lt;/body&gt;</code></pre>
+
+<p><code>freejoint</code> 是 <code>type="free"</code> 关节的简写。它赋予物体<strong>完全的 6 个自由度</strong>：3 个平移 + 3 个旋转。没有 freejoint 的物体会被"焊接"在父 body 上。</p>
+
+<div class="box warn">
+  <div class="box-title">⚠️ freejoint 的 qpos 布局</div>
+  <p>freejoint 在 qpos 中占 <strong>7 个位置</strong>：</p>
+  <pre><code>[x, y, z, qw, qx, qy, qz]
+ ^位置^    ^---四元数---^</code></pre>
+  <p>四元数使用 <strong>(w, x, y, z)</strong> 顺序（w 在前！），其中：</p>
+  <ul>
+    <li>$qw = \cos(\theta/2)$，$(qx, qy, qz) = \sin(\theta/2) \cdot \hat{\mathbf{n}}$</li>
+    <li>单位四元数 (1, 0, 0, 0) 表示"无旋转"</li>
+    <li>MuJoCo 自动归一化四元数（保证 $\|\mathbf{q}\| = 1$）</li>
+  </ul>
+  <p>而 qvel 中只占 <strong>6 个位置</strong>：<code>[vx, vy, vz, wx, wy, wz]</code>（线速度 + 角速度）。</p>
+</div>
+
+
+<h3 id="ch3-actuator">3.7 actuator — 执行器</h3>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;actuator&gt;
+  &lt;motor name="shoulder_motor" joint="shoulder" 
+         gear="1.0" ctrllimited="true" ctrlrange="-10 10"/&gt;
+  &lt;motor name="elbow_motor" joint="elbow" 
+         gear="1.0" ctrllimited="true" ctrlrange="-10 10"/&gt;
+&lt;/actuator&gt;</code></pre>
+
+<p>执行器将<strong>控制信号</strong>（<code>data.ctrl</code>）转化为<strong>关节力矩</strong>。MuJoCo 提供多种执行器类型：</p>
+
+<table>
+<tr><th>类型</th><th>控制输入含义</th><th>内部机制</th><th>适用场景</th></tr>
+<tr><td><code>motor</code></td><td>力矩 (Nm)</td><td>$\tau = \text{gear} \times \text{ctrl}$</td><td><strong>力矩控制（我们使用的）</strong></td></tr>
+<tr><td><code>position</code></td><td>目标角度 (rad)</td><td>$\tau = k_p \times (q_{\text{target}} - q) - k_d \times \dot{q}$</td><td>位置伺服</td></tr>
+<tr><td><code>velocity</code></td><td>目标角速度 (rad/s)</td><td>$\tau = k_v \times (\dot{q}_{\text{target}} - \dot{q})$</td><td>速度控制</td></tr>
+<tr><td><code>general</code></td><td>自定义</td><td>可配置各种增益和偏置</td><td>复杂执行器模型</td></tr>
+</table>
+
+<p>我们的关键参数解释：</p>
+<ul>
+  <li><code>gear="1.0"</code>：传动比。ctrl × gear = 实际力矩。<code>1.0</code> 表示直驱，ctrl 就是力矩。</li>
+  <li><code>ctrllimited="true"</code>：启用控制输入限幅。超出 ctrlrange 的值会被裁剪。</li>
+  <li><code>ctrlrange="-10 10"</code>：控制输入范围。对应 ±10 Nm 的力矩。</li>
+</ul>
+
+<div class="box ex">
+  <div class="box-title">🔍 力矩控制 vs 位置控制</div>
+  <p><strong>力矩控制</strong>（我们的选择）：</p>
+  <ul>
+    <li>RL 智能体直接控制力矩，有最大的灵活性</li>
+    <li>可以做精确的力控制（如推箱子时需要精确力量）</li>
+    <li>但学习难度更大——智能体需要自己实现"稳定性"</li>
+  </ul>
+  <p><strong>位置控制</strong>（如果用 <code>&lt;position&gt;</code>）：</p>
+  <ul>
+    <li>RL 智能体输出目标角度，PD 控制器负责跟踪</li>
+    <li>更稳定，更容易学习</li>
+    <li>但牺牲了力控精度——不适合需要精确接触力的任务</li>
+  </ul>
+</div>
+
+
+<h3 id="ch3-sensor">3.8 sensor — 传感器</h3>
+
+<p>我们当前的 PushBox 模型没有定义传感器（直接从 qpos/site_xpos 获取信息），但 MuJoCo 提供了丰富的传感器系统。以下是常用传感器及其用法：</p>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;!-- 如果我们要给 PushBox 添加传感器 --&gt;
+&lt;sensor&gt;
+  &lt;!-- 关节位置传感器 --&gt;
+  &lt;jointpos name="shoulder_pos" joint="shoulder"/&gt;
+  &lt;jointpos name="elbow_pos" joint="elbow"/&gt;
+  
+  &lt;!-- 关节速度传感器 --&gt;
+  &lt;jointvel name="shoulder_vel" joint="shoulder"/&gt;
+  &lt;jointvel name="elbow_vel" joint="elbow"/&gt;
+  
+  &lt;!-- 关节力矩传感器（测量实际施加的力矩） --&gt;
+  &lt;actuatorfrc name="shoulder_force" actuator="shoulder_motor"/&gt;
+  
+  &lt;!-- 加速度计（挂载在 site 上） --&gt;
+  &lt;accelerometer name="ee_accel" site="endeffector"/&gt;
+  
+  &lt;!-- 触觉传感器（检测接触力） --&gt;
+  &lt;touch name="box_touch" site="box_center"/&gt;
+  
+  &lt;!-- 位置传感器（获取 site 的世界坐标） --&gt;
+  &lt;framepos name="ee_pos" objtype="site" objname="endeffector"/&gt;
+&lt;/sensor&gt;</code></pre>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span># 读取传感器数据
+# 所有传感器数据存储在连续数组中
+sensor_data = data.sensordata
+
+# 通过 ID 获取特定传感器
+sid = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SENSOR, "shoulder_pos")
+adr = model.sensor_adr[sid]  # 在 sensordata 中的起始地址
+dim = model.sensor_dim[sid]  # 数据维度
+value = data.sensordata[adr:adr+dim]</code></pre>
+
+<div class="box thm">
+  <div class="box-title">✅ 何时用传感器 vs 直接访问 data</div>
+  <p><strong>直接访问</strong>（如 <code>data.qpos</code>, <code>data.site_xpos</code>）：简单直接，适合仿真内使用。</p>
+  <p><strong>传感器</strong>：</p>
+  <ul>
+    <li>当你想模拟<strong>现实中传感器的特性</strong>（有限精度、噪声、延迟）</li>
+    <li>当你需要<strong>力/力矩测量</strong>（这些没有对应的"直接访问"方式）</li>
+    <li>为 <strong>sim-to-real</strong> 做准备——真实机器人只能通过传感器获取信息</li>
+  </ul>
+</div>
+
+
+<h3 id="ch3-full">3.9 完整 XML 逐行注释</h3>
+
+<p>以下是我们 <code>push_box.xml</code> 的完整注释版本。建议对照着看：</p>
+
+<pre><code class="language-xml"><span class="code-label">push_box.xml — 完整注释</span>&lt;mujoco model="push_box"&gt;
+  &lt;!-- ==================== 编译器配置 ==================== --&gt;
+  &lt;!-- angle="degree": XML中角度用度表示（内部仍用弧度） --&gt;
+  &lt;!-- coordinate="local": body的pos是相对父body的偏移 --&gt;
+  &lt;!-- inertiafromgeom="true": 自动从geom计算惯性 --&gt;
+  &lt;compiler angle="degree" coordinate="local" inertiafromgeom="true"/&gt;
+  
+  &lt;!-- ==================== 仿真选项 ==================== --&gt;
+  &lt;!-- timestep=0.002: 每步2ms，500Hz仿真频率 --&gt;
+  &lt;!-- Euler积分: 最快的积分器，RL训练首选 --&gt;
+  &lt;!-- gravity: z轴向上，重力加速度9.81 m/s² --&gt;
+  &lt;option timestep="0.002" integrator="Euler" gravity="0 0 -9.81"&gt;
+    &lt;flag warmstart="enable"/&gt;  &lt;!-- 用上一步的接触力初始化本步求解 --&gt;
+  &lt;/option&gt;
+  
+  &lt;!-- ==================== 渲染设置（不影响物理） ==================== --&gt;
+  &lt;visual&gt;
+    &lt;global offwidth="1280" offheight="720"/&gt;  &lt;!-- 离屏渲染分辨率 --&gt;
+    &lt;quality shadowsize="4096"/&gt;               &lt;!-- 高质量阴影 --&gt;
+    &lt;map force="0.1" zfar="30"/&gt;               &lt;!-- 力可视化缩放 + 远裁面 --&gt;
+  &lt;/visual&gt;
+  
+  &lt;!-- ==================== 纹理和材质 ==================== --&gt;
+  &lt;asset&gt;
+    &lt;texture builtin="gradient" height="100" 
+             rgb1="0.3 0.5 0.7" rgb2="0.1 0.2 0.3" type="skybox" width="100"/&gt;
+    &lt;texture builtin="flat" height="1278" mark="cross" markrgb="1 1 1" 
+             name="texgeom" random="0.01" rgb1="0.8 0.6 0.4" rgb2="0.8 0.6 0.4" 
+             type="cube" width="127"/&gt;
+    &lt;texture builtin="checker" height="100" name="texplane" 
+             rgb1="0.2 0.2 0.2" rgb2="0.3 0.3 0.3" type="2d" width="100"/&gt;
+    &lt;material name="MatPlane" reflectance="0.3" shininess="0.5" 
+              specular="0.5" texrepeat="3 3" texture="texplane"/&gt;
+    &lt;material name="geom" texture="texgeom" texuniform="true"/&gt;
+  &lt;/asset&gt;
+  
+  &lt;!-- ==================== 默认参数 ==================== --&gt;
+  &lt;!-- 所有 joint 默认: 有小惯量(armature)、小阻尼、有限位 --&gt;
+  &lt;!-- 所有 geom 默认: 参与碰撞、3维接触、摩擦系数0.5 --&gt;
+  &lt;default&gt;
+    &lt;joint armature="0.01" damping="0.1" limited="true"/&gt;
+    &lt;geom conaffinity="1" condim="3" contype="1" 
+          friction="0.5 0.005 0.0001" margin="0.001" 
+          material="geom" rgba="0.8 0.6 0.4 1"/&gt;
+  &lt;/default&gt;
+  
+  &lt;!-- ==================== 世界物体 ==================== --&gt;
+  &lt;worldbody&gt;
+    &lt;!-- 两个方向光：主光(上方) + 补光(侧方) --&gt;
+    &lt;light directional="true" diffuse="0.8 0.8 0.8" pos="0 0 3" dir="0 0 -1"/&gt;
+    &lt;light directional="true" diffuse="0.4 0.4 0.4" pos="0 0 3" dir="1 1 -1"/&gt;
+    
+    &lt;!-- 地面（无限平面，z=0） --&gt;
+    &lt;geom name="floor" type="plane" size="3 3 0.1" 
+          rgba="0.8 0.8 0.8 1" material="MatPlane"/&gt;
+    
+    &lt;!-- ===== 机器人手臂 ===== --&gt;
+    &lt;!-- 基座: z=0.02 使手臂与箱子同一高度 --&gt;
+    &lt;body name="arm_base" pos="0 0 0.02"&gt;
+      &lt;!-- 基座外观: 圆柱体 r=0.05, h=0.04 --&gt;
+      &lt;geom name="base_geom" type="cylinder" size="0.05 0.02" 
+            rgba="0.3 0.3 0.3 1"/&gt;
+      
+      &lt;!-- 上臂: 再上移0.02(在基座顶部) --&gt;
+      &lt;body name="upper_arm" pos="0 0 0.02"&gt;
+        &lt;!-- 肩关节: hinge绕z轴, 范围±180°, 阻尼0.5 --&gt;
+        &lt;joint name="shoulder" type="hinge" axis="0 0 1" 
+               range="-180 180" damping="0.5"/&gt;
+        &lt;!-- 上臂连杆: 从原点到(0.4,0,0), 半径0.025 --&gt;
+        &lt;geom name="upper_arm_geom" type="capsule" 
+              fromto="0 0 0 0.4 0 0" size="0.025" rgba="0.5 0.5 0.8 1"/&gt;
+        
+        &lt;!-- 前臂: 在上臂末端(0.4,0,0) --&gt;
+        &lt;body name="forearm" pos="0.4 0 0"&gt;
+          &lt;!-- 肘关节: 同样绕z轴 --&gt;
+          &lt;joint name="elbow" type="hinge" axis="0 0 1" 
+                 range="-180 180" damping="0.5"/&gt;
+          &lt;!-- 前臂连杆: 长0.3m --&gt;
+          &lt;geom name="forearm_geom" type="capsule" 
+                fromto="0 0 0 0.3 0 0" size="0.025" rgba="0.5 0.5 0.8 1"/&gt;
+          &lt;!-- 末端执行器标记(橙色, 半径0.03) --&gt;
+          &lt;site name="endeffector" pos="0.3 0 0" size="0.03" 
+                rgba="1 0.5 0 0.8"/&gt;
+        &lt;/body&gt;
+      &lt;/body&gt;
+    &lt;/body&gt;
+    
+    &lt;!-- ===== 可推动的箱子 ===== --&gt;
+    &lt;!-- 初始位置: x=0.35(在手臂够得到的范围), z=0.05(半高) --&gt;
+    &lt;body name="box" pos="0.35 0 0.05"&gt;
+      &lt;!-- freejoint: 6-DOF自由度, 箱子可以自由移动和旋转 --&gt;
+      &lt;freejoint name="box_freejoint"/&gt;
+      &lt;!-- 箱子: 0.1×0.1×0.1m, 质量0.5kg, 绿色 --&gt;
+      &lt;geom name="box_geom" type="box" size="0.05 0.05 0.05" 
+            mass="0.5" rgba="0.2 0.8 0.2 1" 
+            friction="0.5 0.005 0.0001"/&gt;
+      &lt;site name="box_center" pos="0 0 0" size="0.01" rgba="0 1 0 1"/&gt;
+    &lt;/body&gt;
+    
+    &lt;!-- ===== 目标标记（纯视觉） ===== --&gt;
+    &lt;!-- 红色半透明球, 在手臂+推动范围内 --&gt;
+    &lt;site name="goal" pos="0.5 0.3 0.02" size="0.06" 
+          rgba="1 0 0 0.4" type="sphere"/&gt;
+  &lt;/worldbody&gt;
+  
+  &lt;!-- ==================== 执行器 ==================== --&gt;
+  &lt;!-- 两个力矩电机, 直驱(gear=1), 范围±10 Nm --&gt;
+  &lt;actuator&gt;
+    &lt;motor name="shoulder_motor" joint="shoulder" 
+           gear="1.0" ctrllimited="true" ctrlrange="-10 10"/&gt;
+    &lt;motor name="elbow_motor" joint="elbow" 
+           gear="1.0" ctrllimited="true" ctrlrange="-10 10"/&gt;
+  &lt;/actuator&gt;
+&lt;/mujoco&gt;</code></pre>
+
+
+<!-- ================================================================== -->
+<!-- 第四章：Python API                                                   -->
+<!-- ================================================================== -->
+<h2 id="ch4">第四章：MuJoCo Python API</h2>
+
+<h3 id="ch4-load">4.1 模型加载</h3>
+
+<p>MuJoCo 3.x 提供了几种加载模型的方式：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>import mujoco
+
+# === 方式1: 从文件加载 MJCF XML ===
+model = mujoco.MjModel.from_xml_path("push_box.xml")
+
+# === 方式2: 从字符串加载 ===
+xml_string = """
+&lt;mujoco&gt;
+  &lt;worldbody&gt;
+    &lt;geom type="plane" size="5 5 0.1"/&gt;
+  &lt;/worldbody&gt;
+&lt;/mujoco&gt;
+"""
+model = mujoco.MjModel.from_xml_string(xml_string)
+
+# === 方式3: 从 URDF 加载（会自动转换） ===
+model = mujoco.MjModel.from_xml_path("robot.urdf")
+
+# === 方式4: 从已编译的二进制文件加载（更快） ===
+# 先保存
+mujoco.mj_saveModel(model, "push_box.mjb", None)
+# 再加载
+model = mujoco.MjModel.from_binary_path("push_box.mjb")
+
+# === 创建 MjData（必须！每个 model 至少需要一个 data） ===
+data = mujoco.MjData(model)</code></pre>
+
+<div class="box warn">
+  <div class="box-title">⚠️ 常见加载错误</div>
+  <ul>
+    <li><strong>文件路径错误</strong>：用 <code>os.path.join()</code> 构建路径，而非字符串拼接</li>
+    <li><strong>XML 语法错误</strong>：MuJoCo 报错信息通常很详细，看报错的行号和属性名</li>
+    <li><strong>引用缺失</strong>：材质/纹理/mesh 引用了不存在的名称</li>
+    <li><strong>meshdir 错误</strong>：如果用了外部 mesh 文件，检查 <code>compiler meshdir</code> 设置</li>
+  </ul>
+</div>
+
+
+<h3 id="ch4-data">4.2 数据访问详解</h3>
+
+<p>理解如何读写 <code>MjData</code> 中的数据是使用 MuJoCo 的核心技能。以下是 PushBox 中所有重要数据的完整说明：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>import mujoco
+import numpy as np
+
+model = mujoco.MjModel.from_xml_path("push_box.xml")
+data = mujoco.MjData(model)
+
+# ====================================================================
+# qpos — 广义坐标（Generalized Coordinates）
+# ====================================================================
+# PushBox 的 qpos 布局 (nq=9):
+# 索引:  [0]         [1]       [2]  [3]  [4]   [5]   [6]   [7]   [8]
+# 含义:  shoulder    elbow     box_x box_y box_z box_qw box_qx box_qy box_qz
+# 单位:  弧度        弧度      米    米    米    无量纲  无量纲  无量纲  无量纲
+
+print(f"qpos = {data.qpos}")
+# 初始值大概是: [0, 0, 0.35, 0, 0.05, 1, 0, 0, 0]
+
+# 设置关节角度
+data.qpos[0] = np.radians(45)   # shoulder 转 45°
+data.qpos[1] = np.radians(-30)  # elbow 转 -30°
+
+# 设置箱子位置
+data.qpos[2:5] = [0.4, 0.1, 0.05]  # x, y, z
+data.qpos[5:9] = [1, 0, 0, 0]       # 四元数（无旋转）
+
+# ====================================================================
+# qvel — 广义速度（Generalized Velocities）
+# ====================================================================
+# PushBox 的 qvel 布局 (nv=8):
+# 索引:  [0]           [1]         [2]    [3]    [4]    [5]    [6]    [7]
+# 含义:  shoulder_vel  elbow_vel   box_vx box_vy box_vz box_wx box_wy box_wz
+# 单位:  rad/s         rad/s       m/s    m/s    m/s    rad/s  rad/s  rad/s
+
+# 注意 nv=8 < nq=9，因为四元数 4 维 → 角速度 3 维
+
+# ====================================================================
+# ctrl — 控制输入
+# ====================================================================
+# 直接对应 actuator 的顺序
+data.ctrl[0] = 5.0   # shoulder_motor 力矩 = 5 Nm
+data.ctrl[1] = -2.0  # elbow_motor 力矩 = -2 Nm
+
+# ctrl 会被 ctrlrange 裁剪: [-10, 10]
+data.ctrl[0] = 999   # 实际只施加 10 Nm
+
+# ====================================================================
+# 计算后的位置信息（需要先 mj_forward 或 mj_step）
+# ====================================================================
+mujoco.mj_forward(model, data)  # 更新所有计算量
+
+# xpos — 每个 body 的世界坐标位置 (shape: nbody × 3)
+for i in range(model.nbody):
+    name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, i) or "world"
+    print(f"  body '{name}': pos = {data.xpos[i]}")
+
+# xquat — 每个 body 的世界坐标姿态（四元数）
+print(f"box 姿态: {data.xquat[4]}")  # box 是第 5 个 body (0-indexed)
+
+# site_xpos — 每个 site 的世界坐标位置
+ee_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, "endeffector")
+goal_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, "goal")
+print(f"末端执行器: {data.site_xpos[ee_id]}")
+print(f"目标位置: {data.site_xpos[goal_id]}")
+
+# ====================================================================
+# 其他有用的数据
+# ====================================================================
+print(f"仿真时间: {data.time:.4f}s")
+print(f"接触数量: {data.ncon}")           # 当前接触点数
+print(f"质量矩阵大小: {model.nv}×{model.nv}")  # 8×8</code></pre>
+
+
+<h3 id="ch4-name2id">4.3 名称到 ID 映射</h3>
+
+<p>MuJoCo 内部使用整数 ID 来标识所有元素。<code>mj_name2id()</code> 是在名称和 ID 之间转换的桥梁：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>import mujoco
+
+model = mujoco.MjModel.from_xml_path("push_box.xml")
+
+# ========== name → id ==========
+# 需要指定元素类型（body, joint, geom, site, actuator...）
+
+# Body ID
+box_body_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "box")
+print(f"box body ID: {box_body_id}")  # → 4
+
+# Joint ID
+shoulder_jnt_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, "shoulder")
+elbow_jnt_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, "elbow")
+
+# Geom ID
+box_geom_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, "box_geom")
+
+# Site ID
+ee_site_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, "endeffector")
+
+# Actuator ID
+motor_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_ACTUATOR, "shoulder_motor")
+
+# ========== id → name ==========
+name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, 4)
+print(f"Body 4 is: {name}")  # → "box"
+
+# ========== 名称不存在时返回 -1 ==========
+bad_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "nonexistent")
+print(f"Not found: {bad_id}")  # → -1
+
+# ========== 通过 model 的命名字段快速查找 ==========
+# MuJoCo 3.x 支持更 Pythonic 的方式：
+print(f"关节 qpos 地址: {model.jnt_qposadr}")  # 每个关节在 qpos 中的起始位置
+print(f"关节 qvel 地址: {model.jnt_dofadr}")    # 每个关节在 qvel 中的起始位置</code></pre>
+
+<div class="box thm">
+  <div class="box-title">✅ 缓存 ID 以提升性能</div>
+  <p>在 RL 训练中，<code>mj_name2id()</code> 每次调用都会做字符串查找。最佳实践是在 <code>__init__</code> 中缓存所有需要的 ID：</p>
+  <pre><code class="language-python">class PushBoxEnv(gym.Env):
+    def __init__(self):
+        # ...
+        # 缓存 ID（只查找一次）
+        self._ee_site_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_SITE, "endeffector"
+        )
+        self._box_body_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_BODY, "box"
+        )
+    
+    def _get_obs(self):
+        # 直接用缓存的 ID，避免重复查找
+        ee_pos = self.data.site_xpos[self._ee_site_id]
+        # ...</code></pre>
+</div>
+
+
+<h3 id="ch4-sim">4.4 仿真步进 — mj_step vs mj_forward</h3>
+
+<p>这两个函数是 MuJoCo 最核心的 API，但它们的作用完全不同：</p>
+
+<div class="box def">
+  <div class="box-title">📐 mj_step vs mj_forward</div>
+  <table>
+    <tr><th>函数</th><th>作用</th><th>改变 qpos/qvel？</th><th>改变 time？</th></tr>
+    <tr><td><code>mj_step(model, data)</code></td><td>完整的仿真步进：计算力 → 积分 → 更新状态</td><td>✅ 是</td><td>✅ 是</td></tr>
+    <tr><td><code>mj_forward(model, data)</code></td><td>仅正向计算：从 qpos/qvel 计算 xpos、接触等</td><td>❌ 否</td><td>❌ 否</td></tr>
+  </table>
+</div>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span># mj_step: 仿真前进一步
+# 等价于 mj_step1(model, data) + mj_step2(model, data)
+mujoco.mj_step(model, data)
+# data.time 增加了 model.opt.timestep
+# data.qpos, data.qvel 被更新
+
+# mj_forward: 仅计算（不积分）
+# 常用于：
+# 1. 设置初始状态后，需要计算 xpos 等
+data.qpos[0] = np.radians(45)
+mujoco.mj_forward(model, data)  # 更新 xpos, site_xpos 等
+# data.time 不变，qpos/qvel 不变
+
+# 2. reset 后需要更新计算量
+mujoco.mj_resetData(model, data)
+data.qpos[:] = initial_state
+mujoco.mj_forward(model, data)  # 确保 xpos 等是最新的
+
+# ===== 多次 step 的常见模式 =====
+# RL 环境中，每个 env.step() 通常执行多次 mj_step()
+n_substeps = 5  # 5 × 0.002s = 0.01s 的仿真时间
+for _ in range(n_substeps):
+    mujoco.mj_step(model, data)
+# 这样 RL 的决策频率 = 100Hz，物理仿真频率 = 500Hz</code></pre>
+
+<div class="box warn">
+  <div class="box-title">⚠️ 忘记调用 mj_forward 的后果</div>
+  <p>如果你修改了 <code>qpos</code> 但没有调用 <code>mj_forward()</code>，那么 <code>data.xpos</code>、<code>data.site_xpos</code> 等计算量<strong>仍然是旧值</strong>！这是一个常见的 bug 来源：</p>
+  <pre><code class="language-python"># ❌ 错误：读到的是旧的 xpos
+data.qpos[0] = np.radians(90)
+print(data.site_xpos[0])  # 还是旧值！
+
+# ✅ 正确：先 forward 再读
+data.qpos[0] = np.radians(90)
+mujoco.mj_forward(model, data)
+print(data.site_xpos[0])  # 正确的新值</code></pre>
+</div>
+
+
+<h3 id="ch4-collision">4.5 碰撞检测</h3>
+
+<p>碰撞检测是 MuJoCo 最强大的功能之一。你可以查询当前时刻所有的接触信息：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>import mujoco
+import numpy as np
+
+model = mujoco.MjModel.from_xml_path("push_box.xml")
+data = mujoco.MjData(model)
+
+# 仿真几步，让物体接触
+for _ in range(100):
+    mujoco.mj_step(model, data)
+
+# ===== 接触信息 =====
+print(f"当前接触点数: {data.ncon}")
+
+# 遍历所有接触
+for i in range(data.ncon):
+    contact = data.contact[i]
+    
+    # 接触的两个 geom
+    geom1_name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, contact.geom1)
+    geom2_name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, contact.geom2)
+    
+    # 接触位置（世界坐标）
+    pos = contact.pos
+    
+    # 穿透深度（负 = 分离，0 = 刚好接触，正 = 穿透）
+    dist = contact.dist
+    
+    # 接触法向量
+    frame = contact.frame.reshape(3, 3)  # 3×3 旋转矩阵
+    normal = frame[0]  # 第一行是法向量
+    
+    print(f"  接触 {i}: {geom1_name} ↔ {geom2_name}")
+    print(f"    位置: {pos}, 距离: {dist:.6f}")
+    print(f"    法向量: {normal}")
+
+# ===== 检查特定物体对是否接触 =====
+def is_contacting(data, model, geom_name1, geom_name2):
+    """检查两个 geom 是否在接触"""
+    id1 = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, geom_name1)
+    id2 = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_GEOM, geom_name2)
+    for i in range(data.ncon):
+        c = data.contact[i]
+        if (c.geom1 == id1 and c.geom2 == id2) or \
+           (c.geom1 == id2 and c.geom2 == id1):
+            return True
+    return False
+
+arm_touching_box = is_contacting(data, model, "forearm_geom", "box_geom")
+print(f"手臂正在接触箱子: {arm_touching_box}")</code></pre>
+
+
+<h3 id="ch4-render">4.6 渲染</h3>
+
+<p>MuJoCo 3.x 提供了多种渲染方式：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>import mujoco
+import numpy as np
+
+model = mujoco.MjModel.from_xml_path("push_box.xml")
+data = mujoco.MjData(model)
+
+# ===== 方式1: 交互式 Viewer =====
+# 弹出窗口，可以旋转、缩放、暂停
+import mujoco.viewer
+viewer = mujoco.viewer.launch_passive(model, data)
+
+while viewer.is_running():
+    mujoco.mj_step(model, data)
+    viewer.sync()
+
+# ===== 方式2: 离屏渲染（获取图像数组） =====
+# 适合 RL 训练中的视觉观察，或录制视频
+renderer = mujoco.Renderer(model, height=480, width=640)
+
+mujoco.mj_forward(model, data)
+renderer.update_scene(data)
+image = renderer.render()  # numpy array (480, 640, 3), uint8
+
+# 保存图像
+from PIL import Image
+Image.fromarray(image).save("frame.png")
+
+# ===== 方式3: 录制视频 =====
+frames = []
+for _ in range(500):
+    mujoco.mj_step(model, data)
+    if len(frames) % 10 == 0:  # 每 10 步录一帧
+        renderer.update_scene(data)
+        frames.append(renderer.render().copy())
+
+# 用 imageio 保存视频
+import imageio
+imageio.mimsave("simulation.mp4", frames, fps=30)</code></pre>
+
+<div class="box ex">
+  <div class="box-title">🔍 Viewer 快捷键</div>
+  <table>
+    <tr><th>快捷键</th><th>功能</th></tr>
+    <tr><td>Space</td><td>暂停/继续</td></tr>
+    <tr><td>Backspace</td><td>重置</td></tr>
+    <tr><td>Tab</td><td>显示/隐藏 UI 面板</td></tr>
+    <tr><td>鼠标左键拖动</td><td>旋转视角</td></tr>
+    <tr><td>鼠标右键拖动</td><td>平移视角</td></tr>
+    <tr><td>滚轮</td><td>缩放</td></tr>
+    <tr><td>C</td><td>显示接触力</td></tr>
+    <tr><td>J</td><td>显示关节轴</td></tr>
+    <tr><td>U</td><td>显示质心</td></tr>
+    <tr><td>F</td><td>显示帧</td></tr>
+    <tr><td>T</td><td>透明/不透明</td></tr>
+    <tr><td>W</td><td>线框模式</td></tr>
+    <tr><td>双击物体</td><td>选中物体，显示其属性</td></tr>
+    <tr><td>Ctrl + 右键拖动</td><td>对选中物体施力（交互式测试）</td></tr>
+  </table>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- 第五章：机器人建模                                                    -->
+<!-- ================================================================== -->
+<h2 id="ch5">第五章：机器人建模</h2>
+
+<h3 id="ch5-chain">5.1 关节链 — 串联机构的建模方法</h3>
+
+<p>大多数机器人手臂是<strong>串联机构（Serial Manipulator）</strong>——一系列连杆通过关节首尾相连。在 MuJoCo 中，这天然对应 body 的嵌套层级：</p>
+
+<div class="box def">
+  <div class="box-title">📐 串联机构的数学描述</div>
+  <p>一个 $n$ 自由度的串联机构有 $n$ 个关节和 $n+1$ 个连杆（包括基座）。每个关节 $i$ 有一个广义坐标 $q_i$，描述子连杆相对于父连杆的运动。</p>
+  <p>整个系统的<strong>构型空间（Configuration Space, C-space）</strong>是所有关节角度的组合：</p>
+  <p>$$\mathbf{q} = (q_1, q_2, \ldots, q_n) \in \mathbb{R}^n$$</p>
+  <p>对我们的 2-DOF 手臂：$\mathbf{q} = (q_{\text{shoulder}}, q_{\text{elbow}}) \in [-\pi, \pi]^2$</p>
+</div>
+
+<p>建模原则：</p>
+<ol>
+  <li><strong>从基座开始</strong>：基座固定在 worldbody 上（没有 freejoint = 固定）</li>
+  <li><strong>逐级嵌套</strong>：每个连杆是一个 body，关节定义在子 body 内</li>
+  <li><strong>joint 定义的是运动</strong>：关节不是一个物理实体，而是描述子 body 相对于父 body 的运动自由度</li>
+  <li><strong>pos 是偏移</strong>：子 body 的 <code>pos</code> 是当所有关节角为 0 时，子体原点相对于父体原点的偏移</li>
+</ol>
+
+
+<h3 id="ch5-2dof">5.2 我们的 2-DOF 机械臂</h3>
+
+<p>PushBox 的手臂是一个经典的 <strong>2-DOF 平面旋转机械臂</strong>（SCARA-like），两个关节都绕 z 轴旋转，手臂在 xy 平面运动。</p>
+
+<h4>正运动学（Forward Kinematics）</h4>
+
+<p>给定关节角度 $q_1$（shoulder）和 $q_2$（elbow），末端执行器的位置为：</p>
+
+<p>$$x = L_1 \cos(q_1) + L_2 \cos(q_1 + q_2)$$</p>
+<p>$$y = L_1 \sin(q_1) + L_2 \sin(q_1 + q_2)$$</p>
+
+<p>其中 $L_1 = 0.4\text{m}$（上臂长），$L_2 = 0.3\text{m}$（前臂长）。</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>import numpy as np
+import mujoco
+
+def forward_kinematics(q1, q2, L1=0.4, L2=0.3):
+    """手动计算 2-DOF 正运动学"""
+    x = L1 * np.cos(q1) + L2 * np.cos(q1 + q2)
+    y = L1 * np.sin(q1) + L2 * np.sin(q1 + q2)
+    return x, y
+
+# 验证：与 MuJoCo 的计算一致
+model = mujoco.MjModel.from_xml_path("push_box.xml")
+data = mujoco.MjData(model)
+
+q1 = np.radians(30)   # shoulder 30°
+q2 = np.radians(-45)  # elbow -45°
+
+data.qpos[0] = q1
+data.qpos[1] = q2
+mujoco.mj_forward(model, data)
+
+# 手动计算
+x_manual, y_manual = forward_kinematics(q1, q2)
+
+# MuJoCo 计算（考虑基座偏移）
+ee_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_SITE, "endeffector")
+x_mujoco = data.site_xpos[ee_id][0]
+y_mujoco = data.site_xpos[ee_id][1]
+
+print(f"手动: ({x_manual:.4f}, {y_manual:.4f})")
+print(f"MuJoCo: ({x_mujoco:.4f}, {y_mujoco:.4f})")
+# 应该非常接近（差异来自基座偏移）</code></pre>
+
+<h4>工作空间（Workspace）</h4>
+
+<p>工作空间是末端执行器能到达的所有点的集合：</p>
+
+<ul>
+  <li><strong>最大臂展</strong>：$L_1 + L_2 = 0.7\text{m}$（手臂完全伸直）</li>
+  <li><strong>最小臂展</strong>：$|L_1 - L_2| = 0.1\text{m}$（手臂完全折叠）</li>
+  <li><strong>工作空间形状</strong>：以原点为圆心，半径 0.1m 到 0.7m 的环形区域</li>
+</ul>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span># 绘制工作空间
+import matplotlib.pyplot as plt
+
+L1, L2 = 0.4, 0.3
+theta1 = np.linspace(-np.pi, np.pi, 200)
+theta2 = np.linspace(-np.pi, np.pi, 200)
+T1, T2 = np.meshgrid(theta1, theta2)
+
+X = L1 * np.cos(T1) + L2 * np.cos(T1 + T2)
+Y = L1 * np.sin(T1) + L2 * np.sin(T1 + T2)
+
+plt.figure(figsize=(8, 8))
+plt.plot(X.flatten(), Y.flatten(), '.', markersize=0.1, alpha=0.3)
+plt.plot(0.5, 0.3, 'r*', markersize=20, label='目标位置')
+plt.plot(0.35, 0, 'gs', markersize=10, label='箱子初始位置')
+plt.xlabel('x (m)')
+plt.ylabel('y (m)')
+plt.title('2-DOF 机械臂工作空间')
+plt.axis('equal')
+plt.legend()
+plt.grid(True)
+plt.savefig('workspace.png', dpi=150)
+# 目标位置(0.5, 0.3) 距原点 ≈ 0.58m，在工作空间内 ✓</code></pre>
+
+<h4>雅可比矩阵（Jacobian）</h4>
+
+<p>雅可比矩阵将关节空间速度映射到末端执行器的笛卡尔速度：</p>
+
+<p>$$\dot{\mathbf{x}} = J(\mathbf{q}) \dot{\mathbf{q}}$$</p>
+
+<p>对我们的 2-DOF 手臂：</p>
+
+<p>$$J = \begin{bmatrix} -L_1 \sin q_1 - L_2 \sin(q_1+q_2) & -L_2 \sin(q_1+q_2) \\ L_1 \cos q_1 + L_2 \cos(q_1+q_2) & L_2 \cos(q_1+q_2) \end{bmatrix}$$</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span># MuJoCo 可以自动计算雅可比矩阵
+jacp = np.zeros((3, model.nv))  # 位置雅可比 (3 × nv)
+jacr = np.zeros((3, model.nv))  # 旋转雅可比 (3 × nv)
+
+mujoco.mj_jacSite(model, data, jacp, jacr, ee_id)
+
+# 对于我们的 2-DOF 手臂，只看 xy 平面和前两列
+J_xy = jacp[:2, :2]
+print(f"位置雅可比 (xy):\n{J_xy}")
+
+# 雅可比的用途：
+# 1. 末端速度 = J × 关节速度
+# 2. 关节力矩 = J^T × 末端力（力映射）
+# 3. J 的奇异值 → 可操作度（manipulability）</code></pre>
+
+
+<h3 id="ch5-freebody">5.3 自由体（Free Body）— 箱子的建模</h3>
+
+<p>我们的箱子有 <code>freejoint</code>，这意味着它不与任何其他物体固连，具有完全的 6 个自由度。</p>
+
+<div class="box def">
+  <div class="box-title">📐 freejoint 的状态表示</div>
+  <p>自由体的状态在 qpos 和 qvel 中的分布：</p>
+  <table>
+    <tr><th>数组</th><th>维度</th><th>内容</th><th>在 PushBox 中的索引</th></tr>
+    <tr><td>qpos</td><td>7</td><td>[x, y, z, qw, qx, qy, qz]</td><td>qpos[2:9]</td></tr>
+    <tr><td>qvel</td><td>6</td><td>[vx, vy, vz, wx, wy, wz]</td><td>qvel[2:8]</td></tr>
+  </table>
+  <p>注意四元数的约束 $q_w^2 + q_x^2 + q_y^2 + q_z^2 = 1$，所以 7 维 qpos 实际只有 6 个自由度。</p>
+</div>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span># 设置箱子的位置和姿态
+# 位置
+data.qpos[2] = 0.4   # x
+data.qpos[3] = 0.1   # y
+data.qpos[4] = 0.05  # z (半高，刚好在地面上)
+
+# 四元数（旋转 45° 绕 z 轴）
+angle = np.radians(45)
+data.qpos[5] = np.cos(angle / 2)       # qw
+data.qpos[6] = 0                        # qx
+data.qpos[7] = 0                        # qy
+data.qpos[8] = np.sin(angle / 2)       # qz
+
+# 给箱子一个初速度
+data.qvel[2] = 0.5   # x 方向 0.5 m/s
+data.qvel[3] = 0.0   # y 方向
+
+mujoco.mj_forward(model, data)</code></pre>
+
+
+<h3 id="ch5-contact">5.4 接触物理详解</h3>
+
+<p>接触处理是 MuJoCo 最核心的特性。当两个 geom 重叠（或接近 margin 距离内）时，MuJoCo 会计算接触力。</p>
+
+<div class="box def">
+  <div class="box-title">📐 MuJoCo 接触力模型</div>
+  <p>MuJoCo 使用<strong>软接触（soft contact）</strong>模型，结合了弹簧-阻尼器和约束求解：</p>
+  <p>$$f_n = k \cdot d + b \cdot \dot{d}$$</p>
+  <p>其中 $d$ 是穿透深度，$\dot{d}$ 是穿透速度，$k$ 是刚度（由 <code>solref</code> 控制），$b$ 是阻尼（由 <code>solimp</code> 控制）。</p>
+  <p>实际上，MuJoCo 的接触模型更复杂——它将接触力作为一个<strong>约束优化问题</strong>求解，<code>solref</code> 和 <code>solimp</code> 控制约束的"软硬程度"。</p>
+</div>
+
+<h4>摩擦力模型</h4>
+
+<p>MuJoCo 实现的是<strong>椭圆摩擦锥</strong>近似：</p>
+
+<p>$$\|\mathbf{f}_t\| \leq \mu \cdot f_n$$</p>
+
+<p>其中 $\mathbf{f}_t$ 是切向（摩擦）力，$f_n$ 是法向力，$\mu$ 是滑动摩擦系数。</p>
+
+<p>两个接触 geom 的有效摩擦系数计算方式：</p>
+<pre><code class="language-python"><span class="code-label">PYTHON</span># MuJoCo 取两个 geom 摩擦系数的逐元素最大值
+# 而非平均值！这更物理——粗糙表面"赢"
+effective_friction = np.maximum(geom1_friction, geom2_friction)</code></pre>
+
+<h4>solref 和 solimp — 接触"软硬度"</h4>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;!-- solref: 约束参考参数 [timeconst, dampratio] --&gt;
+&lt;!-- solref="0.02 1" 表示: --&gt;
+&lt;!--   timeconst=0.02s: 接触恢复的时间常数（越小越硬） --&gt;
+&lt;!--   dampratio=1: 临界阻尼比（1=不振荡，<1=振荡） --&gt;
+&lt;geom solref="0.02 1"/&gt;
+
+&lt;!-- solimp: 约束阻抗参数 [dmin, dmax, width, midpoint, power] --&gt;
+&lt;!-- 控制约束从"软"到"硬"的过渡曲线 --&gt;
+&lt;geom solimp="0.9 0.95 0.001 0.5 2"/&gt;</code></pre>
+
+
+<h3 id="ch5-inertia">5.5 质量与惯性</h3>
+
+<p>每个刚体的动力学行为由其质量和惯性张量决定。MuJoCo 提供了两种方式来设置：</p>
+
+<h4>方式1: inertiafromgeom（我们使用的方式）</h4>
+<p>当 <code>compiler inertiafromgeom="true"</code> 时，MuJoCo 自动从 geom 的形状和密度（或质量）计算惯性张量。</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span># 查看计算结果
+for i in range(model.nbody):
+    name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, i) or "world"
+    mass = model.body_mass[i]
+    inertia = model.body_inertia[i]  # 主惯性矩 (Ixx, Iyy, Izz)
+    print(f"  {name}: mass={mass:.4f}kg, inertia={inertia}")
+
+# 对于 box_geom (0.1×0.1×0.1m, 0.5kg):
+# I = m/12 * (a² + b²) 对每个轴
+# Ixx = 0.5/12 * (0.1² + 0.1²) = 0.000833
+# 三个轴相同（正方体）</code></pre>
+
+<h4>方式2: 手动指定</h4>
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;body name="custom_body"&gt;
+  &lt;inertial pos="0 0 0" mass="2.0" 
+            diaginertia="0.1 0.1 0.05"/&gt;
+  &lt;!-- diaginertia: 主惯性矩 [Ixx, Iyy, Izz] --&gt;
+  &lt;!-- fullinertia: 完整惯性张量 [Ixx, Iyy, Izz, Ixy, Ixz, Iyz] --&gt;
+&lt;/body&gt;</code></pre>
+
+<div class="box ex">
+  <div class="box-title">🔍 动态修改质量（用于域随机化）</div>
+  <pre><code class="language-python"># 在 PushBoxEnv 中，我们支持修改箱子质量
+def _set_box_mass(self, mass):
+    box_body_id = mujoco.mj_name2id(
+        self.model, mujoco.mjtObj.mjOBJ_BODY, "box"
+    )
+    self.model.body_mass[box_body_id] = mass
+    # 注意：修改 body_mass 后，惯性不会自动更新
+    # 如果需要精确的惯性，也要手动更新 body_inertia</code></pre>
+</div>
+
+
+<!-- ================================================================== -->
+<!-- 第六章：Gymnasium 环境封装                                            -->
+<!-- ================================================================== -->
+<h2 id="ch6">第六章：Gymnasium 环境封装</h2>
+
+<p>这一章我们深入分析 PushBox 环境的实现——如何将 MuJoCo 仿真封装成 Gymnasium 标准接口，使其可以与 Stable-Baselines3 等 RL 库无缝集成。</p>
+
+<h3 id="ch6-interface">6.1 gym.Env 接口</h3>
+
+<p>Gymnasium（前身是 OpenAI Gym）定义了一个标准的环境接口。所有 RL 环境都需要实现这几个方法：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>import gymnasium as gym
+from gymnasium import spaces
+import numpy as np
+
+class PushBoxEnv(gym.Env):
+    """标准的 Gymnasium 环境"""
+    
+    # 1. metadata: 声明支持的渲染模式和帧率
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 50}
+    
+    def __init__(self, render_mode=None, box_mass=0.5):
+        """
+        初始化环境:
+        - 加载 MuJoCo 模型
+        - 定义观察空间和动作空间
+        - 缓存常用 ID
+        - 设置超参数
+        """
+        super().__init__()
+        
+        # 加载 MuJoCo 模型
+        xml_path = os.path.join(os.path.dirname(__file__), "assets", "push_box.xml")
+        self.model = mujoco.MjModel.from_xml_path(xml_path)
+        self.data = mujoco.MjData(self.model)
+        
+        # 可配置的箱子质量（用于 OOD 测试）
+        self.box_mass = box_mass
+        self._set_box_mass(box_mass)
+        
+        # 缓存 ID（性能优化）
+        self._ee_site_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_SITE, "endeffector"
+        )
+        self._box_body_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_BODY, "box"
+        )
+        
+        # 定义空间
+        self.action_space = spaces.Box(
+            low=-10.0, high=10.0, shape=(2,), dtype=np.float32
+        )
+        self.observation_space = spaces.Box(
+            low=-np.inf, high=np.inf, shape=(16,), dtype=np.float32
+        )
+        
+        # 超参数
+        self.goal_pos = np.array([0.5, 0.3, 0.02])
+        self.max_episode_steps = 500
+        self.success_threshold = 0.1
+        self.current_step = 0
+        
+    def reset(self, seed=None, options=None):
+        """重置环境到初始状态"""
+        # Gymnasium v26 标准: 调用 super().reset() 设置随机种子
+        super().reset(seed=seed)
+        
+        # 重置 MuJoCo 仿真
+        mujoco.mj_resetData(self.model, self.data)
+        
+        # 随机化初始状态（增加鲁棒性）
+        self.data.qpos[0] = np.random.uniform(-0.5, 0.5)  # shoulder
+        self.data.qpos[1] = np.random.uniform(-0.5, 0.5)  # elbow
+        self.data.qpos[2] = np.random.uniform(0.25, 0.45)  # box x
+        self.data.qpos[3] = np.random.uniform(-0.15, 0.15)  # box y
+        self.data.qpos[4] = 0.05  # box z (on ground)
+        self.data.qpos[5:9] = [1, 0, 0, 0]  # 无旋转
+        self.data.qvel[:] = 0.0
+        
+        mujoco.mj_forward(self.model, self.data)
+        self.current_step = 0
+        
+        return self._get_obs(), self._get_info()
+    
+    def step(self, action):
+        """执行一步"""
+        self.data.ctrl[:] = action
+        
+        # 5 个物理子步
+        for _ in range(5):
+            mujoco.mj_step(self.model, self.data)
+        
+        obs = self._get_obs()
+        reward = self._compute_reward()
+        self.current_step += 1
+        
+        info = self._get_info()
+        terminated = info['success']
+        truncated = self.current_step >= self.max_episode_steps
+        
+        return obs, reward, terminated, truncated, info</code></pre>
+
+<div class="box def">
+  <div class="box-title">📐 Gymnasium v26 接口变化</div>
+  <p>如果你之前用过旧版 OpenAI Gym，注意以下重要变化：</p>
+  <table>
+    <tr><th>旧版 (Gym v21)</th><th>新版 (Gymnasium v26+)</th></tr>
+    <tr><td><code>obs = env.reset()</code></td><td><code>obs, info = env.reset()</code></td></tr>
+    <tr><td><code>obs, reward, done, info = env.step(action)</code></td><td><code>obs, reward, terminated, truncated, info = env.step(action)</code></td></tr>
+    <tr><td>单一 <code>done</code> 信号</td><td><code>terminated</code>（自然结束）vs <code>truncated</code>（时间截断）</td></tr>
+    <tr><td><code>import gym</code></td><td><code>import gymnasium as gym</code></td></tr>
+  </table>
+  <p>区分 terminated 和 truncated 对于正确计算 value bootstrap 至关重要——truncated 时应该用 V(s') 而非 0。</p>
+</div>
+
+
+<h3 id="ch6-obs">6.2 观察空间设计</h3>
+
+<p>观察空间决定了 RL 智能体能"看到"什么信息。设计原则：<strong>包含足够的信息让任务可解，但避免冗余和噪声</strong>。</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>def _get_obs(self):
+    """构造 16 维观察向量"""
+    # 关节位置 (2维) — 描述手臂的当前构型
+    joint_pos = self.data.qpos[:2].copy()        # [shoulder, elbow] 弧度
+    
+    # 关节速度 (2维) — 描述手臂的运动状态
+    joint_vel = self.data.qvel[:2].copy()         # [shoulder_vel, elbow_vel] rad/s
+    
+    # 末端执行器位置 (3维) — 手臂末端在哪里
+    ee_pos = self.data.site_xpos[self._ee_site_id].copy()  # [x, y, z] 米
+    
+    # 箱子位置 (3维) — 箱子在哪里
+    box_pos = self.data.qpos[2:5].copy()          # [x, y, z] 米
+    
+    # 箱子速度 (3维) — 箱子在怎么动
+    box_vel = self.data.qvel[2:5].copy()          # [vx, vy, vz] m/s
+    
+    # 目标位置 (3维) — 箱子要去哪里
+    goal_pos = self.goal_pos.copy()               # [x, y, z] 米
+    
+    # 拼接成 16 维向量
+    obs = np.concatenate([
+        joint_pos,    # 2: 手臂在什么姿态
+        joint_vel,    # 2: 手臂在怎么动
+        ee_pos,       # 3: 手能碰到箱子吗
+        box_pos,      # 3: 箱子在哪
+        box_vel,      # 3: 箱子在怎么动
+        goal_pos      # 3: 目标在哪
+    ])
+    return obs.astype(np.float32)</code></pre>
+
+<div class="box ex">
+  <div class="box-title">🔍 为什么选择这些观察量？</div>
+  <table>
+    <tr><th>观察</th><th>必要性</th><th>原因</th></tr>
+    <tr><td>关节位置</td><td>⭐⭐⭐⭐⭐</td><td>描述手臂当前构型，是控制的基础</td></tr>
+    <tr><td>关节速度</td><td>⭐⭐⭐⭐</td><td>预测动态行为，使 MDP 满足马尔可夫性</td></tr>
+    <tr><td>末端执行器位置</td><td>⭐⭐⭐⭐⭐</td><td>知道手在哪才能去碰箱子</td></tr>
+    <tr><td>箱子位置</td><td>⭐⭐⭐⭐⭐</td><td>知道箱子在哪才能推它</td></tr>
+    <tr><td>箱子速度</td><td>⭐⭐⭐</td><td>知道箱子运动状态，有助于精确控制</td></tr>
+    <tr><td>目标位置</td><td>⭐⭐⭐⭐⭐</td><td>知道目标在哪才能把箱子推过去</td></tr>
+  </table>
+  <p><strong>马尔可夫性</strong>：观察应该包含足够信息，使得 $P(s_{t+1} | s_t, a_t)$ 成立。如果只有位置没有速度，系统就不是马尔可夫的——你需要历史信息来推断运动方向。</p>
+</div>
+
+
+<h3 id="ch6-action">6.3 动作空间设计</h3>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span># 连续动作空间：2 维力矩
+self.action_space = spaces.Box(
+    low=-10.0,         # 最小力矩 -10 Nm
+    high=10.0,         # 最大力矩 10 Nm
+    shape=(2,),        # 2 个执行器
+    dtype=np.float32
+)
+
+# action[0] → shoulder_motor 力矩
+# action[1] → elbow_motor 力矩</code></pre>
+
+<div class="box thm">
+  <div class="box-title">✅ 动作空间设计选择</div>
+  <table>
+    <tr><th>类型</th><th>优点</th><th>缺点</th><th>适用算法</th></tr>
+    <tr><td><strong>连续力矩</strong>（我们的选择）</td><td>最灵活，可精确力控</td><td>学习难度大</td><td>PPO, SAC, TD3</td></tr>
+    <tr><td>连续位置</td><td>更稳定，容易学</td><td>需要底层 PD 控制器</td><td>PPO, SAC</td></tr>
+    <tr><td>连续速度</td><td>平滑控制</td><td>需要底层速度控制器</td><td>PPO, SAC</td></tr>
+    <tr><td>离散（上下左右）</td><td>最简单</td><td>精度差</td><td>DQN</td></tr>
+  </table>
+  <p>对于研究目的，力矩控制是最"honest"的——智能体必须从底层理解物理。对于应用，位置控制通常更实用。</p>
+</div>
+
+
+<h3 id="ch6-reward">6.4 奖励函数设计</h3>
+
+<p>奖励函数是 RL 环境中最重要也最难设计的部分。它定义了"什么是好的行为"：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>def step(self, action):
+    # ... 执行仿真 ...
+    
+    ee_pos = self.data.site_xpos[self._ee_site_id].copy()
+    box_pos = self.data.qpos[2:5].copy()
+    
+    # ===== 奖励成分 =====
+    
+    # r1: 鼓励末端执行器靠近箱子
+    dist_ee_box = np.linalg.norm(ee_pos[:2] - box_pos[:2])
+    r1 = -dist_ee_box  # 越近奖励越高（负距离→距离越小值越大）
+    
+    # r2: 鼓励箱子靠近目标
+    dist_box_goal = np.linalg.norm(box_pos[:2] - self.goal_pos[:2])
+    r2 = -dist_box_goal
+    
+    # 组合奖励
+    reward = 0.5 * r1 + r2   # r2 权重更高：推箱子比到达箱子更重要
+    
+    # 稀疏成功奖励
+    success = dist_box_goal < self.success_threshold
+    if success:
+        reward += 100.0  # 大额奖金
+    
+    # ===== 奖励分析 =====
+    # 典型值范围:
+    # - 开始时: r1 ≈ -0.3, r2 ≈ -0.4 → reward ≈ -0.55
+    # - 靠近箱子: r1 ≈ -0.05, r2 ≈ -0.3 → reward ≈ -0.325
+    # - 推到目标: r1 ≈ -0.05, r2 ≈ -0.05 → reward ≈ -0.075 + 100
+    
+    return obs, reward, terminated, truncated, info</code></pre>
+
+<div class="box def">
+  <div class="box-title">📐 Dense vs Sparse 奖励</div>
+  <p><strong>Dense（稠密）奖励</strong>：每一步都给出信号。我们的 <code>-dist</code> 就是稠密奖励——每一步都告诉智能体"你离目标还有多远"。</p>
+  <p><strong>Sparse（稀疏）奖励</strong>：只在任务完成时给奖励。如果只用 <code>+100 if success</code>，智能体需要很久才能"碰巧"成功并获得第一个正反馈。</p>
+  <p><strong>我们的策略</strong>：稠密 + 稀疏的结合。稠密部分引导学习方向，稀疏部分强化最终目标。</p>
+</div>
+
+<div class="box warn">
+  <div class="box-title">⚠️ 奖励设计的常见陷阱</div>
+  <ol>
+    <li><strong>奖励黑客（Reward Hacking）</strong>：智能体找到满足奖励但不符合初衷的行为。例如，如果只奖励"手靠近箱子"，智能体可能学会不推箱子而是一直靠近箱子。</li>
+    <li><strong>尺度不一致</strong>：如果 r1 的量级远大于 r2，r2 会被忽略。确保各奖励成分的量级相当。</li>
+    <li><strong>过度 shaping</strong>：太详细的奖励可能导致局部最优。例如，"先到达箱子、再推箱子"的分阶段奖励可能导致智能体停在第一阶段。</li>
+    <li><strong>能量惩罚</strong>：可以添加 <code>-0.01 * np.sum(action**2)</code> 来鼓励能量效率的动作，但权重要小心。</li>
+  </ol>
+</div>
+
+
+<h3 id="ch6-term">6.5 终止条件</h3>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>def step(self, action):
+    # ...
+    
+    # terminated: 任务自然完成（成功）
+    terminated = success  # dist_box_goal < 0.1m
+    
+    # truncated: 时间截断（超过最大步数）
+    truncated = self.current_step >= self.max_episode_steps  # 500 步
+    
+    # 这两个的区别对 RL 算法很重要:
+    # - terminated: V(s_terminal) = 0（真正结束了）
+    # - truncated: V(s_terminal) ≠ 0（人为截断，状态本身没问题）
+    #   → 算法应该用 V(s') bootstrap，而不是把 value 当成 0</code></pre>
+
+
+<h3 id="ch6-vec">6.6 并行环境 — DummyVecEnv</h3>
+
+<p>RL 训练通常需要大量数据。并行化多个环境可以显著加速数据收集：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
+
+# ===== 方式1: DummyVecEnv (单进程串行) =====
+# 适合环境计算量小的场景（如我们的 PushBox）
+envs = DummyVecEnv([
+    lambda: PushBoxEnv(box_mass=0.5) for _ in range(8)
+])
+# 8 个环境，在一个进程中顺序执行
+# 简单但有 GIL 限制
+
+# ===== 方式2: SubprocVecEnv (多进程并行) =====
+# 适合环境计算量大的场景（真正并行）
+envs = SubprocVecEnv([
+    make_push_box_env(box_mass=0.5) for _ in range(8)
+])
+# 8 个环境，每个在独立进程中
+# 需要 fork 安全的环境创建函数
+
+# ===== 使用工厂函数 =====
+def make_push_box_env(box_mass=0.5):
+    """工厂函数（SubprocVecEnv 需要 pickle-able 的函数）"""
+    def _init():
+        return PushBoxEnv(box_mass=box_mass)
+    return _init
+
+# 创建并行训练环境
+from stable_baselines3 import PPO
+
+model = PPO("MlpPolicy", envs, verbose=1)
+model.learn(total_timesteps=100_000)</code></pre>
+
+
+<h3 id="ch6-debug">6.7 环境调试</h3>
+
+<p>在训练之前，<strong>一定要</strong>先验证环境的物理行为是否正确。以下是调试清单：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>from stable_baselines3.common.env_checker import check_env
+
+# ===== 1. 基本检查 =====
+env = PushBoxEnv()
+check_env(env, warn=True)  # Gymnasium 兼容性检查
+# 检查内容: 空间定义、reset/step 返回格式、dtype 等
+
+# ===== 2. 随机动作测试 =====
+obs, info = env.reset()
+for i in range(100):
+    action = env.action_space.sample()  # 随机动作
+    obs, reward, terminated, truncated, info = env.step(action)
+    
+    # 检查观察是否在合理范围内
+    assert not np.any(np.isnan(obs)), f"Step {i}: NaN in obs!"
+    assert not np.any(np.isinf(obs)), f"Step {i}: Inf in obs!"
+    
+    # 检查奖励是否合理
+    assert np.isfinite(reward), f"Step {i}: Invalid reward!"
+    assert -20 < reward < 200, f"Step {i}: Suspicious reward: {reward}"
+    
+    if terminated or truncated:
+        obs, info = env.reset()
+
+print("✅ 基本检查通过！")
+
+# ===== 3. 可视化物理行为 =====
+env = PushBoxEnv(render_mode="human")
+obs, info = env.reset()
+
+# 手动给一个恒定力矩，观察手臂是否合理运动
+for _ in range(500):
+    action = np.array([2.0, -1.0])  # 固定力矩
+    obs, reward, terminated, truncated, info = env.step(action)
+    env.render()
+
+env.close()
+
+# ===== 4. 打印一个 episode 的统计 =====
+env = PushBoxEnv()
+obs, info = env.reset()
+total_reward = 0
+for step in range(500):
+    action = env.action_space.sample()
+    obs, reward, terminated, truncated, info = env.step(action)
+    total_reward += reward
+    if terminated or truncated:
+        break
+
+print(f"Episode: {step+1} steps, total_reward={total_reward:.2f}")
+print(f"Final distance to goal: {info['distance_to_goal']:.3f}")
+print(f"Success: {info['success']}")</code></pre>
+
+
+<!-- ================================================================== -->
+<!-- 第七章：高级主题                                                      -->
+<!-- ================================================================== -->
+<h2 id="ch7">第七章：高级主题</h2>
+
+<h3 id="ch7-flex">7.1 软体仿真（Flex）</h3>
+
+<p>MuJoCo 3.0+ 引入了 <strong>Flex</strong> 功能，支持有限元方法（FEM）的软体仿真：</p>
+
+<div class="box def">
+  <div class="box-title">📐 什么是软体仿真</div>
+  <p>传统刚体仿真假设物体不会变形。但在很多场景中（如医疗机器人操作组织、柔性抓取），物体的形变是核心物理现象。</p>
+  <p>MuJoCo Flex 使用<strong>有限元方法 (FEM)</strong>将连续体离散化为网格元素，在每个元素上求解弹性力学方程。</p>
+</div>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;!-- 软体仿真示例 --&gt;
+&lt;mujoco&gt;
+  &lt;extension&gt;
+    &lt;plugin plugin="mujoco.elasticity.solid"/&gt;
+  &lt;/extension&gt;
+  
+  &lt;worldbody&gt;
+    &lt;!-- 软体立方体 --&gt;
+    &lt;body&gt;
+      &lt;freejoint/&gt;
+      &lt;composite type="grid" count="5 5 5" spacing="0.02"&gt;
+        &lt;!-- 弹性参数 --&gt;
+        &lt;plugin plugin="mujoco.elasticity.solid"&gt;
+          &lt;config key="young" value="1e4"/&gt;    &lt;!-- 杨氏模量 --&gt;
+          &lt;config key="poisson" value="0.3"/&gt;   &lt;!-- 泊松比 --&gt;
+          &lt;config key="damping" value="0.01"/&gt;  &lt;!-- 阻尼 --&gt;
+        &lt;/plugin&gt;
+      &lt;/composite&gt;
+    &lt;/body&gt;
+  &lt;/worldbody&gt;
+&lt;/mujoco&gt;</code></pre>
+
+<p>Flex 对我们项目的意义：医疗机器人需要操作<strong>软组织</strong>（如皮肤、器官），Flex 使得在 MuJoCo 中模拟这些成为可能。</p>
+
+
+<h3 id="ch7-tendon">7.2 肌腱（Tendon）</h3>
+
+<p>肌腱可以将多个关节耦合在一起，模拟肌肉-骨骼系统或线缆传动：</p>
+
+<pre><code class="language-xml"><span class="code-label">XML</span>&lt;tendon&gt;
+  &lt;!-- 固定肌腱: 两个关节之间的线性耦合 --&gt;
+  &lt;fixed name="coupling"&gt;
+    &lt;joint joint="shoulder" coef="1.0"/&gt;
+    &lt;joint joint="elbow" coef="-0.5"/&gt;
+  &lt;/fixed&gt;
+  &lt;!-- 含义: 当 shoulder 转1度, elbow 反向转 0.5 度 --&gt;
+  
+  &lt;!-- 空间肌腱: 经过指定的路径点 --&gt;
+  &lt;spatial name="cable" limited="true" range="0 0.5"&gt;
+    &lt;site site="attachment1"/&gt;
+    &lt;geom geom="upper_arm_geom"/&gt;  &lt;!-- 绕过几何体 --&gt;
+    &lt;site site="attachment2"/&gt;
+  &lt;/spatial&gt;
+&lt;/tendon&gt;</code></pre>
+
+
+<h3 id="ch7-sensor">7.3 传感器系统详解</h3>
+
+<p>MuJoCo 的传感器种类丰富，覆盖了真实机器人常用的各种传感模态：</p>
+
+<table>
+<tr><th>传感器类型</th><th>XML 标签</th><th>挂载目标</th><th>数据维度</th><th>说明</th></tr>
+<tr><td>关节位置</td><td><code>jointpos</code></td><td>joint</td><td>1</td><td>编码器</td></tr>
+<tr><td>关节速度</td><td><code>jointvel</code></td><td>joint</td><td>1</td><td>速度计</td></tr>
+<tr><td>力矩传感器</td><td><code>actuatorfrc</code></td><td>actuator</td><td>1</td><td>电流传感器</td></tr>
+<tr><td>加速度计</td><td><code>accelerometer</code></td><td>site</td><td>3</td><td>IMU 的一部分</td></tr>
+<tr><td>陀螺仪</td><td><code>gyro</code></td><td>site</td><td>3</td><td>IMU 的一部分</td></tr>
+<tr><td>力传感器</td><td><code>force</code></td><td>site</td><td>3</td><td>力/力矩传感器</td></tr>
+<tr><td>触觉传感器</td><td><code>touch</code></td><td>site</td><td>1</td><td>接触力大小</td></tr>
+<tr><td>位置传感器</td><td><code>framepos</code></td><td>body/site</td><td>3</td><td>类似 GPS/视觉定位</td></tr>
+<tr><td>四元数传感器</td><td><code>framequat</code></td><td>body/site</td><td>4</td><td>姿态测量</td></tr>
+</table>
+
+
+<h3 id="ch7-dr">7.4 域随机化（Domain Randomization）</h3>
+
+<p>域随机化是缩小 sim-to-real gap 的核心技术。在训练过程中随机化物理参数，使策略学会应对不确定性：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>class DomainRandomizedPushBoxEnv(PushBoxEnv):
+    """带域随机化的 PushBox 环境"""
+    
+    def reset(self, seed=None, options=None):
+        # 先调用父类 reset
+        obs, info = super().reset(seed=seed)
+        
+        # ===== 域随机化 =====
+        
+        # 1. 箱子质量随机化（0.2 ~ 1.0 kg）
+        mass = np.random.uniform(0.2, 1.0)
+        self._set_box_mass(mass)
+        
+        # 2. 摩擦力随机化
+        box_geom_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_GEOM, "box_geom"
+        )
+        # model.geom_friction 是 (ngeom, 3) 数组
+        self.model.geom_friction[box_geom_id, 0] = np.random.uniform(0.3, 0.8)
+        
+        # 3. 关节阻尼随机化
+        for jnt_name in ["shoulder", "elbow"]:
+            jnt_id = mujoco.mj_name2id(
+                self.model, mujoco.mjtObj.mjOBJ_JOINT, jnt_name
+            )
+            self.model.jnt_damping[jnt_id] = np.random.uniform(0.3, 0.8)
+        
+        # 4. 目标位置小幅随机化
+        self.goal_pos = np.array([
+            0.5 + np.random.uniform(-0.05, 0.05),
+            0.3 + np.random.uniform(-0.05, 0.05),
+            0.02
+        ])
+        
+        # 重新计算
+        mujoco.mj_forward(self.model, self.data)
+        
+        return self._get_obs(), self._get_info()</code></pre>
+
+<div class="box thm">
+  <div class="box-title">✅ 域随机化参数选择建议</div>
+  <ul>
+    <li><strong>质量</strong>：±50% 范围通常足够</li>
+    <li><strong>摩擦力</strong>：0.3 ~ 0.8 覆盖大多数工业场景</li>
+    <li><strong>关节阻尼</strong>：±30% 范围</li>
+    <li><strong>观测噪声</strong>：高斯噪声 $\sigma = 0.01 \sim 0.05$（在观测上加噪声）</li>
+    <li><strong>执行器延迟</strong>：随机延迟 1-3 步</li>
+    <li><strong>原则</strong>：随机化范围应该覆盖你对真实系统不确定性的估计</li>
+  </ul>
+</div>
+
+
+<h3 id="ch7-parallel">7.5 并行仿真</h3>
+
+<p>MuJoCo 支持多个 <code>MjData</code> 共享同一个 <code>MjModel</code>，实现高效的并行仿真：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>import mujoco
+import numpy as np
+from concurrent.futures import ThreadPoolExecutor
+
+# 一个 model 可以被多个 data 共享（只要不修改 model）
+model = mujoco.MjModel.from_xml_path("push_box.xml")
+
+# 创建多个 data（每个代表一个独立的仿真实例）
+n_envs = 16
+datas = [mujoco.MjData(model) for _ in range(n_envs)]
+
+def simulate_one(data, actions):
+    """在一个 data 上运行一步仿真"""
+    data.ctrl[:] = actions
+    for _ in range(5):
+        mujoco.mj_step(model, data)
+    return data.qpos.copy()
+
+# 方式1: 顺序执行（简单但慢）
+for data in datas:
+    simulate_one(data, np.random.uniform(-10, 10, 2))
+
+# 方式2: 线程并行（MuJoCo 释放 GIL！）
+with ThreadPoolExecutor(max_workers=4) as executor:
+    futures = [
+        executor.submit(simulate_one, data, np.random.uniform(-10, 10, 2))
+        for data in datas
+    ]
+    results = [f.result() for f in futures]
+
+# 方式3: MJX — GPU 并行（最快）
+# 需要 JAX 和 mujoco-mjx
+import jax
+from mujoco import mjx
+
+mjx_model = mjx.put_model(model)
+mjx_data = mjx.put_data(model, data)
+
+# 批量仿真（所有环境在 GPU 上并行）
+batch_data = jax.vmap(lambda d: mjx.step(mjx_model, d))(
+    jax.tree_map(lambda x: jnp.stack([x]*n_envs), mjx_data)
+)</code></pre>
+
+
+<h3 id="ch7-sim2real">7.6 Sim-to-Real 迁移</h3>
+
+<p>Sim-to-Real 是整个仿真研究的终极目标——让仿真中训练的策略在真实机器人上工作。关键技术包括：</p>
+
+<h4>1. 系统辨识（System Identification）</h4>
+<p>精确测量真实系统的物理参数（质量、摩擦力、电机特性），在仿真中精确复现。</p>
+
+<h4>2. 域随机化（Domain Randomization）</h4>
+<p>在足够宽的参数范围内随机化（如上节所述），使策略对参数不确定性鲁棒。</p>
+
+<h4>3. 域适应（Domain Adaptation）</h4>
+<p>通过观察真实数据，调整仿真参数或学习一个"仿真→现实"的映射。</p>
+
+<h4>4. Teacher-Student</h4>
+<p>在仿真中用完美信息训练 teacher 策略，然后用 student 策略（只用现实可获取的传感器信息）模仿 teacher。</p>
+
+<div class="box ex">
+  <div class="box-title">🔍 Sim-to-Real 成功案例</div>
+  <ul>
+    <li><strong>OpenAI Rubik's Cube</strong>（2019）：在 MuJoCo 中用大规模域随机化训练灵巧手解魔方，成功迁移到真实 Shadow Hand</li>
+    <li><strong>ANYmal 四足机器人</strong>：ETH Zurich 在 MuJoCo 中训练步态策略，直接部署到真实四足机器人</li>
+    <li><strong>DeepMind Robotics</strong>：使用 MuJoCo 训练的策略在真实机器人手臂上完成堆叠任务</li>
+  </ul>
+</div>
+
+
+<h3 id="ch7-medical">7.7 医疗机器人仿真 — 我们项目的方向</h3>
+
+<p>医疗机器人仿真是 MuJoCo 的一个前沿应用方向，也是我们项目的最终目标：</p>
+
+<h4>挑战</h4>
+<ul>
+  <li><strong>软组织建模</strong>：器官、肌肉等软组织的力学行为极为复杂（非线性、各向异性、粘弹性）</li>
+  <li><strong>高精度力控</strong>：手术操作需要毫米级精度和毫牛级力控</li>
+  <li><strong>安全约束</strong>：绝对不能损伤组织，需要严格的力/位移限制</li>
+  <li><strong>多模态感知</strong>：视觉 + 力觉 + 触觉的融合</li>
+</ul>
+
+<h4>MuJoCo 的优势</h4>
+<ul>
+  <li>Flex 功能支持软体仿真</li>
+  <li>精确的接触力计算——关键用于力控</li>
+  <li>快速仿真——可以大量训练</li>
+  <li>可微分——直接优化控制策略</li>
+</ul>
+
+<h4>从 PushBox 到医疗仿真的路线图</h4>
+<div class="diagram">
+PushBox (Week 1)         → 学习 MuJoCo 基础 + RL 集成
+    ↓
+GraspBox (Week 2-3)      → 抓取任务，加入力传感器
+    ↓
+Soft Object (Week 4-5)   → Flex 软体操作
+    ↓
+Surgical Tool (Week 6-8) → 器械建模 + 组织交互
+    ↓
+Full Surgical Scene       → 完整手术场景仿真
+</div>
+
+
+<!-- ================================================================== -->
+<!-- 第八章：实践                                                          -->
+<!-- ================================================================== -->
+<h2 id="ch8">第八章：实践</h2>
+
+<h3 id="ch8-scratch">8.1 从零创建一个 MuJoCo 场景</h3>
+
+<p>让我们从一个空白的 XML 文件开始，逐步构建一个完整的场景：</p>
+
+<pre><code class="language-xml"><span class="code-label">XML — Step 1: 最简场景</span>&lt;!-- step1_minimal.xml --&gt;
+&lt;mujoco model="my_first_scene"&gt;
+  &lt;worldbody&gt;
+    &lt;!-- 一个光源（否则什么都看不见） --&gt;
+    &lt;light pos="0 0 3" dir="0 0 -1"/&gt;
+    
+    &lt;!-- 地面 --&gt;
+    &lt;geom type="plane" size="5 5 0.1"/&gt;
+    
+    &lt;!-- 一个会掉落的球 --&gt;
+    &lt;body pos="0 0 2"&gt;
+      &lt;freejoint/&gt;
+      &lt;geom type="sphere" size="0.1" rgba="1 0 0 1"/&gt;
+    &lt;/body&gt;
+  &lt;/worldbody&gt;
+&lt;/mujoco&gt;</code></pre>
+
+<pre><code class="language-xml"><span class="code-label">XML — Step 2: 加入物理配置</span>&lt;!-- step2_physics.xml --&gt;
+&lt;mujoco model="my_first_scene"&gt;
+  &lt;compiler angle="degree"/&gt;
+  &lt;option timestep="0.002" gravity="0 0 -9.81"/&gt;
+  
+  &lt;default&gt;
+    &lt;geom friction="0.5 0.005 0.0001"/&gt;
+  &lt;/default&gt;
+  
+  &lt;worldbody&gt;
+    &lt;light pos="0 0 3" dir="0 0 -1"/&gt;
+    &lt;geom type="plane" size="5 5 0.1" rgba="0.9 0.9 0.9 1"/&gt;
+    
+    &lt;!-- 红球：自由落体 --&gt;
+    &lt;body pos="0 0 2"&gt;
+      &lt;freejoint/&gt;
+      &lt;geom type="sphere" size="0.1" mass="1.0" rgba="1 0 0 1"/&gt;
+    &lt;/body&gt;
+    
+    &lt;!-- 蓝色方块：也会掉落 --&gt;
+    &lt;body pos="0.5 0 1"&gt;
+      &lt;freejoint/&gt;
+      &lt;geom type="box" size="0.1 0.1 0.1" mass="0.5" rgba="0 0 1 1"/&gt;
+    &lt;/body&gt;
+  &lt;/worldbody&gt;
+&lt;/mujoco&gt;</code></pre>
+
+<pre><code class="language-xml"><span class="code-label">XML — Step 3: 加入关节和执行器</span>&lt;!-- step3_robot.xml --&gt;
+&lt;mujoco model="simple_arm"&gt;
+  &lt;compiler angle="degree"/&gt;
+  &lt;option timestep="0.002" gravity="0 0 -9.81"/&gt;
+  
+  &lt;worldbody&gt;
+    &lt;light pos="0 0 3" dir="0 0 -1"/&gt;
+    &lt;geom type="plane" size="5 5 0.1"/&gt;
+    
+    &lt;!-- 1-DOF 旋转手臂 --&gt;
+    &lt;body pos="0 0 0.5"&gt;
+      &lt;joint name="joint1" type="hinge" axis="0 1 0" range="-90 90"/&gt;
+      &lt;geom type="capsule" fromto="0 0 0 0 0 0.4" size="0.03" rgba="0.5 0.5 1 1"/&gt;
+      
+      &lt;!-- 末端的球 --&gt;
+      &lt;body pos="0 0 0.4"&gt;
+        &lt;geom type="sphere" size="0.05" rgba="1 0.5 0 1"/&gt;
+      &lt;/body&gt;
+    &lt;/body&gt;
+  &lt;/worldbody&gt;
+  
+  &lt;actuator&gt;
+    &lt;motor name="motor1" joint="joint1" gear="1" ctrllimited="true" ctrlrange="-5 5"/&gt;
+  &lt;/actuator&gt;
+&lt;/mujoco&gt;</code></pre>
+
+<pre><code class="language-python"><span class="code-label">PYTHON — 测试新场景</span>import mujoco
+import mujoco.viewer
+
+model = mujoco.MjModel.from_xml_string(xml)  # 或 from_xml_path
+data = mujoco.MjData(model)
+
+# 交互式查看
+viewer = mujoco.viewer.launch_passive(model, data)
+while viewer.is_running():
+    data.ctrl[0] = 2.0  # 给一个力矩
+    mujoco.mj_step(model, data)
+    viewer.sync()</code></pre>
+
+
+<h3 id="ch8-viewer">8.2 可视化与调试技巧</h3>
+
+<div class="box thm">
+  <div class="box-title">✅ MuJoCo Viewer 调试 Checklist</div>
+  <ol>
+    <li><strong>检查碰撞</strong>：按 C 键显示接触力箭头。确认物体在正确的地方接触。</li>
+    <li><strong>检查关节</strong>：按 J 键显示关节轴。确认旋转方向正确。</li>
+    <li><strong>交互测试</strong>：Ctrl + 右键拖动物体，观察物理响应是否合理。</li>
+    <li><strong>检查质心</strong>：按 U 键显示每个 body 的质心位置。</li>
+    <li><strong>透视检查</strong>：按 T 键切换透明模式，检查内部结构。</li>
+    <li><strong>线框模式</strong>：按 W 键切换线框，检查碰撞几何体的边界。</li>
+  </ol>
+</div>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span># 打印模型诊断信息
+import mujoco
+
+model = mujoco.MjModel.from_xml_path("push_box.xml")
+data = mujoco.MjData(model)
+
+print("=" * 50)
+print("模型诊断信息")
+print("=" * 50)
+
+# 基本统计
+print(f"\n--- 基本统计 ---")
+print(f"  Body 数: {model.nbody}")
+print(f"  Joint 数: {model.njnt}")
+print(f"  Geom 数: {model.ngeom}")
+print(f"  Site 数: {model.nsite}")
+print(f"  Actuator 数: {model.nu}")
+print(f"  nq (广义坐标维度): {model.nq}")
+print(f"  nv (广义速度维度): {model.nv}")
+
+# 关节信息
+print(f"\n--- 关节 ---")
+for i in range(model.njnt):
+    name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_JOINT, i)
+    jnt_type = model.jnt_type[i]
+    type_names = {0: "free", 1: "ball", 2: "slide", 3: "hinge"}
+    qpos_adr = model.jnt_qposadr[i]
+    dof_adr = model.jnt_dofadr[i]
+    print(f"  {name}: type={type_names.get(jnt_type, '?')}, "
+          f"qpos_start={qpos_adr}, dof_start={dof_adr}")
+
+# 质量信息
+print(f"\n--- 质量 ---")
+total_mass = 0
+for i in range(model.nbody):
+    name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, i) or "world"
+    mass = model.body_mass[i]
+    total_mass += mass
+    if mass > 0:
+        print(f"  {name}: {mass:.4f} kg")
+print(f"  总质量: {total_mass:.4f} kg")
+
+# 执行器信息
+print(f"\n--- 执行器 ---")
+for i in range(model.nu):
+    name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, i)
+    ctrl_range = model.actuator_ctrlrange[i]
+    print(f"  {name}: range=[{ctrl_range[0]:.1f}, {ctrl_range[1]:.1f}]")</code></pre>
+
+
+<h3 id="ch8-experiment">8.3 物理参数实验</h3>
+
+<p>通过修改物理参数，观察对仿真行为的影响，是理解物理引擎的最佳方式：</p>
+
+<pre><code class="language-python"><span class="code-label">PYTHON</span>import mujoco
+import numpy as np
+
+def experiment_friction(friction_values):
+    """实验：不同摩擦系数对推箱子的影响"""
+    for mu in friction_values:
+        model = mujoco.MjModel.from_xml_path("push_box.xml")
+        data = mujoco.MjData(model)
+        
+        # 设置箱子摩擦力
+        box_geom_id = mujoco.mj_name2id(
+            model, mujoco.mjtObj.mjOBJ_GEOM, "box_geom"
+        )
+        model.geom_friction[box_geom_id, 0] = mu
+        
+        # 给手臂一个固定力矩
+        for step in range(1000):
+            data.ctrl[0] = 3.0  # shoulder
+            data.ctrl[1] = -1.0  # elbow
+            mujoco.mj_step(model, data)
+        
+        box_pos = data.qpos[2:4]
+        print(f"  摩擦系数 μ={mu:.2f}: 箱子位置 = ({box_pos[0]:.3f}, {box_pos[1]:.3f})")
+
+experiment_friction([0.1, 0.3, 0.5, 0.8, 1.0])
+# μ 越小 → 箱子滑得越远
+# μ 越大 → 箱子更难推动
+
+
+def experiment_mass(mass_values):
+    """实验：不同箱子质量的影响"""
+    for m in mass_values:
+        model = mujoco.MjModel.from_xml_path("push_box.xml")
+        data = mujoco.MjData(model)
+        
+        box_body_id = mujoco.mj_name2id(
+            model, mujoco.mjtObj.mjOBJ_BODY, "box"
+        )
+        model.body_mass[box_body_id] = m
+        
+        for step in range(1000):
+            data.ctrl[0] = 3.0
+            data.ctrl[1] = -1.0
+            mujoco.mj_step(model, data)
+        
+        box_pos = data.qpos[2:4]
+        print(f"  质量 m={m:.2f}kg: 箱子位置 = ({box_pos[0]:.3f}, {box_pos[1]:.3f})")
+
+experiment_mass([0.1, 0.5, 1.0, 2.0, 5.0])
+# 质量越大 → 箱子越难推动（惯性大）
+
+
+def experiment_damping(damping_values):
+    """实验：不同关节阻尼的影响"""
+    for d in damping_values:
+        model = mujoco.MjModel.from_xml_path("push_box.xml")
+        data = mujoco.MjData(model)
+        
+        for jnt_name in ["shoulder", "elbow"]:
+            jnt_id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_JOINT, jnt_name)
+            model.jnt_damping[jnt_id] = d
+        
+        # 给一个脉冲力矩然后释放
+        for step in range(200):
+            if step < 50:
+                data.ctrl[:] = [5.0, -3.0]
+            else:
+                data.ctrl[:] = [0.0, 0.0]
+            mujoco.mj_step(model, data)
+        
+        # 看关节是否还在动
+        vel = np.linalg.norm(data.qvel[:2])
+        print(f"  阻尼 d={d:.2f}: 最终关节速度 = {vel:.4f} rad/s")
+
+experiment_damping([0.01, 0.1, 0.5, 1.0, 5.0])
+# 阻尼越大 → 手臂停得越快（能量耗散快）</code></pre>
+
+
+<h3 id="ch8-new-env">8.4 构建新环境 — 抓取任务示例</h3>
+
+<p>学习完 PushBox 后，我们来构思一个更复杂的环境——抓取任务：</p>
+
+<pre><code class="language-xml"><span class="code-label">XML — grasp_box.xml 概念设计</span>&lt;mujoco model="grasp_box"&gt;
+  &lt;compiler angle="degree" inertiafromgeom="true"/&gt;
+  &lt;option timestep="0.002" gravity="0 0 -9.81"/&gt;
+  
+  &lt;worldbody&gt;
+    &lt;light pos="0 0 3"/&gt;
+    &lt;geom type="plane" size="3 3 0.1"/&gt;
+    
+    &lt;!-- 3-DOF 手臂（增加一个升降关节） --&gt;
+    &lt;body pos="0 0 0"&gt;
+      &lt;!-- 关节1: 升降（slide 关节） --&gt;
+      &lt;joint name="lift" type="slide" axis="0 0 1" range="0 0.5"/&gt;
+      &lt;geom type="cylinder" size="0.03 0.01"/&gt;
+      
+      &lt;body pos="0 0 0"&gt;
+        &lt;!-- 关节2: 旋转 --&gt;
+        &lt;joint name="rotate" type="hinge" axis="0 0 1" range="-180 180"/&gt;
+        &lt;geom type="capsule" fromto="0 0 0 0.3 0 0" size="0.02"/&gt;
+        
+        &lt;body pos="0.3 0 0"&gt;
+          &lt;!-- 关节3: 肘关节 --&gt;
+          &lt;joint name="elbow" type="hinge" axis="0 0 1" range="-150 150"/&gt;
+          &lt;geom type="capsule" fromto="0 0 0 0.2 0 0" size="0.02"/&gt;
+          
+          &lt;!-- 简单夹爪（两个对称的手指） --&gt;
+          &lt;body name="finger_left" pos="0.2 0 0"&gt;
+            &lt;joint name="grip_left" type="slide" axis="0 1 0" range="0 0.05"/&gt;
+            &lt;geom type="box" size="0.01 0.005 0.04" pos="0 0.005 -0.02"/&gt;
+          &lt;/body&gt;
+          &lt;body name="finger_right" pos="0.2 0 0"&gt;
+            &lt;joint name="grip_right" type="slide" axis="0 -1 0" range="0 0.05"/&gt;
+            &lt;geom type="box" size="0.01 0.005 0.04" pos="0 -0.005 -0.02"/&gt;
+          &lt;/body&gt;
+        &lt;/body&gt;
+      &lt;/body&gt;
+    &lt;/body&gt;
+    
+    &lt;!-- 目标物体 --&gt;
+    &lt;body pos="0.3 0.2 0.05"&gt;
+      &lt;freejoint/&gt;
+      &lt;geom type="box" size="0.03 0.03 0.03" mass="0.1" rgba="0 1 0 1"/&gt;
+    &lt;/body&gt;
+  &lt;/worldbody&gt;
+  
+  &lt;actuator&gt;
+    &lt;motor joint="lift" gear="1" ctrlrange="-10 10" ctrllimited="true"/&gt;
+    &lt;motor joint="rotate" gear="1" ctrlrange="-5 5" ctrllimited="true"/&gt;
+    &lt;motor joint="elbow" gear="1" ctrlrange="-5 5" ctrllimited="true"/&gt;
+    &lt;motor joint="grip_left" gear="1" ctrlrange="-1 1" ctrllimited="true"/&gt;
+    &lt;motor joint="grip_right" gear="1" ctrlrange="-1 1" ctrllimited="true"/&gt;
+  &lt;/actuator&gt;
+&lt;/mujoco&gt;</code></pre>
+
+<p>抓取环境需要额外考虑的设计点：</p>
+<ul>
+  <li><strong>观察空间</strong>：增加夹爪开合度、目标物体姿态</li>
+  <li><strong>奖励函数</strong>：分阶段奖励（接近 → 抓取 → 抬起 → 放置）</li>
+  <li><strong>成功判定</strong>：物体被抬起到一定高度以上</li>
+  <li><strong>夹爪控制</strong>：可以用耦合关节（两个手指对称运动）简化动作空间</li>
+</ul>
+
+
+<!-- ================================================================== -->
+<!-- 附录                                                                -->
+<!-- ================================================================== -->
+<h2 id="appendix">附录</h2>
+
+<h3 id="appendix-xml">A. MJCF XML 标签速查表</h3>
+
+<table>
+<tr><th>标签</th><th>父标签</th><th>核心属性</th><th>说明</th></tr>
+<tr><td><code>&lt;mujoco&gt;</code></td><td>—</td><td><code>model</code></td><td>根元素</td></tr>
+<tr><td><code>&lt;compiler&gt;</code></td><td>mujoco</td><td><code>angle, coordinate, inertiafromgeom, meshdir</code></td><td>编译器配置</td></tr>
+<tr><td><code>&lt;option&gt;</code></td><td>mujoco</td><td><code>timestep, integrator, gravity, cone, solver</code></td><td>仿真选项</td></tr>
+<tr><td><code>&lt;visual&gt;</code></td><td>mujoco</td><td>—</td><td>渲染设置容器</td></tr>
+<tr><td><code>&lt;asset&gt;</code></td><td>mujoco</td><td>—</td><td>资产容器</td></tr>
+<tr><td><code>&lt;texture&gt;</code></td><td>asset</td><td><code>name, type, builtin, file</code></td><td>纹理定义</td></tr>
+<tr><td><code>&lt;material&gt;</code></td><td>asset</td><td><code>name, texture, rgba, shininess</code></td><td>材质定义</td></tr>
+<tr><td><code>&lt;mesh&gt;</code></td><td>asset</td><td><code>name, file, scale</code></td><td>网格模型</td></tr>
+<tr><td><code>&lt;default&gt;</code></td><td>mujoco</td><td><code>class</code></td><td>默认参数</td></tr>
+<tr><td><code>&lt;worldbody&gt;</code></td><td>mujoco</td><td>—</td><td>世界根 body</td></tr>
+<tr><td><code>&lt;body&gt;</code></td><td>worldbody/body</td><td><code>name, pos, quat, euler</code></td><td>刚体</td></tr>
+<tr><td><code>&lt;geom&gt;</code></td><td>body/worldbody</td><td><code>name, type, size, pos, mass, density, rgba, friction</code></td><td>几何体</td></tr>
+<tr><td><code>&lt;joint&gt;</code></td><td>body</td><td><code>name, type, axis, range, damping, armature</code></td><td>关节</td></tr>
+<tr><td><code>&lt;freejoint&gt;</code></td><td>body</td><td><code>name</code></td><td>6-DOF 自由关节</td></tr>
+<tr><td><code>&lt;site&gt;</code></td><td>body/worldbody</td><td><code>name, pos, size, type, rgba</code></td><td>标记点</td></tr>
+<tr><td><code>&lt;light&gt;</code></td><td>body/worldbody</td><td><code>pos, dir, diffuse, directional</code></td><td>光源</td></tr>
+<tr><td><code>&lt;actuator&gt;</code></td><td>mujoco</td><td>—</td><td>执行器容器</td></tr>
+<tr><td><code>&lt;motor&gt;</code></td><td>actuator</td><td><code>name, joint, gear, ctrllimited, ctrlrange</code></td><td>力矩电机</td></tr>
+<tr><td><code>&lt;position&gt;</code></td><td>actuator</td><td><code>name, joint, kp</code></td><td>位置伺服</td></tr>
+<tr><td><code>&lt;velocity&gt;</code></td><td>actuator</td><td><code>name, joint, kv</code></td><td>速度控制器</td></tr>
+<tr><td><code>&lt;sensor&gt;</code></td><td>mujoco</td><td>—</td><td>传感器容器</td></tr>
+<tr><td><code>&lt;tendon&gt;</code></td><td>mujoco</td><td>—</td><td>肌腱容器</td></tr>
+<tr><td><code>&lt;equality&gt;</code></td><td>mujoco</td><td>—</td><td>约束容器</td></tr>
+</table>
+
+
+<h3 id="appendix-api">B. MuJoCo Python API 速查表</h3>
+
+<pre><code class="language-python"><span class="code-label">PYTHON — API 速查</span>import mujoco
+
+# ========== 加载 ==========
+model = mujoco.MjModel.from_xml_path("model.xml")
+model = mujoco.MjModel.from_xml_string(xml_str)
+data = mujoco.MjData(model)
+
+# ========== 仿真 ==========
+mujoco.mj_step(model, data)          # 完整一步（计算+积分）
+mujoco.mj_forward(model, data)       # 仅计算（不积分）
+mujoco.mj_resetData(model, data)     # 重置 data 到初始状态
+
+# ========== 名称/ID ==========
+id = mujoco.mj_name2id(model, mujoco.mjtObj.mjOBJ_BODY, "name")
+name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, id)
+# 类型: mjOBJ_BODY, mjOBJ_JOINT, mjOBJ_GEOM, mjOBJ_SITE, mjOBJ_ACTUATOR, mjOBJ_SENSOR
+
+# ========== 状态读写 ==========
+data.qpos[:]    # 广义坐标（关节位置 + 自由体位姿）
+data.qvel[:]    # 广义速度
+data.ctrl[:]    # 控制输入（设置后 mj_step 会用它）
+data.time       # 当前仿真时间
+
+# ========== 计算结果 ==========
+data.xpos[i]       # body i 的世界坐标位置 (3,)
+data.xquat[i]      # body i 的世界坐标姿态 (4,)
+data.site_xpos[i]  # site i 的世界坐标位置 (3,)
+data.ncon           # 接触点数
+data.contact[i]     # 第 i 个接触的信息
+data.sensordata     # 所有传感器数据（连续数组）
+
+# ========== 模型参数 ==========
+model.opt.timestep       # 时间步长
+model.opt.gravity        # 重力向量 (3,)
+model.body_mass[i]       # body i 的质量
+model.body_inertia[i]    # body i 的主惯性矩 (3,)
+model.geom_friction[i]   # geom i 的摩擦系数 (3,)
+model.jnt_damping[i]     # joint i 的阻尼
+model.jnt_range[i]       # joint i 的范围 (2,)
+model.actuator_ctrlrange[i]  # actuator i 的控制范围 (2,)
+
+# ========== 维度信息 ==========
+model.nq        # qpos 维度
+model.nv        # qvel 维度
+model.nu        # 执行器数
+model.nbody     # body 数
+model.njnt      # 关节数
+model.ngeom     # geom 数
+model.nsite     # site 数
+
+# ========== 雅可比 ==========
+jacp = np.zeros((3, model.nv))
+jacr = np.zeros((3, model.nv))
+mujoco.mj_jacSite(model, data, jacp, jacr, site_id)
+mujoco.mj_jacBody(model, data, jacp, jacr, body_id)
+
+# ========== 渲染 ==========
+import mujoco.viewer
+viewer = mujoco.viewer.launch_passive(model, data)
+viewer.sync()
+viewer.close()
+
+renderer = mujoco.Renderer(model, height=480, width=640)
+renderer.update_scene(data)
+image = renderer.render()  # (H, W, 3) uint8
+
+# ========== 保存/加载 ==========
+mujoco.mj_saveModel(model, "model.mjb", None)
+model = mujoco.MjModel.from_binary_path("model.mjb")</code></pre>
+
+
+<h3 id="appendix-errors">C. 常见错误和解决方案</h3>
+
+<table>
+<tr><th>错误信息</th><th>原因</th><th>解决方案</th></tr>
+<tr><td><code>Error: unknown attribute</code></td><td>XML 中使用了不存在的属性名</td><td>检查拼写，参考官方文档的属性列表</td></tr>
+<tr><td><code>Error: missing attribute</code></td><td>缺少必要属性</td><td>添加必要属性（如 geom 需要 type 或 size）</td></tr>
+<tr><td><code>NaN in qpos</code></td><td>数值不稳定（步长太大/力太大）</td><td>减小 timestep，检查 ctrl 是否有异常值</td></tr>
+<tr><td><code>Warning: Pre-allocated contact buffer full</code></td><td>接触点太多</td><td>在 <code>&lt;size&gt;</code> 中增加 <code>nconmax</code></td></tr>
+<tr><td>物体穿透地面</td><td>步长太大 或 速度太高</td><td>减小 timestep，增加 margin</td></tr>
+<tr><td>物体抖动</td><td>接触参数不合适</td><td>调节 solref, solimp 参数</td></tr>
+<tr><td><code>mj_name2id returns -1</code></td><td>名称不存在</td><td>检查 XML 中的 name 属性</td></tr>
+<tr><td>关节不动</td><td>未设置 ctrl 或未添加 actuator</td><td>检查 actuator 是否正确引用了 joint</td></tr>
+<tr><td>qpos 和 qvel 维度不匹配</td><td>正常现象（自由关节/球关节）</td><td>使用 model.nq 和 model.nv 获取正确维度</td></tr>
+<tr><td><code>import mujoco_py</code> 失败</td><td>使用了旧版 API</td><td>改用 <code>import mujoco</code>（3.x API）</td></tr>
+</table>
+
+
+<h3 id="appendix-links">D. 官方文档和学习资源</h3>
+
+<table>
+<tr><th>资源</th><th>链接</th><th>说明</th></tr>
+<tr><td>MuJoCo 官方文档</td><td><a href="https://mujoco.readthedocs.io/" target="_blank">mujoco.readthedocs.io</a></td><td>最权威的参考</td></tr>
+<tr><td>MJCF XML 参考</td><td><a href="https://mujoco.readthedocs.io/en/stable/XMLreference.html" target="_blank">XML Reference</a></td><td>所有标签和属性的完整说明</td></tr>
+<tr><td>Python API 参考</td><td><a href="https://mujoco.readthedocs.io/en/stable/python.html" target="_blank">Python Bindings</a></td><td>Python 绑定详细文档</td></tr>
+<tr><td>MuJoCo GitHub</td><td><a href="https://github.com/google-deepmind/mujoco" target="_blank">github.com/google-deepmind/mujoco</a></td><td>源码、issue、示例</td></tr>
+<tr><td>MuJoCo Menagerie</td><td><a href="https://github.com/google-deepmind/mujoco_menagerie" target="_blank">mujoco_menagerie</a></td><td>开源机器人模型库</td></tr>
+<tr><td>Gymnasium</td><td><a href="https://gymnasium.farama.org/" target="_blank">gymnasium.farama.org</a></td><td>RL 环境标准接口</td></tr>
+<tr><td>dm_control</td><td><a href="https://github.com/google-deepmind/dm_control" target="_blank">dm_control</a></td><td>DeepMind 控制任务套件</td></tr>
+<tr><td>Stable-Baselines3</td><td><a href="https://stable-baselines3.readthedocs.io/" target="_blank">stable-baselines3</a></td><td>RL 算法库</td></tr>
+</table>
+
+<div class="box thm">
+  <div class="box-title">✅ 推荐学习路径</div>
+  <ol>
+    <li>本教程 → 理解基础概念和 PushBox 项目</li>
+    <li>MuJoCo 官方教程 → 更多示例和深入细节</li>
+    <li>dm_control Colab 教程 → 动手实践</li>
+    <li>MuJoCo Menagerie → 学习真实机器人模型的建模方式</li>
+    <li>论文阅读 → Todorov 2012 (MuJoCo 原始论文)、sim-to-real 相关论文</li>
+  </ol>
+</div>
+
+<hr style="margin-top: 60px;">
+<p class="center muted small">
+  📚 MuJoCo 物理引擎完全学习教程 | 医疗机器人仿真项目 · 单项学习系列<br>
+  最后更新: 2026-02-06 | 基于 MuJoCo 3.x | 
+  <a href="https://github.com/google-deepmind/mujoco" target="_blank">MuJoCo GitHub</a>
+</p>
+
+</main>
+
+<!-- Back to top -->
+<button class="back-top" id="backTop" onclick="window.scrollTo({top:0})">↑</button>
+
+<script>
+// ============================================================
+// Theme Toggle
+// ============================================================
+function toggleTheme() {
+  const body = document.body;
+  const isDark = body.getAttribute('data-theme') === 'dark';
+  body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('hljs-dark').disabled = isDark;
+  document.getElementById('hljs-light').disabled = !isDark;
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+}
+
+// Restore theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved) {
+    document.body.setAttribute('data-theme', saved);
+    document.getElementById('hljs-dark').disabled = saved === 'light';
+    document.getElementById('hljs-light').disabled = saved === 'dark';
+  }
+})();
+
+// ============================================================
+// Code Highlighting
+// ============================================================
+hljs.highlightAll();
+
+// ============================================================
+// Progress Bar
+// ============================================================
+window.addEventListener('scroll', function() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  document.getElementById('progressBar').style.width = progress + '%';
+  
+  // Back to top button
+  const btn = document.getElementById('backTop');
+  if (scrollTop > 400) btn.classList.add('show');
+  else btn.classList.remove('show');
+});
+
+// ============================================================
+// Active TOC Tracking
+// ============================================================
+(function() {
+  const headings = document.querySelectorAll('h2[id], h3[id]');
+  const links = document.querySelectorAll('.sidebar a');
+  
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.getAttribute('id');
+        links.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-80px 0px -70% 0px' });
+  
+  headings.forEach(h => observer.observe(h));
+})();
+
+// ============================================================
+// Reading Time Estimate
+// ============================================================
+(function() {
+  const text = document.querySelector('.main-content').textContent;
+  const charCount = text.length;
+  // Chinese: ~400 chars/min reading speed
+  const minutes = Math.ceil(charCount / 400);
+  document.getElementById('readingTime').textContent = `约 ${minutes} 分钟阅读`;
+})();
+
+// ============================================================
+// Mobile sidebar close on link click
+// ============================================================
+document.querySelectorAll('.sidebar a').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth <= 900) {
+      document.querySelector('.sidebar').classList.remove('open');
+    }
+  });
+});
+</script>
+
+</body>
+</html>
