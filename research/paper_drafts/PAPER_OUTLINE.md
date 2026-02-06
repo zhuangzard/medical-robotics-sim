@@ -125,16 +125,17 @@
 
 ### 4.1 Environments
 - **PushBox (single-object):** Push a box to a target location on a table. Simple baseline task.
-  - State: 18-dim (robot 7 DoF pos+vel, box pos+vel+size, target pos)
-  - Action: 4-dim (end-effector velocity + gripper)
-  - Reward: −‖box − target‖₂ + bonus at goal
+  - State: 16-dim (joint pos(2), joint vel(2), ee pos(3), box pos(3), box vel(3), goal(3))
+  - Action: 2-dim (shoulder torque, elbow torque) in [−10, 10] Nm
+  - Robot: 2-DOF planar arm (shoulder + elbow hinge joints)
+  - Reward: −‖ee − box‖ − ‖box − target‖ + 100 × success
 - **MultiPush (3–5 objects):** Push multiple boxes to respective targets simultaneously.
   - Variable number of objects; tests graph structure and generalization.
   - Reward: sum of per-object rewards.
 - **Sort (2 colors, 4–6 objects):** Sort objects by color to two target zones.
   - Requires reasoning about object properties (color → target mapping).
   - Most complex: contact-rich, long-horizon, combinatorial.
-- **All environments:** MuJoCo-based, 50 Hz control, episode length 200 steps.
+- **All environments:** MuJoCo-based, 50 Hz control (dt=0.002s × 5 substeps), episode length 500 steps.
 
 ### 4.2 Baselines
 - **PPO (Schulman et al., 2017):** Standard MLP policy (256-256).

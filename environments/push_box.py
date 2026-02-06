@@ -1,526 +1,270 @@
 """
-PushBox Environment - Simple rigid body manipulation task for Dynami-CAL validation
+PushBox Environment — Canonical Implementation
+================================================
 
-Task: Robot arm pushes a box to a goal position
-Physics: MuJoCo for rigid body dynamics + contact physics
-Purpose: Validate 12.5x sample efficiency and OOD generalization (paper Section 4.1)
+2-DOF planar robot arm pushes a box to a goal position on a table.
+This is the **single authoritative** environment for the PhysRobot project.
 
-Author: Physics-Informed Robotics Team
-Date: 2026-02-05
+Robot:   2-DOF (shoulder + elbow), torque-controlled
+State:   16-dim  [joint_pos(2), joint_vel(2), ee_pos(3), box_pos(3), box_vel(3), goal(3)]
+Action:  2-dim   [shoulder_torque, elbow_torque] in [-10, 10] Nm
+Physics: MuJoCo, dt=0.002s, 5 substeps per env step → 50 Hz control
+
+See ENV_SPECIFICATION.md for full details.
+
+History:
+  - v1 (push_box_deprecated.py): 10-dim obs, missing end-effector position — RETIRED
+  - v2 (this file): 16-dim obs, includes ee_pos — CANONICAL
 """
 
 import numpy as np
+import mujoco
 import gymnasium as gym
 from gymnasium import spaces
-import mujoco
 import os
-from typing import Optional, Tuple, Dict, Any
-import time
 
 
 class PushBoxEnv(gym.Env):
     """
-    Simple rigid body manipulation task for physics learning validation
+    2-DOF robot arm must push a box to a goal position.
     
-    State Space:
-        - robot_joint_pos (2): shoulder, elbow angles [rad]
-        - robot_joint_vel (2): joint velocities [rad/s]
-        - box_pos (2): x, y position [m]
-        - box_vel (2): x, y velocity [m/s]
-        - goal_pos (2): x, y target position [m]
-        Total: 10 dimensions
+    Observation Space:
+        - Joint positions (2)
+        - Joint velocities (2)
+        - End-effector position (3)
+        - Box position (3)
+        - Box velocity (3)
+        - Goal position (3)
+        Total: 16-dimensional
     
     Action Space:
-        - joint_torques (2): shoulder, elbow torques [Nm]
-        Range: [-10, 10] Nm
+        - Joint torques (2): [-10, 10] Nm
     
     Reward:
-        - distance_reward: -||box_pos - goal_pos||
-        - contact_bonus: +0.1 when robot contacts box
-        - control_cost: -0.01 * ||action||^2
-        - success_bonus: +10 when box reaches goal
-    
-    Physics Parameters:
-        - Box mass: 0.5-2.0 kg (default 1.0 kg for training)
-        - Friction coefficient: μ = 0.3
-        - Contact model: Spring-damper (MuJoCo default)
-        - Timestep: 0.002 s
-    
-    Success Criteria:
-        Box within 0.05m of goal for 10 consecutive timesteps
+        - r1: -dist(endeffector, box)  — encourages reaching the box
+        - r2: -dist(box, goal)         — encourages pushing toward goal
+        - r  = 0.5*r1 + r2 + 100*success
     """
     
-    metadata = {
-        'render_modes': ['human', 'rgb_array'],
-        'render_fps': 50
-    }
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 50}
     
-    def __init__(
-        self,
-        render_mode: Optional[str] = None,
-        max_episode_steps: int = 500,
-        box_mass: float = 1.0,
-        friction_coef: float = 0.3,
-        success_threshold: float = 0.05,
-        success_duration: int = 10
-    ):
-        """
-        Initialize PushBox environment
-        
-        Args:
-            render_mode: 'human' for visualization, 'rgb_array' for video
-            max_episode_steps: Maximum steps per episode
-            box_mass: Mass of the box [kg]
-            friction_coef: Friction coefficient
-            success_threshold: Distance threshold for success [m]
-            success_duration: Number of steps to maintain success
-        """
+    def __init__(self, render_mode=None, box_mass=0.5):
         super().__init__()
-        
-        # Environment parameters
-        self.max_episode_steps = max_episode_steps
-        self.success_threshold = success_threshold
-        self.success_duration = success_duration
-        self.render_mode = render_mode
-        
-        # Physics parameters
-        self.box_mass = box_mass
-        self.friction_coef = friction_coef
         
         # Load MuJoCo model
         xml_path = os.path.join(
-            os.path.dirname(__file__),
-            'assets',
-            'push_box.xml'
+            os.path.dirname(__file__), 
+            "assets", 
+            "push_box.xml"
         )
-        
-        if not os.path.exists(xml_path):
-            raise FileNotFoundError(f"MuJoCo XML not found: {xml_path}")
-        
         self.model = mujoco.MjModel.from_xml_path(xml_path)
         self.data = mujoco.MjData(self.model)
         
-        # Set physics parameters
-        self._set_physics_params()
+        # Configurable box mass (for OOD testing)
+        self.box_mass = box_mass
+        self._set_box_mass(box_mass)
         
-        # Rendering
-        self.renderer = None
-        if render_mode == "human":
-            self.renderer = mujoco.Renderer(self.model, height=720, width=1280)
-        
-        # Define spaces
-        # State: [joint_pos(2), joint_vel(2), box_pos(2), box_vel(2), goal_pos(2)]
-        self.observation_space = spaces.Box(
-            low=-np.inf,
-            high=np.inf,
-            shape=(10,),
-            dtype=np.float32
+        # Cache site/body ids
+        self._ee_site_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_SITE, "endeffector"
+        )
+        self._box_body_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_BODY, "box"
         )
         
-        # Action: [shoulder_torque, elbow_torque]
+        # Spaces
         self.action_space = spaces.Box(
-            low=-10.0,
-            high=10.0,
-            shape=(2,),
+            low=-10.0, 
+            high=10.0, 
+            shape=(2,), 
             dtype=np.float32
         )
         
-        # Internal state
+        self.observation_space = spaces.Box(
+            low=-np.inf, 
+            high=np.inf, 
+            shape=(16,), 
+            dtype=np.float32
+        )
+        
+        # Goal position — within arm+push reach
+        # Arm reach = 0.4 + 0.3 = 0.7m from origin
+        # Box can be pushed ~0.2-0.3m further, so goal at ~0.5-0.6m is reachable
+        self.goal_pos = np.array([0.5, 0.3, 0.02])
+        
+        # Episode tracking
+        self.max_episode_steps = 500
         self.current_step = 0
-        self.success_counter = 0
-        self.goal_position = np.array([1.0, 0.5])  # Will be randomized
         
-        # Episode statistics (for StableBaselines3)
-        self.episode_reward = 0.0
-        self.episode_length = 0
+        # Success threshold
+        self.success_threshold = 0.1  # meters
         
-        self.episode_data = {
-            'states': [],
-            'actions': [],
-            'rewards': [],
-            'contacts': []
-        }
+        # Render mode
+        self.render_mode = render_mode
+        self.viewer = None
         
-    def _set_physics_params(self):
-        """Set physics parameters in MuJoCo model"""
-        # Find box body
-        box_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "box")
-        box_geom_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, "box_geom")
+    def _set_box_mass(self, mass):
+        """Set the box mass (for OOD generalization testing)"""
+        box_body_id = mujoco.mj_name2id(
+            self.model, 
+            mujoco.mjtObj.mjOBJ_BODY, 
+            "box"
+        )
+        self.model.body_mass[box_body_id] = mass
         
-        # Set mass (modify inertia matrix)
-        # MuJoCo stores mass in body_mass array
-        if box_id >= 0:
-            # Mass is set via geom mass which contributes to body
-            # We'll modify it during reset for OOD testing
-            pass
+    def set_box_mass(self, mass):
+        """Public interface to change box mass"""
+        self.box_mass = mass
+        self._set_box_mass(mass)
         
-        # Set friction
-        if box_geom_id >= 0:
-            self.model.geom_friction[box_geom_id] = [
-                self.friction_coef,  # sliding friction
-                0.005,               # torsional friction
-                0.0001               # rolling friction
-            ]
-    
-    def reset(
-        self,
-        seed: Optional[int] = None,
-        options: Optional[Dict[str, Any]] = None
-    ) -> Tuple[np.ndarray, Dict[str, Any]]:
-        """
-        Reset environment to initial state
-        
-        Args:
-            seed: Random seed
-            options: Additional options (e.g., 'box_mass', 'goal_pos')
-        
-        Returns:
-            observation: Initial state
-            info: Additional information
-        """
+    def reset(self, seed=None, options=None):
         super().reset(seed=seed)
         
         # Reset MuJoCo simulation
         mujoco.mj_resetData(self.model, self.data)
         
-        # Randomize initial positions
-        if options and 'box_pos' in options:
-            box_pos = options['box_pos']
-        else:
-            # Random box position in [0.3, 0.7] x [-0.3, 0.3]
-            box_pos = np.array([
-                self.np_random.uniform(0.3, 0.7),
-                self.np_random.uniform(-0.3, 0.3)
-            ])
+        # Randomize initial positions slightly for robustness
+        if seed is not None:
+            np.random.seed(seed)
         
-        if options and 'goal_pos' in options:
-            self.goal_position = options['goal_pos']
-        else:
-            # Random goal position in [0.8, 1.2] x [-0.5, 0.5]
-            self.goal_position = np.array([
-                self.np_random.uniform(0.8, 1.2),
-                self.np_random.uniform(-0.5, 0.5)
-            ])
+        # Robot arm: random initial pose (small angles so arm starts roughly forward)
+        self.data.qpos[0] = np.random.uniform(-0.5, 0.5)  # shoulder
+        self.data.qpos[1] = np.random.uniform(-0.5, 0.5)  # elbow
         
-        # Set box mass if specified (for OOD testing)
-        if options and 'box_mass' in options:
-            self.set_box_mass(options['box_mass'])
+        # Box: start within arm reach (0.2–0.45m from origin)
+        # qpos layout: [shoulder, elbow, box_x, box_y, box_z, box_qw, box_qx, box_qy, box_qz]
+        self.data.qpos[2] = np.random.uniform(0.25, 0.45)  # x — within arm reach
+        self.data.qpos[3] = np.random.uniform(-0.15, 0.15)  # y
+        self.data.qpos[4] = 0.05  # z (on ground)
+        # Quaternion for box orientation (no rotation)
+        self.data.qpos[5:9] = [1, 0, 0, 0]
         
-        # Set initial state
-        # Box position (freejoint has 7 DOFs: 3 pos + 4 quat)
-        box_qpos_addr = self.model.jnt_qposadr[
-            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, "box_freejoint")
-        ]
-        self.data.qpos[box_qpos_addr:box_qpos_addr+3] = [box_pos[0], box_pos[1], 0.05]
-        self.data.qpos[box_qpos_addr+3:box_qpos_addr+7] = [1, 0, 0, 0]  # identity quaternion
+        # Reset velocities
+        self.data.qvel[:] = 0.0
         
-        # Random arm configuration
-        self.data.qpos[0] = self.np_random.uniform(-np.pi/4, np.pi/4)  # shoulder
-        self.data.qpos[1] = self.np_random.uniform(-np.pi/4, np.pi/4)  # elbow
-        
-        # Zero velocities
-        self.data.qvel[:] = 0
-        
-        # Update goal marker position
-        goal_site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, "goal")
-        self.model.site_pos[goal_site_id] = [self.goal_position[0], self.goal_position[1], 0.05]
-        
-        # Forward dynamics to compute dependent quantities
+        # Forward kinematics
         mujoco.mj_forward(self.model, self.data)
         
-        # Reset counters
         self.current_step = 0
-        self.success_counter = 0
-        
-        # Reset episode statistics
-        self.episode_reward = 0.0
-        self.episode_length = 0
-        
-        self.episode_data = {
-            'states': [],
-            'actions': [],
-            'rewards': [],
-            'contacts': []
-        }
         
         observation = self._get_obs()
         info = self._get_info()
         
         return observation, info
     
-    def step(self, action: np.ndarray) -> Tuple[np.ndarray, float, bool, bool, Dict[str, Any]]:
-        """
-        Execute one step in the environment
-        
-        Args:
-            action: Joint torques [shoulder, elbow]
-        
-        Returns:
-            observation: Current state
-            reward: Step reward
-            terminated: Whether episode ended (success/failure)
-            truncated: Whether episode was cut off (max steps)
-            info: Additional information
-        """
-        # Clip action to valid range
-        action = np.clip(action, self.action_space.low, self.action_space.high)
-        
-        # Apply control
-        self.data.ctrl[:] = action
-        
-        # Step simulation (multiple substeps for stability)
-        substeps = 10
-        for _ in range(substeps):
-            mujoco.mj_step(self.model, self.data)
-        
-        # Get observation
-        observation = self._get_obs()
-        
-        # Compute reward
-        reward, reward_info = self._compute_reward(action)
-        
-        # Check termination conditions
-        terminated = False
-        truncated = False
-        
-        # Success: box at goal for required duration
-        box_pos = self._get_box_position()
-        dist_to_goal = np.linalg.norm(box_pos[:2] - self.goal_position)  # Only x, y
-        
-        if dist_to_goal < self.success_threshold:
-            self.success_counter += 1
-            if self.success_counter >= self.success_duration:
-                terminated = True
-                reward += 10.0  # Success bonus
-        else:
-            self.success_counter = 0
-        
-        # Failure: box falls off table (z < 0)
-        if box_pos[2] < 0:
-            terminated = True
-            reward -= 5.0  # Failure penalty
-        
-        # Max steps
-        self.current_step += 1
-        if self.current_step >= self.max_episode_steps:
-            truncated = True
-        
-        # Update episode statistics
-        self.episode_reward += reward
-        self.episode_length += 1
-        
-        # Store episode data
-        self.episode_data['states'].append(observation)
-        self.episode_data['actions'].append(action)
-        self.episode_data['rewards'].append(reward)
-        self.episode_data['contacts'].append(reward_info['contact'])
-        
-        # Get info
-        info = self._get_info()
-        info.update(reward_info)
-        info['success'] = self.success_counter >= self.success_duration
-        
-        # Add episode statistics when episode ends (required by StableBaselines3)
-        if terminated or truncated:
-            info['episode'] = {
-                'r': self.episode_reward,
-                'l': self.episode_length
-            }
-        
-        return observation, reward, terminated, truncated, info
-    
-    def _get_obs(self) -> np.ndarray:
-        """
-        Get current observation
-        
-        Returns:
-            State vector [10]: [joint_pos, joint_vel, box_pos, box_vel, goal_pos]
-        """
+    def _get_obs(self):
+        """Get observation vector (16-dim)"""
         # Joint positions and velocities
-        joint_pos = self.data.qpos[:2]  # shoulder, elbow
-        joint_vel = self.data.qvel[:2]
+        joint_pos = self.data.qpos[:2].copy()
+        joint_vel = self.data.qvel[:2].copy()
         
-        # Box position and velocity (freejoint)
-        box_qpos_addr = self.model.jnt_qposadr[
-            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, "box_freejoint")
-        ]
-        box_qvel_addr = self.model.jnt_dofadr[
-            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, "box_freejoint")
-        ]
+        # End-effector position (from site)
+        ee_pos = self.data.site_xpos[self._ee_site_id].copy()
         
-        box_pos = self.data.qpos[box_qpos_addr:box_qpos_addr+2]  # x, y only
-        box_vel = self.data.qvel[box_qvel_addr:box_qvel_addr+2]  # vx, vy only
+        # Box position (from freejoint qpos: indices 2,3,4)
+        box_pos = self.data.qpos[2:5].copy()
         
-        # Concatenate observation
+        # Box velocity (from freejoint qvel: indices 2,3,4 — translational part)
+        box_vel = self.data.qvel[2:5].copy()
+        
+        # Goal position
+        goal_pos = self.goal_pos.copy()
+        
         obs = np.concatenate([
-            joint_pos,
-            joint_vel,
-            box_pos,
-            box_vel,
-            self.goal_position
+            joint_pos,      # 2
+            joint_vel,      # 2
+            ee_pos,         # 3
+            box_pos,        # 3
+            box_vel,        # 3
+            goal_pos        # 3
         ])
         
         return obs.astype(np.float32)
     
-    def _get_box_position(self) -> np.ndarray:
-        """Get 3D position of box center"""
-        box_qpos_addr = self.model.jnt_qposadr[
-            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, "box_freejoint")
-        ]
-        return self.data.qpos[box_qpos_addr:box_qpos_addr+3].copy()
-    
-    def _compute_reward(self, action: np.ndarray) -> Tuple[float, Dict[str, Any]]:
-        """
-        Compute step reward
-        
-        Returns:
-            reward: Total reward
-            info: Breakdown of reward components
-        """
-        # Distance to goal
-        box_pos = self._get_box_position()[:2]  # x, y only
-        dist_to_goal = np.linalg.norm(box_pos - self.goal_position)
-        distance_reward = -dist_to_goal
-        
-        # Contact bonus (check if robot touches box)
-        contact = self._check_contact()
-        contact_bonus = 0.1 if contact else 0.0
-        
-        # Control cost
-        control_cost = -0.01 * np.sum(action ** 2)
-        
-        # Total reward
-        reward = distance_reward + contact_bonus + control_cost
-        
-        info = {
-            'distance_reward': distance_reward,
-            'contact_bonus': contact_bonus,
-            'control_cost': control_cost,
-            'distance_to_goal': dist_to_goal,
-            'contact': contact
-        }
-        
-        return reward, info
-    
-    def _check_contact(self) -> bool:
-        """Check if robot end-effector is in contact with box"""
-        # Get contact information from MuJoCo
-        for i in range(self.data.ncon):
-            contact = self.data.contact[i]
-            
-            # Use correct MuJoCo API to get geometry names
-            geom1_name = mujoco.mj_id2name(
-                self.model, 
-                mujoco.mjtObj.mjOBJ_GEOM, 
-                contact.geom1
-            )
-            geom2_name = mujoco.mj_id2name(
-                self.model, 
-                mujoco.mjtObj.mjOBJ_GEOM, 
-                contact.geom2
-            )
-            
-            # Check if contact involves arm and box
-            arm_geoms = ['upper_arm_geom', 'forearm_geom']
-            box_geom = 'box_geom'
-            
-            if (geom1_name in arm_geoms and geom2_name == box_geom) or \
-               (geom2_name in arm_geoms and geom1_name == box_geom):
-                return True
-        
-        return False
-    
-    def _get_info(self) -> Dict[str, Any]:
-        """Get additional info"""
-        box_pos = self._get_box_position()
+    def _get_info(self):
+        """Get episode info"""
+        box_pos = self.data.qpos[2:5]
+        distance_to_goal = np.linalg.norm(box_pos[:2] - self.goal_pos[:2])
+        success = distance_to_goal < self.success_threshold
         
         return {
-            'step': self.current_step,
-            'box_position': box_pos,
-            'goal_position': self.goal_position,
-            'success_counter': self.success_counter,
-            'box_mass': self.box_mass
+            'distance_to_goal': distance_to_goal,
+            'success': success,
+            'box_mass': self.box_mass,
+            'timestep': self.current_step
         }
     
-    def set_box_mass(self, mass: float):
-        """
-        Set box mass (for OOD testing)
+    def step(self, action):
+        """Execute one timestep"""
+        # Apply action (joint torques)
+        self.data.ctrl[:] = action
         
-        Args:
-            mass: New mass [kg]
-        """
-        self.box_mass = mass
+        # Step simulation (multiple sub-steps for stability)
+        n_substeps = 5
+        for _ in range(n_substeps):
+            mujoco.mj_step(self.model, self.data)
         
-        # Update geom mass
-        box_geom_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_GEOM, "box_geom")
-        if box_geom_id >= 0:
-            # Get geom size (box half-extents)
-            size = self.model.geom_size[box_geom_id]
-            volume = 8 * size[0] * size[1] * size[2]
-            density = mass / volume
-            
-            # Set mass directly
-            # Note: This is a workaround; proper way is to set density and recompile
-            # For quick testing, we modify the inertia
-            box_body_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_BODY, "box")
-            if box_body_id >= 0:
-                # Scale inertia proportionally
-                old_mass = self.model.body_mass[box_body_id]
-                scale = mass / max(old_mass, 0.001)
-                
-                self.model.body_mass[box_body_id] = mass
-                self.model.body_inertia[box_body_id] *= scale
+        # Get positions
+        ee_pos = self.data.site_xpos[self._ee_site_id].copy()
+        box_pos = self.data.qpos[2:5].copy()
+        
+        # ---- Reward shaping ----
+        # r1: encourage end-effector to reach the box
+        dist_ee_box = np.linalg.norm(ee_pos[:2] - box_pos[:2])
+        r1 = -dist_ee_box
+        
+        # r2: encourage box to be near goal
+        dist_box_goal = np.linalg.norm(box_pos[:2] - self.goal_pos[:2])
+        r2 = -dist_box_goal
+        
+        # Combined reward
+        reward = 0.5 * r1 + r2
+        
+        # Sparse bonus for success
+        success = dist_box_goal < self.success_threshold
+        if success:
+            reward += 100.0
+        
+        # Get observation
+        observation = self._get_obs()
+        
+        # Check termination
+        self.current_step += 1
+        terminated = success
+        truncated = self.current_step >= self.max_episode_steps
+        
+        info = self._get_info()
+        
+        return observation, reward, terminated, truncated, info
     
     def render(self):
-        """Render the environment"""
-        if self.render_mode == "human":
-            if self.renderer is None:
-                self.renderer = mujoco.Renderer(self.model, height=720, width=1280)
-            
-            self.renderer.update_scene(self.data)
-            return self.renderer.render()
+        if self.render_mode == "rgb_array":
+            return self._render_frame()
+        elif self.render_mode == "human":
+            return self._render_frame()
+    
+    def _render_frame(self):
+        if self.viewer is None and self.render_mode == "human":
+            import mujoco.viewer
+            self.viewer = mujoco.viewer.launch_passive(
+                self.model, 
+                self.data
+            )
         
-        elif self.render_mode == "rgb_array":
-            renderer = mujoco.Renderer(self.model, height=480, width=640)
-            renderer.update_scene(self.data)
-            return renderer.render()
+        if self.render_mode == "human" and self.viewer is not None:
+            self.viewer.sync()
         
         return None
     
     def close(self):
-        """Clean up resources"""
-        if self.renderer is not None:
-            self.renderer.close()
-            self.renderer = None
-    
-    def get_episode_data(self) -> Dict[str, np.ndarray]:
-        """
-        Get collected episode data
-        
-        Returns:
-            Dictionary with states, actions, rewards, contacts
-        """
-        return {
-            'states': np.array(self.episode_data['states']),
-            'actions': np.array(self.episode_data['actions']),
-            'rewards': np.array(self.episode_data['rewards']),
-            'contacts': np.array(self.episode_data['contacts'])
-        }
+        if self.viewer is not None:
+            self.viewer.close()
+            self.viewer = None
 
 
-# Factory function for easy creation
-def make_push_box_env(
-    render_mode: Optional[str] = None,
-    **kwargs
-) -> PushBoxEnv:
-    """
-    Factory function to create PushBoxEnv
-    
-    Args:
-        render_mode: Render mode
-        **kwargs: Additional environment parameters
-    
-    Returns:
-        PushBoxEnv instance
-    """
-    return PushBoxEnv(render_mode=render_mode, **kwargs)
+# Factory function for vectorized environments
+def make_push_box_env(box_mass=0.5):
+    """Factory function for creating PushBox environments"""
+    def _init():
+        return PushBoxEnv(box_mass=box_mass)
+    return _init
