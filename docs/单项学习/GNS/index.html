@@ -1,0 +1,3034 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GNS 图网络模拟器 — 超详细学习教程</title>
+
+<!-- KaTeX for math rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+
+<style>
+/* ===== CSS Variables ===== */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-code: #f4f5f7;
+  --bg-sidebar: #f0f2f5;
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6a;
+  --text-muted: #8888aa;
+  --border-color: #e0e0e8;
+  --accent: #4361ee;
+  --accent-light: #e8edff;
+  --link: #4361ee;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,0.1);
+  --radius: 12px;
+  --sidebar-width: 300px;
+  --def-bg: #e8f4fd;
+  --def-border: #3b82f6;
+  --thm-bg: #ecfdf5;
+  --thm-border: #10b981;
+  --example-bg: #fefce8;
+  --example-border: #f59e0b;
+  --warn-bg: #fef2f2;
+  --warn-border: #ef4444;
+  --code-keyword: #d73a49;
+  --code-string: #032f62;
+  --code-comment: #6a737d;
+  --code-function: #6f42c1;
+  --code-number: #005cc5;
+  --code-class: #e36209;
+  --code-builtin: #005cc5;
+  --code-decorator: #6f42c1;
+  --code-self: #d73a49;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-code: #1c2333;
+  --bg-sidebar: #0d1117;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --border-color: #30363d;
+  --accent: #58a6ff;
+  --accent-light: #1c2d4a;
+  --link: #58a6ff;
+  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,0.4);
+  --def-bg: #0d1f3c;
+  --def-border: #58a6ff;
+  --thm-bg: #0d2818;
+  --thm-border: #3fb950;
+  --example-bg: #2d2000;
+  --example-border: #d29922;
+  --warn-bg: #2d0000;
+  --warn-border: #f85149;
+  --code-keyword: #ff7b72;
+  --code-string: #a5d6ff;
+  --code-comment: #8b949e;
+  --code-function: #d2a8ff;
+  --code-number: #79c0ff;
+  --code-class: #ffa657;
+  --code-builtin: #79c0ff;
+  --code-decorator: #d2a8ff;
+  --code-self: #ff7b72;
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.8;
+  font-size: 16px;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  z-index: 100;
+  padding: 20px 0;
+  transition: transform 0.3s ease, background 0.3s;
+}
+
+.sidebar-header {
+  padding: 10px 20px 20px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 10px;
+}
+
+.sidebar-header h2 {
+  font-size: 18px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.sidebar-header p {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sidebar nav {
+  padding: 0 12px;
+}
+
+.sidebar nav a {
+  display: block;
+  padding: 6px 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  line-height: 1.5;
+}
+
+.sidebar nav a:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.sidebar nav a.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.sidebar nav .chapter-title {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 14px;
+  padding: 12px 12px 4px;
+  margin-top: 6px;
+}
+
+.sidebar nav .chapter-title:first-child {
+  margin-top: 0;
+}
+
+/* ===== Main Content ===== */
+.main-content {
+  margin-left: var(--sidebar-width);
+  max-width: 900px;
+  padding: 30px 50px 80px;
+}
+
+/* ===== Top Bar ===== */
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  height: 56px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 30px;
+  z-index: 99;
+  transition: background 0.3s;
+  gap: 12px;
+}
+
+.top-bar .btn-theme {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.top-bar .btn-theme:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.menu-toggle {
+  display: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* ===== Hero Section ===== */
+.hero {
+  margin-top: 56px;
+  padding: 60px 0 40px;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 2.8em;
+  font-weight: 800;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--accent), #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero .subtitle {
+  font-size: 1.2em;
+  color: var(--text-secondary);
+  max-width: 700px;
+  margin: 0 auto 30px;
+}
+
+.hero .badges {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ===== Headings ===== */
+h2 {
+  font-size: 2em;
+  font-weight: 700;
+  margin-top: 60px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--accent);
+  color: var(--text-primary);
+}
+
+h3 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 40px;
+  margin-bottom: 14px;
+  color: var(--text-primary);
+}
+
+h4 {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+p { margin-bottom: 14px; }
+
+/* ===== Highlight Boxes ===== */
+.box {
+  padding: 20px 24px;
+  border-radius: var(--radius);
+  margin: 20px 0;
+  border-left: 4px solid;
+}
+
+.box-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.box.definition {
+  background: var(--def-bg);
+  border-color: var(--def-border);
+}
+
+.box.theorem {
+  background: var(--thm-bg);
+  border-color: var(--thm-border);
+}
+
+.box.example {
+  background: var(--example-bg);
+  border-color: var(--example-border);
+}
+
+.box.warning {
+  background: var(--warn-bg);
+  border-color: var(--warn-border);
+}
+
+/* ===== Code Blocks ===== */
+.code-container {
+  position: relative;
+  margin: 16px 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.code-header .copy-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.code-header .copy-btn:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+pre {
+  background: var(--bg-code);
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+code {
+  font-family: "SF Mono", "Fira Code", "JetBrains Mono", Menlo, Consolas, monospace;
+}
+
+p code, li code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  border: 1px solid var(--border-color);
+}
+
+/* ===== Syntax Highlighting ===== */
+.kw { color: var(--code-keyword); font-weight: 600; }
+.str { color: var(--code-string); }
+.cmt { color: var(--code-comment); font-style: italic; }
+.fn { color: var(--code-function); }
+.num { color: var(--code-number); }
+.cls { color: var(--code-class); }
+.bi { color: var(--code-builtin); }
+.dec { color: var(--code-decorator); }
+.sf { color: var(--code-self); font-weight: 600; }
+
+/* ===== Tables ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 14px;
+}
+
+th, td {
+  padding: 12px 16px;
+  border: 1px solid var(--border-color);
+  text-align: left;
+}
+
+th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+}
+
+tr:nth-child(even) {
+  background: var(--bg-secondary);
+}
+
+/* ===== SVG Diagrams ===== */
+.diagram {
+  text-align: center;
+  margin: 30px 0;
+}
+
+.diagram svg {
+  max-width: 100%;
+}
+
+.diagram figcaption {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* ===== Lists ===== */
+ul, ol {
+  padding-left: 24px;
+  margin-bottom: 14px;
+}
+
+li { margin-bottom: 6px; }
+
+/* ===== Responsive ===== */
+@media (max-width: 960px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .main-content {
+    margin-left: 0;
+    padding: 30px 20px 80px;
+  }
+  .top-bar {
+    left: 0;
+  }
+  .menu-toggle {
+    display: block;
+  }
+  .hero h1 {
+    font-size: 2em;
+  }
+}
+
+/* ===== Scrollbar ===== */
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+/* ===== Progress Bar ===== */
+.progress-bar {
+  position: fixed;
+  top: 56px;
+  left: var(--sidebar-width);
+  right: 0;
+  height: 3px;
+  background: var(--border-color);
+  z-index: 98;
+}
+.progress-bar .fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.1s;
+}
+
+@media (max-width: 960px) {
+  .progress-bar { left: 0; }
+}
+
+/* ===== Flow Diagram ===== */
+.flow-diagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.flow-box {
+  background: var(--accent-light);
+  border: 2px solid var(--accent);
+  color: var(--accent);
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+}
+
+.flow-arrow {
+  font-size: 20px;
+  color: var(--accent);
+}
+
+/* ===== Comparison Grid ===== */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.compare-card {
+  padding: 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.compare-card h4 {
+  margin-top: 0;
+  color: var(--accent);
+}
+
+@media (max-width: 600px) {
+  .compare-grid { grid-template-columns: 1fr; }
+}
+
+/* ===== Anchor link ===== */
+h2[id], h3[id], h4[id] {
+  scroll-margin-top: 80px;
+}
+
+/* ===== Inline Math ===== */
+.katex-display { margin: 20px 0; }
+
+/* ===== Back to top ===== */
+.back-to-top {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 90;
+  box-shadow: var(--shadow);
+  transition: opacity 0.3s;
+}
+
+.back-to-top.visible {
+  display: flex;
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>📊 GNS 教程</h2>
+    <p>Graph Network Simulator 完全指南</p>
+  </div>
+  <nav id="sidebar-nav">
+    <div class="chapter-title">第一章：图的基础</div>
+    <a href="#ch1-graph">1.1 什么是图</a>
+    <a href="#ch1-directed">1.2 有向图 vs 无向图</a>
+    <a href="#ch1-repr">1.3 图的表示方法</a>
+    <a href="#ch1-physics">1.4 图在物理系统中的应用</a>
+    <a href="#ch1-pushbox">1.5 我们的 PushBox 图</a>
+
+    <div class="chapter-title">第二章：图神经网络基础</div>
+    <a href="#ch2-why">2.1 为什么需要 GNN</a>
+    <a href="#ch2-mp">2.2 消息传递范式</a>
+    <a href="#ch2-gcn">2.3 GCN 图卷积网络</a>
+    <a href="#ch2-gat">2.4 GAT 图注意力网络</a>
+    <a href="#ch2-sage">2.5 GraphSAGE</a>
+    <a href="#ch2-pyg">2.6 PyTorch Geometric 入门</a>
+
+    <div class="chapter-title">第三章：GNS 详解</div>
+    <a href="#ch3-bg">3.1 GNS 论文背景</a>
+    <a href="#ch3-epd">3.2 Encode-Process-Decode</a>
+    <a href="#ch3-node">3.3 节点特征设计</a>
+    <a href="#ch3-edge">3.4 边特征设计</a>
+    <a href="#ch3-impl">3.5 消息传递层实现</a>
+    <a href="#ch3-multi">3.6 多轮消息传递</a>
+    <a href="#ch3-global">3.7 全局特征</a>
+
+    <div class="chapter-title">第四章：Edge Frame</div>
+    <a href="#ch4-what">4.1 什么是 Edge Frame</a>
+    <a href="#ch4-why">4.2 为什么重要</a>
+    <a href="#ch4-math">4.3 数学推导</a>
+    <a href="#ch4-code">4.4 代码解析</a>
+    <a href="#ch4-compare">4.5 有无对比</a>
+
+    <div class="chapter-title">第五章：Dynami-CAL GNN</div>
+    <a href="#ch5-what">5.1 什么是 Dynami-CAL</a>
+    <a href="#ch5-pmp">5.2 PhysicsMessagePassing</a>
+    <a href="#ch5-arch">5.3 完整架构</a>
+    <a href="#ch5-conservation">5.4 守恒定律编码</a>
+    <a href="#ch5-symplectic">5.5 辛积分器</a>
+    <a href="#ch5-force">5.6 力预测 vs 加速度预测</a>
+
+    <div class="chapter-title">第六章：PushBox 应用</div>
+    <a href="#ch6-build">6.1 图构建过程</a>
+    <a href="#ch6-gns">6.2 GNSFeaturesExtractor</a>
+    <a href="#ch6-phys">6.3 PhysRobotFeaturesExtractor</a>
+    <a href="#ch6-train">6.4 训练流程</a>
+    <a href="#ch6-compare">6.5 与纯 PPO 对比</a>
+
+    <div class="chapter-title">第七章：高级主题</div>
+    <a href="#ch7-multi">7.1 多体系统</a>
+    <a href="#ch7-dynamic">7.2 动态图</a>
+    <a href="#ch7-hier">7.3 层次化图</a>
+    <a href="#ch7-attn">7.4 注意力 + GNN</a>
+    <a href="#ch7-limit">7.5 GNN 的局限性</a>
+    <a href="#ch7-recent">7.6 最新进展</a>
+
+    <div class="chapter-title">第八章：实践练习</div>
+    <a href="#ch8-scratch">8.1 从零构建 GNN</a>
+    <a href="#ch8-pyg">8.2 用 PyG 构建 GNS</a>
+    <a href="#ch8-pushbox">8.3 PushBox 训练脚本</a>
+    <a href="#ch8-viz">8.4 可视化消息传递</a>
+    <a href="#ch8-hyper">8.5 超参数实验</a>
+
+    <div class="chapter-title">附录</div>
+    <a href="#appendix-formula">公式速查表</a>
+    <a href="#appendix-pyg">PyG 常用 API</a>
+    <a href="#appendix-papers">关键论文</a>
+    <a href="#appendix-compare">方法对比表</a>
+  </nav>
+</aside>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+  <button class="btn-theme" onclick="toggleTheme()">🌓 切换主题</button>
+</div>
+
+<!-- Progress Bar -->
+<div class="progress-bar"><div class="fill" id="progress-fill"></div></div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+<!-- Hero -->
+<div class="hero">
+  <h1>GNS 图网络模拟器</h1>
+  <p class="subtitle">从零开始掌握 Graph Network Simulator — 用图结构为物理世界建模，以 PushBox 机器人为例贯穿全文</p>
+  <div class="badges">
+    <span class="badge">📊 8 章深度内容</span>
+    <span class="badge">🐍 完整 Python 代码</span>
+    <span class="badge">🤖 PushBox 实战案例</span>
+    <span class="badge">📐 数学公式推导</span>
+  </div>
+</div>
+
+<!-- ================================================================ -->
+<!-- 第一章 -->
+<!-- ================================================================ -->
+<h2 id="ch1">第一章：图的基础</h2>
+
+<h3 id="ch1-graph">1.1 什么是图</h3>
+
+<div class="box definition">
+  <div class="box-title">📘 定义：图 (Graph)</div>
+  <p>图 $G = (V, E)$ 是由 <strong>节点</strong>（vertices / nodes）集合 $V$ 和 <strong>边</strong>（edges）集合 $E$ 组成的数学结构。每条边连接一对节点，表示它们之间的关系。</p>
+</div>
+
+<p>图是一种非常强大的数据结构，能够表示各种关系型数据。与规则排列的网格（如图像的像素）或线性序列（如文本的词语）不同，图的拓扑结构可以是任意的。</p>
+
+<p>形式化地，一个图包含：</p>
+<ul>
+  <li><strong>节点集 $V = \{v_1, v_2, \ldots, v_N\}$</strong>：$N$ 个实体，每个节点可以有自身的特征向量 $\mathbf{x}_i \in \mathbb{R}^d$</li>
+  <li><strong>边集 $E \subseteq V \times V$</strong>：节点之间的连接关系，每条边也可以有特征向量 $\mathbf{e}_{ij} \in \mathbb{R}^k$</li>
+  <li><strong>邻接矩阵 $\mathbf{A} \in \{0,1\}^{N \times N}$</strong>：$A_{ij} = 1$ 当且仅当节点 $i$ 和节点 $j$ 之间有边</li>
+</ul>
+
+<div class="box example">
+  <div class="box-title">💡 例子：社交网络</div>
+  <p>在社交网络中，每个 <strong>人</strong> 是一个节点（节点特征可能包含年龄、兴趣等），<strong>友谊关系</strong> 是一条边。节点数 $N$ 可以上亿，而每个人的朋友数（边数）通常在几百以内。</p>
+</div>
+
+<p>在物理模拟中，节点通常代表物理实体（粒子、刚体、关节），边代表它们之间的交互关系（力、约束、接触）。这正是 GNS 的核心思想。</p>
+
+<h4>邻接矩阵示例</h4>
+<p>对于一个有 3 个节点、3 条边的简单图：</p>
+
+$$
+\mathbf{A} = \begin{pmatrix} 0 & 1 & 1 \\ 1 & 0 & 1 \\ 1 & 1 & 0 \end{pmatrix}
+$$
+
+<p>$A_{01} = 1$ 表示节点 0 和节点 1 之间有边连接。</p>
+
+<!-- ===== 1.2 ===== -->
+<h3 id="ch1-directed">1.2 有向图 vs 无向图</h3>
+
+<div class="box definition">
+  <div class="box-title">📘 定义：有向图与无向图</div>
+  <p><strong>无向图</strong>：边没有方向，$(i, j) \in E \Leftrightarrow (j, i) \in E$，邻接矩阵对称 $A_{ij} = A_{ji}$。</p>
+  <p><strong>有向图</strong>：边有方向，$(i, j) \in E$ 不一定意味着 $(j, i) \in E$，邻接矩阵不一定对称。</p>
+</div>
+
+<table>
+  <thead>
+    <tr><th>特性</th><th>无向图</th><th>有向图</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>边的方向</td><td>双向/无方向</td><td>单向</td></tr>
+    <tr><td>邻接矩阵</td><td>对称</td><td>不一定对称</td></tr>
+    <tr><td>物理例子</td><td>弹簧连接、距离约束</td><td>因果关系、信息流</td></tr>
+    <tr><td>在 GNS 中</td><td>双向消息传递</td><td>单向消息传递</td></tr>
+  </tbody>
+</table>
+
+<div class="box warning">
+  <div class="box-title">⚠️ 注意</div>
+  <p>在 GNS 和大多数 GNN 实现中，即使表示无向关系，也通常使用 <strong>两条有向边</strong> 来实现。即对于无向边 $(i, j)$，会同时添加 $(i \to j)$ 和 $(j \to i)$。这是 PyTorch Geometric (PyG) 的标准做法。</p>
+</div>
+
+<!-- ===== 1.3 ===== -->
+<h3 id="ch1-repr">1.3 图的表示方法</h3>
+
+<h4>方法 1：邻接矩阵</h4>
+<p>用一个 $N \times N$ 的矩阵 $\mathbf{A}$ 存储所有连接关系。</p>
+
+$$
+A_{ij} = \begin{cases} 1, & \text{if } (i, j) \in E \\ 0, & \text{otherwise} \end{cases}
+$$
+
+<p><strong>优点</strong>：查询任意两节点间是否有边是 $O(1)$。<br>
+<strong>缺点</strong>：空间复杂度 $O(N^2)$，当图稀疏时极其浪费。</p>
+
+<h4>方法 2：邻接列表</h4>
+<p>每个节点维护一个邻居列表。</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 邻接列表</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="cmt"># 邻接列表表示</span>
+adj_list = {
+    <span class="num">0</span>: [<span class="num">1</span>, <span class="num">2</span>],      <span class="cmt"># 节点0的邻居是1和2</span>
+    <span class="num">1</span>: [<span class="num">0</span>, <span class="num">2</span>],      <span class="cmt"># 节点1的邻居是0和2</span>
+    <span class="num">2</span>: [<span class="num">0</span>, <span class="num">1</span>],      <span class="cmt"># 节点2的邻居是0和1</span>
+}</code></pre>
+</div>
+
+<h4>方法 3：edge_index（PyG 格式）⭐</h4>
+<p>这是 PyTorch Geometric 的标准格式，也是 GNS 中最常用的。它用两个列表分别存储边的 <strong>源节点</strong> 和 <strong>目标节点</strong>。</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — edge_index (PyG)</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">import</span> torch
+
+<span class="cmt"># edge_index 形状: [2, E]</span>
+<span class="cmt"># 第一行: 源节点 (source)</span>
+<span class="cmt"># 第二行: 目标节点 (target)</span>
+edge_index = torch.tensor([
+    [<span class="num">0</span>, <span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>],  <span class="cmt"># source</span>
+    [<span class="num">1</span>, <span class="num">2</span>, <span class="num">0</span>, <span class="num">2</span>, <span class="num">0</span>, <span class="num">1</span>],  <span class="cmt"># target</span>
+], dtype=torch.long)
+<span class="cmt"># 这表示 6 条有向边:  0→1, 0→2, 1→0, 1→2, 2→0, 2→1</span>
+<span class="cmt"># 等价于 3 个节点的全连接无向图</span>
+
+<span class="bi">print</span>(edge_index.shape)  <span class="cmt"># torch.Size([2, 6])</span></code></pre>
+</div>
+
+<div class="box theorem">
+  <div class="box-title">📗 要点：为什么 edge_index 高效？</div>
+  <p>edge_index 只存储 <strong>实际存在的边</strong>，空间复杂度 $O(E)$，对稀疏图非常友好。同时它天然支持批量操作（只需要做节点编号偏移），是 GPU 加速的关键。</p>
+</div>
+
+<!-- ===== 1.4 ===== -->
+<h3 id="ch1-physics">1.4 图在物理系统中的应用</h3>
+
+<p>图是描述物理系统交互关系的天然工具。几乎所有物理系统都可以建模为图：</p>
+
+<table>
+  <thead>
+    <tr><th>物理系统</th><th>节点</th><th>边</th><th>交互类型</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>粒子系统</td><td>粒子</td><td>粒子对（距离阈值内）</td><td>引力、碰撞</td></tr>
+    <tr><td>刚体系统</td><td>刚体</td><td>接触点</td><td>接触力、摩擦</td></tr>
+    <tr><td>机器人关节</td><td>链接（link）</td><td>关节（joint）</td><td>扭矩、约束</td></tr>
+    <tr><td>弹簧质点</td><td>质点</td><td>弹簧</td><td>弹力、阻尼</td></tr>
+    <tr><td>流体 (SPH)</td><td>流体粒子</td><td>邻近粒子</td><td>压力、粘性</td></tr>
+    <tr><td>布料模拟</td><td>网格节点</td><td>结构/剪切/弯曲弹簧</td><td>弹性力</td></tr>
+  </tbody>
+</table>
+
+<div class="box example">
+  <div class="box-title">💡 核心洞察</div>
+  <p>物理交互具有 <strong>局部性</strong>——力通常只在空间上相近的物体之间传递。这与图的 <strong>消息传递</strong> 范式完美匹配：每个节点只需要关注它的 <strong>邻居</strong>！</p>
+</div>
+
+<!-- ===== 1.5 ===== -->
+<h3 id="ch1-pushbox">1.5 我们的 PushBox 图</h3>
+
+<p>在我们的 PushBox 机器人推箱子任务中，物理系统由以下组件构成：</p>
+
+<div class="diagram">
+  <svg width="500" height="200" viewBox="0 0 500 200">
+    <!-- Node 0: End-effector -->
+    <circle cx="120" cy="100" r="40" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <text x="120" y="95" text-anchor="middle" fill="currentColor" font-size="13" font-weight="bold">Node 0</text>
+    <text x="120" y="112" text-anchor="middle" fill="currentColor" font-size="11">末端执行器</text>
+
+    <!-- Node 1: Box -->
+    <rect x="340" y="60" width="80" height="80" rx="8" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <text x="380" y="95" text-anchor="middle" fill="currentColor" font-size="13" font-weight="bold">Node 1</text>
+    <text x="380" y="112" text-anchor="middle" fill="currentColor" font-size="11">盒子</text>
+
+    <!-- Edge 0→1 -->
+    <line x1="160" y1="88" x2="340" y2="88" stroke="currentColor" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="250" y="80" text-anchor="middle" fill="currentColor" font-size="11">edge 0→1</text>
+
+    <!-- Edge 1→0 -->
+    <line x1="340" y1="112" x2="160" y2="112" stroke="currentColor" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="250" y="132" text-anchor="middle" fill="currentColor" font-size="11">edge 1→0</text>
+
+    <defs>
+      <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="currentColor" />
+      </marker>
+    </defs>
+  </svg>
+  <figcaption>图 1.1：PushBox 任务的图表示 — 2 节点、2 条双向边</figcaption>
+</div>
+
+<p><strong>图结构详细说明：</strong></p>
+
+<table>
+  <thead>
+    <tr><th>组件</th><th>内容</th><th>维度</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Node 0 (末端执行器)</td><td>ee_pos (3D), ee_vel (3D)</td><td>6</td></tr>
+    <tr><td>Node 1 (盒子)</td><td>box_pos (3D), box_vel (3D)</td><td>6</td></tr>
+    <tr><td>Edge 0→1</td><td>rel_pos = box_pos - ee_pos (3D), distance (1D)</td><td>4</td></tr>
+    <tr><td>Edge 1→0</td><td>rel_pos = ee_pos - box_pos (3D), distance (1D)</td><td>4</td></tr>
+    <tr><td>edge_index</td><td>[[0, 1], [1, 0]]</td><td>[2, 2]</td></tr>
+  </tbody>
+</table>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — PushBox 图构建</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">import</span> torch
+<span class="kw">from</span> torch_geometric.data <span class="kw">import</span> Data
+
+<span class="kw">def</span> <span class="fn">build_pushbox_graph</span>(obs):
+    <span class="str">"""
+    从 16 维观测构建 PushBox 图
+    
+    obs 布局:
+      [0:2]   joint_pos   (2)  — 关节角度
+      [2:4]   joint_vel   (2)  — 关节速度
+      [4:7]   ee_pos      (3)  — 末端执行器位置
+      [7:10]  box_pos     (3)  — 盒子位置
+      [10:13] box_vel     (3)  — 盒子速度
+      [13:16] goal_pos    (3)  — 目标位置
+    """</span>
+    <span class="cmt"># 提取物理量</span>
+    ee_pos  = obs[<span class="num">4</span>:<span class="num">7</span>]
+    ee_vel  = torch.zeros(<span class="num">3</span>)   <span class="cmt"># 简化：从观测中近似为零</span>
+    box_pos = obs[<span class="num">7</span>:<span class="num">10</span>]
+    box_vel = obs[<span class="num">10</span>:<span class="num">13</span>]
+    
+    <span class="cmt"># 节点特征: [pos(3), vel(3)] = 6D</span>
+    node_features = torch.stack([
+        torch.cat([ee_pos, ee_vel]),    <span class="cmt"># Node 0: 末端执行器</span>
+        torch.cat([box_pos, box_vel]),  <span class="cmt"># Node 1: 盒子</span>
+    ])  <span class="cmt"># shape: [2, 6]</span>
+    
+    <span class="cmt"># 边: 双向连接</span>
+    edge_index = torch.tensor([
+        [<span class="num">0</span>, <span class="num">1</span>],  <span class="cmt"># source</span>
+        [<span class="num">1</span>, <span class="num">0</span>],  <span class="cmt"># target</span>
+    ], dtype=torch.long)
+    
+    <span class="cmt"># 边特征: [相对位置(3), 距离(1)] = 4D</span>
+    rel_01 = box_pos - ee_pos
+    rel_10 = ee_pos - box_pos
+    d_01 = torch.norm(rel_01).unsqueeze(<span class="num">0</span>)
+    d_10 = torch.norm(rel_10).unsqueeze(<span class="num">0</span>)
+    
+    edge_attr = torch.stack([
+        torch.cat([rel_01, d_01]),  <span class="cmt"># Edge 0→1</span>
+        torch.cat([rel_10, d_10]),  <span class="cmt"># Edge 1→0</span>
+    ])  <span class="cmt"># shape: [2, 4]</span>
+    
+    graph = Data(
+        x=node_features,          <span class="cmt"># [2, 6]</span>
+        edge_index=edge_index,    <span class="cmt"># [2, 2]</span>
+        edge_attr=edge_attr,      <span class="cmt"># [2, 4]</span>
+    )
+    <span class="kw">return</span> graph</code></pre>
+</div>
+
+<div class="box theorem">
+  <div class="box-title">📗 关键理解</div>
+  <p>虽然 PushBox 只有 2 个节点、2 条边——看起来极其简单——但它包含了 GNS 的 <strong>所有核心概念</strong>：节点编码、边编码、消息传递、动力学预测。掌握了这个简单例子，扩展到 100+ 节点的复杂系统只是增加节点数量而已。</p>
+</div>
+
+
+<!-- ================================================================ -->
+<!-- 第二章 -->
+<!-- ================================================================ -->
+<h2 id="ch2">第二章：图神经网络 (GNN) 基础</h2>
+
+<h3 id="ch2-why">2.1 为什么需要 GNN</h3>
+
+<p>传统的多层感知机（MLP）将所有输入拼接成一个扁平向量来处理。这存在几个根本问题：</p>
+
+<div class="compare-grid">
+  <div class="compare-card">
+    <h4>❌ MLP 的问题</h4>
+    <ul>
+      <li><strong>置换不变性缺失</strong>：交换两个粒子的顺序 → 输出完全改变</li>
+      <li><strong>维度固定</strong>：输入维度固定，无法处理不同数量的物体</li>
+      <li><strong>关系隐式</strong>：物体间的关系需要网络自己学习发现</li>
+      <li><strong>泛化差</strong>：训练 3 个物体，无法泛化到 5 个</li>
+    </ul>
+  </div>
+  <div class="compare-card">
+    <h4>✅ GNN 的优势</h4>
+    <ul>
+      <li><strong>置换等变</strong>：交换节点顺序 → 输出跟着交换</li>
+      <li><strong>大小可变</strong>：同一网络处理任意数量的节点</li>
+      <li><strong>关系显式</strong>：边直接编码物体间关系</li>
+      <li><strong>强泛化</strong>：训练 3 节点，泛化到 100 节点</li>
+    </ul>
+  </div>
+</div>
+
+<div class="box example">
+  <div class="box-title">💡 直觉</div>
+  <p>想象你有 100 个粒子，MLP 需要一个 $100 \times 6 = 600$ 维输入向量，而且 <strong>第 1 个粒子必须始终放在前 6 个位置</strong>。如果你交换第 1 和第 50 个粒子的位置，MLP 会给出完全不同的答案。</p>
+  <p>GNN 则完全不同：每个粒子都是一个 "节点"，同一个消息传递函数作用于每一对邻居。无论粒子编号怎么变化，物理规律不变——这就是 <strong>等变性</strong>。</p>
+</div>
+
+<!-- ===== 2.2 ===== -->
+<h3 id="ch2-mp">2.2 消息传递范式 (Message Passing)</h3>
+
+<div class="box definition">
+  <div class="box-title">📘 定义：消息传递神经网络 (MPNN)</div>
+  <p>消息传递是 GNN 的统一框架（Gilmer et al., 2017），包含三个步骤：</p>
+  <ol>
+    <li><strong>消息函数 (Message)</strong>：计算每条边上的消息</li>
+    <li><strong>聚合函数 (Aggregate)</strong>：将所有入边消息聚合</li>
+    <li><strong>更新函数 (Update)</strong>：用聚合结果更新节点特征</li>
+  </ol>
+</div>
+
+<p>形式化地，第 $l$ 轮消息传递的过程为：</p>
+
+<p><strong>第 1 步：消息函数 (Message)</strong></p>
+$$
+\mathbf{m}_{ij}^{(l)} = \phi\left(\mathbf{x}_i^{(l)}, \mathbf{x}_j^{(l)}, \mathbf{e}_{ij}\right)
+$$
+<p>其中 $\mathbf{x}_i^{(l)}$ 是节点 $i$ 在第 $l$ 层的特征，$\mathbf{x}_j^{(l)}$ 是邻居 $j$ 的特征，$\mathbf{e}_{ij}$ 是边特征，$\phi$ 是可学习的函数（通常是 MLP）。</p>
+
+<p><strong>第 2 步：聚合函数 (Aggregate)</strong></p>
+$$
+\mathbf{M}_i^{(l)} = \bigoplus_{j \in \mathcal{N}(i)} \mathbf{m}_{ij}^{(l)}
+$$
+<p>$\bigoplus$ 是一个 <strong>置换不变</strong> 的聚合操作，常用的有：</p>
+<ul>
+  <li><strong>求和 (Sum)</strong>：$\mathbf{M}_i = \sum_{j \in \mathcal{N}(i)} \mathbf{m}_{ij}$ — 保留邻居数量信息</li>
+  <li><strong>均值 (Mean)</strong>：$\mathbf{M}_i = \frac{1}{|\mathcal{N}(i)|} \sum_{j} \mathbf{m}_{ij}$ — 归一化，对密度不敏感</li>
+  <li><strong>最大值 (Max)</strong>：$\mathbf{M}_i = \max_{j \in \mathcal{N}(i)} \mathbf{m}_{ij}$ — 只保留最显著的消息</li>
+</ul>
+
+<p><strong>第 3 步：更新函数 (Update)</strong></p>
+$$
+\mathbf{x}_i^{(l+1)} = \gamma\left(\mathbf{x}_i^{(l)}, \mathbf{M}_i^{(l)}\right)
+$$
+<p>$\gamma$ 结合旧特征和聚合消息产生新特征。</p>
+
+<div class="diagram">
+  <svg width="600" height="280" viewBox="0 0 600 280">
+    <!-- Central node -->
+    <circle cx="300" cy="140" r="30" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="2.5"/>
+    <text x="300" y="145" text-anchor="middle" fill="var(--accent)" font-size="14" font-weight="bold">$x_i$</text>
+    
+    <!-- Neighbor nodes -->
+    <circle cx="150" cy="60" r="24" fill="var(--bg-secondary)" stroke="currentColor" stroke-width="2"/>
+    <text x="150" y="65" text-anchor="middle" fill="currentColor" font-size="12">$x_{j_1}$</text>
+    
+    <circle cx="450" cy="60" r="24" fill="var(--bg-secondary)" stroke="currentColor" stroke-width="2"/>
+    <text x="450" y="65" text-anchor="middle" fill="currentColor" font-size="12">$x_{j_2}$</text>
+    
+    <circle cx="150" cy="220" r="24" fill="var(--bg-secondary)" stroke="currentColor" stroke-width="2"/>
+    <text x="150" y="225" text-anchor="middle" fill="currentColor" font-size="12">$x_{j_3}$</text>
+    
+    <circle cx="450" cy="220" r="24" fill="var(--bg-secondary)" stroke="currentColor" stroke-width="2"/>
+    <text x="450" y="225" text-anchor="middle" fill="currentColor" font-size="12">$x_{j_4}$</text>
+    
+    <!-- Arrows with messages -->
+    <line x1="174" y1="72" x2="275" y2="125" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowhead)"/>
+    <text x="210" y="88" fill="currentColor" font-size="11">$m_{j_1 i}$</text>
+    
+    <line x1="426" y1="72" x2="325" y2="125" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowhead)"/>
+    <text x="385" y="88" fill="currentColor" font-size="11">$m_{j_2 i}$</text>
+    
+    <line x1="174" y1="210" x2="275" y2="158" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowhead)"/>
+    <text x="210" y="200" fill="currentColor" font-size="11">$m_{j_3 i}$</text>
+    
+    <line x1="426" y1="210" x2="325" y2="158" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowhead)"/>
+    <text x="385" y="200" fill="currentColor" font-size="11">$m_{j_4 i}$</text>
+    
+    <text x="300" y="270" text-anchor="middle" fill="var(--text-muted)" font-size="12">图 2.1：消息传递 — 邻居将消息发送到中心节点，聚合后更新</text>
+  </svg>
+</div>
+
+<div class="box warning">
+  <div class="box-title">⚠️ 关键概念：感受野 (Receptive Field)</div>
+  <p>1 层消息传递 → 每个节点只能 "看到" 直接邻居（1-hop）<br>
+  2 层消息传递 → 可以 "看到" 2-hop 邻居<br>
+  $K$ 层消息传递 → 可以 "看到" $K$-hop 邻居</p>
+  <p>这类似于 CNN 中堆叠卷积层增大感受野。在物理系统中，多层消息传递让 <strong>远距离交互</strong> 的信息可以传播到位。</p>
+</div>
+
+<!-- ===== 2.3 ===== -->
+<h3 id="ch2-gcn">2.3 GCN (图卷积网络)</h3>
+
+<div class="box definition">
+  <div class="box-title">📘 GCN — Graph Convolutional Network (Kipf & Welling, 2017)</div>
+  <p>GCN 是最经典的 GNN 之一，它的更新规则是：</p>
+  $$\mathbf{X}^{(l+1)} = \sigma\left(\hat{\mathbf{D}}^{-\frac{1}{2}} \hat{\mathbf{A}} \hat{\mathbf{D}}^{-\frac{1}{2}} \mathbf{X}^{(l)} \mathbf{W}^{(l)}\right)$$
+  <p>其中 $\hat{\mathbf{A}} = \mathbf{A} + \mathbf{I}$（加自环），$\hat{\mathbf{D}}_{ii} = \sum_j \hat{A}_{ij}$（度矩阵），$\mathbf{W}^{(l)}$ 是可学习权重。</p>
+</div>
+
+<p>逐节点来看，GCN 的更新可以写成：</p>
+$$
+\mathbf{x}_i^{(l+1)} = \sigma\left(\sum_{j \in \mathcal{N}(i) \cup \{i\}} \frac{1}{\sqrt{\hat{d}_i \hat{d}_j}} \mathbf{W}^{(l)} \mathbf{x}_j^{(l)}\right)
+$$
+
+<p>直觉上：对每个节点，取邻居特征的 <strong>加权平均</strong>（按度归一化），然后通过线性变换和非线性激活。</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 简单 GCN 层实现</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">SimpleGCNLayer</span>(nn.Module):
+    <span class="str">"""最简单的 GCN 层"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, in_dim, out_dim):
+        <span class="bi">super</span>().__init__()
+        <span class="sf">self</span>.linear = nn.Linear(in_dim, out_dim)
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, x, adj):
+        <span class="str">"""
+        x:   节点特征 [N, in_dim]
+        adj: 邻接矩阵 [N, N] (带自环, 归一化)
+        """</span>
+        <span class="cmt"># 1. 线性变换</span>
+        h = <span class="sf">self</span>.linear(x)       <span class="cmt"># [N, out_dim]</span>
+        <span class="cmt"># 2. 邻居聚合 (矩阵乘法 = 加权求和)</span>
+        out = torch.matmul(adj, h)  <span class="cmt"># [N, out_dim]</span>
+        <span class="cmt"># 3. 激活</span>
+        <span class="kw">return</span> torch.relu(out)</code></pre>
+</div>
+
+<!-- ===== 2.4 ===== -->
+<h3 id="ch2-gat">2.4 GAT (图注意力网络)</h3>
+
+<div class="box definition">
+  <div class="box-title">📘 GAT — Graph Attention Network (Veličković et al., 2018)</div>
+  <p>GAT 引入 <strong>注意力机制</strong> 来学习邻居的重要性权重（而非使用固定的度归一化）：</p>
+  $$\alpha_{ij} = \frac{\exp\left(\text{LeakyReLU}\left(\mathbf{a}^T [\mathbf{W}\mathbf{x}_i \| \mathbf{W}\mathbf{x}_j]\right)\right)}{\sum_{k \in \mathcal{N}(i)} \exp\left(\text{LeakyReLU}\left(\mathbf{a}^T [\mathbf{W}\mathbf{x}_i \| \mathbf{W}\mathbf{x}_k]\right)\right)}$$
+  $$\mathbf{x}_i^{(l+1)} = \sigma\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ij} \mathbf{W} \mathbf{x}_j^{(l)}\right)$$
+</div>
+
+<p>注意力系数 $\alpha_{ij}$ 的含义：节点 $j$ 对节点 $i$ 的 "重要性"。这使得 GNN 可以 <strong>动态地</strong> 根据特征决定关注哪些邻居——在物理系统中，这意味着可以学习到 "哪个物体对我的影响最大"。</p>
+
+<!-- ===== 2.5 ===== -->
+<h3 id="ch2-sage">2.5 GraphSAGE</h3>
+
+<div class="box definition">
+  <div class="box-title">📘 GraphSAGE — Sample and Aggregate (Hamilton et al., 2017)</div>
+  <p>GraphSAGE 的更新规则：</p>
+  $$\mathbf{h}_{\mathcal{N}(i)} = \text{AGG}\left(\{\mathbf{x}_j, \forall j \in \mathcal{N}(i)\}\right)$$
+  $$\mathbf{x}_i^{(l+1)} = \sigma\left(\mathbf{W} \cdot [\mathbf{x}_i^{(l)} \| \mathbf{h}_{\mathcal{N}(i)}]\right)$$
+  <p>关键创新：<strong>拼接 (concatenate)</strong> 自身特征和邻居聚合，而非只做加权求和。采样固定数量邻居使其可扩展到大规模图。</p>
+</div>
+
+<table>
+  <thead>
+    <tr><th>方法</th><th>聚合方式</th><th>边权重</th><th>特点</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>GCN</td><td>加权求和</td><td>按度固定</td><td>简单高效</td></tr>
+    <tr><td>GAT</td><td>加权求和</td><td>注意力学习</td><td>自适应权重</td></tr>
+    <tr><td>GraphSAGE</td><td>拼接 + 变换</td><td>均匀/采样</td><td>可扩展到大图</td></tr>
+    <tr><td>GNS (消息传递)</td><td>任意 MLP</td><td>学习边函数</td><td>最通用灵活</td></tr>
+  </tbody>
+</table>
+
+<!-- ===== 2.6 ===== -->
+<h3 id="ch2-pyg">2.6 PyTorch Geometric 入门</h3>
+
+<p>PyTorch Geometric (PyG) 是最流行的图神经网络库，它提供了三个核心抽象：</p>
+
+<h4>安装</h4>
+<div class="code-container">
+  <div class="code-header"><span>Shell</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code>pip install torch-geometric
+<span class="cmt"># 或者用 conda:</span>
+conda install pyg -c pyg</code></pre>
+</div>
+
+<h4>Data — 图数据对象</h4>
+<div class="code-container">
+  <div class="code-header"><span>Python — PyG Data 对象</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">from</span> torch_geometric.data <span class="kw">import</span> Data
+<span class="kw">import</span> torch
+
+<span class="cmt"># 创建一个简单的图</span>
+graph = Data(
+    x=torch.randn(<span class="num">4</span>, <span class="num">16</span>),         <span class="cmt"># 4 个节点，每个 16 维特征</span>
+    edge_index=torch.tensor([       <span class="cmt"># 边连接</span>
+        [<span class="num">0</span>, <span class="num">1</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">2</span>, <span class="num">3</span>],
+        [<span class="num">1</span>, <span class="num">0</span>, <span class="num">2</span>, <span class="num">1</span>, <span class="num">3</span>, <span class="num">2</span>],
+    ], dtype=torch.long),
+    edge_attr=torch.randn(<span class="num">6</span>, <span class="num">8</span>),   <span class="cmt"># 6 条边，每个 8 维特征</span>
+)
+
+<span class="bi">print</span>(graph)
+<span class="cmt"># Data(x=[4, 16], edge_index=[2, 6], edge_attr=[6, 8])</span>
+<span class="bi">print</span>(graph.num_nodes)  <span class="cmt"># 4</span>
+<span class="bi">print</span>(graph.num_edges)  <span class="cmt"># 6</span></code></pre>
+</div>
+
+<h4>Batch — 批量图</h4>
+<div class="code-container">
+  <div class="code-header"><span>Python — PyG Batch</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">from</span> torch_geometric.data <span class="kw">import</span> Batch
+
+<span class="cmt"># 将多个图合并成一个 batch</span>
+graph1 = Data(x=torch.randn(<span class="num">2</span>, <span class="num">6</span>), edge_index=torch.tensor([[<span class="num">0</span>,<span class="num">1</span>],[<span class="num">1</span>,<span class="num">0</span>]]))
+graph2 = Data(x=torch.randn(<span class="num">3</span>, <span class="num">6</span>), edge_index=torch.tensor([[<span class="num">0</span>,<span class="num">1</span>,<span class="num">2</span>],[<span class="num">1</span>,<span class="num">2</span>,<span class="num">0</span>]]))
+
+batch = Batch.from_data_list([graph1, graph2])
+<span class="bi">print</span>(batch)
+<span class="cmt"># DataBatch(x=[5, 6], edge_index=[2, 5], batch=[5])</span>
+<span class="cmt"># PyG 自动调整 edge_index 的编号偏移!</span></code></pre>
+</div>
+
+<h4>MessagePassing — 自定义消息传递层</h4>
+<div class="code-container">
+  <div class="code-header"><span>Python — MessagePassing 子类化</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">from</span> torch_geometric.nn <span class="kw">import</span> MessagePassing
+
+<span class="kw">class</span> <span class="cls">MyGNNLayer</span>(MessagePassing):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, in_dim, out_dim, edge_dim):
+        <span class="bi">super</span>().__init__(aggr=<span class="str">'add'</span>)  <span class="cmt"># 聚合方式: 求和</span>
+        <span class="sf">self</span>.msg_mlp = nn.Linear(in_dim * <span class="num">2</span> + edge_dim, out_dim)
+        <span class="sf">self</span>.upd_mlp = nn.Linear(in_dim + out_dim, out_dim)
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, x, edge_index, edge_attr):
+        <span class="cmt"># propagate 自动调用 message → aggregate → update</span>
+        <span class="kw">return</span> <span class="sf">self</span>.propagate(edge_index, x=x, edge_attr=edge_attr)
+    
+    <span class="kw">def</span> <span class="fn">message</span>(<span class="sf">self</span>, x_i, x_j, edge_attr):
+        <span class="str">"""
+        x_i: 目标节点特征 [E, in_dim]
+        x_j: 源节点特征   [E, in_dim]
+        edge_attr: 边特征  [E, edge_dim]
+        """</span>
+        msg_input = torch.cat([x_i, x_j, edge_attr], dim=-<span class="num">1</span>)
+        <span class="kw">return</span> torch.relu(<span class="sf">self</span>.msg_mlp(msg_input))
+    
+    <span class="kw">def</span> <span class="fn">update</span>(<span class="sf">self</span>, aggr_out, x):
+        <span class="str">"""
+        aggr_out: 聚合后的消息 [N, out_dim]
+        x: 原始节点特征 [N, in_dim]
+        """</span>
+        upd_input = torch.cat([x, aggr_out], dim=-<span class="num">1</span>)
+        <span class="kw">return</span> <span class="sf">self</span>.upd_mlp(upd_input)</code></pre>
+</div>
+
+<div class="box theorem">
+  <div class="box-title">📗 PyG 的 propagate() 魔法</div>
+  <p>当你调用 <code>self.propagate(edge_index, x=x, edge_attr=edge_attr)</code> 时，PyG 会：</p>
+  <ol>
+    <li>根据 edge_index 自动为每条边提取 <code>x_i</code>（目标）和 <code>x_j</code>（源）</li>
+    <li>调用你定义的 <code>message()</code> 函数</li>
+    <li>按 <code>aggr</code> 方式聚合同一目标节点的消息</li>
+    <li>调用你定义的 <code>update()</code> 函数</li>
+  </ol>
+  <p>你只需要定义 <strong>怎么算消息</strong> 和 <strong>怎么更新</strong>，剩下的 PyG 全部搞定！</p>
+</div>
+
+
+<!-- ================================================================ -->
+<!-- 第三章 -->
+<!-- ================================================================ -->
+<h2 id="ch3">第三章：Graph Network Simulator (GNS) 详解</h2>
+
+<h3 id="ch3-bg">3.1 GNS 论文背景</h3>
+
+<div class="box definition">
+  <div class="box-title">📘 论文："Learning to Simulate Complex Physics with Graph Networks"</div>
+  <p><strong>作者</strong>：Alvaro Sanchez-Gonzalez, Jonathan Godwin, Tobias Pfaff, Rex Ying, Jure Leskovec, Peter Battaglia (DeepMind, 2020)</p>
+  <p><strong>核心贡献</strong>：提出一个通用的基于图神经网络的物理模拟器 (GNS)，能够学习 <strong>流体</strong>、<strong>刚体</strong>、<strong>可变形物体</strong> 等各种物理系统的动力学。</p>
+  <p><strong>关键发现</strong>：GNS 在训练域外（不同数量粒子、不同初始条件）仍然能保持良好的 <strong>泛化性</strong>。</p>
+</div>
+
+<p>GNS 的核心思想是将物理模拟转化为一个 <strong>图级预测任务</strong>：</p>
+<ol>
+  <li>将物理系统（粒子、刚体等）表示为图 $G = (V, E)$</li>
+  <li>用 GNN 预测每个节点的 <strong>加速度</strong> $\ddot{\mathbf{x}}_i$</li>
+  <li>用积分器（Euler / Verlet）推进状态：$\mathbf{v}_{t+1} = \mathbf{v}_t + \ddot{\mathbf{x}} \cdot \Delta t$，$\mathbf{x}_{t+1} = \mathbf{x}_t + \mathbf{v}_{t+1} \cdot \Delta t$</li>
+</ol>
+
+<!-- ===== 3.2 ===== -->
+<h3 id="ch3-epd">3.2 Encode-Process-Decode 架构</h3>
+
+<p>GNS 采用经典的 <strong>Encode-Process-Decode</strong> 架构：</p>
+
+<div class="flow-diagram">
+  <div class="flow-box">📥 Encoder<br><small>物理量 → embedding</small></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box">⚙️ Processor<br><small>M 轮消息传递</small></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box">📤 Decoder<br><small>embedding → 加速度</small></div>
+</div>
+
+<h4>1. Encoder（编码器）</h4>
+<p>将原始物理量映射到高维 embedding 空间：</p>
+$$
+\mathbf{h}_i^{(0)} = \text{MLP}_{\text{node}}\left(\mathbf{x}_i^{\text{raw}}\right), \quad
+\mathbf{e}_{ij}^{(0)} = \text{MLP}_{\text{edge}}\left(\mathbf{e}_{ij}^{\text{raw}}\right)
+$$
+<p>原始节点特征可能是位置、速度、质量等；原始边特征可能是相对位置、距离等。编码器用 MLP 将它们映射到统一的隐藏维度（如 128D）。</p>
+
+<h4>2. Processor（处理器）</h4>
+<p>核心计算单元，由 $M$ 个消息传递层堆叠组成：</p>
+$$
+\mathbf{h}_i^{(l+1)} = \text{MP}_l\left(\mathbf{h}_i^{(l)}, \{\mathbf{h}_j^{(l)}\}_{j \in \mathcal{N}(i)}, \mathbf{e}_{ij}^{(0)}\right), \quad l = 0, 1, \ldots, M-1
+$$
+<p>每一层消息传递都让信息在图上扩散一步。$M$ 层后，每个节点可以 "感知" 到 $M$-hop 邻居的信息。</p>
+
+<h4>3. Decoder（解码器）</h4>
+<p>从最终的节点 embedding 预测加速度：</p>
+$$
+\ddot{\mathbf{x}}_i = \text{MLP}_{\text{decode}}\left(\mathbf{h}_i^{(M)}\right)
+$$
+
+<div class="box theorem">
+  <div class="box-title">📗 为什么预测加速度而非位置？</div>
+  <p>预测 <strong>加速度</strong>（或力）比直接预测 <strong>下一时刻位置</strong> 要好得多：</p>
+  <ol>
+    <li>加速度是 <strong>局部量</strong>——只依赖当前状态的力</li>
+    <li>位置是 <strong>积累量</strong>——需要预测长期轨迹的累积效果</li>
+    <li>加速度预测可以配合 <strong>任意积分器</strong>（Euler、Verlet、RK4）推进状态</li>
+    <li>物理定律 $F = ma$ 本身就是关于加速度的</li>
+  </ol>
+</div>
+
+<!-- ===== 3.3 ===== -->
+<h3 id="ch3-node">3.3 节点特征设计</h3>
+
+<p>GNS 中节点特征的设计对性能至关重要。常见的节点特征包括：</p>
+
+<table>
+  <thead>
+    <tr><th>特征</th><th>维度</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>位置 $\mathbf{x}_i$</td><td>3</td><td>当前 3D 位置</td></tr>
+    <tr><td>速度 $\mathbf{v}_i$</td><td>3</td><td>当前速度</td></tr>
+    <tr><td>历史速度</td><td>3×K</td><td>过去 K 个时间步的速度（提供加速度信息）</td></tr>
+    <tr><td>质量 $m_i$</td><td>1</td><td>物体质量（可选）</td></tr>
+    <tr><td>物体类型</td><td>one-hot</td><td>粒子 / 边界 / 工具 等类型编码</td></tr>
+    <tr><td>物理属性</td><td>可变</td><td>摩擦系数、弹性系数等</td></tr>
+  </tbody>
+</table>
+
+<div class="box example">
+  <div class="box-title">💡 PushBox 中的节点特征</div>
+  <p>在我们的 PushBox 中，每个节点的特征是 6 维：<code>[pos_x, pos_y, pos_z, vel_x, vel_y, vel_z]</code></p>
+  <ul>
+    <li>Node 0 (末端执行器): <code>[ee_pos(3), ee_vel(3)]</code></li>
+    <li>Node 1 (盒子): <code>[box_pos(3), box_vel(3)]</code></li>
+  </ul>
+</div>
+
+<!-- ===== 3.4 ===== -->
+<h3 id="ch3-edge">3.4 边特征设计</h3>
+
+<p>边特征编码了两个节点之间的 <strong>关系</strong>。在物理系统中，这通常是空间关系：</p>
+
+$$
+\mathbf{e}_{ij}^{\text{raw}} = \left[\mathbf{x}_j - \mathbf{x}_i, \|\mathbf{x}_j - \mathbf{x}_i\|, \mathbf{v}_j - \mathbf{v}_i, \|\mathbf{v}_j - \mathbf{v}_i\|\right]
+$$
+
+<table>
+  <thead>
+    <tr><th>特征</th><th>维度</th><th>物理意义</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>相对位置 $\mathbf{r}_{ij} = \mathbf{x}_j - \mathbf{x}_i$</td><td>3</td><td>方向和距离信息</td></tr>
+    <tr><td>距离 $\|\mathbf{r}_{ij}\|$</td><td>1</td><td>标量距离（旋转不变）</td></tr>
+    <tr><td>相对速度 $\mathbf{v}_j - \mathbf{v}_i$</td><td>3</td><td>接近/远离速度</td></tr>
+    <tr><td>速度范数 $\|\mathbf{v}_j - \mathbf{v}_i\|$</td><td>1</td><td>相对速率</td></tr>
+  </tbody>
+</table>
+
+<div class="box theorem">
+  <div class="box-title">📗 反对称性 (Antisymmetry)</div>
+  <p>注意一个重要性质：$\mathbf{r}_{ij} = -\mathbf{r}_{ji}$。这意味着从 $i$ 看 $j$ 和从 $j$ 看 $i$，位移向量方向相反。这种 <strong>反对称性</strong> 在物理上非常自然（牛顿第三定律：$F_{ij} = -F_{ji}$），也是 Edge Frame 的关键思想。</p>
+</div>
+
+<!-- ===== 3.5 ===== -->
+<h3 id="ch3-impl">3.5 消息传递层的实现</h3>
+
+<p>以下是我们项目中 <strong>GraphNetworkLayer</strong> 的完整实现，来自 <code>baselines/gns_baseline.py</code>：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — GraphNetworkLayer (gns_baseline.py)</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">class</span> <span class="cls">GraphNetworkLayer</span>(MessagePassing):
+    <span class="str">"""
+    单个图网络层
+    标准消息传递，不带物理约束
+    """</span>
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, node_dim, edge_dim, hidden_dim=<span class="num">128</span>):
+        <span class="bi">super</span>().__init__(aggr=<span class="str">'add'</span>)
+        
+        <span class="cmt"># 边模型: 计算消息</span>
+        <span class="sf">self</span>.edge_mlp = nn.Sequential(
+            nn.Linear(<span class="num">2</span> * node_dim + edge_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, edge_dim)
+        )
+        
+        <span class="cmt"># 节点模型: 更新节点特征</span>
+        <span class="sf">self</span>.node_mlp = nn.Sequential(
+            nn.Linear(node_dim + edge_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, node_dim)
+        )
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, x, edge_index, edge_attr):
+        <span class="kw">return</span> <span class="sf">self</span>.propagate(edge_index, x=x, edge_attr=edge_attr)
+    
+    <span class="kw">def</span> <span class="fn">message</span>(<span class="sf">self</span>, x_i, x_j, edge_attr):
+        <span class="str">"""
+        计算边消息
+        x_i: 接收节点特征 [E, node_dim]
+        x_j: 发送节点特征 [E, node_dim]
+        edge_attr: 边属性   [E, edge_dim]
+        """</span>
+        <span class="cmt"># 拼接发送者、接收者、边的信息</span>
+        edge_input = torch.cat([x_i, x_j, edge_attr], dim=-<span class="num">1</span>)
+        <span class="cmt"># 更新边特征（即消息）</span>
+        <span class="kw">return</span> <span class="sf">self</span>.edge_mlp(edge_input)
+    
+    <span class="kw">def</span> <span class="fn">update</span>(<span class="sf">self</span>, aggr_out, x):
+        <span class="str">"""
+        更新节点特征
+        aggr_out: 聚合后的消息 [N, edge_dim]
+        x: 当前节点特征 [N, node_dim]
+        """</span>
+        node_input = torch.cat([x, aggr_out], dim=-<span class="num">1</span>)
+        <span class="kw">return</span> <span class="sf">self</span>.node_mlp(node_input)</code></pre>
+</div>
+
+<p>数据流分析：</p>
+<ol>
+  <li><strong>message()</strong>: 输入 $(x_i, x_j, e_{ij})$ → 输出 <code>[E, edge_dim]</code> 的消息向量</li>
+  <li><strong>aggregate</strong> (由 <code>aggr='add'</code> 指定): 按目标节点求和 → <code>[N, edge_dim]</code></li>
+  <li><strong>update()</strong>: 拼接原始特征和聚合消息 → MLP → <code>[N, node_dim]</code></li>
+</ol>
+
+<!-- ===== 3.6 ===== -->
+<h3 id="ch3-multi">3.6 多轮消息传递</h3>
+
+<p>为什么需要多轮（多层）消息传递？关键在于 <strong>信息传播范围</strong>：</p>
+
+<div class="box definition">
+  <div class="box-title">📘 信息传播与感受野</div>
+  <p>$L$ 层消息传递后，节点 $i$ 的表示 $\mathbf{h}_i^{(L)}$ 包含了其 $L$-hop 邻域内所有节点的信息。</p>
+</div>
+
+<p>在 PushBox 中只有 2 个节点，1 层就足够让信息传遍全图。但在更复杂的系统中：</p>
+
+<table>
+  <thead>
+    <tr><th>层数</th><th>感受野</th><th>适用场景</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>直接邻居</td><td>PushBox (2节点)、短距离力</td></tr>
+    <tr><td>3</td><td>3-hop</td><td>中等规模粒子系统</td></tr>
+    <tr><td>5-10</td><td>5-10-hop</td><td>链状结构、长距离依赖</td></tr>
+    <tr><td>10+</td><td>整个图</td><td>全局属性预测（可能过平滑！）</td></tr>
+  </tbody>
+</table>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 多层消息传递（残差连接）</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="cmt"># GNSNetwork 中的多层消息传递</span>
+<span class="sf">self</span>.gn_layers = nn.ModuleList([
+    GraphNetworkLayer(hidden_dim, hidden_dim, hidden_dim)
+    <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_layers)  <span class="cmt"># 通常 n_layers = 3~10</span>
+])
+
+<span class="cmt"># Forward pass 中:</span>
+x = <span class="sf">self</span>.node_encoder(x)
+edge_attr = <span class="sf">self</span>.edge_encoder(edge_attr)
+
+<span class="kw">for</span> layer <span class="kw">in</span> <span class="sf">self</span>.gn_layers:
+    x_new = layer(x, edge_index, edge_attr)
+    x = x + x_new  <span class="cmt"># ← 残差连接！防止梯度消失</span>
+
+acc = <span class="sf">self</span>.decoder(x)</code></pre>
+</div>
+
+<div class="box warning">
+  <div class="box-title">⚠️ 残差连接的重要性</div>
+  <p>注意 <code>x = x + x_new</code> 这行残差连接。没有它，深层 GNN 会 <strong>梯度消失</strong> 或 <strong>过平滑</strong>（所有节点特征趋同）。残差连接保留了原始信息，让优化更稳定。</p>
+</div>
+
+<!-- ===== 3.7 ===== -->
+<h3 id="ch3-global">3.7 全局特征</h3>
+
+<p>有些物理量是全局的（如重力方向、系统总能量），无法归属于任何单个节点或边。GNS 可以引入 <strong>全局节点</strong> 来处理：</p>
+
+$$
+\mathbf{u} = \phi_u\left(\mathbf{u}^{(l)}, \sum_i \mathbf{h}_i^{(l)}\right)
+$$
+
+<p>全局节点连接到所有其他节点，可以广播全局信息（如重力、外部场），也可以汇总全局统计量（如系统总能量）。</p>
+
+<div class="box example">
+  <div class="box-title">💡 在 PushBox 中</div>
+  <p>我们的 PushBox 只有 2 个节点，1 轮消息传递已经能让信息传遍全图，所以 <strong>不需要全局节点</strong>。但如果扩展到多物体场景（10+ 个箱子），全局节点可以编码目标信息或环境参数。</p>
+</div>
+
+
+<!-- ================================================================ -->
+<!-- 第四章 -->
+<!-- ================================================================ -->
+<h2 id="ch4">第四章：边帧 (Edge Frame) 与物理约束</h2>
+
+<h3 id="ch4-what">4.1 什么是 Edge Frame</h3>
+
+<div class="box definition">
+  <div class="box-title">📘 定义：边帧 (Edge Frame)</div>
+  <p>边帧是以每条 <strong>边</strong> 为中心构建的 <strong>局部坐标系</strong>。对于边 $(i, j)$，以位移向量 $\mathbf{r}_{ij} = \mathbf{x}_j - \mathbf{x}_i$ 为基准方向，构建一个正交基 $\{\mathbf{e}_1, \mathbf{e}_2, \mathbf{e}_3\}$，然后在此坐标系下表示所有物理量。</p>
+</div>
+
+<p>传统 GNN 使用全局坐标系下的绝对位置和速度作为特征。Edge Frame 则将这些特征 <strong>转换到局部坐标系</strong>，使得：</p>
+<ul>
+  <li><strong>平移不变性</strong>：只使用相对量 $\mathbf{r}_{ij} = \mathbf{x}_j - \mathbf{x}_i$，与绝对位置无关</li>
+  <li><strong>旋转等变性</strong>：力的方向随坐标系旋转，但物理规律不变</li>
+  <li><strong>反对称性</strong>：$\mathbf{e}_{ij} = -\mathbf{e}_{ji}$，自动满足牛顿第三定律</li>
+</ul>
+
+<!-- ===== 4.2 ===== -->
+<h3 id="ch4-why">4.2 为什么 Edge Frame 重要</h3>
+
+<div class="box theorem">
+  <div class="box-title">📗 核心论点</div>
+  <p>物理定律具有 <strong>对称性</strong>：</p>
+  <ul>
+    <li><strong>平移对称性</strong> → 动量守恒（Noether 定理）</li>
+    <li><strong>旋转对称性</strong> → 角动量守恒</li>
+    <li><strong>时间平移对称性</strong> → 能量守恒</li>
+  </ul>
+  <p>如果网络的输入特征没有这些对称性，网络就需要 <strong>从数据中学习</strong> 它们——这浪费了大量样本。Edge Frame 将对称性 <strong>内置到网络结构中</strong>，让网络从一开始就自动满足。</p>
+</div>
+
+<p>用一个具体例子说明：</p>
+
+<div class="compare-grid">
+  <div class="compare-card">
+    <h4>❌ 没有 Edge Frame</h4>
+    <p>输入：绝对位置 $\mathbf{x}_i = [1, 2, 3]$</p>
+    <p>如果整个系统平移 $[10, 0, 0]$：</p>
+    <p>$\mathbf{x}_i' = [11, 2, 3]$ → <strong>完全不同的输入！</strong></p>
+    <p>网络需要学到"平移不影响物理"。</p>
+  </div>
+  <div class="compare-card">
+    <h4>✅ 有 Edge Frame</h4>
+    <p>输入：相对位置 $\mathbf{r}_{ij} = \mathbf{x}_j - \mathbf{x}_i$</p>
+    <p>如果整个系统平移 $[10, 0, 0]$：</p>
+    <p>$\mathbf{r}_{ij}' = (\mathbf{x}_j + [10,0,0]) - (\mathbf{x}_i + [10,0,0]) = \mathbf{r}_{ij}$</p>
+    <p><strong>输入完全不变！</strong>天生平移不变。</p>
+  </div>
+</div>
+
+<!-- ===== 4.3 ===== -->
+<h3 id="ch4-math">4.3 Edge Frame 的数学</h3>
+
+<p>对于边 $(i, j)$，Edge Frame 计算以下特征：</p>
+
+<h4>1. 位移向量与距离</h4>
+$$
+\mathbf{r}_{ij} = \mathbf{x}_j - \mathbf{x}_i \in \mathbb{R}^3, \quad d_{ij} = \|\mathbf{r}_{ij}\| \in \mathbb{R}
+$$
+
+<h4>2. 相对速度与速率</h4>
+$$
+\mathbf{v}_{ij}^{\text{rel}} = \mathbf{v}_j - \mathbf{v}_i \in \mathbb{R}^3, \quad s_{ij} = \|\mathbf{v}_{ij}^{\text{rel}}\| \in \mathbb{R}
+$$
+
+<h4>3. 组合边特征</h4>
+$$
+\mathbf{e}_{ij} = [\mathbf{r}_{ij},\; d_{ij},\; \mathbf{v}_{ij}^{\text{rel}},\; s_{ij}] \in \mathbb{R}^8
+$$
+
+<h4>4. 反对称性质</h4>
+$$
+\mathbf{r}_{ij} = -\mathbf{r}_{ji}, \quad \mathbf{v}_{ij}^{\text{rel}} = -\mathbf{v}_{ji}^{\text{rel}}
+$$
+<p>但 $d_{ij} = d_{ji}$，$s_{ij} = s_{ji}$（范数总为正）。</p>
+
+<div class="box theorem">
+  <div class="box-title">📗 反对称性与牛顿第三定律</div>
+  <p>由于 $\mathbf{r}_{ij} = -\mathbf{r}_{ji}$，如果力 $\mathbf{F}_{ij}$ 是 $\mathbf{r}_{ij}$ 的奇函数，则自动满足 $\mathbf{F}_{ij} = -\mathbf{F}_{ji}$（牛顿第三定律），进而保证 <strong>动量守恒</strong>：</p>
+  $$\sum_i \mathbf{F}_i = \sum_i \sum_{j \neq i} \mathbf{F}_{ij} = \sum_{(i,j)} (\mathbf{F}_{ij} + \mathbf{F}_{ji}) = \mathbf{0}$$
+</div>
+
+<!-- ===== 4.4 ===== -->
+<h3 id="ch4-code">4.4 我们的 EdgeFrame 实现 — 完整代码解析</h3>
+
+<p>以下是 <code>physics_core/edge_frame.py</code> 中 <strong>EdgeFrame</strong> 类的完整实现，附逐行解释：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — edge_frame.py 完整源码</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">from</span> typing <span class="kw">import</span> Tuple, Optional
+
+
+<span class="kw">class</span> <span class="cls">EdgeFrame</span>(nn.Module):
+    <span class="str">"""
+    Edge Frame for encoding spatial relationships between nodes.
+    
+    Given nodes i and j with positions x_i, x_j and velocities v_i, v_j,
+    constructs antisymmetric edge features:
+    
+    e_ij = [r_ij, ||r_ij||, v_rel, ||v_rel||]
+    
+    where r_ij = x_j - x_i (displacement vector)
+          v_rel = v_j - v_i (relative velocity)
+    """</span>
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, hidden_dim: <span class="bi">int</span> = <span class="num">64</span>):
+        <span class="bi">super</span>().__init__()
+        <span class="sf">self</span>.hidden_dim = hidden_dim
+        
+        <span class="cmt"># 边特征编码器（保持反对称性）</span>
+        <span class="cmt"># 输入: [dx, dy, dz, ||r||, dvx, dvy, dvz, ||v||] = 8 个特征</span>
+        <span class="sf">self</span>.edge_encoder = nn.Sequential(
+            nn.Linear(<span class="num">8</span>, hidden_dim),       <span class="cmt"># 8D → hidden_dim</span>
+            nn.LayerNorm(hidden_dim),       <span class="cmt"># 归一化稳定训练</span>
+            nn.ReLU(),                      <span class="cmt"># 非线性激活</span>
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+        )
+        
+    <span class="kw">def</span> <span class="fn">forward</span>(
+        <span class="sf">self</span>,
+        positions: torch.Tensor,   <span class="cmt"># (N, 3)</span>
+        velocities: torch.Tensor,  <span class="cmt"># (N, 3)</span>
+        edge_index: torch.Tensor,  <span class="cmt"># (2, E)</span>
+    ) -> torch.Tensor:             <span class="cmt"># (E, hidden_dim)</span>
+
+        <span class="cmt"># 提取源节点和目标节点的索引</span>
+        src_idx, tgt_idx = edge_index[<span class="num">0</span>], edge_index[<span class="num">1</span>]
+        
+        <span class="cmt"># ========= 核心计算 =========</span>
+        
+        <span class="cmt"># 1. 位移向量（反对称）: r_ij = x_target - x_source</span>
+        r_ij = positions[tgt_idx] - positions[src_idx]   <span class="cmt"># (E, 3)</span>
+        r_norm = torch.norm(r_ij, dim=<span class="num">1</span>, keepdim=<span class="kw">True</span>)  <span class="cmt"># (E, 1)</span>
+        
+        <span class="cmt"># 2. 相对速度（反对称）: v_rel = v_target - v_source</span>
+        v_rel = velocities[tgt_idx] - velocities[src_idx] <span class="cmt"># (E, 3)</span>
+        v_norm = torch.norm(v_rel, dim=<span class="num">1</span>, keepdim=<span class="kw">True</span>)  <span class="cmt"># (E, 1)</span>
+        
+        <span class="cmt"># 3. 拼接原始特征: [r_ij(3), ||r||(1), v_rel(3), ||v||(1)] = 8D</span>
+        edge_features = torch.cat([r_ij, r_norm, v_rel, v_norm], dim=<span class="num">1</span>)
+        
+        <span class="cmt"># 4. 编码到高维空间</span>
+        edge_hidden = <span class="sf">self</span>.edge_encoder(edge_features)  <span class="cmt"># (E, hidden_dim)</span>
+        
+        <span class="kw">return</span> edge_hidden</code></pre>
+</div>
+
+<p><strong>逐步解析：</strong></p>
+<ol>
+  <li><strong>输入</strong>：所有节点的位置 $(N, 3)$、速度 $(N, 3)$、边连接 $(2, E)$</li>
+  <li><strong>索引提取</strong>：<code>edge_index[0]</code> 是源节点编号，<code>edge_index[1]</code> 是目标节点编号</li>
+  <li><strong>位移计算</strong>：用 PyTorch 的高级索引 <code>positions[tgt_idx]</code> 一次性取出所有边的目标节点位置，然后减去源节点位置</li>
+  <li><strong>范数计算</strong>：<code>torch.norm(..., keepdim=True)</code> 保持维度以便后续拼接</li>
+  <li><strong>MLP 编码</strong>：8D 原始特征 → <code>hidden_dim</code>D 隐藏表示</li>
+</ol>
+
+<h4>反对称性验证</h4>
+<div class="code-container">
+  <div class="code-header"><span>Python — 验证反对称性</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">def</span> <span class="fn">check_antisymmetry</span>(<span class="sf">self</span>, positions, velocities, edge_index):
+    <span class="str">"""验证: e_ij ≈ -e_ji (反对称性质)"""</span>
+    <span class="cmt"># 正向边 e_ij</span>
+    e_ij = <span class="sf">self</span>(positions, velocities, edge_index)
+    
+    <span class="cmt"># 反向边 e_ji (交换源和目标)</span>
+    edge_index_rev = torch.stack([edge_index[<span class="num">1</span>], edge_index[<span class="num">0</span>]], dim=<span class="num">0</span>)
+    e_ji = <span class="sf">self</span>(positions, velocities, edge_index_rev)
+    
+    <span class="cmt"># 检查 e_ij + e_ji ≈ 0</span>
+    antisym_error = torch.max(torch.abs(e_ij + e_ji))
+    <span class="kw">return</span> antisym_error.item()
+    <span class="cmt"># 注意：经过 MLP 后反对称性不再严格成立</span>
+    <span class="cmt"># 但原始特征层面 (r_ij = -r_ji) 是精确的</span></code></pre>
+</div>
+
+<div class="box warning">
+  <div class="box-title">⚠️ MLP 会破坏严格反对称</div>
+  <p>原始的 8D 边特征中，$\mathbf{r}_{ij}$ 和 $\mathbf{v}_{rel}$ 是严格反对称的，但经过非线性 MLP 编码后，$\mathbf{e}_{ij}$ 不再严格等于 $-\mathbf{e}_{ji}$。不过，MLP 可以 <strong>学习到</strong> 近似的反对称性。如果需要 <strong>严格</strong> 反对称，需要使用奇函数激活或专门的反对称架构（见第五章）。</p>
+</div>
+
+<!-- ===== 4.5 ===== -->
+<h3 id="ch4-compare">4.5 对比：有 vs 无 Edge Frame</h3>
+
+<table>
+  <thead>
+    <tr><th>方面</th><th>无 Edge Frame</th><th>有 Edge Frame</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>平移不变性</td><td>❌ 需要学习</td><td>✅ 内置</td></tr>
+    <tr><td>旋转等变性</td><td>❌ 需要学习</td><td>⚠️ 部分（需范数特征）</td></tr>
+    <tr><td>反对称性</td><td>❌ 需要学习</td><td>✅ 原始特征层精确</td></tr>
+    <tr><td>泛化到新位置</td><td>差（过拟合绝对坐标）</td><td>好（只依赖相对量）</td></tr>
+    <tr><td>样本效率</td><td>低</td><td>高（对称性降低搜索空间）</td></tr>
+    <tr><td>计算开销</td><td>略低</td><td>略高（需计算相对量）</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ================================================================ -->
+<!-- 第五章 -->
+<!-- ================================================================ -->
+<h2 id="ch5">第五章：Dynami-CAL GNN</h2>
+
+<h3 id="ch5-what">5.1 什么是 Dynami-CAL</h3>
+
+<div class="box definition">
+  <div class="box-title">📘 Dynami-CAL GNN — 动力学感知的图网络</div>
+  <p>Dynami-CAL (Dynamics-Calibrated) 是我们在标准 GNS 基础上的增强版本，核心创新是：</p>
+  <ul>
+    <li><strong>边局部坐标系</strong>（Edge Frame）保证平移/旋转等变性</li>
+    <li><strong>反对称消息传递</strong> 自动满足牛顿第三定律 → 动量守恒</li>
+    <li><strong>辛积分器</strong>（Symplectic Integrator）保持哈密顿结构 → 能量守恒</li>
+    <li><strong>力分解</strong> 在局部坐标系下分解力的分量</li>
+  </ul>
+</div>
+
+<!-- ===== 5.2 ===== -->
+<h3 id="ch5-pmp">5.2 PhysicsMessagePassing — 物理消息传递层</h3>
+
+<p>以下是 <code>physics_core/dynamical_gnn.py</code> 中 <strong>PhysicsMessagePassing</strong> 的完整实现：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — PhysicsMessagePassing (dynamical_gnn.py)</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">class</span> <span class="cls">PhysicsMessagePassing</span>(MessagePassing):
+    <span class="str">"""
+    带物理约束的消息传递层
+    
+    Message: m_ij = φ(e_ij, h_i, h_j)
+    Update:  h_i' = ψ(h_i, Σ_j m_ij)
+    """</span>
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, hidden_dim: <span class="bi">int</span>, edge_dim: <span class="bi">int</span>):
+        <span class="bi">super</span>().__init__(aggr=<span class="str">'add'</span>)  <span class="cmt"># Sum 聚合 — 力的叠加原理!</span>
+        <span class="sf">self</span>.hidden_dim = hidden_dim
+        <span class="sf">self</span>.edge_dim = edge_dim
+        
+        <span class="cmt"># 消息网络 φ: 根据边特征和两端节点计算消息</span>
+        <span class="sf">self</span>.message_net = nn.Sequential(
+            nn.Linear(edge_dim + <span class="num">2</span> * hidden_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+        )
+        
+        <span class="cmt"># 更新网络 ψ: 结合旧特征和聚合消息</span>
+        <span class="sf">self</span>.update_net = nn.Sequential(
+            nn.Linear(<span class="num">2</span> * hidden_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+        )
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, x, edge_index, edge_attr):
+        <span class="kw">return</span> <span class="sf">self</span>.propagate(edge_index, x=x, edge_attr=edge_attr)
+    
+    <span class="kw">def</span> <span class="fn">message</span>(<span class="sf">self</span>, x_i, x_j, edge_attr):
+        <span class="str">"""
+        构造消息 m_ij: 从源 j 发送到目标 i
+        
+        关键: edge_attr 来自 EdgeFrame, 已经包含反对称信息
+        """</span>
+        msg_input = torch.cat([edge_attr, x_i, x_j], dim=-<span class="num">1</span>)
+        messages = <span class="sf">self</span>.message_net(msg_input)
+        <span class="kw">return</span> messages
+    
+    <span class="kw">def</span> <span class="fn">update</span>(<span class="sf">self</span>, aggr_out, x):
+        <span class="str">"""
+        更新节点特征 (带残差连接)
+        
+        aggr_out = Σ_j m_ij  — 所有入边消息之和
+        x = 原始节点特征
+        """</span>
+        update_input = torch.cat([x, aggr_out], dim=-<span class="num">1</span>)
+        x_new = <span class="sf">self</span>.update_net(update_input) + x  <span class="cmt"># ← 残差!</span>
+        <span class="kw">return</span> x_new</code></pre>
+</div>
+
+<p><strong>与标准 GraphNetworkLayer 的区别：</strong></p>
+<ol>
+  <li><strong>edge_attr 来自 EdgeFrame</strong>：已经编码了反对称的空间关系</li>
+  <li><strong><code>aggr='add'</code></strong>：求和聚合 = 力的叠加原理 $\mathbf{F}_i = \sum_j \mathbf{F}_{ij}$</li>
+  <li><strong>残差连接</strong>：<code>update_net(input) + x</code>，让优化更稳定</li>
+  <li><strong>LayerNorm</strong>：归一化隐藏表示，防止数值爆炸/消失</li>
+</ol>
+
+<!-- ===== 5.3 ===== -->
+<h3 id="ch5-arch">5.3 DynamicalGNN 完整架构</h3>
+
+<p>将 EdgeFrame + PhysicsMessagePassing + Decoder 组合为完整的 DynamicalGNN：</p>
+
+<div class="flow-diagram">
+  <div class="flow-box">🌐 EdgeFrame<br><small>位置+速度→边特征</small></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box">📥 NodeEncoder<br><small>状态→embedding</small></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box">⚙️ MP × N<br><small>物理消息传递</small></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box">📤 Decoder<br><small>embedding→加速度</small></div>
+</div>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — DynamicalGNN 完整架构 (dynamical_gnn.py)</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">class</span> <span class="cls">DynamicalGNN</span>(nn.Module):
+    <span class="str">"""
+    用于学习动力学系统的图神经网络
+    
+    架构:
+    1. Edge Frame: 编码空间关系
+    2. Node Encoder: 嵌入节点状态
+    3. Message Passing: 传播信息 (×N 层)
+    4. Dynamics Decoder: 预测加速度
+    """</span>
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(
+        <span class="sf">self</span>,
+        node_dim: <span class="bi">int</span> = <span class="num">6</span>,              <span class="cmt"># 位置(3) + 速度(3)</span>
+        hidden_dim: <span class="bi">int</span> = <span class="num">128</span>,          <span class="cmt"># 隐藏层维度</span>
+        edge_hidden_dim: <span class="bi">int</span> = <span class="num">64</span>,     <span class="cmt"># 边特征维度</span>
+        n_message_passing: <span class="bi">int</span> = <span class="num">3</span>,    <span class="cmt"># 消息传递层数</span>
+        output_dim: <span class="bi">int</span> = <span class="num">3</span>,           <span class="cmt"># 加速度(3)</span>
+    ):
+        <span class="bi">super</span>().__init__()
+        
+        <span class="cmt"># 1. 边帧 — 空间关系编码</span>
+        <span class="sf">self</span>.edge_frame = EdgeFrame(hidden_dim=edge_hidden_dim)
+        
+        <span class="cmt"># 2. 节点编码器</span>
+        <span class="sf">self</span>.node_encoder = nn.Sequential(
+            nn.Linear(node_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+        )
+        
+        <span class="cmt"># 3. 消息传递层 (N 层)</span>
+        <span class="sf">self</span>.mp_layers = nn.ModuleList([
+            PhysicsMessagePassing(hidden_dim, edge_hidden_dim)
+            <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_message_passing)
+        ])
+        
+        <span class="cmt"># 4. 动力学解码器 → 加速度</span>
+        <span class="sf">self</span>.decoder = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim // <span class="num">2</span>),
+            nn.ReLU(),
+            nn.Linear(hidden_dim // <span class="num">2</span>, output_dim),
+        )
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, positions, velocities, edge_index, masses=<span class="kw">None</span>):
+        <span class="cmt"># Step 1: 边帧编码</span>
+        edge_features = <span class="sf">self</span>.edge_frame(positions, velocities, edge_index)
+        
+        <span class="cmt"># Step 2: 节点编码</span>
+        node_states = torch.cat([positions, velocities], dim=-<span class="num">1</span>)  <span class="cmt"># (N, 6)</span>
+        node_features = <span class="sf">self</span>.node_encoder(node_states)            <span class="cmt"># (N, 128)</span>
+        
+        <span class="cmt"># Step 3: 多轮消息传递</span>
+        x = node_features
+        <span class="kw">for</span> mp_layer <span class="kw">in</span> <span class="sf">self</span>.mp_layers:
+            x = mp_layer(x, edge_index, edge_features)
+        
+        <span class="cmt"># Step 4: 预测加速度</span>
+        accelerations = <span class="sf">self</span>.decoder(x)  <span class="cmt"># (N, 3)</span>
+        
+        <span class="kw">return</span> accelerations</code></pre>
+</div>
+
+<p><strong>参数量统计（默认配置）：</strong></p>
+<ul>
+  <li>EdgeFrame: $8 \times 64 + 64 \times 64 \approx 4.6K$ 参数</li>
+  <li>NodeEncoder: $6 \times 128 + 128 \times 128 \approx 17K$ 参数</li>
+  <li>3 × PhysicsMessagePassing: $3 \times (192 \times 128 + 256 \times 128) \approx 172K$ 参数</li>
+  <li>Decoder: $128 \times 128 + 128 \times 64 + 64 \times 3 \approx 25K$ 参数</li>
+  <li><strong>总计约 ~220K 参数</strong> — 非常轻量!</li>
+</ul>
+
+<!-- ===== 5.4 ===== -->
+<h3 id="ch5-conservation">5.4 守恒定律编码</h3>
+
+<p>Dynami-CAL GNN 如何将物理守恒定律融入网络？</p>
+
+<h4>动量守恒</h4>
+<p>通过 <strong>反对称消息传递</strong> 实现。当使用 Sum 聚合时：</p>
+$$
+\sum_{i} \sum_{j \in \mathcal{N}(i)} \mathbf{m}_{ji} = \sum_{(i,j) \in E} (\mathbf{m}_{ji} + \mathbf{m}_{ij})
+$$
+<p>如果消息是反对称的 ($\mathbf{m}_{ij} = -\mathbf{m}_{ji}$)，则系统总力为零 → 动量守恒。</p>
+
+<h4>能量守恒</h4>
+<p>通过 <strong>守恒定律损失函数</strong> 软约束实现：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 能量守恒检查</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">def</span> <span class="fn">compute_energy</span>(<span class="sf">self</span>, positions, velocities, masses):
+    <span class="str">"""计算系统能量用于守恒检查"""</span>
+    <span class="cmt"># 动能: KE = 0.5 * m * v²</span>
+    kinetic = <span class="num">0.5</span> * masses.unsqueeze(-<span class="num">1</span>) * (velocities ** <span class="num">2</span>).<span class="fn">sum</span>(dim=-<span class="num">1</span>)
+    kinetic_total = kinetic.<span class="fn">sum</span>()
+    
+    <span class="cmt"># 势能 (重力): PE = m * g * h</span>
+    g = <span class="num">9.81</span>
+    potential = masses * g * positions[:, <span class="num">2</span>]  <span class="cmt"># z 是高度</span>
+    potential_total = potential.<span class="fn">sum</span>()
+    
+    total = kinetic_total + potential_total
+    <span class="kw">return</span> kinetic_total, potential_total, total
+
+<span class="kw">def</span> <span class="fn">check_conservation</span>(<span class="sf">self</span>, pos_t0, vel_t0, pos_t1, vel_t1, masses):
+    <span class="str">"""检查两个时间步之间的守恒律"""</span>
+    _, _, E_t0 = <span class="sf">self</span>.compute_energy(pos_t0, vel_t0, masses)
+    _, _, E_t1 = <span class="sf">self</span>.compute_energy(pos_t1, vel_t1, masses)
+    energy_error = torch.abs((E_t1 - E_t0) / (E_t0 + <span class="num">1e-8</span>))
+    
+    <span class="cmt"># 动量守恒</span>
+    p_t0 = (masses.unsqueeze(-<span class="num">1</span>) * vel_t0).<span class="fn">sum</span>(dim=<span class="num">0</span>)
+    p_t1 = (masses.unsqueeze(-<span class="num">1</span>) * vel_t1).<span class="fn">sum</span>(dim=<span class="num">0</span>)
+    momentum_error = torch.norm(p_t1 - p_t0) / (torch.norm(p_t0) + <span class="num">1e-8</span>)
+    
+    <span class="kw">return</span> {
+        <span class="str">'energy_error'</span>: energy_error.item(),
+        <span class="str">'momentum_error'</span>: momentum_error.item(),
+    }</code></pre>
+</div>
+
+<!-- ===== 5.5 ===== -->
+<h3 id="ch5-symplectic">5.5 辛积分器 (Symplectic Integrator)</h3>
+
+<div class="box definition">
+  <div class="box-title">📘 辛积分器 — Velocity Verlet</div>
+  <p>辛积分器是一类保持 <strong>哈密顿结构</strong>（即相空间体积）的数值积分方法。相比 Euler 积分，辛积分器在 <strong>长期模拟</strong> 中能量漂移更小。</p>
+</div>
+
+<p>Velocity Verlet 算法的更新步骤：</p>
+
+$$
+\begin{aligned}
+\mathbf{v}_{n+\frac{1}{2}} &= \mathbf{v}_n + \frac{1}{2} \Delta t \cdot \mathbf{a}_n \\
+\mathbf{x}_{n+1} &= \mathbf{x}_n + \Delta t \cdot \mathbf{v}_{n+\frac{1}{2}} \\
+\mathbf{a}_{n+1} &= f(\mathbf{x}_{n+1}) \\
+\mathbf{v}_{n+1} &= \mathbf{v}_{n+\frac{1}{2}} + \frac{1}{2} \Delta t \cdot \mathbf{a}_{n+1}
+\end{aligned}
+$$
+
+<div class="code-container">
+  <div class="code-header"><span>Python — SymplecticIntegrator (integrators.py)</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">class</span> <span class="cls">SymplecticIntegrator</span>:
+    <span class="str">"""
+    辛 (Verlet) 积分器
+    保持哈密顿结构，长期模拟能量漂移小
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, dt: <span class="bi">float</span> = <span class="num">0.01</span>):
+        <span class="sf">self</span>.dt = dt
+    
+    <span class="kw">def</span> <span class="fn">step</span>(<span class="sf">self</span>, positions, velocities, acceleration_fn):
+        <span class="str">"""
+        执行一步积分
+        acceleration_fn: (pos, vel) → accel 的函数
+        """</span>
+        <span class="cmt"># 当前加速度</span>
+        accel_n = acceleration_fn(positions, velocities)
+        
+        <span class="cmt"># 半步速度更新</span>
+        v_half = velocities + <span class="num">0.5</span> * <span class="sf">self</span>.dt * accel_n
+        
+        <span class="cmt"># 位置更新</span>
+        x_new = positions + <span class="sf">self</span>.dt * v_half
+        
+        <span class="cmt"># 新位置处的加速度</span>
+        accel_n1 = acceleration_fn(x_new, v_half)
+        
+        <span class="cmt"># 完整速度更新</span>
+        v_new = v_half + <span class="num">0.5</span> * <span class="sf">self</span>.dt * accel_n1
+        
+        <span class="kw">return</span> x_new, v_new</code></pre>
+</div>
+
+<div class="compare-grid">
+  <div class="compare-card">
+    <h4>Euler 积分</h4>
+    <p>$\mathbf{v}_{n+1} = \mathbf{v}_n + \Delta t \cdot \mathbf{a}_n$</p>
+    <p>$\mathbf{x}_{n+1} = \mathbf{x}_n + \Delta t \cdot \mathbf{v}_{n+1}$</p>
+    <p>⚠️ 1 阶精度，能量持续漂移</p>
+    <p>⚠️ 长期模拟不稳定</p>
+  </div>
+  <div class="compare-card">
+    <h4>Velocity Verlet (辛积分)</h4>
+    <p>半步速度 → 位置 → 新加速度 → 全步速度</p>
+    <p>✅ 2 阶精度，能量振荡但不漂移</p>
+    <p>✅ 适合长期保守系统模拟</p>
+    <p>✅ 时间可逆</p>
+  </div>
+</div>
+
+<!-- ===== 5.6 ===== -->
+<h3 id="ch5-force">5.6 力预测 vs 加速度预测</h3>
+
+<table>
+  <thead>
+    <tr><th>预测目标</th><th>优点</th><th>缺点</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>力 $\mathbf{F}_i$</strong></td>
+      <td>可以直接检查牛顿第三定律；可以分解为各分力</td>
+      <td>需要质量信息来转换为加速度</td>
+    </tr>
+    <tr>
+      <td><strong>加速度 $\ddot{\mathbf{x}}_i$</strong></td>
+      <td>直接用于积分器；不需要质量</td>
+      <td>难以直接检查守恒律</td>
+    </tr>
+    <tr>
+      <td><strong>速度变化 $\Delta \mathbf{v}$</strong></td>
+      <td>直接更新速度，简单</td>
+      <td>依赖时间步长</td>
+    </tr>
+    <tr>
+      <td><strong>位置变化 $\Delta \mathbf{x}$</strong></td>
+      <td>最简单直接</td>
+      <td>物理意义不明确，难泛化</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="box theorem">
+  <div class="box-title">📗 我们的选择：加速度</div>
+  <p>在 DynamicalGNN 中，我们选择预测 <strong>加速度</strong> $\ddot{\mathbf{x}}_i \in \mathbb{R}^3$，原因是：</p>
+  <ol>
+    <li>加速度与时间步长无关（力和加速度的关系 $\mathbf{a} = \mathbf{F}/m$ 是瞬时的）</li>
+    <li>可以搭配任意积分器（Euler / Verlet / RK4）</li>
+    <li>质量可以被网络隐式学习（不需要显式提供）</li>
+  </ol>
+</div>
+
+
+<!-- ================================================================ -->
+<!-- 第六章 -->
+<!-- ================================================================ -->
+<h2 id="ch6">第六章：GNS 在 PushBox 中的应用</h2>
+
+<h3 id="ch6-build">6.1 图构建过程</h3>
+
+<p>从 PushBox 环境的 16 维观测向量构建图的完整过程：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — PushBox 观测空间 (push_box_env.py)</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">def</span> <span class="fn">_get_obs</span>(<span class="sf">self</span>):
+    <span class="str">"""获取 16 维观测向量"""</span>
+    joint_pos = <span class="sf">self</span>.data.qpos[:<span class="num">2</span>].copy()   <span class="cmt"># 2D: 关节角度</span>
+    joint_vel = <span class="sf">self</span>.data.qvel[:<span class="num">2</span>].copy()   <span class="cmt"># 2D: 关节速度</span>
+    ee_pos = <span class="sf">self</span>.data.site_xpos[<span class="sf">self</span>._ee_site_id].copy()  <span class="cmt"># 3D</span>
+    box_pos = <span class="sf">self</span>.data.qpos[<span class="num">2</span>:<span class="num">5</span>].copy()    <span class="cmt"># 3D: 盒子位置</span>
+    box_vel = <span class="sf">self</span>.data.qvel[<span class="num">2</span>:<span class="num">5</span>].copy()    <span class="cmt"># 3D: 盒子速度</span>
+    goal_pos = <span class="sf">self</span>.goal_pos.copy()           <span class="cmt"># 3D: 目标位置</span>
+    
+    obs = np.concatenate([
+        joint_pos,    <span class="cmt"># [0:2]   — 关节角度</span>
+        joint_vel,    <span class="cmt"># [2:4]   — 关节速度</span>
+        ee_pos,       <span class="cmt"># [4:7]   — 末端执行器位置</span>
+        box_pos,      <span class="cmt"># [7:10]  — 盒子位置</span>
+        box_vel,      <span class="cmt"># [10:13] — 盒子速度</span>
+        goal_pos      <span class="cmt"># [13:16] — 目标位置</span>
+    ])
+    <span class="kw">return</span> obs.astype(np.float32)</code></pre>
+</div>
+
+<p>图构建的映射关系：</p>
+<div class="flow-diagram">
+  <div class="flow-box">📋 obs[16]<br><small>扁平观测向量</small></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box">🔀 拆分提取<br><small>ee_pos, box_pos, box_vel</small></div>
+  <span class="flow-arrow">→</span>
+  <div class="flow-box">📊 Graph(x, edge_index, edge_attr)<br><small>2 节点、2 边的 PyG 图</small></div>
+</div>
+
+<!-- ===== 6.2 ===== -->
+<h3 id="ch6-gns">6.2 GNSFeaturesExtractor</h3>
+
+<p>这是将 GNS 集成到 PPO 框架的关键组件。它作为 Stable-Baselines3 的 <strong>自定义特征提取器</strong>，将原始观测转换为物理感知的特征向量。</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — GNSFeaturesExtractor (gns_baseline.py)</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">class</span> <span class="cls">GNSFeaturesExtractor</span>(BaseFeaturesExtractor):
+    <span class="str">"""
+    将 GNS 集成到 PPO 的特征提取器
+    观测 → 图 → GNS 物理预测 → 特征向量
+    """</span>
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, observation_space, features_dim=<span class="num">128</span>):
+        <span class="bi">super</span>().__init__(observation_space, features_dim)
+        
+        <span class="cmt"># GNS 网络用于物理预测</span>
+        <span class="sf">self</span>.gns = GNSNetwork(
+            node_feature_dim=<span class="num">6</span>,     <span class="cmt"># pos(3) + vel(3)</span>
+            edge_feature_dim=<span class="num">4</span>,     <span class="cmt"># rel_pos(3) + dist(1)</span>
+            hidden_dim=<span class="num">128</span>,
+            n_layers=<span class="num">3</span>
+        )
+        
+        <span class="cmt"># 融合: GNS物理特征 + 原始观测</span>
+        <span class="sf">self</span>.feature_proj = nn.Sequential(
+            nn.Linear(<span class="num">128</span> + <span class="num">16</span>, features_dim),
+            nn.ReLU()
+        )
+    
+    <span class="kw">def</span> <span class="fn">_obs_to_graph</span>(<span class="sf">self</span>, obs):
+        <span class="str">"""将批量观测转为 PyG 批量图"""</span>
+        batch_size = obs.shape[<span class="num">0</span>]
+        graphs = []
+        
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="bi">range</span>(batch_size):
+            o = obs[i]
+            
+            <span class="cmt"># 节点: [末端执行器, 盒子]</span>
+            ee_pos = o[<span class="num">4</span>:<span class="num">7</span>]
+            ee_vel = torch.zeros(<span class="num">3</span>, device=obs.device)
+            box_pos = o[<span class="num">7</span>:<span class="num">10</span>]
+            box_vel = o[<span class="num">10</span>:<span class="num">13</span>]
+            
+            <span class="cmt"># 节点特征: [pos(3), vel(3)]</span>
+            node_features = torch.stack([
+                torch.cat([ee_pos, ee_vel]),
+                torch.cat([box_pos, box_vel])
+            ])
+            
+            <span class="cmt"># 单向边: 末端执行器 → 盒子</span>
+            edge_index = torch.tensor([[<span class="num">0</span>], [<span class="num">1</span>]],
+                dtype=torch.long, device=obs.device)
+            
+            <span class="cmt"># 边特征: 相对位置 + 距离</span>
+            rel_pos = box_pos - ee_pos
+            distance = torch.norm(rel_pos).unsqueeze(<span class="num">0</span>)
+            edge_attr = torch.cat([rel_pos, distance]).unsqueeze(<span class="num">0</span>)
+            
+            graph = Data(x=node_features,
+                        edge_index=edge_index, edge_attr=edge_attr)
+            graphs.append(graph)
+        
+        <span class="kw">return</span> Batch.from_data_list(graphs)
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, observations):
+        <span class="str">"""观测 → GNS → 特征向量"""</span>
+        graph = <span class="sf">self</span>._obs_to_graph(observations)
+        acc_pred = <span class="sf">self</span>.gns(graph)
+        
+        <span class="cmt"># 提取盒子节点的预测 (每2个节点取第2个)</span>
+        physics_features = acc_pred[<span class="num">1</span>::<span class="num">2</span>]
+        
+        <span class="cmt"># 拼接物理预测 + 原始观测</span>
+        combined = torch.cat([
+            physics_features.view(observations.shape[<span class="num">0</span>], -<span class="num">1</span>),
+            observations
+        ], dim=-<span class="num">1</span>)
+        
+        <span class="kw">return</span> <span class="sf">self</span>.feature_proj(combined)</code></pre>
+</div>
+
+<div class="box example">
+  <div class="box-title">💡 数据流</div>
+  <p>一个 batch 的数据流如下（batch_size=64）：</p>
+  <ol>
+    <li><code>observations</code>: <code>[64, 16]</code> — 64 个观测</li>
+    <li><code>_obs_to_graph()</code>: 构建 64 个独立的 2-节点图 → <code>Batch(x=[128, 6], ...)</code></li>
+    <li><code>gns(graph)</code>: 对 128 个节点做消息传递 → <code>acc_pred [128, 3]</code></li>
+    <li>取盒子节点: <code>acc_pred[1::2]</code> → <code>[64, 3]</code> — 每个样本的盒子加速度预测</li>
+    <li>拼接: <code>[64, 3] cat [64, 16]</code> → <code>[64, 19]</code></li>
+    <li>投影: <code>feature_proj([64, 19])</code> → <code>[64, 128]</code> — PPO 的输入特征</li>
+  </ol>
+</div>
+
+<!-- ===== 6.3 ===== -->
+<h3 id="ch6-phys">6.3 PhysRobotFeaturesExtractor — 物理约束版本</h3>
+
+<p>与 GNSFeaturesExtractor 相比，PhysRobot 版本增加了 <strong>Dynami-CAL 物理约束</strong> 和 <strong>双流融合</strong>：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — PhysRobotFeaturesExtractor (physics_informed.py)</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">class</span> <span class="cls">PhysRobotFeaturesExtractor</span>(BaseFeaturesExtractor):
+    <span class="str">"""
+    双流特征提取器:
+    - 策略流 (Policy Stream): "该做什么" — 标准 MLP
+    - 物理流 (Physics Stream): "物理上什么可能" — Dynami-CAL
+    - 融合: 合并两者
+    """</span>
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, observation_space, features_dim=<span class="num">128</span>):
+        <span class="bi">super</span>().__init__(observation_space, features_dim)
+        
+        <span class="cmt"># 物理流: Dynami-CAL 物理核心</span>
+        <span class="sf">self</span>.physics_core = PhysicsCore(
+            node_feature_dim=<span class="num">6</span>, hidden_dim=<span class="num">128</span>, n_message_passing=<span class="num">3</span>
+        )
+        
+        <span class="cmt"># 策略流: 标准 MLP</span>
+        <span class="sf">self</span>.policy_stream = nn.Sequential(
+            nn.Linear(observation_space.shape[<span class="num">0</span>], <span class="num">128</span>),
+            nn.ReLU(),
+            nn.Linear(<span class="num">128</span>, <span class="num">128</span>),
+            nn.ReLU(),
+            nn.Linear(<span class="num">128</span>, features_dim)
+        )
+        
+        <span class="cmt"># 融合: 策略特征(128) + 物理预测(3) → 最终特征(128)</span>
+        <span class="sf">self</span>.fusion = nn.Sequential(
+            nn.Linear(features_dim + <span class="num">3</span>, features_dim),
+            nn.ReLU()
+        )
+    
+    <span class="kw">def</span> <span class="fn">_obs_to_graph</span>(<span class="sf">self</span>, obs):
+        <span class="str">"""观测 → 图 (带位置信息)"""</span>
+        batch_size = obs.shape[<span class="num">0</span>]
+        graphs = []
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="bi">range</span>(batch_size):
+            o = obs[i]
+            ee_pos = o[<span class="num">4</span>:<span class="num">7</span>]
+            box_pos = o[<span class="num">7</span>:<span class="num">10</span>]
+            box_vel = o[<span class="num">10</span>:<span class="num">13</span>]
+            
+            positions = torch.stack([ee_pos, box_pos])
+            node_features = torch.stack([
+                torch.cat([torch.zeros(<span class="num">3</span>, device=obs.device), ee_pos]),
+                torch.cat([box_vel, box_pos])
+            ])
+            
+            <span class="cmt"># 双向边！</span>
+            edge_index = torch.tensor(
+                [[<span class="num">0</span>, <span class="num">1</span>], [<span class="num">1</span>, <span class="num">0</span>]], dtype=torch.long, device=obs.device
+            ).t()
+            
+            graph = Data(x=node_features, pos=positions,
+                        edge_index=edge_index)
+            graphs.append(graph)
+        <span class="kw">return</span> Batch.from_data_list(graphs)
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, observations):
+        <span class="str">"""双流处理 → 融合"""</span>
+        <span class="cmt"># 1. 策略流: 学习 "该做什么"</span>
+        policy_features = <span class="sf">self</span>.policy_stream(observations)
+        
+        <span class="cmt"># 2. 物理流: 预测 "物理上什么会发生"</span>
+        graph = <span class="sf">self</span>._obs_to_graph(observations)
+        physics_pred = <span class="sf">self</span>.physics_core(graph)
+        box_physics = physics_pred[<span class="num">1</span>::<span class="num">2</span>]  <span class="cmt"># 盒子预测</span>
+        
+        <span class="cmt"># 3. 融合</span>
+        combined = torch.cat([policy_features, box_physics], dim=-<span class="num">1</span>)
+        features = <span class="sf">self</span>.fusion(combined)
+        <span class="kw">return</span> features</code></pre>
+</div>
+
+<div class="box theorem">
+  <div class="box-title">📗 双流架构的优势</div>
+  <p><strong>策略流</strong>（MLP）可以灵活学习任意策略特征，不受物理约束限制。<br>
+  <strong>物理流</strong>（Dynami-CAL）保证预测符合物理定律，提供可靠的动力学信息。<br>
+  <strong>融合模块</strong> 让 PPO 自动学习如何权衡两者——当物理预测可靠时依赖物理流，当需要非物理的决策（如选择目标）时依赖策略流。</p>
+</div>
+
+<!-- ===== 6.4 ===== -->
+<h3 id="ch6-train">6.4 训练流程</h3>
+
+<p>GNS + PPO 的完整训练循环：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 训练脚本 (train.py 摘录)</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">from</span> stable_baselines3 <span class="kw">import</span> PPO
+<span class="kw">from</span> stable_baselines3.common.vec_env <span class="kw">import</span> DummyVecEnv
+<span class="kw">from</span> environments.push_box_env <span class="kw">import</span> make_push_box_env
+<span class="kw">from</span> baselines.gns_baseline <span class="kw">import</span> GNSFeaturesExtractor
+
+<span class="cmt"># 1. 创建并行环境</span>
+n_envs = <span class="num">4</span>
+env = DummyVecEnv([make_push_box_env(box_mass=<span class="num">1.0</span>) <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_envs)])
+
+<span class="cmt"># 2. 配置 PPO + GNS 特征提取器</span>
+policy_kwargs = <span class="bi">dict</span>(
+    features_extractor_class=GNSFeaturesExtractor,
+    features_extractor_kwargs=<span class="bi">dict</span>(features_dim=<span class="num">128</span>),
+)
+
+model = PPO(
+    <span class="str">"MlpPolicy"</span>,
+    env,
+    learning_rate=<span class="num">3e-4</span>,
+    n_steps=<span class="num">2048</span>,
+    batch_size=<span class="num">64</span>,
+    n_epochs=<span class="num">10</span>,
+    gamma=<span class="num">0.99</span>,
+    policy_kwargs=policy_kwargs,
+    verbose=<span class="num">1</span>,
+)
+
+<span class="cmt"># 3. 训练！</span>
+model.learn(total_timesteps=<span class="num">80_000</span>)  <span class="cmt"># GNS 只需 80K 步</span>
+
+<span class="cmt"># 4. 保存模型</span>
+model.save(<span class="str">"models/gns_pushbox"</span>)</code></pre>
+</div>
+
+<div class="box warning">
+  <div class="box-title">⚠️ 关键细节</div>
+  <p>GNS 特征提取器是 <strong>端到端</strong> 和 PPO 一起训练的！GNS 的参数通过 PPO 的策略梯度同时更新。这意味着 GNS 不需要单独的监督数据——它通过强化学习的信号自动学习有用的物理表示。</p>
+</div>
+
+<!-- ===== 6.5 ===== -->
+<h3 id="ch6-compare">6.5 与纯 PPO 的对比</h3>
+
+<table>
+  <thead>
+    <tr><th>方法</th><th>训练步数</th><th>首次成功 (episodes)</th><th>样本效率提升</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>纯 PPO</td><td>200,000</td><td>~2000</td><td>1× (基准)</td></tr>
+    <tr><td>GNS + PPO</td><td>80,000</td><td>~800</td><td>~2.5×</td></tr>
+    <tr><td>PhysRobot (Ours)</td><td>16,000</td><td>~160</td><td>~12.5×</td></tr>
+  </tbody>
+</table>
+
+<div class="box theorem">
+  <div class="box-title">📗 为什么 GNS 更样本高效？</div>
+  <ol>
+    <li><strong>归纳偏置</strong>：图结构编码了 "物体通过交互影响彼此" 的先验知识，MLP 需要从零学起</li>
+    <li><strong>参数共享</strong>：同一个消息函数作用于所有边 → 更少参数 → 更少数据</li>
+    <li><strong>置换等变性</strong>：交换物体顺序不影响预测 → 自动数据增强效果</li>
+    <li><strong>物理约束（PhysRobot）</strong>：守恒律排除了大量非物理解 → 搜索空间更小</li>
+  </ol>
+</div>
+
+
+<!-- ================================================================ -->
+<!-- 第七章 -->
+<!-- ================================================================ -->
+<h2 id="ch7">第七章：高级主题</h2>
+
+<h3 id="ch7-multi">7.1 多体系统</h3>
+
+<p>PushBox 只有 2 个节点。扩展到多体系统只需要增加节点和边：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 多物体图构建</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">def</span> <span class="fn">build_multi_object_graph</span>(robot_joints, objects):
+    <span class="str">"""
+    多关节机器人 + 多物体场景
+    robot_joints: list of (pos, vel) for each joint
+    objects: list of (pos, vel, mass) for each object
+    """</span>
+    nodes = []
+    
+    <span class="cmt"># 机器人关节节点</span>
+    <span class="kw">for</span> pos, vel <span class="kw">in</span> robot_joints:
+        nodes.append(torch.cat([pos, vel, torch.tensor([<span class="num">0</span>])]))  <span class="cmt"># type=0: joint</span>
+    
+    <span class="cmt"># 物体节点</span>
+    <span class="kw">for</span> pos, vel, mass <span class="kw">in</span> objects:
+        nodes.append(torch.cat([pos, vel, torch.tensor([<span class="num">1</span>])]))  <span class="cmt"># type=1: object</span>
+    
+    N = <span class="bi">len</span>(nodes)
+    x = torch.stack(nodes)
+    
+    <span class="cmt"># 全连接图 (或基于距离阈值)</span>
+    sources, targets = [], []
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="bi">range</span>(N):
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="bi">range</span>(N):
+            <span class="kw">if</span> i != j:
+                sources.append(i)
+                targets.append(j)
+    
+    edge_index = torch.tensor([sources, targets], dtype=torch.long)
+    <span class="kw">return</span> Data(x=x, edge_index=edge_index)</code></pre>
+</div>
+
+<div class="box example">
+  <div class="box-title">💡 例子：7-DOF 机械臂推 3 个盒子</div>
+  <p>节点：7（关节）+ 3（盒子）= 10 个节点<br>
+  边：$10 \times 9 = 90$ 条边（全连接）或按距离阈值筛选<br>
+  <strong>GNS 的参数量完全不变</strong>——因为消息函数是共享的！只是计算量随边数增加。</p>
+</div>
+
+<!-- ===== 7.2 ===== -->
+<h3 id="ch7-dynamic">7.2 动态图</h3>
+
+<p>在许多物理场景中，交互关系会随时间变化：</p>
+<ul>
+  <li><strong>接触/分离</strong>：两个物体碰撞时产生边，分离后边消失</li>
+  <li><strong>距离阈值</strong>：只在距离 $d_{ij} < r$ 时添加边</li>
+  <li><strong>拓扑变化</strong>：绳索断裂、物体破碎</li>
+</ul>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 基于距离的动态边</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">def</span> <span class="fn">radius_graph</span>(positions, radius=<span class="num">0.5</span>):
+    <span class="str">"""根据距离阈值动态构建边"""</span>
+    N = positions.shape[<span class="num">0</span>]
+    sources, targets = [], []
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="bi">range</span>(N):
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="bi">range</span>(N):
+            <span class="kw">if</span> i != j:
+                dist = torch.norm(positions[i] - positions[j])
+                <span class="kw">if</span> dist < radius:
+                    sources.append(i)
+                    targets.append(j)
+    <span class="kw">return</span> torch.tensor([sources, targets], dtype=torch.long)
+
+<span class="cmt"># PyG 提供了高效的实现:</span>
+<span class="kw">from</span> torch_geometric.nn <span class="kw">import</span> radius_graph
+edge_index = radius_graph(positions, r=<span class="num">0.5</span>)</code></pre>
+</div>
+
+<!-- ===== 7.3 ===== -->
+<h3 id="ch7-hier">7.3 层次化图</h3>
+
+<p>对于复杂系统，可以使用多尺度/层次化图：</p>
+<ul>
+  <li><strong>细粒度</strong>：每个粒子一个节点（详细但计算量大）</li>
+  <li><strong>粗粒度</strong>：一组粒子聚合为一个 "超级节点"（快速但丢失细节）</li>
+  <li><strong>层次化</strong>：两层都有，通过池化操作连接</li>
+</ul>
+
+<div class="flow-diagram">
+  <div class="flow-box">细粒度图<br><small>100 个粒子节点</small></div>
+  <span class="flow-arrow">↕ 池化/反池化</span>
+  <div class="flow-box">粗粒度图<br><small>10 个超级节点</small></div>
+</div>
+
+<!-- ===== 7.4 ===== -->
+<h3 id="ch7-attn">7.4 注意力 + GNN</h3>
+
+<p>将注意力机制引入 GNS 的消息传递，让网络学习边的重要性：</p>
+
+$$
+\alpha_{ij} = \text{softmax}_j\left(\frac{\mathbf{q}_i^T \mathbf{k}_j}{\sqrt{d}}\right), \quad
+\mathbf{m}_i = \sum_{j \in \mathcal{N}(i)} \alpha_{ij} \mathbf{v}_j
+$$
+
+<p>在物理模拟中，注意力可以学习到：距离近的粒子权重高，远的权重低——这与物理力的衰减一致。</p>
+
+<!-- ===== 7.5 ===== -->
+<h3 id="ch7-limit">7.5 GNN 的局限性</h3>
+
+<div class="box warning">
+  <div class="box-title">⚠️ 已知问题</div>
+  <ul>
+    <li><strong>过平滑 (Over-Smoothing)</strong>：层数太多时，所有节点特征趋同。解决方案：残差连接、Jumping Knowledge、DropEdge</li>
+    <li><strong>过压缩 (Over-Squashing)</strong>：远距离信息需经过多次聚合，信息被 "压缩" 丢失。解决方案：全局节点、图Transformer</li>
+    <li><strong>表达力限制</strong>：标准 MPNN 的表达力等价于 1-WL 测试，无法区分某些非同构图。解决方案：高阶 GNN、子图方法</li>
+    <li><strong>大图可扩展性</strong>：全连接图的边数为 $O(N^2)$，对大系统不可行。解决方案：稀疏图、采样</li>
+  </ul>
+</div>
+
+<!-- ===== 7.6 ===== -->
+<h3 id="ch7-recent">7.6 最新进展</h3>
+
+<table>
+  <thead>
+    <tr><th>方法</th><th>核心创新</th><th>优势</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>SEGNN</strong> (Steerable E(3) Equivariant GNN)</td><td>球谐函数表示，严格 E(3) 等变</td><td>完美的旋转/平移/反射不变性</td></tr>
+    <tr><td><strong>Equivariant GNN</strong></td><td>等变线性层 + 非线性</td><td>不需要数据增强即可泛化到任意朝向</td></tr>
+    <tr><td><strong>Geometric Algebra GNN</strong></td><td>用几何代数替代向量运算</td><td>统一标量/向量/双向量的处理</td></tr>
+    <tr><td><strong>Graph Transformer</strong></td><td>全局注意力取代局部消息传递</td><td>解决过压缩，捕获长距离依赖</td></tr>
+    <tr><td><strong>Neural ODE + GNN</strong></td><td>连续时间消息传递</td><td>自适应时间步长，更物理</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ================================================================ -->
+<!-- 第八章 -->
+<!-- ================================================================ -->
+<h2 id="ch8">第八章：实践练习</h2>
+
+<h3 id="ch8-scratch">8.1 从零构建一个简单的 GNN（纯 PyTorch）</h3>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 从零实现 GNN（不用 PyG）</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cls">SimpleGNN</span>(nn.Module):
+    <span class="str">"""
+    从零实现的简单 GNN（不依赖 PyG）
+    用于理解消息传递的本质
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, node_dim, edge_dim, hidden_dim, output_dim, n_layers=<span class="num">3</span>):
+        <span class="bi">super</span>().__init__()
+        <span class="sf">self</span>.n_layers = n_layers
+        
+        <span class="cmt"># 节点编码器</span>
+        <span class="sf">self</span>.node_encoder = nn.Linear(node_dim, hidden_dim)
+        
+        <span class="cmt"># 消息函数 (每层共享或独立)</span>
+        <span class="sf">self</span>.message_mlps = nn.ModuleList([
+            nn.Sequential(
+                nn.Linear(<span class="num">2</span> * hidden_dim + edge_dim, hidden_dim),
+                nn.ReLU(),
+                nn.Linear(hidden_dim, hidden_dim)
+            ) <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_layers)
+        ])
+        
+        <span class="cmt"># 更新函数</span>
+        <span class="sf">self</span>.update_mlps = nn.ModuleList([
+            nn.Sequential(
+                nn.Linear(<span class="num">2</span> * hidden_dim, hidden_dim),
+                nn.ReLU(),
+                nn.Linear(hidden_dim, hidden_dim)
+            ) <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_layers)
+        ])
+        
+        <span class="cmt"># 解码器</span>
+        <span class="sf">self</span>.decoder = nn.Linear(hidden_dim, output_dim)
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, x, edge_index, edge_attr):
+        <span class="str">"""
+        x: 节点特征 [N, node_dim]
+        edge_index: [2, E]
+        edge_attr: [E, edge_dim]
+        """</span>
+        N = x.shape[<span class="num">0</span>]
+        src, tgt = edge_index[<span class="num">0</span>], edge_index[<span class="num">1</span>]
+        
+        <span class="cmt"># 编码</span>
+        h = torch.relu(<span class="sf">self</span>.node_encoder(x))
+        
+        <span class="cmt"># 多轮消息传递</span>
+        <span class="kw">for</span> l <span class="kw">in</span> <span class="bi">range</span>(<span class="sf">self</span>.n_layers):
+            <span class="cmt"># Step 1: 计算消息 (对每条边)</span>
+            h_src = h[src]  <span class="cmt"># [E, hidden_dim]</span>
+            h_tgt = h[tgt]  <span class="cmt"># [E, hidden_dim]</span>
+            msg_input = torch.cat([h_tgt, h_src, edge_attr], dim=-<span class="num">1</span>)
+            messages = <span class="sf">self</span>.message_mlps[l](msg_input)  <span class="cmt"># [E, hidden_dim]</span>
+            
+            <span class="cmt"># Step 2: 聚合 (scatter_add — 对同一目标节点的消息求和)</span>
+            aggregated = torch.zeros(N, messages.shape[<span class="num">1</span>], device=x.device)
+            aggregated.scatter_add_(<span class="num">0</span>, tgt.unsqueeze(<span class="num">1</span>).expand_as(messages), messages)
+            
+            <span class="cmt"># Step 3: 更新 (带残差)</span>
+            upd_input = torch.cat([h, aggregated], dim=-<span class="num">1</span>)
+            h = h + <span class="sf">self</span>.update_mlps[l](upd_input)  <span class="cmt"># 残差连接</span>
+        
+        <span class="cmt"># 解码</span>
+        <span class="kw">return</span> <span class="sf">self</span>.decoder(h)
+
+
+<span class="cmt"># ===== 测试 =====</span>
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="cmt"># PushBox 配置</span>
+    model = SimpleGNN(
+        node_dim=<span class="num">6</span>,       <span class="cmt"># pos(3) + vel(3)</span>
+        edge_dim=<span class="num">4</span>,       <span class="cmt"># rel_pos(3) + dist(1)</span>
+        hidden_dim=<span class="num">64</span>,
+        output_dim=<span class="num">3</span>,     <span class="cmt"># 加速度(3)</span>
+        n_layers=<span class="num">3</span>,
+    )
+    
+    <span class="cmt"># 构建 PushBox 图</span>
+    x = torch.randn(<span class="num">2</span>, <span class="num">6</span>)         <span class="cmt"># 2 个节点</span>
+    edge_index = torch.tensor([[<span class="num">0</span>,<span class="num">1</span>],[<span class="num">1</span>,<span class="num">0</span>]])
+    edge_attr = torch.randn(<span class="num">2</span>, <span class="num">4</span>)  <span class="cmt"># 2 条边</span>
+    
+    acc = model(x, edge_index, edge_attr)
+    <span class="bi">print</span>(f<span class="str">"Input: {x.shape}, Output: {acc.shape}"</span>)
+    <span class="bi">print</span>(f<span class="str">"Predicted accelerations:\n{acc}"</span>)
+    <span class="bi">print</span>(f<span class="str">"Parameters: {sum(p.numel() for p in model.parameters()):,}"</span>)</code></pre>
+</div>
+
+<div class="box theorem">
+  <div class="box-title">📗 核心要点</div>
+  <p><code>scatter_add_</code> 是消息传递的核心操作：它将每条边的消息根据 <strong>目标节点编号</strong> 累加到对应位置。这正是 PyG 的 <code>propagate()</code> 内部做的事。</p>
+</div>
+
+<!-- ===== 8.2 ===== -->
+<h3 id="ch8-pyg">8.2 用 PyG 构建完整的 GNS</h3>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 完整 GNS 实现 (PyG)</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">from</span> torch_geometric.nn <span class="kw">import</span> MessagePassing
+<span class="kw">from</span> torch_geometric.data <span class="kw">import</span> Data, Batch
+
+<span class="kw">class</span> <span class="cls">GNSLayer</span>(MessagePassing):
+    <span class="str">"""一层 GNS 消息传递"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, node_dim, edge_dim):
+        <span class="bi">super</span>().__init__(aggr=<span class="str">'add'</span>)
+        <span class="sf">self</span>.msg = nn.Sequential(
+            nn.Linear(<span class="num">2</span> * node_dim + edge_dim, node_dim),
+            nn.LayerNorm(node_dim), nn.ReLU(),
+            nn.Linear(node_dim, node_dim),
+        )
+        <span class="sf">self</span>.upd = nn.Sequential(
+            nn.Linear(<span class="num">2</span> * node_dim, node_dim),
+            nn.LayerNorm(node_dim), nn.ReLU(),
+            nn.Linear(node_dim, node_dim),
+        )
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, x, edge_index, edge_attr):
+        <span class="kw">return</span> <span class="sf">self</span>.propagate(edge_index, x=x, edge_attr=edge_attr)
+    
+    <span class="kw">def</span> <span class="fn">message</span>(<span class="sf">self</span>, x_i, x_j, edge_attr):
+        <span class="kw">return</span> <span class="sf">self</span>.msg(torch.cat([x_i, x_j, edge_attr], dim=-<span class="num">1</span>))
+    
+    <span class="kw">def</span> <span class="fn">update</span>(<span class="sf">self</span>, aggr_out, x):
+        <span class="kw">return</span> <span class="sf">self</span>.upd(torch.cat([x, aggr_out], dim=-<span class="num">1</span>)) + x  <span class="cmt"># 残差</span>
+
+
+<span class="kw">class</span> <span class="cls">GNS</span>(nn.Module):
+    <span class="str">"""完整的 Graph Network Simulator"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, node_in=<span class="num">6</span>, edge_in=<span class="num">8</span>, hidden=<span class="num">128</span>, layers=<span class="num">5</span>, out=<span class="num">3</span>):
+        <span class="bi">super</span>().__init__()
+        <span class="cmt"># Encoder</span>
+        <span class="sf">self</span>.node_enc = nn.Sequential(nn.Linear(node_in, hidden), nn.ReLU())
+        <span class="sf">self</span>.edge_enc = nn.Sequential(nn.Linear(edge_in, hidden), nn.ReLU())
+        <span class="cmt"># Processor</span>
+        <span class="sf">self</span>.layers = nn.ModuleList([GNSLayer(hidden, hidden) <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(layers)])
+        <span class="cmt"># Decoder</span>
+        <span class="sf">self</span>.decoder = nn.Sequential(
+            nn.Linear(hidden, hidden), nn.ReLU(),
+            nn.Linear(hidden, out)
+        )
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, data):
+        x = <span class="sf">self</span>.node_enc(data.x)
+        e = <span class="sf">self</span>.edge_enc(data.edge_attr)
+        <span class="kw">for</span> layer <span class="kw">in</span> <span class="sf">self</span>.layers:
+            x = layer(x, data.edge_index, e)
+        <span class="kw">return</span> <span class="sf">self</span>.decoder(x)
+
+<span class="cmt"># 使用</span>
+model = GNS(node_in=<span class="num">6</span>, edge_in=<span class="num">8</span>, hidden=<span class="num">128</span>, layers=<span class="num">5</span>, out=<span class="num">3</span>)
+<span class="bi">print</span>(f<span class="str">"Parameters: {sum(p.numel() for p in model.parameters()):,}"</span>)</code></pre>
+</div>
+
+<!-- ===== 8.3 ===== -->
+<h3 id="ch8-pushbox">8.3 在 PushBox 上训练的完整脚本</h3>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 完整训练脚本</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="str">"""完整的 GNS + PPO PushBox 训练脚本"""</span>
+<span class="kw">import</span> sys, os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+<span class="kw">from</span> stable_baselines3 <span class="kw">import</span> PPO
+<span class="kw">from</span> stable_baselines3.common.vec_env <span class="kw">import</span> DummyVecEnv
+<span class="kw">from</span> stable_baselines3.common.callbacks <span class="kw">import</span> BaseCallback
+<span class="kw">from</span> environments.push_box_env <span class="kw">import</span> make_push_box_env
+<span class="kw">from</span> baselines.gns_baseline <span class="kw">import</span> GNSFeaturesExtractor
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="kw">class</span> <span class="cls">SuccessTracker</span>(BaseCallback):
+    <span class="str">"""跟踪首次成功的 episode"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>):
+        <span class="bi">super</span>().__init__()
+        <span class="sf">self</span>.episode_count = <span class="num">0</span>
+        <span class="sf">self</span>.first_success = <span class="kw">None</span>
+    
+    <span class="kw">def</span> <span class="fn">_on_step</span>(<span class="sf">self</span>):
+        <span class="kw">if</span> <span class="sf">self</span>.locals.get(<span class="str">'dones'</span>, [<span class="kw">False</span>])[<span class="num">0</span>]:
+            <span class="sf">self</span>.episode_count += <span class="num">1</span>
+            info = <span class="sf">self</span>.locals.get(<span class="str">'infos'</span>, [{}])[<span class="num">0</span>]
+            <span class="kw">if</span> info.get(<span class="str">'success'</span>) <span class="kw">and</span> <span class="sf">self</span>.first_success <span class="kw">is</span> <span class="kw">None</span>:
+                <span class="sf">self</span>.first_success = <span class="sf">self</span>.episode_count
+                <span class="bi">print</span>(f<span class="str">"\n🎉 首次成功! Episode {self.episode_count}"</span>)
+        <span class="kw">return</span> <span class="kw">True</span>
+
+<span class="cmt"># 配置</span>
+N_ENVS = <span class="num">4</span>
+TOTAL_TIMESTEPS = <span class="num">80_000</span>
+
+<span class="cmt"># 创建环境</span>
+env = DummyVecEnv([make_push_box_env(box_mass=<span class="num">1.0</span>) <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(N_ENVS)])
+
+<span class="cmt"># 创建模型 (PPO + GNS)</span>
+model = PPO(
+    <span class="str">"MlpPolicy"</span>, env,
+    learning_rate=<span class="num">3e-4</span>,
+    n_steps=<span class="num">2048</span>,
+    batch_size=<span class="num">64</span>,
+    n_epochs=<span class="num">10</span>,
+    gamma=<span class="num">0.99</span>,
+    policy_kwargs=<span class="bi">dict</span>(
+        features_extractor_class=GNSFeaturesExtractor,
+        features_extractor_kwargs=<span class="bi">dict</span>(features_dim=<span class="num">128</span>),
+    ),
+    verbose=<span class="num">1</span>,
+)
+
+<span class="cmt"># 训练</span>
+tracker = SuccessTracker()
+model.learn(total_timesteps=TOTAL_TIMESTEPS, callback=tracker)
+
+<span class="bi">print</span>(f<span class="str">"\n训练完成! 首次成功 episode: {tracker.first_success}"</span>)
+model.save(<span class="str">"models/gns_pushbox_final"</span>)</code></pre>
+</div>
+
+<!-- ===== 8.4 ===== -->
+<h3 id="ch8-viz">8.4 可视化消息传递</h3>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 可视化消息强度</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">import</span> networkx <span class="kw">as</span> nx
+<span class="kw">import</span> torch
+
+<span class="kw">def</span> <span class="fn">visualize_messages</span>(model, graph, layer_idx=<span class="num">0</span>):
+    <span class="str">"""可视化消息传递中的消息强度"""</span>
+    <span class="cmt"># Hook 获取消息</span>
+    messages_captured = []
+    
+    <span class="kw">def</span> <span class="fn">hook_fn</span>(module, input, output):
+        messages_captured.append(output.detach())
+    
+    <span class="cmt"># 注册 hook</span>
+    handle = model.gn_layers[layer_idx].edge_mlp.register_forward_hook(hook_fn)
+    
+    <span class="cmt"># 前向传播</span>
+    <span class="kw">with</span> torch.no_grad():
+        _ = model(graph)
+    
+    handle.remove()
+    
+    <span class="cmt"># 计算消息强度 (L2 范数)</span>
+    msg = messages_captured[<span class="num">0</span>]
+    msg_strength = torch.norm(msg, dim=-<span class="num">1</span>).numpy()
+    
+    <span class="cmt"># 绘制图</span>
+    G = nx.DiGraph()
+    edge_index = graph.edge_index.numpy()
+    pos_dict = {}
+    
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="bi">range</span>(graph.num_nodes):
+        G.add_node(i)
+        pos_dict[i] = graph.x[i, :<span class="num">2</span>].numpy()
+    
+    edge_colors = []
+    <span class="kw">for</span> e <span class="kw">in</span> <span class="bi">range</span>(edge_index.shape[<span class="num">1</span>]):
+        s, t = edge_index[<span class="num">0</span>, e], edge_index[<span class="num">1</span>, e]
+        G.add_edge(s, t)
+        edge_colors.append(msg_strength[e])
+    
+    fig, ax = plt.subplots(<span class="num">1</span>, <span class="num">1</span>, figsize=(<span class="num">8</span>, <span class="num">6</span>))
+    nx.draw(G, pos_dict, ax=ax,
+            edge_color=edge_colors, edge_cmap=plt.cm.Reds,
+            node_color=<span class="str">'lightblue'</span>, node_size=<span class="num">500</span>,
+            width=<span class="num">3</span>, with_labels=<span class="kw">True</span>, font_weight=<span class="str">'bold'</span>)
+    plt.colorbar(plt.cm.ScalarMappable(cmap=plt.cm.Reds), ax=ax, label=<span class="str">'消息强度'</span>)
+    plt.title(f<span class="str">'第 {layer_idx} 层消息传递可视化'</span>)
+    plt.show()</code></pre>
+</div>
+
+<!-- ===== 8.5 ===== -->
+<h3 id="ch8-hyper">8.5 超参数实验</h3>
+
+<table>
+  <thead>
+    <tr><th>超参数</th><th>建议范围</th><th>影响</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>消息传递层数</td><td>1 ~ 10</td><td>增大感受野，但过多导致过平滑</td></tr>
+    <tr><td>隐藏维度</td><td>64 ~ 256</td><td>增大表达力，但增加计算量和过拟合风险</td></tr>
+    <tr><td>聚合方式</td><td>sum / mean / max</td><td>sum 保留邻居数量信息（物理常用）</td></tr>
+    <tr><td>残差连接</td><td>有 / 无</td><td>深层网络必需，防止梯度消失</td></tr>
+    <tr><td>归一化</td><td>LayerNorm / BatchNorm / 无</td><td>稳定训练，LayerNorm 对图更友好</td></tr>
+    <tr><td>学习率</td><td>1e-4 ~ 3e-3</td><td>PPO 与 GNS 联合训练，通常 3e-4 适中</td></tr>
+  </tbody>
+</table>
+
+<div class="code-container">
+  <div class="code-header"><span>Python — 超参数扫描框架</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">import</span> itertools
+
+configs = {
+    <span class="str">'n_layers'</span>: [<span class="num">1</span>, <span class="num">3</span>, <span class="num">5</span>, <span class="num">10</span>],
+    <span class="str">'hidden_dim'</span>: [<span class="num">64</span>, <span class="num">128</span>, <span class="num">256</span>],
+    <span class="str">'aggr'</span>: [<span class="str">'add'</span>, <span class="str">'mean'</span>],
+}
+
+results = []
+<span class="kw">for</span> n_layers, hidden, aggr <span class="kw">in</span> itertools.product(
+    configs[<span class="str">'n_layers'</span>], configs[<span class="str">'hidden_dim'</span>], configs[<span class="str">'aggr'</span>]
+):
+    <span class="bi">print</span>(f<span class="str">"Testing: layers={n_layers}, hidden={hidden}, aggr={aggr}"</span>)
+    <span class="cmt"># ... 训练并评估 ...</span>
+    <span class="cmt"># results.append({'config': ..., 'success_rate': ..., 'episodes_to_success': ...})</span></code></pre>
+</div>
+
+
+<!-- ================================================================ -->
+<!-- 附录 -->
+<!-- ================================================================ -->
+<h2 id="appendix">附录</h2>
+
+<h3 id="appendix-formula">A. GNS 核心公式速查表</h3>
+
+<table>
+  <thead>
+    <tr><th>公式</th><th>名称</th><th>说明</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>$\mathbf{m}_{ij} = \phi(\mathbf{x}_i, \mathbf{x}_j, \mathbf{e}_{ij})$</td>
+      <td>消息函数</td>
+      <td>边上的信息计算</td>
+    </tr>
+    <tr>
+      <td>$\mathbf{M}_i = \sum_{j \in \mathcal{N}(i)} \mathbf{m}_{ij}$</td>
+      <td>聚合</td>
+      <td>邻居消息求和</td>
+    </tr>
+    <tr>
+      <td>$\mathbf{x}_i' = \gamma(\mathbf{x}_i, \mathbf{M}_i)$</td>
+      <td>更新函数</td>
+      <td>节点特征更新</td>
+    </tr>
+    <tr>
+      <td>$\mathbf{r}_{ij} = \mathbf{x}_j - \mathbf{x}_i$</td>
+      <td>位移向量</td>
+      <td>反对称: $\mathbf{r}_{ij} = -\mathbf{r}_{ji}$</td>
+    </tr>
+    <tr>
+      <td>$\ddot{\mathbf{x}}_i = \text{Decode}(\mathbf{h}_i^{(L)})$</td>
+      <td>加速度预测</td>
+      <td>GNS 最终输出</td>
+    </tr>
+    <tr>
+      <td>$\mathbf{v}_{t+1} = \mathbf{v}_t + \Delta t \cdot \ddot{\mathbf{x}}$</td>
+      <td>Euler 积分</td>
+      <td>速度更新</td>
+    </tr>
+    <tr>
+      <td>$\hat{\mathbf{A}} = \hat{D}^{-1/2} \hat{A} \hat{D}^{-1/2}$</td>
+      <td>GCN 归一化</td>
+      <td>对称归一化邻接矩阵</td>
+    </tr>
+    <tr>
+      <td>$\alpha_{ij} = \text{softmax}_j(a^T [Wx_i \| Wx_j])$</td>
+      <td>GAT 注意力</td>
+      <td>可学习边权重</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="appendix-pyg">B. PyTorch Geometric 常用 API</h3>
+
+<table>
+  <thead>
+    <tr><th>类/函数</th><th>用途</th><th>示例</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>Data(x, edge_index, ...)</code></td><td>单图数据</td><td><code>Data(x=feats, edge_index=edges)</code></td></tr>
+    <tr><td><code>Batch.from_data_list()</code></td><td>批量图</td><td><code>Batch.from_data_list([g1, g2])</code></td></tr>
+    <tr><td><code>MessagePassing</code></td><td>消息传递基类</td><td>子类化，定义 message/update</td></tr>
+    <tr><td><code>GCNConv</code></td><td>GCN 层</td><td><code>GCNConv(16, 32)(x, edge_index)</code></td></tr>
+    <tr><td><code>GATConv</code></td><td>GAT 层</td><td><code>GATConv(16, 32, heads=4)</code></td></tr>
+    <tr><td><code>SAGEConv</code></td><td>GraphSAGE 层</td><td><code>SAGEConv(16, 32)</code></td></tr>
+    <tr><td><code>radius_graph</code></td><td>距离阈值建图</td><td><code>radius_graph(pos, r=0.5)</code></td></tr>
+    <tr><td><code>knn_graph</code></td><td>KNN 建图</td><td><code>knn_graph(pos, k=6)</code></td></tr>
+    <tr><td><code>global_mean_pool</code></td><td>图级池化</td><td><code>global_mean_pool(x, batch)</code></td></tr>
+  </tbody>
+</table>
+
+<h3 id="appendix-papers">C. 关键论文列表</h3>
+
+<table>
+  <thead>
+    <tr><th>论文</th><th>年份</th><th>核心贡献</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Learning to Simulate Complex Physics with Graph Networks</strong><br>Sanchez-Gonzalez et al.</td>
+      <td>2020</td>
+      <td>GNS 原始论文，Encode-Process-Decode 架构</td>
+    </tr>
+    <tr>
+      <td><strong>Interaction Networks for Learning about Objects, Relations and Physics</strong><br>Battaglia et al.</td>
+      <td>2016</td>
+      <td>交互网络，GNS 的前身</td>
+    </tr>
+    <tr>
+      <td><strong>Relational inductive biases, deep learning, and graph networks</strong><br>Battaglia et al.</td>
+      <td>2018</td>
+      <td>图网络的统一框架 (GN Block)</td>
+    </tr>
+    <tr>
+      <td><strong>Neural Message Passing for Quantum Chemistry</strong><br>Gilmer et al.</td>
+      <td>2017</td>
+      <td>消息传递神经网络 (MPNN) 统一框架</td>
+    </tr>
+    <tr>
+      <td><strong>Semi-Supervised Classification with Graph Convolutional Networks</strong><br>Kipf & Welling</td>
+      <td>2017</td>
+      <td>GCN 原始论文</td>
+    </tr>
+    <tr>
+      <td><strong>Graph Attention Networks</strong><br>Veličković et al.</td>
+      <td>2018</td>
+      <td>GAT 原始论文</td>
+    </tr>
+    <tr>
+      <td><strong>Inductive Representation Learning on Large Graphs</strong><br>Hamilton et al.</td>
+      <td>2017</td>
+      <td>GraphSAGE</td>
+    </tr>
+    <tr>
+      <td><strong>Hamiltonian Graph Networks with ODE Integrators</strong><br>Sanchez-Gonzalez et al.</td>
+      <td>2019</td>
+      <td>哈密顿力学 + GNN</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="appendix-compare">D. 方法对比表</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>方法</th>
+      <th>输入结构</th>
+      <th>物理约束</th>
+      <th>泛化性</th>
+      <th>样本效率</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>纯 MLP</td>
+      <td>扁平向量</td>
+      <td>无</td>
+      <td>差</td>
+      <td>低</td>
+    </tr>
+    <tr>
+      <td>GCN + RL</td>
+      <td>图（固定权重）</td>
+      <td>无</td>
+      <td>中</td>
+      <td>中</td>
+    </tr>
+    <tr>
+      <td>GNS (标准)</td>
+      <td>图（学习消息）</td>
+      <td>无</td>
+      <td>好</td>
+      <td>高</td>
+    </tr>
+    <tr>
+      <td>GNS + Edge Frame</td>
+      <td>图（局部坐标）</td>
+      <td>平移不变</td>
+      <td>很好</td>
+      <td>很高</td>
+    </tr>
+    <tr>
+      <td>Dynami-CAL GNN</td>
+      <td>图（物理帧）</td>
+      <td>动量+能量</td>
+      <td>极好</td>
+      <td>极高</td>
+    </tr>
+    <tr>
+      <td>PhysRobot (Ours)</td>
+      <td>双流（图+MLP）</td>
+      <td>完整守恒律</td>
+      <td>最好</td>
+      <td>最高 (~12.5×)</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- Footer -->
+<div style="margin-top: 80px; padding: 30px 0; border-top: 2px solid var(--border-color); text-align: center; color: var(--text-muted); font-size: 14px;">
+  <p>📊 GNS 图网络模拟器 — 超详细学习教程</p>
+  <p>Medical Robotics Simulation Project · 2025</p>
+  <p>Built with ❤️ for physics-informed machine learning</p>
+</div>
+
+</div><!-- end main-content -->
+
+<!-- Back to Top -->
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ===== JavaScript ===== -->
+<script>
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+
+// Load saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+  else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+
+// Copy code button
+function copyCode(btn) {
+  const pre = btn.closest('.code-container').querySelector('pre');
+  const text = pre.textContent || pre.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '已复制 ✓';
+    setTimeout(() => btn.textContent = '复制', 2000);
+  });
+}
+
+// Progress bar
+window.addEventListener('scroll', function() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  document.getElementById('progress-fill').style.width = progress + '%';
+  
+  // Back to top button
+  const btn = document.getElementById('backToTop');
+  if (scrollTop > 400) btn.classList.add('visible');
+  else btn.classList.remove('visible');
+});
+
+// Active sidebar link
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      document.querySelectorAll('#sidebar-nav a').forEach(a => {
+        a.classList.remove('active');
+        if (a.getAttribute('href') === '#' + id) a.classList.add('active');
+      });
+    }
+  });
+}, { rootMargin: '-80px 0px -80% 0px' });
+
+document.querySelectorAll('h2[id], h3[id]').forEach(h => observer.observe(h));
+
+// Close sidebar on mobile when clicking a link
+document.querySelectorAll('#sidebar-nav a').forEach(a => {
+  a.addEventListener('click', () => {
+    if (window.innerWidth <= 960) {
+      document.getElementById('sidebar').classList.remove('open');
+    }
+  });
+});
+</script>
+
+</body>
+</html>
