@@ -1,6 +1,8 @@
 """
 PushBox Environment for Physics-Informed Robotics Research
 Week 1: 2-DOF Robot Arm + Box Pushing Task
+
+Fixed: arm-box height mismatch, unreachable goal, reward shaping
 """
 
 import numpy as np
@@ -27,13 +29,14 @@ class PushBoxEnv(gym.Env):
         - Joint torques (2): [-10, 10] Nm
     
     Reward:
-        - Dense: -distance_to_goal
-        - Sparse: +100 if success (box within 0.1m of goal)
+        - r1: -dist(endeffector, box)  — encourages reaching the box
+        - r2: -dist(box, goal)         — encourages pushing toward goal
+        - r  = 0.5*r1 + r2 + 100*success
     """
     
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 50}
     
-    def __init__(self, render_mode=None, box_mass=1.0):
+    def __init__(self, render_mode=None, box_mass=0.5):
         super().__init__()
         
         # Load MuJoCo model
@@ -48,6 +51,14 @@ class PushBoxEnv(gym.Env):
         # Configurable box mass (for OOD testing)
         self.box_mass = box_mass
         self._set_box_mass(box_mass)
+        
+        # Cache site/body ids
+        self._ee_site_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_SITE, "endeffector"
+        )
+        self._box_body_id = mujoco.mj_name2id(
+            self.model, mujoco.mjtObj.mjOBJ_BODY, "box"
+        )
         
         # Spaces
         self.action_space = spaces.Box(
@@ -64,8 +75,10 @@ class PushBoxEnv(gym.Env):
             dtype=np.float32
         )
         
-        # Goal position (fixed for training, can randomize later)
-        self.goal_pos = np.array([1.0, 0.5, 0.05])
+        # Goal position — within arm+push reach
+        # Arm reach = 0.4 + 0.3 = 0.7m from origin
+        # Box can be pushed ~0.2-0.3m further, so goal at ~0.5-0.6m is reachable
+        self.goal_pos = np.array([0.5, 0.3, 0.02])
         
         # Episode tracking
         self.max_episode_steps = 500
@@ -80,13 +93,11 @@ class PushBoxEnv(gym.Env):
         
     def _set_box_mass(self, mass):
         """Set the box mass (for OOD generalization testing)"""
-        # Find box body index
         box_body_id = mujoco.mj_name2id(
             self.model, 
             mujoco.mjtObj.mjOBJ_BODY, 
             "box"
         )
-        # Set mass
         self.model.body_mass[box_body_id] = mass
         
     def set_box_mass(self, mass):
@@ -104,13 +115,14 @@ class PushBoxEnv(gym.Env):
         if seed is not None:
             np.random.seed(seed)
         
-        # Robot arm: random initial pose
+        # Robot arm: random initial pose (small angles so arm starts roughly forward)
         self.data.qpos[0] = np.random.uniform(-0.5, 0.5)  # shoulder
         self.data.qpos[1] = np.random.uniform(-0.5, 0.5)  # elbow
         
-        # Box: start at random position near robot
-        self.data.qpos[2] = np.random.uniform(0.4, 0.6)  # x
-        self.data.qpos[3] = np.random.uniform(-0.2, 0.2)  # y
+        # Box: start within arm reach (0.2–0.45m from origin)
+        # qpos layout: [shoulder, elbow, box_x, box_y, box_z, box_qw, box_qx, box_qy, box_qz]
+        self.data.qpos[2] = np.random.uniform(0.25, 0.45)  # x — within arm reach
+        self.data.qpos[3] = np.random.uniform(-0.15, 0.15)  # y
         self.data.qpos[4] = 0.05  # z (on ground)
         # Quaternion for box orientation (no rotation)
         self.data.qpos[5:9] = [1, 0, 0, 0]
@@ -129,24 +141,21 @@ class PushBoxEnv(gym.Env):
         return observation, info
     
     def _get_obs(self):
-        """Get observation vector"""
+        """Get observation vector (16-dim)"""
         # Joint positions and velocities
         joint_pos = self.data.qpos[:2].copy()
         joint_vel = self.data.qvel[:2].copy()
         
-        # End-effector position
-        ee_site_id = mujoco.mj_name2id(
-            self.model, 
-            mujoco.mjtObj.mjOBJ_SITE, 
-            "endeffector"
-        )
-        ee_pos = self.data.site_xpos[ee_site_id].copy()
+        # End-effector position (from site)
+        ee_pos = self.data.site_xpos[self._ee_site_id].copy()
         
-        # Box position and velocity
+        # Box position (from freejoint qpos: indices 2,3,4)
         box_pos = self.data.qpos[2:5].copy()
+        
+        # Box velocity (from freejoint qvel: indices 2,3,4 — translational part)
         box_vel = self.data.qvel[2:5].copy()
         
-        # Goal position (relative to box for better learning)
+        # Goal position
         goal_pos = self.goal_pos.copy()
         
         obs = np.concatenate([
@@ -178,23 +187,34 @@ class PushBoxEnv(gym.Env):
         # Apply action (joint torques)
         self.data.ctrl[:] = action
         
-        # Step simulation
-        mujoco.mj_step(self.model, self.data)
+        # Step simulation (multiple sub-steps for stability)
+        n_substeps = 5
+        for _ in range(n_substeps):
+            mujoco.mj_step(self.model, self.data)
+        
+        # Get positions
+        ee_pos = self.data.site_xpos[self._ee_site_id].copy()
+        box_pos = self.data.qpos[2:5].copy()
+        
+        # ---- Reward shaping ----
+        # r1: encourage end-effector to reach the box
+        dist_ee_box = np.linalg.norm(ee_pos[:2] - box_pos[:2])
+        r1 = -dist_ee_box
+        
+        # r2: encourage box to be near goal
+        dist_box_goal = np.linalg.norm(box_pos[:2] - self.goal_pos[:2])
+        r2 = -dist_box_goal
+        
+        # Combined reward
+        reward = 0.5 * r1 + r2
+        
+        # Sparse bonus for success
+        success = dist_box_goal < self.success_threshold
+        if success:
+            reward += 100.0
         
         # Get observation
         observation = self._get_obs()
-        
-        # Calculate reward
-        box_pos = self.data.qpos[2:5]
-        distance_to_goal = np.linalg.norm(box_pos[:2] - self.goal_pos[:2])
-        
-        # Dense reward: negative distance
-        reward = -distance_to_goal
-        
-        # Sparse bonus for success
-        success = distance_to_goal < self.success_threshold
-        if success:
-            reward += 100.0
         
         # Check termination
         self.current_step += 1
@@ -213,7 +233,6 @@ class PushBoxEnv(gym.Env):
     
     def _render_frame(self):
         if self.viewer is None and self.render_mode == "human":
-            # Initialize viewer
             import mujoco.viewer
             self.viewer = mujoco.viewer.launch_passive(
                 self.model, 
@@ -223,8 +242,6 @@ class PushBoxEnv(gym.Env):
         if self.render_mode == "human" and self.viewer is not None:
             self.viewer.sync()
         
-        # For rgb_array, return rendered frame
-        # (requires offscreen rendering setup)
         return None
     
     def close(self):
@@ -234,7 +251,7 @@ class PushBoxEnv(gym.Env):
 
 
 # Factory function for vectorized environments
-def make_push_box_env(box_mass=1.0):
+def make_push_box_env(box_mass=0.5):
     """Factory function for creating PushBox environments"""
     def _init():
         return PushBoxEnv(box_mass=box_mass)

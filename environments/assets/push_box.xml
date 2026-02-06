@@ -21,7 +21,7 @@
   
   <default>
     <joint armature="0.01" damping="0.1" limited="true"/>
-    <geom conaffinity="1" condim="3" contype="1" friction="0.3 0.005 0.0001" margin="0.001" material="geom" rgba="0.8 0.6 0.4 1"/>
+    <geom conaffinity="1" condim="3" contype="1" friction="0.5 0.005 0.0001" margin="0.001" material="geom" rgba="0.8 0.6 0.4 1"/>
   </default>
   
   <worldbody>
@@ -30,29 +30,29 @@
     <light directional="true" diffuse="0.4 0.4 0.4" pos="0 0 3" dir="1 1 -1"/>
     <geom name="floor" type="plane" size="3 3 0.1" rgba="0.8 0.8 0.8 1" material="MatPlane"/>
     
-    <!-- Robot arm base (fixed to ground) -->
-    <body name="arm_base" pos="0 0 0.5">
+    <!-- Robot arm base — sits on the ground plane (z=0.02) so arm sweeps at box height -->
+    <body name="arm_base" pos="0 0 0.02">
       <geom name="base_geom" type="cylinder" size="0.05 0.02" rgba="0.3 0.3 0.3 1"/>
       <body name="upper_arm" pos="0 0 0.02">
         <joint name="shoulder" type="hinge" axis="0 0 1" range="-180 180" damping="0.5"/>
-        <geom name="upper_arm_geom" type="capsule" fromto="0 0 0 0.3 0 0" size="0.025" rgba="0.5 0.5 0.8 1"/>
-        <body name="forearm" pos="0.3 0 0">
+        <geom name="upper_arm_geom" type="capsule" fromto="0 0 0 0.4 0 0" size="0.025" rgba="0.5 0.5 0.8 1"/>
+        <body name="forearm" pos="0.4 0 0">
           <joint name="elbow" type="hinge" axis="0 0 1" range="-180 180" damping="0.5"/>
           <geom name="forearm_geom" type="capsule" fromto="0 0 0 0.3 0 0" size="0.025" rgba="0.5 0.5 0.8 1"/>
-          <site name="endeffector" pos="0.3 0 0" size="0.02" rgba="1 0.5 0 0.8"/>
+          <site name="endeffector" pos="0.3 0 0" size="0.03" rgba="1 0.5 0 0.8"/>
         </body>
       </body>
     </body>
     
-    <!-- Box (target object to push) -->
-    <body name="box" pos="0.5 0 0.05">
+    <!-- Box (target object to push) — on the ground, within arm reach -->
+    <body name="box" pos="0.35 0 0.05">
       <freejoint name="box_freejoint"/>
-      <geom name="box_geom" type="box" size="0.05 0.05 0.05" mass="1.0" rgba="0.2 0.8 0.2 1" friction="0.3 0.005 0.0001"/>
+      <geom name="box_geom" type="box" size="0.05 0.05 0.05" mass="0.5" rgba="0.2 0.8 0.2 1" friction="0.5 0.005 0.0001"/>
       <site name="box_center" pos="0 0 0" size="0.01" rgba="0 1 0 1"/>
     </body>
     
-    <!-- Goal marker (visual only) -->
-    <site name="goal" pos="1.0 0.5 0.05" size="0.06" rgba="1 0 0 0.4" type="sphere"/>
+    <!-- Goal marker (visual only) — within arm+push range -->
+    <site name="goal" pos="0.5 0.3 0.02" size="0.06" rgba="1 0 0 0.4" type="sphere"/>
   </worldbody>
   
   <actuator>

@@ -95,15 +95,16 @@ from gymnasium import spaces
 XML = '''{XML_CONTENT}'''
 
 class PushBoxEnv(gym.Env):
-    def __init__(self, render_mode=None, box_mass=1.0):
+    def __init__(self, render_mode=None, box_mass=0.5):
         super().__init__()
         self.model = mujoco.MjModel.from_xml_string(XML)
         self.data = mujoco.MjData(self.model)
         self.box_mass = box_mass
         self._set_box_mass(box_mass)
+        self._ee_site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, 'endeffector')
         self.action_space = spaces.Box(low=-10.0, high=10.0, shape=(2,), dtype=np.float32)
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(16,), dtype=np.float32)
-        self.goal_pos = np.array([1.0, 0.5, 0.05])
+        self.goal_pos = np.array([0.5, 0.3, 0.02])
         self.max_episode_steps = 500
         self.current_step = 0
         self.success_threshold = 0.1
@@ -124,8 +125,8 @@ class PushBoxEnv(gym.Env):
             np.random.seed(seed)
         self.data.qpos[0] = np.random.uniform(-0.5, 0.5)
         self.data.qpos[1] = np.random.uniform(-0.5, 0.5)
-        self.data.qpos[2] = np.random.uniform(0.4, 0.6)
-        self.data.qpos[3] = np.random.uniform(-0.2, 0.2)
+        self.data.qpos[2] = np.random.uniform(0.25, 0.45)
+        self.data.qpos[3] = np.random.uniform(-0.15, 0.15)
         self.data.qpos[4] = 0.05
         self.data.qpos[5:9] = [1, 0, 0, 0]
         self.data.qvel[:] = 0.0
@@ -136,8 +137,7 @@ class PushBoxEnv(gym.Env):
     def _get_obs(self):
         joint_pos = self.data.qpos[:2].copy()
         joint_vel = self.data.qvel[:2].copy()
-        ee_site_id = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_SITE, 'endeffector')
-        ee_pos = self.data.site_xpos[ee_site_id].copy()
+        ee_pos = self.data.site_xpos[self._ee_site_id].copy()
         box_pos = self.data.qpos[2:5].copy()
         box_vel = self.data.qvel[2:5].copy()
         goal_pos = self.goal_pos.copy()
@@ -152,18 +152,20 @@ class PushBoxEnv(gym.Env):
     
     def step(self, action):
         self.data.ctrl[:] = action
-        mujoco.mj_step(self.model, self.data)
-        observation = self._get_obs()
-        box_pos = self.data.qpos[2:5]
-        distance_to_goal = np.linalg.norm(box_pos[:2] - self.goal_pos[:2])
-        reward = -distance_to_goal
-        success = distance_to_goal < self.success_threshold
+        for _ in range(5):
+            mujoco.mj_step(self.model, self.data)
+        ee_pos = self.data.site_xpos[self._ee_site_id].copy()
+        box_pos = self.data.qpos[2:5].copy()
+        dist_ee_box = np.linalg.norm(ee_pos[:2] - box_pos[:2])
+        dist_box_goal = np.linalg.norm(box_pos[:2] - self.goal_pos[:2])
+        reward = 0.5 * (-dist_ee_box) + (-dist_box_goal)
+        success = dist_box_goal < self.success_threshold
         if success:
             reward += 100.0
         self.current_step += 1
         terminated = success
         truncated = self.current_step >= self.max_episode_steps
-        return observation, reward, terminated, truncated, self._get_info()
+        return self._get_obs(), reward, terminated, truncated, self._get_info()
     
     def render(self):
         pass
@@ -171,7 +173,7 @@ class PushBoxEnv(gym.Env):
     def close(self):
         pass
 
-def make_push_box_env(box_mass=1.0):
+def make_push_box_env(box_mass=0.5):
     def _init():
         return PushBoxEnv(box_mass=box_mass)
     return _init
@@ -423,7 +425,7 @@ cells.append(code_cell([
     "    'gns_timesteps': 80000,\n",
     "    'physrobot_timesteps': 16000,\n",
     "    'n_envs': 4,\n",
-    "    'box_mass': 1.0,\n",
+    "    'box_mass': 0.5,\n",
     "    'eval_episodes': 50\n",
     "}\n",
     "print('Configuration:', CONFIG)\n"
