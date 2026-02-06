@@ -15,8 +15,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from stable_baselines3.common.vec_env import DummyVecEnv
 import pandas as pd
 
-from environments.push_box_env import make_push_box_env as make_push_box_env_16
-from environments.push_box import make_push_box_env as make_push_box_env_10
+from environments.push_box import make_push_box_env  # Canonical 16-dim env
+# Legacy alias for backward compatibility
+make_push_box_env_16 = make_push_box_env
+make_push_box_env_10 = make_push_box_env  # NOTE: 10-dim version retired
 from baselines.ppo_baseline import PurePPOAgent
 from baselines.gns_baseline import GNSAgent
 from baselines.physics_informed import PhysRobotAgent

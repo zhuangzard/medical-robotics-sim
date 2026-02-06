@@ -1,18 +1,21 @@
 """
 Environments package for medical-robotics-sim
 
-Available environments:
-- PushBoxEnv: Simple rigid body manipulation task
+Canonical environments:
+- PushBoxEnv:          2-DOF single-box push (16-dim obs, 2-dim action)
+- MultiObjectPushEnv:  Point-mass multi-object push (variable obs, 2-dim action)
 
-Author: Physics-Informed Robotics Team
-Date: 2026-02-05
+See ENV_SPECIFICATION.md for full parameter documentation.
 """
 
 from environments.push_box import PushBoxEnv, make_push_box_env
+from environments.multi_object_push import MultiObjectPushEnv, make_multi_push_env
 
 __all__ = [
     'PushBoxEnv',
-    'make_push_box_env'
+    'make_push_box_env',
+    'MultiObjectPushEnv',
+    'make_multi_push_env',
 ]
 
-__version__ = '0.1.0'
+__version__ = '0.2.0'

@@ -342,15 +342,9 @@ def run_single_experiment(
     
     start_time = time.time()
     
-    # Create environment
-    try:
-        from environments.push_box_env import make_push_box_env
-        make_env = make_push_box_env
-        env_type = '16dim'
-    except ImportError:
-        from environments.push_box import make_push_box_env
-        make_env = make_push_box_env
-        env_type = '10dim'
+    # Create environment (canonical 16-dim PushBoxEnv)
+    from environments.push_box import make_push_box_env
+    make_env = make_push_box_env
     
     n_envs = config.get('n_envs', 4)
     train_env = DummyVecEnv([make_env(box_mass=1.0) for _ in range(n_envs)])

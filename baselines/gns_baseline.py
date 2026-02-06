@@ -17,7 +17,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from environments.push_box_env import make_push_box_env
+from environments.push_box import PushBoxEnv, make_push_box_env
 
 
 class GraphNetworkLayer(MessagePassing):

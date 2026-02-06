@@ -15,7 +15,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from stable_baselines3.common.vec_env import DummyVecEnv, SubprocVecEnv
 from stable_baselines3.common.callbacks import BaseCallback
 
-from environments.push_box_env import make_push_box_env
+from environments.push_box import PushBoxEnv, make_push_box_env
 from baselines.ppo_baseline import PurePPOAgent, SuccessTrackingCallback
 from baselines.gns_baseline import GNSAgent
 from baselines.physics_informed import PhysRobotAgent
