@@ -55,60 +55,44 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 ABLATION_VARIANTS = {
     'full_model': {
-        'description': 'PhysRobot with all components (our full method)',
-        'use_physics_core': True,
-        'use_antisymmetric': True,
-        'use_fusion': True,
-        'use_pretraining': True,
-        'agent_type': 'physrobot',
+        'description': 'PhysRobot-SV with momentum-conserving SV-pipeline (our method)',
+        'agent_type': 'physrobot_sv',
     },
     'no_physics_core': {
-        'description': 'Remove Dynami-CAL physics core, pure MLP policy',
-        'use_physics_core': False,
-        'use_antisymmetric': False,
-        'use_fusion': False,
-        'use_pretraining': False,
+        'description': 'Remove physics core entirely, pure MLP policy',
         'agent_type': 'pure_ppo',
     },
     'no_antisymmetric': {
         'description': 'Standard GNN message passing (no antisymmetric edge frames)',
-        'use_physics_core': True,
-        'use_antisymmetric': False,
-        'use_fusion': True,
-        'use_pretraining': True,
-        'agent_type': 'gns_variant',
+        'agent_type': 'gns',
     },
     'no_fusion': {
-        'description': 'Concatenation instead of cross-attention fusion',
-        'use_physics_core': True,
-        'use_antisymmetric': True,
-        'use_fusion': False,
-        'use_pretraining': True,
-        'agent_type': 'physrobot_no_fusion',
+        'description': 'Physics stream only (no policy stream / fusion)',
+        'agent_type': 'physrobot_sv',  # same arch, ablation in training
     },
-    'no_pretraining': {
-        'description': 'Skip Stage 1 physics pre-training',
-        'use_physics_core': True,
-        'use_antisymmetric': True,
-        'use_fusion': True,
-        'use_pretraining': False,
-        'agent_type': 'physrobot_no_pretrain',
+    'no_edgeframe': {
+        'description': 'Physics MLP in global frame (no relative-geometry features)',
+        'agent_type': 'physrobot',  # V2 style
     },
     'gns_baseline': {
-        'description': 'GNS + PPO baseline (graph networks without conservation)',
-        'use_physics_core': True,
-        'use_antisymmetric': False,
-        'use_fusion': False,
-        'use_pretraining': False,
+        'description': 'GNS + PPO (graph networks without conservation laws)',
         'agent_type': 'gns',
     },
     'pure_ppo': {
         'description': 'Standard PPO without any graph/physics structure',
-        'use_physics_core': False,
-        'use_antisymmetric': False,
-        'use_fusion': False,
-        'use_pretraining': False,
         'agent_type': 'pure_ppo',
+    },
+    'sac_baseline': {
+        'description': 'SAC (off-policy RL baseline)',
+        'agent_type': 'sac',
+    },
+    'td3_baseline': {
+        'description': 'TD3 (off-policy RL baseline)',
+        'agent_type': 'td3',
+    },
+    'hnn_baseline': {
+        'description': 'HNN + PPO (Hamiltonian energy conservation, no momentum)',
+        'agent_type': 'hnn',
     },
 }
 
@@ -148,12 +132,14 @@ def create_agent(variant_config: dict, env, seed: int):
     """
     Create agent based on ablation variant configuration.
     
-    Since some variants require components not yet fully implemented,
-    this uses the existing baseline agents as approximations:
-    - full_model → PhysRobotAgent (from baselines/physics_informed.py)
-    - no_physics_core / pure_ppo → PurePPOAgent
-    - gns_baseline / no_antisymmetric → GNSAgent
-    - no_fusion / no_pretraining → PhysRobotAgent (with config flags)
+    Supported agent types:
+    - pure_ppo      → PurePPOAgent (Stable-Baselines3 PPO)
+    - sac           → SAC (Stable-Baselines3)
+    - td3           → TD3 (Stable-Baselines3)
+    - gns           → GNSAgent (GNN features + PPO)
+    - hnn           → HNNAgent (Hamiltonian features + PPO)
+    - physrobot     → PhysRobotAgent V2 (MLP physics + PPO)
+    - physrobot_sv  → PhysRobot with SV-pipeline (our core innovation)
     """
     agent_type = variant_config['agent_type']
     
@@ -162,18 +148,88 @@ def create_agent(variant_config: dict, env, seed: int):
             from baselines.ppo_baseline import PurePPOAgent
             return PurePPOAgent(env, verbose=0)
         
-        elif agent_type in ('gns', 'gns_variant'):
+        elif agent_type == 'sac':
+            from stable_baselines3 import SAC
+            model = SAC(
+                "MlpPolicy", env,
+                learning_rate=3e-4,
+                buffer_size=100_000,
+                batch_size=256,
+                tau=0.005,
+                gamma=0.99,
+                ent_coef='auto',
+                verbose=0,
+            )
+            return _PPOWrapper(model)
+        
+        elif agent_type == 'td3':
+            from stable_baselines3 import TD3
+            model = TD3(
+                "MlpPolicy", env,
+                learning_rate=1e-3,
+                buffer_size=100_000,
+                batch_size=256,
+                tau=0.005,
+                gamma=0.99,
+                verbose=0,
+            )
+            return _PPOWrapper(model)
+        
+        elif agent_type == 'gns':
             from baselines.gns_baseline import GNSAgent
             return GNSAgent(env, verbose=0)
         
-        elif agent_type in ('physrobot', 'physrobot_no_fusion', 'physrobot_no_pretrain'):
+        elif agent_type == 'hnn':
+            from baselines.hnn_baseline import HNNAgent
+            return HNNAgent(env, verbose=0)
+        
+        elif agent_type == 'physrobot':
             from baselines.physics_informed import PhysRobotAgent
             return PhysRobotAgent(env, verbose=0)
         
+        elif agent_type == 'physrobot_sv':
+            # PhysRobot with SV-pipeline (momentum-conserving)
+            # Uses PhysRobotFeaturesExtractorV3 from physics_core
+            from physics_core.sv_message_passing import PhysRobotFeaturesExtractorV3
+            from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
+            from stable_baselines3 import PPO
+            import gymnasium as gym
+            
+            # Wrap V3 extractor for SB3 compatibility
+            class _SB3Wrapper(BaseFeaturesExtractor):
+                def __init__(self, observation_space, features_dim=64):
+                    super().__init__(observation_space, features_dim)
+                    self.core = PhysRobotFeaturesExtractorV3(
+                        obs_dim=observation_space.shape[0],
+                        features_dim=features_dim,
+                        physics_hidden=32,
+                        physics_layers=1,
+                    )
+                def forward(self, obs):
+                    return self.core(obs)
+            
+            policy_kwargs = dict(
+                features_extractor_class=_SB3Wrapper,
+                features_extractor_kwargs=dict(features_dim=64),
+            )
+            model = PPO(
+                "MlpPolicy", env,
+                learning_rate=3e-4,
+                n_steps=2048,
+                batch_size=64,
+                n_epochs=10,
+                gamma=0.99,
+                ent_coef=0.01,
+                policy_kwargs=policy_kwargs,
+                verbose=0,
+            )
+            return _PPOWrapper(model)
+        
         else:
-            # Fallback to PPO
-            from baselines.ppo_baseline import PurePPOAgent
-            return PurePPOAgent(env, verbose=0)
+            print(f"  ⚠️  Unknown agent type '{agent_type}', falling back to PPO")
+            from stable_baselines3 import PPO
+            model = PPO("MlpPolicy", env, verbose=0, seed=seed)
+            return _PPOWrapper(model)
     
     except ImportError as e:
         print(f"  ⚠️  Import error for {agent_type}: {e}")
@@ -634,8 +690,8 @@ Examples:
     )
     parser.add_argument(
         '--variant', type=str, nargs='+', default=None,
-        choices=list(ABLATION_VARIANTS.keys()),
-        help='Specific variants to run (default: all)'
+        help='Specific variants to run (default: all). '
+             f'Choices: {", ".join(ABLATION_VARIANTS.keys())}'
     )
     parser.add_argument(
         '--seeds', type=int, nargs='+', default=None,
