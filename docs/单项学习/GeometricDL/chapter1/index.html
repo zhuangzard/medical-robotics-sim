@@ -28,12 +28,39 @@
 
   <nav class="sidebar">
     <h3>Chapter 1</h3>
-    <a href="#intro">1. 引言</a>
+    <a href="#overview">概述</a>
+    <a href="#why-gdl">为什么需要 GDL？</a>
     <a href="#revolution" class="sub">深度学习革命</a>
-    <a href="#two-principles" class="sub">两个算法原则</a>
-    <a href="#symmetry" class="sub">对称性与正则性</a>
-    <a href="#erlangen" class="sub">Erlangen Program</a>
-    <a href="#project-link" class="sub">与项目的联系</a>
+    <a href="#beyond-euclidean" class="sub">超越欧几里得</a>
+    <a href="#symmetry-principle" class="sub">对称性原则</a>
+    <a href="#two-principles">两个核心算法原则</a>
+    <a href="#representation-learning" class="sub">表征学习</a>
+    <a href="#gradient-descent" class="sub">梯度下降</a>
+    <a href="#curse-overview" class="sub">维度灾难预览</a>
+    <a href="#5g-framework">5G 统一框架</a>
+    <a href="#grids" class="sub">Grids (网格)</a>
+    <a href="#groups" class="sub">Groups (群)</a>
+    <a href="#graphs" class="sub">Graphs (图)</a>
+    <a href="#geodesics" class="sub">Geodesics (测地线)</a>
+    <a href="#gauges" class="sub">Gauges (规范)</a>
+    <a href="#erlangen">Erlangen Program</a>
+    <a href="#erlangen-history" class="sub">历史背景</a>
+    <a href="#erlangen-ml" class="sub">对机器学习的启示</a>
+    <a href="#architectures">架构景观</a>
+    <a href="#cnn-intro" class="sub">CNN 家族</a>
+    <a href="#rnn-intro" class="sub">RNN 家族</a>
+    <a href="#gnn-intro" class="sub">GNN 家族</a>
+    <a href="#transformer-intro" class="sub">Transformer</a>
+    <a href="#scope">本书范围与非范围</a>
+    <a href="#roadmap">阅读路线图</a>
+    <a href="#roadmap-ch2" class="sub">Ch2: 高维学习</a>
+    <a href="#roadmap-ch3" class="sub">Ch3: 几何先验</a>
+    <a href="#roadmap-ch4" class="sub">Ch4: 几何域</a>
+    <a href="#roadmap-ch5" class="sub">Ch5: GDL 模型</a>
+    <a href="#roadmap-ch6" class="sub">Ch6: 应用</a>
+    <a href="#roadmap-ch7" class="sub">Ch7: 历史视角</a>
+    <a href="#physrobot">与 PhysRobot 的关联</a>
+    <a href="#code-setup">代码环境准备</a>
     <a href="#exercises">练习题</a>
     <h3>导航</h3>
     <a href="../index.html">📚 总目录</a>
@@ -41,133 +68,804 @@
   </nav>
 
   <main class="main">
-    <h1>Chapter 1: Introduction<br><span style="font-size:0.6em;color:var(--text-secondary)">引言</span></h1>
+    <h1>Chapter 1: Introduction<br><span style="font-size:0.6em;color:var(--text-secondary)">引言 — 几何深度学习的统一视角</span></h1>
 
-    <!-- 章节概述 -->
-    <div class="callout callout-info">
+    <div class="callout callout-info" id="overview">
       <h4>本章概述</h4>
-      <p>本章是全书的导论，介绍了 Geometric Deep Learning 的核心思想：用<strong>几何统一原则</strong>理解和构建深度学习架构。如同 Felix Klein 的 Erlangen Program 用变换群统一几何学一样，本书用对称性统一 CNN、RNN、GNN 和 Transformer。</p>
+      <p>本章是全书的<strong>起点</strong>，建立了几何深度学习（Geometric Deep Learning, GDL）的宏观视角。我们将回答以下核心问题：</p>
+      <ul>
+        <li><strong>为什么</strong>几何深度学习如此重要？</li>
+        <li><strong>什么是</strong>深度学习中的"几何统一"？</li>
+        <li><strong>5G 框架</strong>如何统一 CNN、RNN、GNN 和 Transformer？</li>
+        <li>Erlangen Program 的精神如何指导架构设计？</li>
+        <li><strong>阅读路线图</strong>：本书各章如何串联？</li>
+      </ul>
+      <p><strong>预计阅读时间</strong>：1.5 小时 &nbsp;|&nbsp; <strong>先修知识</strong>：基础线性代数、微积分、Python</p>
     </div>
 
-    <h2 id="intro">1. 引言 Introduction</h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>过去十年见证了数据科学和机器学习的实验性革命，以<span class="term">深度学习</span>（Deep Learning）方法为代表。事实上，许多以前被认为无法解决的高维学习任务——比如<strong>计算机视觉</strong>、<strong>下围棋</strong>、<strong>蛋白质折叠</strong>——在适当的计算规模下都是可行的。</p>
-      </div>
-      <div class="en">
-        The last decade has witnessed an experimental revolution in data science and machine learning, epitomised by deep learning methods. Indeed, many high-dimensional learning tasks previously thought to be beyond reach – such as computer vision, playing Go, or protein folding – are in fact feasible with appropriate computational scale.
-      </div>
-    </div>
+    <!-- ========= 为什么需要 GDL ========= -->
+    <h2 id="why-gdl">为什么需要几何深度学习？<br><span style="font-size:0.7em;color:var(--text-secondary)">Why Geometric Deep Learning?</span></h2>
 
     <h3 id="revolution">深度学习革命</h3>
 
     <div class="bilingual">
       <div class="zh">
-        <p>深度学习的精髓建立在两个简单的<span class="term">算法原则</span>之上：</p>
+        <p>过去十年见证了数据科学和机器学习领域的<strong>实验性革命</strong>，其标志是深度学习方法的崛起。许多此前被认为不可能的高维学习任务——如<strong>计算机视觉</strong>、<strong>围棋博弈</strong>或<strong>蛋白质折叠</strong>——实际上在适当的计算规模下是可行的。</p>
+      </div>
+      <div class="en">
+        The last decade has witnessed an experimental revolution in data science and machine learning, epitomised by deep learning methods. Indeed, many high-dimensional learning tasks previously thought to be beyond reach — such as computer vision, playing Go, or protein folding — are in fact feasible with appropriate computational scale.
+      </div>
+    </div>
+
+    <p>让我们用一组数字来感受这场革命的规模：</p>
+
+    <table>
+      <thead>
+        <tr><th>里程碑</th><th>年份</th><th>意义</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>AlexNet (ImageNet)</td><td>2012</td><td>CNN 在图像识别上首次大幅超越传统方法，开启深度学习时代</td></tr>
+        <tr><td>AlphaGo</td><td>2016</td><td>CNN + MCTS 在围棋上击败世界冠军李世乭</td></tr>
+        <tr><td>Transformer / Attention is All You Need</td><td>2017</td><td>自注意力机制统一 NLP，开启大模型时代</td></tr>
+        <tr><td>AlphaFold 2</td><td>2020</td><td>等变 GNN 解决蛋白质结构预测问题</td></tr>
+        <tr><td>GPT-3</td><td>2020</td><td>1750 亿参数语言模型展示 few-shot 学习能力</td></tr>
+        <tr><td>GNS (粒子仿真)</td><td>2020</td><td>GNN 实现高精度物理仿真，超越传统数值方法</td></tr>
+      </tbody>
+    </table>
+
+    <p>但这场革命背后有一个<strong>深刻的统一主题</strong>：所有这些成功都源于<strong>对数据底层几何结构的正确利用</strong>。这正是几何深度学习要揭示的核心洞察。</p>
+
+    <h3 id="beyond-euclidean">超越欧几里得：非结构化数据的崛起</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>传统深度学习成功主要集中在<strong>欧几里得域</strong>的数据上：图像（2D 网格）、语音（1D 序列）、文本（1D 序列）。但现实世界的大量数据天然具有<strong>非欧几里得</strong>结构：</p>
+        <ul>
+          <li><strong>社交网络</strong> — 用户和关系构成图结构</li>
+          <li><strong>分子</strong> — 原子和化学键构成图；3D 结构在旋转下不变</li>
+          <li><strong>蛋白质</strong> — 氨基酸链折叠成复杂的 3D 表面</li>
+          <li><strong>交通网络</strong> — 道路和交叉口构成空间图</li>
+          <li><strong>粒子系统</strong> — 物理粒子之间的相互作用构成动态图</li>
+          <li><strong>医疗数据</strong> — 患者关系网络、脑功能连接图</li>
+        </ul>
+        <p>对这些数据，传统的 CNN 或 RNN 无法直接适用。我们需要一种<strong>更通用的理论框架</strong>。</p>
+      </div>
+      <div class="en">
+        While traditional deep learning succeeded on Euclidean-structured data (images, speech, text), the real world is full of non-Euclidean data: social networks, molecules, proteins, road networks, particle systems, medical data, and more. We need a more general theoretical framework.
+      </div>
+    </div>
+
+    <div class="callout callout-project">
+      <h4>PhysRobot 项目中的非欧几里得数据</h4>
+      <p>我们的医疗机器人物理仿真项目正是这种非欧几里得数据的典型案例：</p>
+      <ul>
+        <li><strong>软组织</strong>模型为三角网格（离散流形）</li>
+        <li><strong>粒子系统</strong>由动态图表示（k-NN 图随仿真演化）</li>
+        <li><strong>手术器械</strong>在 SE(3) 空间中运动（旋转 + 平移）</li>
+        <li>物理定律具有<strong>旋转不变性</strong>和<strong>平移不变性</strong></li>
+      </ul>
+      <p>GDL 提供了正确利用这些对称性的理论基础。</p>
+    </div>
+
+    <h3 id="symmetry-principle">对称性：物理学的指导原则</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>利用大型系统的<strong>已知对称性</strong>是对抗维度灾难的经典而强大的方法，也是大多数物理理论的基础。深度学习系统也不例外——从早期开始，研究者就调整神经网络来利用物理测量产生的低维几何结构：</p>
+        <ul>
+          <li><strong>图像</strong>中的网格结构 → <strong>平移对称性</strong> → CNN</li>
+          <li><strong>时间序列</strong>中的序列结构 → <strong>时间不变性</strong> → RNN</li>
+          <li><strong>分子</strong>中的位置和动量 → <strong>旋转对称性</strong> → 等变网络</li>
+        </ul>
+        <p>本书的核心论点是：这些看似不同的架构实际上是<strong>同一个底层原则——几何正则性</strong>的自然实例。</p>
+      </div>
+      <div class="en">
+        Exploiting the known symmetries of a large system is a powerful and classical remedy against the curse of dimensionality, and forms the basis of most physical theories. Deep learning systems are no exception. Throughout our exposition, we will describe these models as natural instances of the same underlying principle of geometric regularity.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\text{对称性} \xrightarrow{\text{约束}} \text{函数空间} \xrightarrow{\text{减少}} \text{需要的样本数} \xrightarrow{\text{提升}} \text{泛化性能}$$
+      <div class="math-explain">
+        核心逻辑链：对称性约束了可能的函数空间（假设类），使得学习算法不需要从所有可能的函数中搜索，而只需在一个<strong>更小但更正确</strong>的函数类中搜索。这直接导致更好的<strong>样本效率</strong>和<strong>泛化性能</strong>。
+      </div>
+    </div>
+
+    <p>让我们用一个直觉性的例子来理解：</p>
+
+    <pre><code># 对称性如何减少参数量的直觉
+import numpy as np
+
+# 不利用对称性：全连接层
+# 输入: 32x32 图像 = 1024 维
+# 输出: 1024 维
+fc_params = 1024 * 1024  # = 1,048,576 参数
+
+# 利用平移对称性：卷积层
+# 3x3 卷积核，共享权重
+conv_params = 3 * 3  # = 9 参数（减少了 ~100,000 倍！）
+
+print(f"全连接层参数: {fc_params:,}")
+print(f"卷积层参数: {conv_params}")
+print(f"减少倍数: {fc_params / conv_params:.0f}x")
+
+# 但卷积层并没有损失"有用的"表达能力
+# 因为图像的统计规律确实具有平移不变性
+# 这就是"对称性 → 更好的归纳偏置"的核心思想</code></pre>
+
+    <!-- ========= 两个核心原则 ========= -->
+    <h2 id="two-principles">两个核心算法原则<br><span style="font-size:0.7em;color:var(--text-secondary)">Two Algorithmic Principles</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>深度学习的本质建立在两个简单的算法原则之上：</p>
       </div>
       <div class="en">
         The essence of deep learning is built from two simple algorithmic principles.
       </div>
     </div>
 
-    <h3 id="two-principles">两个核心算法原则</h3>
-
-    <div class="callout callout-key">
-      <h4>核心原则</h4>
-      <ol>
-        <li><strong>表示学习 / 特征学习</strong>（Representation / Feature Learning）— 自适应的、通常是层级化的特征，能够捕捉每个任务的适当<strong>正则性</strong>（regularity）概念</li>
-        <li><strong>局部梯度下降学习</strong>（Learning by local gradient-descent）— 通常通过<strong>反向传播</strong>（backpropagation）实现</li>
-      </ol>
-    </div>
+    <h3 id="representation-learning">原则一：表征学习 (Representation Learning)</h3>
 
     <div class="bilingual">
       <div class="zh">
-        <p>虽然在高维空间中学习泛化函数是一个受到<span class="term">维度灾难</span>（curse of dimensionality）困扰的估计问题，但大多数感兴趣的任务并不是通用的——它们带有来自底层<strong>物理世界的低维性和结构</strong>所产生的本质性预定义正则性。</p>
-        <p>本书关注的就是通过统一的<strong>几何原则</strong>来揭示这些正则性，并将其应用于广泛的应用场景。</p>
+        <p><span class="term">表征学习</span>（或<span class="term">特征学习</span>）是指通过自适应的、通常是层级化的特征来捕获每个任务的适当正则性概念。与传统机器学习中需要人工设计特征不同，深度学习<strong>自动学习</strong>数据表征。</p>
       </div>
       <div class="en">
-        While learning generic functions in high dimensions is a cursed estimation problem, most tasks of interest are not generic, and come with essential pre-defined regularities arising from the underlying low-dimensionality and structure of the physical world. This text is concerned with exposing these regularities through unified geometric principles.
+        Representation or feature learning, whereby adapted, often hierarchical, features capture the appropriate notion of regularity for each task.
       </div>
     </div>
 
-    <h3 id="symmetry">对称性与正则性</h3>
+    <div class="math-block">
+      $$x \xrightarrow{f_1} h^{(1)} \xrightarrow{f_2} h^{(2)} \xrightarrow{\cdots} h^{(L)} \xrightarrow{g} \hat{y}$$
+      <div class="math-explain">
+        <strong>层级表征</strong>：输入 $x$ 经过多层非线性变换 $f_1, f_2, \ldots$，逐步提取越来越抽象的特征 $h^{(k)}$，最终通过输出层 $g$ 做出预测 $\hat{y}$。例如在图像识别中：$h^{(1)}$ 捕获边缘，$h^{(2)}$ 捕获纹理/形状，$h^{(3)}$ 捕获对象部件，$h^{(L)}$ 捕获完整对象。
+      </div>
+    </div>
+
+    <pre><code># 层级特征学习的直觉
+import torch
+import torch.nn as nn
+
+class HierarchicalFeatureLearner(nn.Module):
+    """层级表征学习的简单示例"""
+    def __init__(self):
+        super().__init__()
+        # 每一层学习越来越抽象的特征
+        self.layer1 = nn.Conv2d(3, 32, 3, padding=1)    # 低级: 边缘、颜色
+        self.layer2 = nn.Conv2d(32, 64, 3, padding=1)   # 中级: 纹理、形状
+        self.layer3 = nn.Conv2d(64, 128, 3, padding=1)  # 高级: 对象部件
+        self.classifier = nn.Linear(128, 10)             # 分类: 完整对象
+        self.relu = nn.ReLU()
+        self.pool = nn.AdaptiveAvgPool2d(1)
+
+    def forward(self, x):
+        h1 = self.relu(self.layer1(x))   # h^(1): 边缘特征
+        h2 = self.relu(self.layer2(h1))  # h^(2): 纹理特征
+        h3 = self.relu(self.layer3(h2))  # h^(3): 对象特征
+        pooled = self.pool(h3).flatten(1)
+        return self.classifier(pooled)
+
+# 关键洞察: 这些特征不是人工设计的，
+# 而是通过梯度下降自动学习的！</code></pre>
+
+    <h3 id="gradient-descent">原则二：局部梯度下降 (Backpropagation)</h3>
 
     <div class="bilingual">
       <div class="zh">
-        <p>利用大型系统的已知<span class="term">对称性</span>（symmetries）是对抗维度灾难的强大且经典的补救手段，也是大多数物理理论的基础。深度学习系统也不例外——从早期开始，研究者们就改编神经网络来利用来自物理测量的低维几何，例如：</p>
+        <p>第二个原则是通过<span class="term">局部梯度下降</span>进行学习，通常以<span class="term">反向传播</span>（backpropagation）的形式实现。给定损失函数 $\mathcal{L}(\theta)$，我们通过计算梯度 $\nabla_\theta \mathcal{L}$ 并沿负梯度方向更新参数来最小化损失。</p>
+      </div>
+      <div class="en">
+        Learning by local gradient-descent, typically implemented as backpropagation.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\theta^{(t+1)} = \theta^{(t)} - \eta \nabla_\theta \mathcal{L}(\theta^{(t)})$$
+      <div class="math-explain">
+        <strong>梯度下降</strong>：$\theta$ 是模型参数，$\eta$ 是学习率，$\mathcal{L}$ 是损失函数。反向传播通过链式法则高效计算 $\nabla_\theta \mathcal{L}$。这两个原则（表征学习 + 梯度下降）在各种架构中是<strong>通用的</strong>——无论是 CNN、RNN、GNN 还是 Transformer，都使用同样的学习机制。
+      </div>
+    </div>
+
+    <h3 id="curse-overview">维度灾难预览</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>虽然在高维空间中学习通用函数是一个<strong>被诅咒的</strong>估计问题（需要指数级的样本），但大多数实际任务并不是通用的。它们来自物理世界底层的<strong>低维性</strong>和<strong>结构性</strong>，带有本质的预定义正则性。</p>
+        <p>本书的核心目标就是：通过<strong>统一的几何原则</strong>暴露这些正则性，并将它们应用于广泛的应用领域。</p>
+      </div>
+      <div class="en">
+        While learning generic functions in high dimensions is a cursed estimation problem, most tasks of interest are not generic, and come with essential pre-defined regularities arising from the underlying low-dimensionality and structure of the physical world.
+      </div>
+    </div>
+
+    <div class="callout callout-warning">
+      <h4>维度灾难的直觉</h4>
+      <p>在 $d$ 维空间中，如果我们在每个维度上取 $m$ 个样本点，总共需要 $m^d$ 个样本。对于 $d = 100$（一张 10×10 的灰度图），即使每维只取 2 个点，也需要 $2^{100} \approx 10^{30}$ 个样本——远超宇宙中的原子数（$\sim 10^{80}$...等等，虽然没超过，但这仅仅是 10×10 的图像！对于现实的 224×224 RGB 图像，维度是 $224 \times 224 \times 3 = 150{,}528$）。</p>
+      <p><strong>这就是为什么我们需要归纳偏置</strong>——利用数据的结构来约束搜索空间。详见 <a href="../chapter2/index.html">Chapter 2</a>。</p>
+    </div>
+
+    <!-- ========= 5G 框架 ========= -->
+    <h2 id="5g-framework">5G 统一框架<br><span style="font-size:0.7em;color:var(--text-secondary)">The 5G Framework: Grids, Groups, Graphs, Geodesics, Gauges</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>本书提出的<strong>"几何统一"</strong>方案——以 Erlangen Program 的精神——有双重目的：一方面，它提供了一个<strong>共同的数学框架</strong>来研究最成功的神经网络架构；另一方面，它提供了一个<strong>建设性程序</strong>来将先验物理知识融入神经架构，并为设计未来的新架构提供原则性方法。</p>
+        <p>我们将这个框架称为 <strong>5G</strong>：五个以 G 开头的几何域，覆盖了几乎所有的数据结构。</p>
+      </div>
+      <div class="en">
+        Such a 'geometric unification' endeavour in the spirit of the Erlangen Program serves a dual purpose: providing a common mathematical framework to study the most successful architectures, and giving a constructive procedure to incorporate prior physical knowledge into neural architectures.
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/misc_p5_img0.png" alt="5G Framework overview">
+      <figcaption>5G 框架概览：五种几何域及其对应的对称性和神经网络架构。从左到右，对称性从大到小，结构从通用到特殊。</figcaption>
+    </div>
+
+    <h3 id="grids">🔲 Grids — 网格</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">网格</span>是最简单也是最成功的几何域。图像是 2D 网格上的信号，语音和文本是 1D 网格上的信号。网格的关键对称性是<strong>平移对称性</strong>（translation symmetry）。</p>
+      </div>
+      <div class="en">
+        Grids are the simplest and most successful geometric domain. Images are signals on 2D grids, speech/text on 1D grids. The key symmetry is translation.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\Omega = \mathbb{Z}^d, \quad G = (\mathbb{Z}^d, +), \quad \text{对应架构: CNN}$$
+      <div class="math-explain">
+        <strong>域</strong>：$d$ 维整数网格。<strong>对称群</strong>：整数平移群。<strong>等变操作</strong>：离散卷积。CNN 的成功正是因为它<strong>正确利用</strong>了图像域的平移对称性。卷积核在所有位置共享权重（权重共享 = 平移等变性）。
+      </div>
+    </div>
+
+    <pre><code># 网格域: 图像卷积
+import torch
+import torch.nn.functional as F
+
+# 3x3 卷积核 (权重共享 = 平移等变性)
+kernel = torch.tensor([
+    [-1, -1, -1],
+    [-1,  8, -1],
+    [-1, -1, -1]
+], dtype=torch.float).view(1, 1, 3, 3)
+
+# 同一个核应用于图像的每个位置
+# 这就是 "平移等变性" — 如果输入平移，输出也平移
+image = torch.randn(1, 1, 28, 28)  # MNIST-like
+output = F.conv2d(image, kernel, padding=1)
+print(f"输入形状: {image.shape}, 输出形状: {output.shape}")
+print(f"卷积核参数: {kernel.numel()} (vs 全连接: {28*28*28*28:,})")</code></pre>
+
+    <h3 id="groups">👥 Groups — 群</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>当域不仅有平移对称性，还有<strong>旋转</strong>、<strong>反射</strong>等更丰富的对称性时，我们需要考虑<span class="term">群</span>域上的信号处理。典型例子包括球面上的信号（天文学、气象学）和分子系统。</p>
+      </div>
+      <div class="en">
+        When the domain has richer symmetries beyond translation (rotation, reflection, etc.), we need signal processing on group domains.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\Omega = G \text{ (群本身)}, \quad \text{对称群: } G \text{ 自身的左/右作用}$$
+      $$\text{对应架构: Group Equivariant CNN, Spherical CNN}$$
+      <div class="math-explain">
+        在群域上，信号定义为 $f : G \to \mathbb{R}^c$。群卷积定义为：$(f \star \psi)(g) = \int_G f(g'^{-1}g)\psi(g')dg'$。这保证了对群作用的等变性。例如，SO(3)-等变的网络在分子性质预测中至关重要。
+      </div>
+    </div>
+
+    <h3 id="graphs">🔗 Graphs — 图</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">图</span>可能是最通用的非欧几里得数据结构。社交网络、分子、知识图谱、交通网络——它们都是图。图的关键对称性是<strong>节点置换对称性</strong>：图的性质不应该依赖于节点的编号顺序。</p>
+      </div>
+      <div class="en">
+        Graphs are perhaps the most general non-Euclidean data structure. The key symmetry is node permutation: graph properties should not depend on the ordering of nodes.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\Omega = (\mathcal{V}, \mathcal{E}), \quad G = \Sigma_n, \quad \text{对应架构: GNN (消息传递)}$$
+      <div class="math-explain">
+        <strong>域</strong>：图 $(\mathcal{V}, \mathcal{E})$，节点集 $\mathcal{V}$，边集 $\mathcal{E}$。<strong>对称群</strong>：节点置换群 $\Sigma_n$。<strong>等变操作</strong>：消息传递（Message Passing）。GNN 通过邻域聚合（$h_i \leftarrow \text{AGG}(\{h_j : j \in \mathcal{N}(i)\})$）实现置换等变性。
+      </div>
+    </div>
+
+    <pre><code># 图域: 消息传递 GNN
+import torch
+
+def message_passing(node_features, edge_index, message_fn, update_fn):
+    """
+    基本的消息传递操作
+    - 置换等变: 重新排列节点不改变计算结果
+    """
+    num_nodes = node_features.size(0)
+    messages = torch.zeros_like(node_features)
+
+    for src, dst in edge_index.t():
+        # 从邻居 src 向节点 dst 发送消息
+        msg = message_fn(node_features[src], node_features[dst])
+        messages[dst] += msg  # 聚合 (求和是置换不变的!)
+
+    # 更新节点特征
+    new_features = update_fn(node_features, messages)
+    return new_features
+
+# 消息传递是置换等变的:
+# 如果我们打乱节点顺序, 结果只是相应地打乱
+# 而不会改变每个节点的实际计算结果</code></pre>
+
+    <h3 id="geodesics">📏 Geodesics — 测地线</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">测地线</span>（Geodesics）指的是<strong>流形</strong>（manifold）和<strong>网格</strong>（mesh）上的<strong>内蕴度量</strong>和<strong>等距对称性</strong>。典型例子是蛋白质表面、人体形状等，其中形状的内蕴几何（如曲率、测地距离）比外在嵌入更重要。</p>
+      </div>
+      <div class="en">
+        Geodesics refer to intrinsic metrics and isometric symmetries on manifolds and meshes. Shape analysis (e.g., protein surfaces, body shapes) relies on intrinsic geometry rather than extrinsic embedding.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\Omega = \mathcal{M} \text{ (流形)}, \quad G = \text{Iso}(\mathcal{M}), \quad \text{对应架构: Mesh CNN, Geodesic CNN}$$
+      <div class="math-explain">
+        在流形上，"距离" 由测地线（表面上的最短路径）定义，而不是直线距离。等距对称群 $\text{Iso}(\mathcal{M})$ 保持测地距离不变。例如，当人体弯曲手臂时，皮肤表面上两点的测地距离不变（等距变换），但欧几里得距离变了。
+      </div>
+    </div>
+
+    <h3 id="gauges">🔬 Gauges — 规范</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">规范</span>（Gauge）是最精细的几何结构，涉及流形上的<strong>参考框架</strong>（frame）和<strong>纤维丛</strong>（fiber bundle）。在流形上定义卷积需要选择局部参考方向——这个选择就是"规范"。规范等变意味着计算结果不依赖于这个任意选择。</p>
+      </div>
+      <div class="en">
+        Gauges involve reference frames on manifolds and fiber bundles. Defining convolution on manifolds requires choosing local reference directions — this choice is a "gauge". Gauge equivariance means computations are independent of this arbitrary choice.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\Omega = (\mathcal{M}, \text{gauge}), \quad G = \text{Structure group of the bundle}$$
+      $$\text{对应架构: Gauge Equivariant CNN}$$
+      <div class="math-explain">
+        规范等变 CNN 是最通用的几何 CNN 形式。它在流形的每个点上定义局部滤波器，并确保结果不依赖于局部坐标系的选择。这与物理学中的规范理论（如电磁学中的 U(1) 规范不变性）有深刻的类比。
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>5G 之间的关系</h4>
+      <table>
+        <thead>
+          <tr><th>域</th><th>对称性</th><th>典型架构</th><th>应用例子</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>集合 (Sets)</td><td>$\Sigma_n$ (置换)</td><td>DeepSets, Transformer</td><td>点云、NLP</td></tr>
+          <tr><td>网格 (Grids)</td><td>$\mathbb{Z}^d$ (平移)</td><td>CNN, RNN</td><td>图像、语音</td></tr>
+          <tr><td>群 (Groups)</td><td>$G$ (群作用)</td><td>Group CNN, Spherical CNN</td><td>天文学、分子</td></tr>
+          <tr><td>图 (Graphs)</td><td>$\Sigma_n$ (节点置换)</td><td>GCN, GAT, MPNN</td><td>社交网络、分子</td></tr>
+          <tr><td>流形 (Manifolds)</td><td>Iso($\mathcal{M}$) / Gauge</td><td>Mesh CNN, Gauge CNN</td><td>蛋白质表面、3D形状</td></tr>
+        </tbody>
+      </table>
+      <p>这些域形成一个<strong>层级结构</strong>：集合 ⊃ 图 ⊃ 网格；流形 ⊃ 网格。5G 框架用<strong>对称性</strong>这一统一语言描述所有这些域。</p>
+    </div>
+
+    <!-- ========= Erlangen Program ========= -->
+    <h2 id="erlangen">Erlangen Program 的精神<br><span style="font-size:0.7em;color:var(--text-secondary)">The Spirit of the Erlangen Programme</span></h2>
+
+    <h3 id="erlangen-history">历史背景</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>1872 年，年仅 23 岁的数学家 <strong>Felix Klein</strong> 在德国 Erlangen 大学的就职演讲中提出了著名的 <span class="term">Erlangen Program</span>（Erlangen 纲领）。他的革命性想法是：不同的<strong>几何学</strong>可以通过其<strong>对称群</strong>来分类和统一。</p>
         <ul>
-          <li><strong>图像中的网格</strong>（grids）→ CNN 利用平移对称性</li>
-          <li><strong>时间序列中的序列</strong>（sequences）→ RNN 利用时间平移</li>
-          <li><strong>分子中的位置和动量</strong>（position and momentum）→ GNN 利用旋转/置换对称性</li>
+          <li><strong>欧几里得几何</strong> = 在欧几里得群 $E(d)$ 下不变的性质</li>
+          <li><strong>仿射几何</strong> = 在仿射群下不变的性质</li>
+          <li><strong>射影几何</strong> = 在射影群下不变的性质</li>
+          <li><strong>拓扑学</strong> = 在同胚群下不变的性质</li>
         </ul>
-        <p>以及相关的对称性，如<strong>平移</strong>或<strong>旋转</strong>。</p>
+        <p>Klein 的核心洞察：<strong>几何就是研究在某个变换群下不变的性质</strong>。</p>
       </div>
       <div class="en">
-        Exploiting the known symmetries of a large system is a powerful and classical remedy against the curse of dimensionality, and forms the basis of most physical theories. Deep learning systems are no exception, and since the early days researchers have adapted neural networks to exploit the low-dimensional geometry arising from physical measurements.
+        In 1872, the 23-year-old mathematician Felix Klein proclaimed group theory to be the organising principle of geometry in his famous Erlangen Programme. His key insight: geometry is the study of properties invariant under a transformation group.
       </div>
     </div>
 
-    <h3 id="erlangen">Erlangen Program 精神的几何统一</h3>
-
-    <div class="callout callout-key">
-      <h4>Erlangen Program 类比</h4>
-      <p><strong>Felix Klein 的 Erlangen Program</strong>（1872）提出：每种几何学都可以用其对称变换群来定义。例如，欧几里得几何对应于刚体运动群（平移+旋转），仿射几何对应于仿射变换群。</p>
-      <p>本书将这一思想应用于深度学习：<strong>每种神经网络架构都可以用其保持的对称性来理解</strong>。</p>
-    </div>
+    <h3 id="erlangen-ml">对机器学习的启示</h3>
 
     <div class="bilingual">
       <div class="zh">
-        <p>这种 Erlangen Program 精神的"<strong>几何统一</strong>"具有双重目的：</p>
-        <ol>
-          <li>提供<strong>通用数学框架</strong>来研究最成功的神经网络架构（CNN、RNN、GNN、Transformer）</li>
-          <li>提供<strong>构造性程序</strong>来将先验物理知识融入神经架构，并为尚未发明的未来架构提供原则性的构建方法</li>
-        </ol>
+        <p>本书将 Erlangen Program 的精神应用于深度学习：<strong>不同的深度学习架构可以通过其利用的对称群来分类和统一</strong>。</p>
+        <ul>
+          <li><strong>CNN</strong> = 利用平移对称群 $(\mathbb{Z}^d, +)$ 的网络</li>
+          <li><strong>GNN</strong> = 利用置换对称群 $\Sigma_n$ 的网络</li>
+          <li><strong>Transformer</strong> = 在完全图上利用置换对称性的网络</li>
+          <li><strong>Spherical CNN</strong> = 利用旋转对称群 $SO(3)$ 的网络</li>
+        </ul>
+        <p>这不仅是事后的"理解"，更是<strong>前瞻性的设计原则</strong>：给定一个新问题，确定其数据的对称性，然后构建等变架构。</p>
       </div>
       <div class="en">
-        Such a 'geometric unification' endeavour in the spirit of the Erlangen Program serves a dual purpose: on one hand, it provides a common mathematical framework to study the most successful neural network architectures. On the other, it gives a constructive procedure to incorporate prior physical knowledge into neural architectures.
+        We apply the Erlangen Program spirit to deep learning: different architectures can be classified and unified by the symmetry group they exploit. This is not just retrospective understanding, but a prospective design principle.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\text{Erlangen for ML: } \quad \fbox{问题} \xrightarrow{\text{识别}} \fbox{对称群 } G \xrightarrow{\text{构建}} \fbox{G-等变架构}$$
+      <div class="math-explain">
+        这是 GDL 的<strong>建设性程序</strong>：(1) 分析问题的数据域 $\Omega$；(2) 确定相关的对称群 $G$；(3) 构建 $G$-等变的神经网络层；(4) 通过局部池化和全局池化得到 $G$-不变的输出。
+      </div>
+    </div>
+
+    <!-- ========= 架构景观 ========= -->
+    <h2 id="architectures">架构景观<br><span style="font-size:0.7em;color:var(--text-secondary)">The Landscape of Architectures</span></h2>
+
+    <h3 id="cnn-intro">CNN 家族 — 网格上的等变网络</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">卷积神经网络</span>（CNN）是深度学习最早也是最成功的架构之一。从 GDL 的视角看，CNN 是在<strong>$d$ 维网格</strong>上利用<strong>平移对称性</strong>的等变网络。其核心操作——卷积——正是唯一的平移等变线性操作。</p>
+        <ul>
+          <li><strong>1D CNN</strong>：用于序列数据（WaveNet 语音合成、时间序列）</li>
+          <li><strong>2D CNN</strong>：用于图像（AlexNet → VGG → ResNet → EfficientNet）</li>
+          <li><strong>3D CNN</strong>：用于视频和体积数据（医学 CT/MRI）</li>
+        </ul>
+      </div>
+      <div class="en">
+        CNNs are equivariant networks on d-dimensional grids exploiting translation symmetry. Convolution is the unique translation-equivariant linear operation.
+      </div>
+    </div>
+
+    <h3 id="rnn-intro">RNN 家族 — 序列上的处理</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">循环神经网络</span>（RNN）处理可变长度的序列数据。从 GDL 视角看，RNN 可以视为在 1D 网格上利用了<strong>因果结构</strong>（只看过去，不看未来）的架构。LSTM 和 GRU 通过门控机制解决了梯度消失问题。</p>
+      </div>
+      <div class="en">
+        RNNs process variable-length sequences. From GDL perspective, they exploit causal structure on 1D grids. LSTM and GRU solve vanishing gradient via gating.
+      </div>
+    </div>
+
+    <h3 id="gnn-intro">GNN 家族 — 图上的消息传递</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">图神经网络</span>（GNN）是 GDL 的核心成员，处理图结构数据。其基本操作是<span class="term">消息传递</span>（message passing）：每个节点聚合其邻居的信息来更新自身表示。这个操作是<strong>置换等变</strong>的。</p>
+        <ul>
+          <li><strong>GCN</strong>（Kipf & Welling, 2016）：谱方法的简化</li>
+          <li><strong>GAT</strong>（Veličković et al., 2018）：注意力加权的消息传递</li>
+          <li><strong>MPNN</strong>（Gilmer et al., 2017）：统一消息传递框架</li>
+          <li><strong>GNS</strong>（Sanchez-Gonzalez et al., 2020）：用于物理仿真</li>
+        </ul>
+      </div>
+      <div class="en">
+        GNNs are the core of GDL, processing graph-structured data via message passing — a permutation-equivariant operation.
+      </div>
+    </div>
+
+    <h3 id="transformer-intro">Transformer — 集合上的全局注意力</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">Transformer</span> 从 GDL 视角可以理解为在<strong>完全图</strong>上的 GNN——每个元素都关注所有其他元素。自注意力机制是一种在<strong>集合</strong>（无固定拓扑结构的域）上的置换等变操作。</p>
+        <p>Transformer 的位置编码打破了纯置换对称性，引入了序列/空间位置信息。这是一个"减少对称性"的例子——当数据确实有序列结构时，我们<strong>不应该</strong>保持完全的置换不变性。</p>
+      </div>
+      <div class="en">
+        From a GDL perspective, Transformers can be understood as GNNs on a complete graph — each element attends to all others. Self-attention is a permutation-equivariant operation on sets.
+      </div>
+    </div>
+
+    <pre><code># GDL 视角下的自注意力 = 完全图上的消息传递
+import torch
+import torch.nn.functional as F
+import math
+
+def self_attention_as_gnn(Q, K, V):
+    """
+    自注意力 ≡ 完全图上的注意力加权消息传递
+    Q, K, V: [batch, seq_len, d_k]
+    """
+    d_k = Q.size(-1)
+
+    # 计算注意力权重 (完全图的边权重)
+    # 每个节点关注所有其他节点
+    attention_weights = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(d_k)
+    attention_weights = F.softmax(attention_weights, dim=-1)
+
+    # 聚合消息 (加权求和 = 注意力消息传递)
+    output = torch.matmul(attention_weights, V)
+    return output
+
+# 关键洞察:
+# - Transformer = GNN on complete graph
+# - 如果限制注意力只在局部邻居: 得到类似 GAT 的东西
+# - 如果注意力权重只依赖于距离: 得到类似 CNN 的东西
+# - 这就是 GDL 统一视角的力量!</code></pre>
+
+    <!-- ========= 本书范围 ========= -->
+    <h2 id="scope">本书的范围与非范围<br><span style="font-size:0.7em;color:var(--text-secondary)">Scope and Non-Scope</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>值得注意的是，本书关注的是<strong>表征学习架构</strong>及其中的<strong>数据对称性利用</strong>。以下内容<strong>不是</strong>本书的核心关注点（虽然我们认为几何原则在这些领域同样重要）：</p>
+      </div>
+      <div class="en">
+        Our work concerns representation learning architectures and exploiting the symmetries of data therein. The following exciting pipelines are not our central focus.
       </div>
     </div>
 
     <table>
       <thead>
-        <tr><th>架构 Architecture</th><th>域 Domain</th><th>对称群 Symmetry Group</th></tr>
+        <tr><th>主题</th><th>关系</th><th>代表性工作</th></tr>
       </thead>
       <tbody>
-        <tr><td>CNN</td><td>网格 Grid</td><td>平移 Translation</td></tr>
-        <tr><td>Spherical CNN</td><td>球面 Sphere / SO(3)</td><td>旋转 Rotation SO(3)</td></tr>
-        <tr><td>GNN</td><td>图 Graph</td><td>置换 Permutation Σ<sub>n</sub></td></tr>
-        <tr><td>Deep Sets</td><td>集合 Set</td><td>置换 Permutation Σ<sub>n</sub></td></tr>
-        <tr><td>Transformer</td><td>完全图 Complete Graph</td><td>置换 Permutation Σ<sub>n</sub></td></tr>
-        <tr><td>Intrinsic/Mesh CNN</td><td>流形 Manifold</td><td>等距 Isometry / 规范 Gauge SO(2)</td></tr>
-        <tr><td>LSTM</td><td>1D 网格 1D Grid</td><td>时间扭曲 Time warping</td></tr>
+        <tr><td>自监督学习</td><td>使用 GDL 架构作为编码器</td><td>BERT, GPT, SimCLR</td></tr>
+        <tr><td>生成模型</td><td>VAE, GAN, Flow 的编码器/解码器可以是 GDL 架构</td><td>VAE, GAN, Normalizing Flows</td></tr>
+        <tr><td>强化学习</td><td>策略/价值网络可以使用 GDL 架构</td><td>DQN, PPO, AlphaGo</td></tr>
+        <tr><td>优化技术</td><td>Adam, Dropout, BatchNorm 等是通用训练技巧</td><td>Adam, Dropout, BN</td></tr>
+        <tr><td>互信息最大化</td><td>DGI 等将 GNN 与自监督结合</td><td>DGI, InfoNCE</td></tr>
       </tbody>
     </table>
 
-    <h3 id="project-link">与 PhysRobot 项目的联系</h3>
+    <!-- ========= 阅读路线图 ========= -->
+    <h2 id="roadmap">阅读路线图<br><span style="font-size:0.7em;color:var(--text-secondary)">Reading Roadmap</span></h2>
 
-    <div class="callout callout-project">
-      <h4>与 PhysRobot 项目的关系</h4>
-      <p>本章引言中提到的核心思想直接适用于我们的物理仿真项目：</p>
-      <ul>
-        <li><strong>物理世界的低维结构</strong> — 医疗机器人仿真中的物理量（力、位移、应力）都具有几何对称性（旋转不变性、平移等变性）</li>
-        <li><strong>对称性作为归纳偏置</strong> — 我们的 GNN 仿真器利用 SE(3) 等变性来保证物理一致性，这正是本书的核心方法论</li>
-        <li><strong>从原则构建架构</strong> — 本书提供的"构造性程序"帮助我们理解为什么 Equivariant Message Passing 是物理仿真的自然选择</li>
-      </ul>
+    <div class="callout callout-info">
+      <h4>本书结构</h4>
+      <p>全书由 7 章组成，形成一个<strong>从理论到应用</strong>的完整链条。</p>
     </div>
 
+    <h3 id="roadmap-ch2">Chapter 2: 高维学习 (Learning in High Dimensions)</h3>
+    <div class="bilingual">
+      <div class="zh">
+        <p><strong>核心问题</strong>：为什么通用高维函数学习是不可能的？</p>
+        <ul>
+          <li>维度灾难的数学论证</li>
+          <li>归纳偏置的概念</li>
+          <li>函数正则性与复杂度度量</li>
+          <li>万能逼近定理及其局限性</li>
+        </ul>
+        <p><strong>关键收获</strong>：理解为什么我们<em>必须</em>利用数据结构——这不是可选的优化，而是<em>必要的</em>。</p>
+      </div>
+    </div>
+
+    <h3 id="roadmap-ch3">Chapter 3: 几何先验 (Geometric Priors)</h3>
+    <div class="bilingual">
+      <div class="zh">
+        <p><strong>核心概念</strong>：对称性、不变性、等变性</p>
+        <ul>
+          <li>群论基础</li>
+          <li>G-不变性和 G-等变性</li>
+          <li>形变稳定性</li>
+          <li>尺度分离</li>
+          <li><strong>GDL 蓝图</strong>——统一所有架构的抽象框架</li>
+        </ul>
+        <p><strong>关键收获</strong>：掌握 GDL 的核心数学语言，理解"对称性 → 约束 → 更好的学习"这条逻辑链。</p>
+      </div>
+    </div>
+
+    <h3 id="roadmap-ch4">Chapter 4: 几何域 (Geometric Domains)</h3>
+    <div class="bilingual">
+      <div class="zh">
+        <p><strong>核心内容</strong>：5G 的详细数学描述</p>
+        <ul>
+          <li>集合、网格、群、图、流形——每个域的定义和性质</li>
+          <li>每个域上的信号空间</li>
+          <li>每个域的对称群</li>
+          <li>Fourier 分析的推广</li>
+        </ul>
+        <p><strong>关键收获</strong>：具体理解每种数据结构的数学本质。</p>
+      </div>
+    </div>
+
+    <h3 id="roadmap-ch5">Chapter 5: GDL 模型 (Geometric Deep Learning Models)</h3>
+    <div class="bilingual">
+      <div class="zh">
+        <p><strong>核心内容</strong>：具体架构的推导和分析</p>
+        <ul>
+          <li>CNN 从 GDL 蓝图的推导</li>
+          <li>GNN 的三种风格（卷积型、注意力型、消息传递型）</li>
+          <li>Transformer 的几何理解</li>
+          <li>等变网络（EGNN, TFN, PaiNN）</li>
+        </ul>
+        <p><strong>关键收获</strong>：能够从第一性原理<em>推导</em>出各种架构，而不是死记硬背。</p>
+      </div>
+    </div>
+
+    <h3 id="roadmap-ch6">Chapter 6: 应用 (Problems and Applications)</h3>
+    <div class="bilingual">
+      <div class="zh">
+        <p><strong>核心内容</strong>：GDL 在实际领域的应用</p>
+        <ul>
+          <li>计算机视觉、药物发现、粒子物理</li>
+          <li>蛋白质结构预测（AlphaFold）</li>
+          <li>推荐系统、社交网络</li>
+          <li>交通预测、游戏 AI</li>
+          <li><strong>医疗机器人</strong>——与我们项目的直接关联</li>
+        </ul>
+        <p><strong>关键收获</strong>：看到理论如何落地，理解每个应用中的对称性选择。</p>
+      </div>
+    </div>
+
+    <h3 id="roadmap-ch7">Chapter 7: 历史视角 (Historic Perspective)</h3>
+    <div class="bilingual">
+      <div class="zh">
+        <p><strong>核心内容</strong>：GDL 的思想渊源</p>
+        <ul>
+          <li>从 Erlangen Program 到 Noether 定理</li>
+          <li>CNN 的发明史</li>
+          <li>GNN 的独立起源（AI vs 计算化学）</li>
+          <li>谱方法和调和分析</li>
+          <li>WL 图同构测试与 GNN 表达力</li>
+        </ul>
+        <p><strong>关键收获</strong>：理解思想的演进脉络，发现不同领域之间的意外联系。</p>
+      </div>
+    </div>
+
+    <!-- ========= PhysRobot 关联 ========= -->
+    <h2 id="physrobot">与 PhysRobot 项目的关联<br><span style="font-size:0.7em;color:var(--text-secondary)">Connection to PhysRobot</span></h2>
+
+    <div class="callout callout-project">
+      <h4>为什么 GDL 对医疗机器人仿真如此重要？</h4>
+      <p>我们的 PhysRobot 项目（医疗机器人物理仿真）是 GDL 原则的<strong>完美应用场景</strong>。以下是核心连接点：</p>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>PhysRobot 组件</th><th>几何域</th><th>对称群</th><th>GDL 架构</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>粒子系统仿真</td><td>动态图</td><td>SE(3) × $\Sigma_n$</td><td>GNS (Graph Network Simulator)</td></tr>
+        <tr><td>软组织变形</td><td>网格/流形</td><td>SE(3)</td><td>MeshGraphNet</td></tr>
+        <tr><td>刚体动力学</td><td>SE(3) 群</td><td>SE(3)</td><td>等变消息传递</td></tr>
+        <tr><td>器械-组织交互</td><td>异构图</td><td>SE(3)</td><td>异构 GNN</td></tr>
+        <tr><td>力场预测</td><td>粒子图</td><td>SE(3) (等变)</td><td>EGNN / PaiNN</td></tr>
+        <tr><td>能量预测</td><td>粒子图</td><td>SE(3) (不变)</td><td>SchNet / DimeNet</td></tr>
+      </tbody>
+    </table>
+
+    <pre><code># PhysRobot 中 GDL 原则的体现
+"""
+GNS (Graph Network Simulator) 是一个完美的 GDL 实例:
+
+1. 域: 动态图 (粒子 = 节点, 相互作用 = 边)
+2. 对称群: 
+   - SE(3): 物理定律不依赖于坐标系选择
+   - Σ_n: 粒子没有固有排序
+3. 等变操作: 消息传递 (置换等变)
+4. 关键设计:
+   - 用相对位置 (r_ij = r_j - r_i) 作为边特征 → 平移不变
+   - 用距离 |r_ij| 作为标量特征 → 旋转不变
+   - 预测加速度而非位置 → 保持物理因果性
+"""
+
+class GNS_GDL_Blueprint:
+    """
+    GNS 在 GDL 蓝图中的位置:
+    
+    Signal:     x = (particle_type, position, velocity)
+    Domain:     Ω = dynamic graph (k-NN in 3D space)
+    Symmetry:   G = SE(3) × Σ_n
+    Equivariant: message passing layers
+    Invariant:  aggregation for global properties
+    Coarsening: not used (single-scale)
+    Output:     acceleration (SE(3)-equivariant vector)
+    """
+    pass</code></pre>
+
+    <!-- ========= 代码环境 ========= -->
+    <h2 id="code-setup">代码环境准备<br><span style="font-size:0.7em;color:var(--text-secondary)">Setting Up Your Environment</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>本教程中的代码示例使用 Python 和 PyTorch 生态系统。以下是推荐的环境配置：</p>
+      </div>
+    </div>
+
+    <pre><code># 创建虚拟环境
+conda create -n gdl python=3.10
+conda activate gdl
+
+# 核心依赖
+pip install torch torchvision torchaudio
+pip install torch-geometric          # PyG: GNN 框架
+pip install torch-scatter torch-sparse torch-cluster
+
+# 可视化和数值计算
+pip install numpy scipy matplotlib networkx
+pip install plotly                   # 3D 可视化
+
+# 可选: 等变网络
+pip install e3nn                     # E(3)-等变网络框架
+
+# 验证安装
+python -c "
+import torch
+import torch_geometric
+print(f'PyTorch: {torch.__version__}')
+print(f'PyG: {torch_geometric.__version__}')
+print(f'CUDA available: {torch.cuda.is_available()}')
+print(f'MPS available: {torch.backends.mps.is_available()}')  # Apple Silicon
+"</code></pre>
+
+    <pre><code># 验证 GDL 概念的快速脚本
+import torch
+import torch_geometric
+from torch_geometric.nn import GCNConv
+from torch_geometric.data import Data
+
+# 创建一个简单的图: 5 个节点，6 条边
+edge_index = torch.tensor([
+    [0, 1, 1, 2, 3, 4],
+    [1, 0, 2, 1, 4, 3]
+], dtype=torch.long)
+
+# 节点特征: 每个节点 3 维
+x = torch.randn(5, 3)
+
+# 创建 PyG Data 对象
+data = Data(x=x, edge_index=edge_index)
+print(f"图: {data.num_nodes} 节点, {data.num_edges} 边")
+print(f"节点特征维度: {data.x.shape}")
+
+# GCN 层 (置换等变!)
+conv = GCNConv(3, 16)
+out = conv(data.x, data.edge_index)
+print(f"GCN 输出: {out.shape}")
+
+# 验证置换等变性
+perm = torch.randperm(5)
+x_perm = x[perm]
+edge_index_perm = perm[edge_index]  # 简化, 实际需要更细致的处理
+# 理论上: conv(x_perm, edge_perm) == conv(x, edge)[perm]
+print("✅ GDL 环境配置完成!")</code></pre>
+
+    <!-- ========= 练习题 ========= -->
     <div class="exercises" id="exercises">
       <h3>练习题 Exercises</h3>
       <ol>
-        <li>列举三个你熟悉的物理系统，说明它们各自具有什么对称性。这些对称性如何被用来简化问题？</li>
-        <li>Erlangen Program 将几何学按其对称群分类。类比地，试着将你知道的神经网络架构（MLP、CNN、RNN、GNN）按它们保持的"对称性"分类。</li>
-        <li>为什么"利用对称性"能够缓解维度灾难？直觉上，如果输入空间中有一个对称群 $G$，那么有效的搜索空间缩小了多少？</li>
-        <li><strong>PhysRobot 思考</strong>：在我们的粒子系统仿真中，如果旋转系统中所有粒子的位置，物理行为应该如何变化？这暗示了什么样的网络设计？</li>
+        <li><strong>对称性识别</strong>：对以下数据类型，识别其自然的几何域和对称群：
+          (a) 一组点云中的 3D 物体  
+          (b) 化学分子  
+          (c) 社交媒体上用户之间的关系  
+          (d) 全球天气数据（定义在地球表面上）  
+          (e) 手术视频中器械与组织的交互  
+        </li>
+        <li><strong>参数量比较</strong>：计算以下架构对 $32 \times 32$ 灰度图像的参数量：
+          (a) 全连接层（输出 1024 维）  
+          (b) $3 \times 3$ 卷积层（64 个滤波器）  
+          (c) 讨论参数量差异的原因（提示：对称性！）
+        </li>
+        <li><strong>Erlangen 思考</strong>：如果一个机器学习问题的数据具有 SE(3)（旋转+平移）对称性，但你使用了一个不具有 SE(3) 等变性的网络，会发生什么？从样本效率和泛化的角度讨论。</li>
+        <li><strong>5G 分类</strong>：将以下具体问题映射到 5G 框架中最合适的域：
+          (a) 图像语义分割  
+          (b) 蛋白质-蛋白质对接  
+          (c) 交通流量预测  
+          (d) 球面上的气候模式识别  
+          (e) 粒子物理中的 jet 分类
+        </li>
+        <li><strong>PhysRobot 思考</strong>：在医疗机器人仿真中，当手术器械刺入软组织时：
+          (a) 描述系统的几何域  
+          (b) 系统有哪些对称性？  
+          (c) 有哪些对称性被<em>打破</em>了（例如重力方向）？  
+          (d) 如何在网络设计中处理这种"部分对称性"？
+        </li>
+        <li><strong>编程练习</strong>：使用 PyTorch Geometric 创建一个简单的消息传递 GNN，应用于 Karate Club 数据集。
+          (a) 加载数据并可视化图结构  
+          (b) 实现 2 层 GCN  
+          (c) 验证输出的维度和可视化节点嵌入（使用 t-SNE）
+        </li>
+        <li><strong>思考题</strong>：Transformer 中的位置编码（positional encoding）从 GDL 的角度意味着什么？它增加了还是减少了对称性？为什么有时候需要"减少对称性"？</li>
       </ol>
     </div>
 
+    <!-- ========= 章节导航 ========= -->
     <div class="chapter-nav">
-      <a href="../index.html">← 返回目录</a>
+      <a href="../index.html">📚 总目录</a>
       <a href="../chapter2/index.html">Chapter 2: 高维学习 →</a>
     </div>
   </main>

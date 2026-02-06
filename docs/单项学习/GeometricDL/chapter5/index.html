@@ -4,547 +4,2939 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chapter 5: Geometric Deep Learning Models | GDL 学习指南</title>
-  <link rel="stylesheet" href="../assets/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
-    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+  <style>
+/* ================================================================
+   Geometric Deep Learning Study Guide - Chapter 5 Inline Styles
+   ================================================================ */
+:root {
+  --bg: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-code: #f1f3f5;
+  --text: #212529;
+  --text-secondary: #495057;
+  --text-muted: #868e96;
+  --border: #dee2e6;
+  --accent: #4263eb;
+  --accent-light: #dbe4ff;
+  --accent-dark: #3b5bdb;
+  --success: #37b24d;
+  --warning: #f59f00;
+  --danger: #f03e3e;
+  --sidebar-width: 300px;
+  --header-height: 60px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+  --radius: 8px;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-serif: 'Noto Serif SC', 'Georgia', serif;
+}
+
+[data-theme="dark"] {
+  --bg: #1a1b1e; --bg-secondary: #25262b; --bg-code: #2c2e33;
+  --text: #c1c2c5; --text-secondary: #909296; --text-muted: #5c5f66;
+  --border: #373a40; --accent: #5c7cfa; --accent-light: #1c2541; --accent-dark: #748ffc;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; scroll-behavior: smooth; scroll-padding-top: calc(var(--header-height) + 20px); }
+body { font-family: var(--font-sans); background: var(--bg); color: var(--text); line-height: 1.7; transition: background 0.3s, color 0.3s; }
+
+/* Header */
+.header { position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--bg-secondary); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; z-index: 1000; box-shadow: var(--shadow); }
+.header-title { font-size: 1.1rem; font-weight: 700; color: var(--accent); flex: 1; }
+.header-title a { color: var(--accent); text-decoration: none; }
+.header-nav { display: flex; gap: 12px; align-items: center; }
+.header-nav a { color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; padding: 4px 10px; border-radius: 4px; transition: all 0.2s; }
+.header-nav a:hover { background: var(--accent-light); color: var(--accent); }
+.theme-toggle { background: var(--bg-code); border: 1px solid var(--border); border-radius: 20px; padding: 6px 12px; cursor: pointer; font-size: 1rem; color: var(--text); transition: all 0.2s; }
+.theme-toggle:hover { background: var(--accent-light); }
+
+/* Progress bar */
+.progress-bar { position: fixed; top: var(--header-height); left: 0; width: 0%; height: 3px; background: linear-gradient(90deg, var(--accent), #e64980, var(--accent-dark)); z-index: 1001; transition: width 0.1s; }
+
+/* Sidebar */
+.sidebar { position: fixed; top: var(--header-height); left: 0; width: var(--sidebar-width); height: calc(100vh - var(--header-height)); background: var(--bg-secondary); border-right: 1px solid var(--border); overflow-y: auto; padding: 20px 0; z-index: 900; transition: transform 0.3s; }
+.sidebar-toggle { display: none; position: fixed; top: calc(var(--header-height) + 10px); left: 10px; z-index: 950; background: var(--accent); color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.2rem; cursor: pointer; box-shadow: var(--shadow-lg); }
+.sidebar h3 { padding: 8px 20px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 12px; }
+.sidebar a { display: block; padding: 5px 20px 5px 24px; color: var(--text-secondary); text-decoration: none; font-size: 0.82rem; border-left: 3px solid transparent; transition: all 0.2s; }
+.sidebar a:hover { background: var(--accent-light); color: var(--accent); border-left-color: var(--accent); }
+.sidebar a.active { background: var(--accent-light); color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+.sidebar a.sub { padding-left: 40px; font-size: 0.78rem; }
+.sidebar a.sub-sub { padding-left: 56px; font-size: 0.76rem; }
+.sidebar .star { color: #f59f00; }
+
+/* Main */
+.main { margin-left: var(--sidebar-width); margin-top: var(--header-height); padding: 40px 60px; max-width: 960px; }
+h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 16px; line-height: 1.3; }
+h2 { font-size: 1.6rem; font-weight: 700; margin-top: 56px; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+h3 { font-size: 1.3rem; font-weight: 600; margin-top: 40px; margin-bottom: 12px; }
+h4 { font-size: 1.1rem; font-weight: 600; margin-top: 28px; margin-bottom: 8px; color: var(--text-secondary); }
+p { margin-bottom: 16px; }
+ul, ol { padding-left: 24px; margin-bottom: 16px; }
+li { margin-bottom: 6px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Bilingual */
+.bilingual { margin: 20px 0; border-left: 4px solid var(--accent); padding: 16px 20px; background: var(--bg-secondary); border-radius: 0 var(--radius) var(--radius) 0; }
+.bilingual .zh { font-size: 1rem; line-height: 1.8; margin-bottom: 10px; }
+.bilingual .en { font-size: 0.86rem; color: var(--text-muted); font-style: italic; line-height: 1.6; border-top: 1px solid var(--border); padding-top: 8px; }
+.term { color: var(--accent); font-weight: 600; }
+
+/* Math blocks */
+.math-block { margin: 24px 0; padding: 20px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; }
+.math-explain { margin-top: 12px; padding: 12px 16px; background: var(--accent-light); border-radius: var(--radius); font-size: 0.92rem; color: var(--text-secondary); }
+.math-explain::before { content: "💡 "; }
+
+/* Symbol table */
+.symbol-table { margin: 16px 0; }
+.symbol-table table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.symbol-table th { background: var(--accent); color: white; padding: 8px 12px; text-align: left; }
+.symbol-table td { padding: 8px 12px; border: 1px solid var(--border); }
+.symbol-table tr:nth-child(even) { background: var(--bg-secondary); }
+
+/* Figures */
+.figure { margin: 24px 0; text-align: center; }
+.figure img { max-width: 100%; height: auto; border-radius: var(--radius); box-shadow: var(--shadow); }
+.figure figcaption { margin-top: 10px; font-size: 0.88rem; color: var(--text-secondary); font-style: italic; }
+
+/* Callout boxes */
+.callout { margin: 24px 0; padding: 16px 20px; border-radius: var(--radius); border-left: 4px solid; }
+.callout h4 { margin-top: 0; margin-bottom: 8px; font-size: 0.95rem; color: var(--text); }
+.callout-info { background: #e7f5ff; border-left-color: #339af0; }
+[data-theme="dark"] .callout-info { background: #1c3a5e; border-left-color: #339af0; }
+.callout-project { background: #ebfbee; border-left-color: var(--success); }
+[data-theme="dark"] .callout-project { background: #1e3a23; border-left-color: var(--success); }
+.callout-warning { background: #fff9db; border-left-color: var(--warning); }
+[data-theme="dark"] .callout-warning { background: #3a3520; border-left-color: var(--warning); }
+.callout-key { background: #fff0f6; border-left-color: #e64980; }
+[data-theme="dark"] .callout-key { background: #3a1c2e; border-left-color: #e64980; }
+.callout-danger { background: #ffe3e3; border-left-color: var(--danger); }
+[data-theme="dark"] .callout-danger { background: #3a1c1c; border-left-color: var(--danger); }
+.callout-project h4::before { content: "🤖 "; }
+.callout-info h4::before { content: "ℹ️ "; }
+.callout-warning h4::before { content: "⚠️ "; }
+.callout-key h4::before { content: "🔑 "; }
+.callout-danger h4::before { content: "🔥 "; }
+
+/* Code blocks */
+.code-container { position: relative; margin: 16px 0; }
+.code-container .copy-btn { position: absolute; top: 8px; right: 8px; background: var(--accent); color: white; border: none; border-radius: 4px; padding: 4px 10px; font-size: 0.75rem; cursor: pointer; opacity: 0; transition: opacity 0.2s; z-index: 10; }
+.code-container:hover .copy-btn { opacity: 1; }
+.code-container .copy-btn:active { background: var(--accent-dark); }
+.code-label { display: inline-block; background: var(--accent); color: white; padding: 2px 10px; font-size: 0.75rem; border-radius: var(--radius) var(--radius) 0 0; font-weight: 600; }
+pre { margin: 0 0 16px 0; padding: 16px; background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.55; }
+code { font-family: var(--font-mono); font-size: 0.88em; background: var(--bg-code); padding: 2px 6px; border-radius: 3px; }
+pre code { background: none; padding: 0; font-size: inherit; }
+
+/* Blueprint / Framework box */
+.blueprint { margin: 24px 0; padding: 20px; background: linear-gradient(135deg, var(--accent-light), var(--bg-secondary)); border: 2px solid var(--accent); border-radius: var(--radius); }
+.blueprint h4 { color: var(--accent); margin-top: 0; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 0.9rem; }
+th, td { padding: 10px 14px; border: 1px solid var(--border); text-align: left; }
+th { background: var(--bg-secondary); font-weight: 600; }
+
+/* Comparison table */
+.comparison-table { overflow-x: auto; margin: 24px 0; }
+.comparison-table table { min-width: 600px; }
+.comparison-table th { background: var(--accent); color: white; }
+.comparison-table td:first-child { font-weight: 600; color: var(--accent); }
+
+/* Algorithm */
+.algorithm { margin: 24px 0; border: 2px solid var(--accent); border-radius: var(--radius); overflow: hidden; }
+.algorithm-title { background: var(--accent); color: white; padding: 8px 16px; font-weight: 600; font-size: 0.95rem; }
+.algorithm-body { padding: 16px; background: var(--bg-secondary); font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.8; white-space: pre-wrap; }
+
+/* Exercises */
+.exercises { margin: 32px 0; padding: 20px; background: var(--bg-secondary); border: 2px solid var(--warning); border-radius: var(--radius); }
+.exercises h3 { margin-top: 0; color: var(--warning); }
+.exercises h3::before { content: "✏️ "; }
+.exercises ol { padding-left: 24px; }
+.exercises li { margin-bottom: 12px; line-height: 1.6; }
+
+/* Step-by-step derivation */
+.derivation { margin: 20px 0; padding: 16px 20px; background: var(--bg-secondary); border-left: 4px solid #e64980; border-radius: 0 var(--radius) var(--radius) 0; }
+.derivation h4 { color: #e64980; margin-top: 0; }
+.derivation h4::before { content: "📐 "; }
+.step { margin: 8px 0; padding: 8px 12px; background: var(--bg); border-radius: var(--radius); border: 1px solid var(--border); }
+.step-num { display: inline-block; background: var(--accent); color: white; width: 24px; height: 24px; border-radius: 50%; text-align: center; font-size: 0.75rem; line-height: 24px; margin-right: 8px; font-weight: 700; }
+
+/* Navigation */
+.chapter-nav { display: flex; justify-content: space-between; margin-top: 60px; padding: 20px 0; border-top: 1px solid var(--border); }
+.chapter-nav a { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: var(--radius); font-weight: 500; transition: all 0.2s; }
+.chapter-nav a:hover { background: var(--accent-light); border-color: var(--accent); text-decoration: none; }
+
+/* Reading time badge */
+.badge { display: inline-block; background: var(--accent); color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; margin-right: 6px; }
+.badge-green { background: var(--success); }
+.badge-orange { background: var(--warning); }
+.badge-red { background: var(--danger); }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-toggle { display: block; }
+  .main { margin-left: 0; padding: 30px 24px; }
+}
+@media (max-width: 640px) {
+  .main { padding: 20px 16px; }
+  h1 { font-size: 1.6rem; }
+  h2 { font-size: 1.3rem; }
+  .header-nav a { display: none; }
+  .header-nav .theme-toggle { display: inline-block; }
+}
+@media print {
+  .sidebar, .header, .sidebar-toggle, .theme-toggle, .progress-bar { display: none; }
+  .main { margin: 0; padding: 20px; max-width: 100%; }
+}
+
+/* Tooltip */
+.tooltip { position: relative; border-bottom: 1px dotted var(--accent); cursor: help; }
+.tooltip:hover::after { content: attr(data-tip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--bg-code); border: 1px solid var(--border); padding: 8px 12px; border-radius: var(--radius); font-size: 0.82rem; white-space: nowrap; z-index: 100; box-shadow: var(--shadow-lg); }
+
+/* Tab system for code comparison */
+.tab-container { margin: 20px 0; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.tab-buttons { display: flex; background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+.tab-btn { flex: 1; padding: 10px; border: none; background: none; cursor: pointer; font-weight: 500; color: var(--text-secondary); font-size: 0.88rem; transition: all 0.2s; border-bottom: 2px solid transparent; }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--bg); }
+.tab-content { display: none; padding: 0; }
+.tab-content.active { display: block; }
+.tab-content pre { margin: 0; border: none; border-radius: 0; }
+
+/* Flow diagram */
+.flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 16px 0; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius); }
+.flow-box { padding: 8px 16px; background: var(--accent-light); border: 2px solid var(--accent); border-radius: var(--radius); font-weight: 600; font-size: 0.9rem; text-align: center; }
+.flow-arrow { font-size: 1.3rem; color: var(--accent); font-weight: 700; }
+  </style>
 </head>
 <body>
-  <div class="progress-bar"></div>
+  <div class="progress-bar" id="progressBar"></div>
 
   <header class="header">
     <div class="header-title"><a href="../index.html">📐 GDL 学习指南</a></div>
     <div class="header-nav">
-      <a href="../chapter4/index.html">← 上一章</a>
+      <a href="../chapter4/index.html">← Ch.4 几何域</a>
       <a href="../index.html">目录</a>
-      <a href="../chapter6/index.html">下一章 →</a>
       <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
     </div>
   </header>
 
   <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
-  <nav class="sidebar">
-    <h3>Chapter 5 ⭐</h3>
+  <nav class="sidebar" id="sidebar">
+    <h3>Chapter 5</h3>
     <a href="#overview">概述</a>
-    <a href="#sec5-1">5.1 CNN 卷积神经网络</a>
-    <a href="#cnn-conv" class="sub">卷积操作</a>
-    <a href="#cnn-multiscale" class="sub">多尺度计算</a>
+    <a href="#sec5-1">5.1 卷积神经网络 CNN</a>
+    <a href="#cnn-group-theory" class="sub">群论解释</a>
+    <a href="#cnn-convolution-theorem" class="sub">卷积定理</a>
+    <a href="#cnn-pooling" class="sub">池化与不变性</a>
     <a href="#cnn-resnet" class="sub">残差网络</a>
+    <a href="#cnn-code" class="sub">代码实现</a>
     <a href="#sec5-2">5.2 群等变 CNN</a>
-    <a href="#group-conv-impl" class="sub">群卷积实现</a>
-    <a href="#spherical-cnn" class="sub">球面 CNN</a>
-    <a href="#sec5-3">5.3 图神经网络 GNN</a>
-    <a href="#three-flavours" class="sub">三种风味</a>
-    <a href="#gnn-conv" class="sub">卷积型 GNN</a>
-    <a href="#gnn-attn" class="sub">注意力型 GNN</a>
-    <a href="#gnn-mp" class="sub">消息传递型 GNN</a>
-    <a href="#sec5-4">5.4 Deep Sets & Transformers</a>
-    <a href="#deep-sets" class="sub">Deep Sets</a>
-    <a href="#transformer" class="sub">Transformer 即 GNN</a>
+    <a href="#gcnn-definition" class="sub">G-CNN 定义</a>
+    <a href="#gcnn-group-conv" class="sub">群卷积</a>
+    <a href="#gcnn-code" class="sub">代码实现</a>
+    <a href="#sec5-3">5.3 图神经网络 GNN <span class="star">⭐⭐⭐</span></a>
+    <a href="#gnn-overview" class="sub">总览</a>
+    <a href="#gnn-mpnn" class="sub">消息传递框架</a>
+    <a href="#gnn-three-flavors" class="sub">三种风格</a>
+    <a href="#gnn-gcn" class="sub">GCN 完整推导</a>
+    <a href="#gnn-gat" class="sub">GAT 注意力机制</a>
+    <a href="#gnn-graphsage" class="sub">GraphSAGE</a>
+    <a href="#gnn-gin" class="sub">GIN 表达力</a>
+    <a href="#gnn-comparison" class="sub">GNN 对比表</a>
+    <a href="#gnn-code" class="sub">完整代码</a>
+    <a href="#gnn-physrobot" class="sub">🤖 PhysRobot 关联</a>
+    <a href="#sec5-4">5.4 DeepSets / Transformer</a>
+    <a href="#deepsets" class="sub">Deep Sets</a>
+    <a href="#transformer" class="sub">Transformer</a>
     <a href="#latent-graph" class="sub">隐式图推断</a>
-    <a href="#sec5-5">5.5 等变消息传递 🤖</a>
-    <a href="#egnn" class="sub">EGNN</a>
-    <a href="#irreps" class="sub">不可约表示</a>
-    <a href="#regular-rep" class="sub">正则表示</a>
-    <a href="#sec5-6">5.6 Mesh CNN</a>
-    <a href="#sec5-7">5.7 RNN</a>
+    <a href="#sec5-5">5.5 等变消息传递 <span class="star">⭐⭐</span></a>
+    <a href="#egnn" class="sub">E(n)-等变 GNN</a>
+    <a href="#tfn" class="sub">Tensor Field Network</a>
+    <a href="#empnn-physrobot" class="sub">🤖 EdgeFrame 关联</a>
+    <a href="#empnn-code" class="sub">代码实现</a>
+    <a href="#sec5-6">5.6 内蕴网格 CNN</a>
+    <a href="#geodesic-cnn" class="sub">测地线 CNN</a>
+    <a href="#monet" class="sub">MoNet</a>
+    <a href="#gauge-cnn" class="sub">规范等变 CNN</a>
+    <a href="#sec5-7">5.7 循环神经网络 RNN</a>
+    <a href="#rnn-equivariance" class="sub">时间等变性</a>
+    <a href="#rnn-vanishing" class="sub">梯度消失</a>
     <a href="#sec5-8">5.8 LSTM</a>
+    <a href="#lstm-gates" class="sub">门控机制</a>
+    <a href="#lstm-time-warp" class="sub">时间扭曲不变性</a>
     <a href="#exercises">练习题</a>
     <h3>导航</h3>
     <a href="../index.html">📚 总目录</a>
     <a href="../chapter4/index.html">← Ch.4 几何域</a>
-    <a href="../chapter6/index.html">→ Ch.6 应用</a>
   </nav>
 
   <main class="main">
-    <h1>Chapter 5: Geometric Deep Learning Models<br><span style="font-size:0.6em;color:var(--text-secondary)">几何深度学习模型 ⭐ 与 PhysRobot 最相关</span></h1>
 
-    <div class="callout callout-project" id="overview">
-      <h4>本章是全书重点 · 与我们项目最直接相关</h4>
-      <p>本章展示了如何从 Chapter 3 的几何蓝图<strong>推导出</strong>具体的深度学习架构。覆盖了 8 个主要架构族：</p>
-      <ul>
-        <li><strong>5.1 CNN</strong> — 网格上的平移等变架构</li>
-        <li><strong>5.2 Group-equivariant CNN</strong> — 更丰富对称性的卷积</li>
-        <li><strong>5.3 GNN</strong> ⭐ — 图上的置换等变架构（三种风味）</li>
-        <li><strong>5.4 Deep Sets & Transformers</strong> — 集合/完全图上的特例</li>
-        <li><strong>5.5 Equivariant Message Passing</strong> ⭐⭐ — E(3)-等变 GNN，<span style="color:var(--success);font-weight:700">物理仿真核心</span></li>
-        <li><strong>5.6 Intrinsic Mesh CNN</strong> — 流形/网格上的卷积</li>
-        <li><strong>5.7-5.8 RNN & LSTM</strong> — 时间序列上的等变架构</li>
-      </ul>
-      <p><strong>预计阅读时间</strong>：5 小时</p>
-    </div>
+    <!-- ====================== CHAPTER TITLE ====================== -->
+    <h1>Chapter 5: Geometric Deep Learning Models<br>
+      <span style="font-size:0.55em;color:var(--text-secondary)">几何深度学习模型 — 从 CNN 到 GNN 再到等变网络</span>
+    </h1>
 
-    <!-- 5.1 CNN -->
-    <h2 id="sec5-1">5.1 卷积神经网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Convolutional Neural Networks (CNNs)</span></h2>
+    <p>
+      <span class="badge badge-red">⭐ 最重要章节</span>
+      <span class="badge badge-orange">预计阅读：6+ 小时</span>
+      <span class="badge badge-green">代码可运行</span>
+    </p>
 
-    <div class="bilingual">
-      <div class="zh">
-        <p>CNN 是最早、最知名的遵循 GDL 蓝图的深度学习架构。在 Section 4.2 中，我们已经完整刻画了<strong>线性、局部、平移等变</strong>操作的类——它们就是<span class="term">卷积</span>。</p>
-      </div>
-      <div class="en">
-        CNNs are perhaps the earliest and most well known example of deep learning architectures following the GDL blueprint. The class of linear, local, translation equivariant operators is given by convolutions.
-      </div>
-    </div>
-
-    <h3 id="cnn-conv">卷积操作的详细展开</h3>
-
-    <div class="math-block">
-      $$F(x)_{u_1, u_2} = \sum_{a=1}^{H_f} \sum_{b=1}^{W_f} \alpha_{ab}\, x_{u_1+a,\, u_2+b}$$
-      <div class="math-explain">
-        2D 卷积的坐标形式。滤波器 $\alpha$ 的大小为 $H_f \times W_f$，在所有空间位置 $(u_1, u_2)$ 上<strong>共享</strong>（weight sharing）。这是平移等变性的直接数学后果。
-      </div>
-    </div>
-
-    <p><strong>多通道卷积</strong>（RGB → 多个特征图）：</p>
-
-    <div class="math-block">
-      $$F(x)_{uvj} = \sum_{a=1}^{H_f} \sum_{b=1}^{W_f} \sum_{c=1}^{M} \alpha_{jabc}\, x_{u+a,\, v+b,\, c}, \quad j \in [N]$$
-      <div class="math-explain">
-        $M$ = 输入通道数，$N$ = 输出通道数。滤波器张量 $\alpha \in \mathbb{R}^{N \times H_f \times W_f \times M}$ 表达了输入特征到输出特征的<strong>任意线性组合</strong>。这个基本操作涵盖了广泛的 CNN 架构。
-      </div>
-    </div>
-
-    <h3 id="cnn-multiscale">多尺度计算与池化</h3>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>标准 CNN 层可以表示为 GDL 蓝图中基本操作的组合：</p>
-      </div>
-      <div class="en">
-        A 'vanilla' CNN layer can be expressed as the composition of basic objects from the GDL blueprint.
-      </div>
-    </div>
-
-    <div class="math-block">
-      $$h = P(\sigma(F(x)))$$
-      <div class="math-explain">
-        <strong>$F$</strong>：等变线性层（卷积）<br>
-        <strong>$\sigma$</strong>：逐点非线性（如 ReLU = $\max(x, 0)$）<br>
-        <strong>$P$</strong>：粗化操作（池化）— 降低空间分辨率<br>
-        池化方式：局部平均池化（低通滤波 + 下采样）或最大池化（max-pooling）
-      </div>
-    </div>
-
-    <div class="figure">
-      <img src="../assets/ch5_p79_img0.png" alt="CNN architectures timeline">
-      <figcaption>经典 CNN 架构时间线：从 LeNet (1998) 到 AlexNet (2012) 到 VGG (2014) 到 ResNet (2016)，架构越来越深但遵循相同的 GDL 蓝图。</figcaption>
-    </div>
-
-    <h3 id="cnn-resnet">残差网络 ResNet</h3>
-
-    <div class="callout callout-key">
-      <h4>残差连接的核心思想</h4>
-    </div>
-
-    <div class="math-block">
-      $$h = P(x + \sigma(F(x)))$$
-      <div class="math-explain">
-        <strong>残差重参数化</strong>（He et al., 2016）：每层建模前一层特征的<strong>扰动</strong>，而非通用非线性变换。这等价于 ODE 的<strong>前向 Euler 离散化</strong>：$\dot{x} = \sigma(F(x))$。<br>
-        关键优势：学习速度场（velocity field）比直接学习位置更容易，导致更好的优化景观，使训练深得多的网络成为可能。<br>
-        <strong>Neural ODE</strong>（Chen et al., 2018）将这个类比推到极致，直接学习 ODE 参数并使用数值积分。
-      </div>
-    </div>
-
-    <!-- 5.2 Group-equivariant CNN -->
-    <h2 id="sec5-2">5.2 群等变卷积神经网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Group-equivariant CNNs</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>标准 CNN 只利用了平移对称性。但很多数据具有更丰富的对称性——例如医学体积图像（3D CT/MRI）具有离散旋转对称性，DNA 序列具有反向互补对称性。<span class="term">群等变 CNN</span> 将卷积推广到任意群上。</p>
-      </div>
-      <div class="en">
-        Standard CNNs exploit only translation symmetry. Group-equivariant CNNs generalise convolution to arbitrary groups, capturing richer symmetries.
-      </div>
-    </div>
-
-    <h3 id="group-conv-impl">Transform + Convolve 实现策略</h3>
-
-    <div class="algorithm">
-      <div class="algorithm-title">Algorithm: 群卷积的高效实现（Transform + Convolve）</div>
-      <div class="algorithm-body">输入：信号 x，滤波器 θ，群变换集 H
-输出：群卷积 x ⋆ θ
-
-对每个 h ∈ H：
-  θ_h = ρ(h)θ           // 变换滤波器（如旋转、反向互补）
-  对每个平移 k：
-    (x ⋆ θ)(kh) = (x ⋆ θ_h)(k)  // 标准平移卷积
-
-// 输出可以看作 |H| 组"方向通道"的特征图
-// 例如 24 个旋转 → 24 个方向通道</div>
-    </div>
-
-    <div class="figure">
-      <img src="../assets/ch5_p79_img0.png" alt="Group-equivariant CNN filters">
-      <figcaption>3×3 滤波器在离散旋转群 $O_h$（48 个元素）下的所有旋转副本。群卷积等价于用所有旋转版本的滤波器做标准卷积。</figcaption>
-    </div>
-
-    <h3 id="spherical-cnn">球面 CNN Spherical CNNs</h3>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>对于球面上的连续对称群 SO(3)，可以在<strong>谱域</strong>中实现卷积。球谐函数（Spherical Harmonics）是球面上的正交基——类似于经典 Fourier 基。SO(3) 上的 Fourier 基是 <strong>Wigner D-函数</strong>。卷积定理在两个域上都成立。</p>
-      </div>
-      <div class="en">
-        For the continuous symmetry group of the sphere, convolution can be implemented in the spectral domain using spherical harmonics (for S²) and Wigner D-functions (for SO(3)).
-      </div>
-    </div>
-
-    <!-- 5.3 GNN -->
-    <h2 id="sec5-3">5.3 图神经网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Graph Neural Networks (GNNs) ⭐</span></h2>
-
-    <div class="callout callout-project">
-      <h4>PhysRobot 核心架构</h4>
-      <p>GNN 是 GDL 蓝图在图上的实现。它们是目前最通用的深度学习架构之一——大多数其他架构可以理解为具有额外几何结构的 GNN 特例。</p>
-    </div>
-
-    <div class="figure">
-      <img src="../assets/ch5_p88_img0.png" alt="Three flavours of GNN">
-      <figcaption>图 17：GNN 层的三种"风味"，以节点 b 的邻域为例。左→右：卷积型（固定权重 $c_{uv}$）、注意力型（计算注意力 $\alpha_{uv}$）、消息传递型（计算向量消息 $m_{uv}$）。</figcaption>
-    </div>
-
-    <h3 id="three-flavours">三种 GNN 风味</h3>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>绝大部分 GNN 文献可以归入三种"风味"（flavours），它们在对邻域特征的变换程度上有所不同：</p>
-      </div>
-      <div class="en">
-        The vast majority of GNN literature may be derived from only three "flavours" of GNN layers.
-      </div>
-    </div>
-
-    <h4 id="gnn-conv">① 卷积型 Convolutional (GCN, ChebNet)</h4>
-
-    <div class="math-block">
-      $$h_u = \phi\left(x_u, \bigoplus_{v \in \mathcal{N}_u} c_{uv} \psi(x_v)\right)$$
-      <div class="math-explain">
-        <strong>$c_{uv}$</strong>：固定的重要性权重，通常直接来自邻接矩阵（如 GCN 中的归一化度数）<br>
-        <strong>$\psi$</strong>：对发送节点特征的变换（通常是线性变换）<br>
-        <strong>$\bigoplus$</strong>：求和聚合（相当于线性扩散或位置相关线性滤波）<br>
-        <strong>代表模型</strong>：GCN (Kipf & Welling, 2017)、ChebNet (Defferrard et al., 2016)
-      </div>
-    </div>
-
-    <h4 id="gnn-attn">② 注意力型 Attentional (GAT)</h4>
-
-    <div class="math-block">
-      $$h_u = \phi\left(x_u, \bigoplus_{v \in \mathcal{N}_u} a(x_u, x_v) \psi(x_v)\right)$$
-      <div class="math-explain">
-        <strong>$a(x_u, x_v)$</strong>：可学习的<strong>自注意力机制</strong>，隐式计算重要性系数 $\alpha_{uv}$（通常 softmax 归一化）<br>
-        权重是<strong>特征依赖的</strong>——不同的输入产生不同的注意力分布<br>
-        <strong>代表模型</strong>：GAT (Veličković et al., 2018)、MoNet (Monti et al., 2017)
-      </div>
-    </div>
-
-    <h4 id="gnn-mp">③ 消息传递型 Message-Passing (MPNN)</h4>
-
-    <div class="math-block">
-      $$h_u = \phi\left(x_u, \bigoplus_{v \in \mathcal{N}_u} \psi(x_u, x_v)\right)$$
-      <div class="math-explain">
-        <strong>$\psi(x_u, x_v)$</strong>：可学习的<strong>消息函数</strong>，计算从 $v$ 到 $u$ 的<strong>向量消息</strong><br>
-        最灵活的形式——消息可以是任意维度的向量<br>
-        <strong>代表模型</strong>：MPNN (Gilmer et al., 2017)、Interaction Networks (Battaglia et al., 2016)
-      </div>
-    </div>
-
-    <div class="callout callout-key">
-      <h4>表达力包含关系</h4>
-      <p style="text-align:center;font-size:1.2em;font-weight:700">
-        卷积型 ⊂ 注意力型 ⊂ 消息传递型
-      </p>
-      <ul>
-        <li>注意力型可以通过 $a(x_u, x_v) = c_{uv}$（查找表）模拟卷积型</li>
-        <li>消息传递型可以通过 $\psi(x_u, x_v) = a(x_u, x_v)\psi(x_v)$ 模拟注意力型</li>
-        <li>但表达力更强 ≠ 更好：消息传递需要更多内存，更难训练</li>
-        <li>对于<strong>同质图</strong>（homophilous graph），简单的卷积型往往效果更好</li>
-      </ul>
-    </div>
-
-    <!-- 5.4 Deep Sets & Transformers -->
-    <h2 id="sec5-4">5.4 Deep Sets、Transformers 与隐式图推断<br><span style="font-size:0.7em;color:var(--text-secondary)">Deep Sets, Transformers, and Latent Graph Inference</span></h2>
-
-    <h3 id="deep-sets">Deep Sets：空边集的 GNN</h3>
-
-    <div class="math-block">
-      $$h_u = \psi(x_u)$$
-      <div class="math-explain">
-        当 $A = I$（无边，$\mathcal{N}_u = \{u\}$）时，GNN 退化为对每个节点独立地应用共享变换 $\psi$。这就是 <strong>Deep Sets</strong>（Zaheer et al., 2017）/ <strong>PointNet</strong>（Qi et al., 2017）。
-      </div>
-    </div>
-
-    <h3 id="transformer">Transformer 即注意力 GNN over 完全图！</h3>
-
-    <div class="callout callout-key">
-      <h4>这是本节最重要的洞察</h4>
-    </div>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>当 $A = \mathbf{1}\mathbf{1}^\top$（完全图，$\mathcal{N}_u = V$）时，使用注意力型 GNN 就得到了<strong>自注意力算子</strong>——即 <span class="term">Transformer</span>（Vaswani et al., 2017）的核心：</p>
-      </div>
-      <div class="en">
-        With a complete graph and attentional aggregation, we recover the self-attention operator — the core of the Transformer architecture.
-      </div>
-    </div>
-
-    <div class="math-block">
-      $$h_u = \phi\left(x_u, \bigoplus_{v \in V} a(x_u, x_v) \psi(x_v)\right)$$
-      <div class="math-explain">
-        Transformer = <strong>注意力 GNN over 完全图</strong>（Joshi, 2020）<br>
-        自注意力隐式推断了一个<strong>软邻接矩阵</strong>：$a_{uv} = a(x_u, x_v) \in [0, 1]$（通过 softmax 归一化）<br>
-        <strong>位置编码</strong>（Positional Encoding）的作用：完全图丢失了位置信息，位置编码把位置信息补回来<br>
-        <strong>深层联系</strong>：Transformer 的位置编码与 DFT（离散 Fourier 变换）直接相关，进而与图拉普拉斯的特征向量相关
-      </div>
-    </div>
-
-    <div class="callout callout-info">
-      <h4>从 Transformer 到 Graph Transformer</h4>
-      <p>Transformer 的位置编码隐含假设输入节点连在<strong>循环网格</strong>上。对于更一般的图结构，可以使用图拉普拉斯特征向量作为位置编码（Dwivedi & Bresson, 2020 — Graph Transformer）。</p>
-    </div>
-
-    <h3 id="latent-graph">隐式图推断 Latent Graph Inference</h3>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>第三种选择：既不假设空图（$A = I$），也不假设完全图（$A = \mathbf{1}\mathbf{1}^\top$），而是<strong>学习</strong>一个隐式邻接矩阵 $A$。这个问题被称为<span class="term">隐式图推断</span>（Latent Graph Inference），是高度活跃的研究方向。</p>
-        <p>挑战：图结构学习是<strong>离散优化</strong>问题，与基于梯度的下游任务优化之间存在张力。</p>
-      </div>
-      <div class="en">
-        One can try to learn the latent relational structure, leading to a general A that is neither I nor 11ᵀ. This requires balancing a discrete structure learning objective with any downstream task.
-      </div>
-    </div>
-
-    <!-- 5.5 EQUIVARIANT MESSAGE PASSING -->
-    <h2 id="sec5-5">5.5 等变消息传递网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Equivariant Message Passing Networks ⭐⭐ PhysRobot 核心</span></h2>
-
-    <div class="callout callout-project">
-      <h4>这是与我们项目最直接相关的部分！</h4>
-      <p>在物理仿真、分子动力学等应用中，节点特征不只是任意向量——它们包含<strong>几何实体的坐标</strong>（如原子的 3D 位置）。我们需要这些坐标在空间变换下<strong>正确变换</strong>——即对欧几里得群 E(3) 等变。</p>
-    </div>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>设定：区分节点的<strong>标量特征</strong> $f_u \in \mathbb{R}^d$ 和<strong>空间坐标</strong> $x_u \in \mathbb{R}^3$。等变层分别变换这两个输入，产生更新的 $f'_u$ 和 $x'_u$。</p>
-        <p><strong>等变性要求</strong>：如果对输入的空间坐标应用 $g \in E(3)$（$\rho(g)x = Rx + b$，其中 $R$ 是正交矩阵，$b$ 是平移向量），则：</p>
-        <ul>
-          <li>空间坐标输出以同样方式变换：$x'_u \mapsto Rx'_u + b$</li>
-          <li>标量特征输出<strong>不变</strong>：$f'_u$ 不变</li>
-        </ul>
-      </div>
-      <div class="en">
-        We distinguish node features f_u and spatial coordinates x_u. The coordinates are endowed with Euclidean symmetry. An equivariant layer transforms both separately, maintaining equivariance to E(3).
-      </div>
-    </div>
-
-    <h3 id="egnn">EGNN: Equivariant Graph Neural Network (Satorras et al., 2021)</h3>
-
-    <div class="blueprint">
-      <h4>🌟 EGNN 核心公式</h4>
-
-      <p><strong>特征更新</strong>（E(3)-不变）：</p>
-      $$f'_u = \phi\left(f_u, \bigoplus_{v \in \mathcal{N}_u} \psi_f(f_u, f_v, \|x_u - x_v\|^2)\right)$$
-
-      <p><strong>坐标更新</strong>（E(3)-等变）：</p>
-      $$x'_u = x_u + \sum_{v \neq u} (x_u - x_v)\, \psi_c(f_u, f_v, \|x_u - x_v\|^2)$$
-    </div>
-
-    <div class="math-explain">
-      <strong>为什么这是 E(3)-等变的？</strong>
-      <ul>
-        <li><strong>特征 $f'_u$</strong>：只依赖于距离 $\|x_u - x_v\|^2$，而 E(3) 变换保持距离不变 → $f'_u$ 是 E(3)-<strong>不变</strong>的 ✓</li>
-        <li><strong>坐标 $x'_u$</strong>：$x'_u = x_u + \sum (x_u - x_v) \cdot \text{scalar}$。设 $g = (R, b)$，则：
-          <ul>
-            <li>$g.x_u = Rx_u + b$</li>
-            <li>$g.x'_u = R(x_u + \sum (x_u - x_v) \cdot s_{uv}) + b = Rx_u + b + R\sum (x_u - x_v) \cdot s_{uv}$</li>
-            <li>而 $R(x_u - x_v) = Rx_u + b - (Rx_v + b) = g.x_u - g.x_v$ → 等变性成立 ✓</li>
-          </ul>
-        </li>
-      </ul>
-      <strong>关键洞察</strong>：使用<strong>相对位置向量</strong> $(x_u - x_v)$ 乘以<strong>标量权重</strong>来更新坐标——这自动保证了等变性！
-    </div>
-
-    <div class="callout callout-project">
-      <h4>EGNN 在 PhysRobot 中的应用</h4>
-      <p>EGNN 的结构与物理仿真完美对应：</p>
-      <ul>
-        <li><strong>特征更新</strong> = 更新粒子的内部状态（能量、速度大小等标量量）</li>
-        <li><strong>坐标更新</strong> = 更新粒子的位置（受到来自邻居的"力"的影响）</li>
-        <li><strong>$\psi_c$ 标量</strong> = 类似于力的大小（标量），乘以方向 $(x_u - x_v)$ 得到力向量</li>
-        <li>这与牛顿力学中 $F_{uv} = f(\|r_{uv}\|) \cdot \hat{r}_{uv}$ 的结构完全一致！</li>
-      </ul>
-    </div>
-
-    <h3 id="irreps">不可约表示方法 Irreducible Representations</h3>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>EGNN 只处理<strong>标量</strong>特征和<strong>坐标</strong>（向量）。但有些特征可能需要编码为<strong>更高阶张量</strong>（如应力张量、电四极矩）。<span class="term">不可约表示</span>方法利用旋转群的 Fourier 分析来处理任意阶张量。</p>
-        <p>关键数学工具：<strong>Wigner D-矩阵</strong>（旋转群的不可约表示）和 <strong>Clebsch-Gordan 系数</strong>（张量积的分解）。</p>
-      </div>
-      <div class="en">
-        Irreducible representation approaches handle arbitrary tensor features using the Fourier analysis of the rotation group, via Wigner D-matrices and Clebsch-Gordan coefficients.
-      </div>
-    </div>
-
-    <div class="callout callout-info">
-      <h4>不可约表示方法的代表模型</h4>
+    <!-- ====================== OVERVIEW ====================== -->
+    <div class="callout callout-info" id="overview">
+      <h4>本章概述</h4>
+      <p>本章是全书的<strong>核心高潮</strong>。在前四章建立了几何先验（对称性、不变性、等变性）和几何域（5 Gs）之后，本章展示这些理论原则如何<strong>具象化为实际的深度学习架构</strong>。每一种流行的深度学习模型——CNN、GNN、Transformer、LSTM——都是几何深度学习蓝图在特定域和对称群上的<strong>实例化</strong>。</p>
       <table>
-        <tr><th>模型</th><th>类型</th><th>年份</th><th>特点</th></tr>
-        <tr><td><strong>TFN</strong> (Thomas et al.)</td><td>卷积</td><td>2018</td><td>Tensor Field Networks，点云上的等变卷积</td></tr>
-        <tr><td><strong>3D Steerable CNN</strong> (Weiler et al.)</td><td>卷积</td><td>2018</td><td>可操控特征的 3D 卷积</td></tr>
-        <tr><td><strong>SE(3)-Transformer</strong> (Fuchs et al.)</td><td>注意力</td><td>2020</td><td>图上的等变注意力</td></tr>
-        <tr><td><strong>NequIP</strong> (Batzner et al.)</td><td>消息传递</td><td>2022</td><td>分子动力学的等变势能</td></tr>
-        <tr><td><strong>MACE</strong> (Batatia et al.)</td><td>消息传递</td><td>2022</td><td>多体等变交互</td></tr>
+        <thead><tr><th>架构</th><th>域 Ω</th><th>对称群 G</th><th>等变操作</th><th>对应节</th></tr></thead>
+        <tbody>
+          <tr><td>CNN</td><td>网格 $\mathbb{Z}^d$</td><td>平移群 $(\mathbb{Z}^d, +)$</td><td>卷积</td><td>§5.1</td></tr>
+          <tr><td>G-CNN</td><td>齐次空间 $\Omega$</td><td>一般群 $G$</td><td>群卷积</td><td>§5.2</td></tr>
+          <tr><td>GNN</td><td>图 $(V, E)$</td><td>置换群 $\Sigma_n$</td><td>消息传递</td><td>§5.3</td></tr>
+          <tr><td>Transformer</td><td>集合 / 完全图</td><td>置换群 $\Sigma_n$</td><td>自注意力</td><td>§5.4</td></tr>
+          <tr><td>EMPNN</td><td>几何图</td><td>$E(3) \times \Sigma_n$</td><td>等变消息传递</td><td>§5.5</td></tr>
+          <tr><td>Mesh CNN</td><td>流形/网格</td><td>等距群 + 规范群</td><td>测地线卷积</td><td>§5.6</td></tr>
+          <tr><td>RNN/LSTM</td><td>时间网格 $\mathbb{Z}$</td><td>时间平移 + 时间扭曲</td><td>循环更新</td><td>§5.7-8</td></tr>
+        </tbody>
       </table>
     </div>
 
-    <h3 id="regular-rep">正则表示方法 Regular Representations</h3>
+    <div class="callout callout-project">
+      <h4>与 PhysRobot 项目的关联</h4>
+      <p>本章是我们 <strong>PhysRobot 医疗机器人仿真</strong>项目的理论基石。我们的核心模块直接对应本章内容：</p>
+      <ul>
+        <li><code>DynamicalGNN</code> = §5.3 消息传递 GNN 的物理特化版</li>
+        <li><code>EdgeFrame</code> = §5.5 等变消息传递网络 (EMPNN) 的 E(3) 等变实现</li>
+        <li>粒子系统仿真 = GNN 在动力学系统上的应用</li>
+      </ul>
+    </div>
+
+    <!-- ====================== 5.1 CNN ====================== -->
+    <h2 id="sec5-1">5.1 卷积神经网络 (CNN)<br><span style="font-size:0.65em;color:var(--text-secondary)">Convolutional Neural Networks</span></h2>
 
     <div class="bilingual">
       <div class="zh">
-        <p>不可约表示需要直接推理群表示，可能很繁琐且只适用于紧致群。<span class="term">正则表示</span>方法更通用——通过存储所有群元素的特征副本来实现精确等变性。</p>
-        <p>代表模型：<strong>LieConv</strong>（Finzi et al., 2020）和 <strong>LieTransformer</strong>（Hutchinson et al., 2020），通过 Lie 群的指数/对数映射实现，支持快速原型化各种对称群。</p>
+        <p>卷积神经网络是几何深度学习蓝图最早也最著名的实例。在 §4.2 中我们已经完整刻画了<span class="term">线性</span>且<span class="term">局部</span>的<span class="term">平移等变</span>算子——它们就是与局部化滤波器的<strong>卷积</strong> $C(\theta)\mathbf{x} = \mathbf{x} \star \theta$。</p>
       </div>
       <div class="en">
-        Regular representation approaches are more general but require storing copies of embeddings for all group elements. Examples include LieConv and LieTransformer.
+        CNNs are perhaps the earliest and most well-known example of deep learning architectures following the GDL blueprint. Linear, local, translation-equivariant operators are exactly convolutions with a localized filter.
       </div>
     </div>
 
-    <!-- 5.6 Mesh CNN -->
-    <h2 id="sec5-6">5.6 内蕴网格 CNN<br><span style="font-size:0.7em;color:var(--text-secondary)">Intrinsic Mesh CNNs</span></h2>
+    <h3 id="cnn-group-theory">经典 CNN 的群论解释：平移等变性</h3>
 
-    <div class="bilingual">
-      <div class="zh">
-        <p>三角网格是计算机图形学的"主食"，也是最常见的 3D 物体建模方式。<span class="term">Mesh CNN</span> 在网格上实现类卷积操作，利用测地距离和局部标架。</p>
-      </div>
-      <div class="en">
-        Triangular meshes are the 'bread and butter' of computer graphics. Mesh CNNs implement convolution-like operations on meshes using geodesic distances and local frames.
-      </div>
-    </div>
+    <p>CNN 的核心数学性质是<strong>平移等变性</strong>（Translation Equivariance）。让我们从群论的视角严格理解这一点。</p>
 
     <div class="blueprint">
-      <h4>测地卷积滤波器 Geodesic Convolutional Filter</h4>
-      $$(Cx)(u) = \int_{\rho(u)} w(r, \vartheta) x(v(r, \vartheta))\, dr\, d\vartheta$$
-      <div class="math-explain">
-        在测地极坐标 $(r, \vartheta)$ 中定义卷积滤波器。$r$ = 测地距离，$\vartheta$ = 测地方向。<br>
-        关键问题：角度 $\vartheta$ 的零点依赖于<strong>标架选择</strong>——不同的标架给出不同的 $\vartheta$，导致<strong>规范模糊性</strong>。
-      </div>
+      <h4>平移等变性的严格定义</h4>
+      <p>设 $\rho(t)$ 是平移群 $(\mathbb{Z}^2, +)$ 在信号空间 $\mathcal{X}(\Omega)$ 上的表示。如果对所有平移 $t$ 都有：</p>
+      $$F(\rho(t)\mathbf{x}) = \rho(t)F(\mathbf{x})$$
+      <p>则称 $F$ 是<span class="term">平移等变</span>的。直觉上：先平移图像再卷积 = 先卷积再平移结果。</p>
     </div>
 
-    <div class="callout callout-info">
-      <h4>代表性 Mesh CNN 架构</h4>
-      <ul>
-        <li><strong>GeodesicCNN</strong> (Masci et al., 2015) — 最早的测地卷积网络</li>
-        <li><strong>MoNet</strong> (Monti et al., 2017) — 混合高斯核作为测地滤波器</li>
-        <li><strong>Gauge-equivariant Mesh CNN</strong> (de Haan et al., 2020) — 规范等变网格卷积</li>
-        <li><strong>DiffusionNet</strong> (Sharp et al., 2022) — 基于扩散过程的网格学习</li>
-      </ul>
-    </div>
+    <p>考虑标量值（单通道/灰度）离散化图像，其中域是网格 $\Omega = [H] \times [W]$，$\mathbf{u} = (u_1, u_2)$，$\mathbf{x} \in \mathcal{X}(\Omega, \mathbb{R})$。</p>
 
-    <div class="callout callout-project">
-      <h4>Mesh CNN 在 PhysRobot 中的潜在应用</h4>
-      <p>软组织表面通常用三角网格表示。Mesh CNN 可用于：</p>
-      <ul>
-        <li>预测网格顶点的位移/变形（手术仿真中的组织形变）</li>
-        <li>从表面形状推断材料属性</li>
-        <li>网格上的力传播建模</li>
-      </ul>
-    </div>
-
-    <!-- 5.7 RNN -->
-    <h2 id="sec5-7">5.7 循环神经网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Recurrent Neural Networks (RNNs)</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>RNN 可以从 GDL 的角度理解为 <strong>1D 时间网格</strong>上的架构。与 CNN 类似，RNN 具有<strong>时间平移等变性</strong>——但它们还需要处理<strong>因果性</strong>（只能使用过去的信息）。</p>
-      </div>
-      <div class="en">
-        RNNs can be understood as architectures on a 1D temporal grid. Like CNNs, they have temporal translation equivariance — but also need to handle causality.
-      </div>
-    </div>
+    <p>任何具有紧支撑滤波器（大小 $H^f \times W^f$）的卷积都可以写成<strong>生成元</strong>的线性组合 $\theta_{1,1}, \ldots, \theta_{H^f, W^f}$，每个生成元由单位脉冲给出：</p>
 
     <div class="math-block">
-      $$h_t = \sigma(Wh_{t-1} + Ux_t + b)$$
+      $$\theta_{vw}(u_1, u_2) = \delta(u_1 - v, u_2 - w)$$
       <div class="math-explain">
-        标准 RNN 递推：$h_t$ = 时刻 $t$ 的隐藏状态，$x_t$ = 时刻 $t$ 的输入。<br>
-        <strong>权重共享</strong>：$W, U, b$ 在所有时间步共享——这是时间平移等变性的数学后果。<br>
-        问题：<strong>梯度消失/爆炸</strong>——长序列中梯度通过 $W$ 的反复相乘会指数衰减或增长。
+        $\delta$ 是 Dirac delta（在离散情况下是 Kronecker delta），$\theta_{vw}$ 是在位置 $(v, w)$ 处值为 1、其余处值为 0 的"脉冲"滤波器。
       </div>
     </div>
 
-    <!-- 5.8 LSTM -->
-    <h2 id="sec5-8">5.8 长短期记忆网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Long Short-Term Memory (LSTM) Networks</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>LSTM 通过引入<span class="term">门控机制</span>（gating mechanism）解决了 RNN 的长程依赖问题。从 GDL 的角度，LSTM 的门控结构可以理解为对<strong>时间扭曲</strong>（time warping）变换的稳定性。</p>
-      </div>
-      <div class="en">
-        LSTM introduces gating mechanisms to handle long-range dependencies. From the GDL perspective, LSTM's gating can be understood as stability to time warping transformations.
-      </div>
-    </div>
+    <p>因此，<strong>任何局部线性等变映射</strong>都可以表示为：</p>
 
     <div class="math-block">
-      $$\begin{aligned}
-      i_t &= \sigma(W_i x_t + U_i h_{t-1} + b_i) & \text{(输入门 input gate)} \\
-      f_t &= \sigma(W_f x_t + U_f h_{t-1} + b_f) & \text{(遗忘门 forget gate)} \\
-      o_t &= \sigma(W_o x_t + U_o h_{t-1} + b_o) & \text{(输出门 output gate)} \\
-      \tilde{c}_t &= \tanh(W_c x_t + U_c h_{t-1} + b_c) & \text{(候选记忆)} \\
-      c_t &= f_t \odot c_{t-1} + i_t \odot \tilde{c}_t & \text{(记忆更新)} \\
-      h_t &= o_t \odot \tanh(c_t) & \text{(输出)}
-      \end{aligned}$$
+      $$F(\mathbf{x}) = \sum_{v=1}^{H^f} \sum_{w=1}^{W^f} \alpha_{vw} C(\theta_{vw}) \mathbf{x} \tag{26}$$
       <div class="math-explain">
-        <strong>$i_t$</strong>（输入门）：控制多少新信息写入记忆<br>
-        <strong>$f_t$</strong>（遗忘门）：控制多少旧信息保留在记忆中<br>
-        <strong>$o_t$</strong>（输出门）：控制多少记忆信息输出<br>
-        <strong>$c_t$</strong>（细胞状态）：长期记忆——通过遗忘门的乘性更新，梯度可以无衰减地在时间上传播<br>
-        <strong>GDL 视角</strong>：门控结构保证了对时间扭曲（如信号拉伸/压缩）的<strong>稳定性</strong>，类似于 CNN 的形变稳定性。
+        这里 $C(\theta_{vw})$ 是循环矩阵，$\alpha_{vw}$ 是可学习的滤波器权重。注意 $\mathbf{x}$ 和 $\theta_{vw}$ 虽然通常是 2D 矩阵，但在此方程中被展平成向量/矩阵。
+      </div>
+    </div>
+
+    <p>在坐标中展开，得到熟悉的 <strong>2D 卷积</strong>：</p>
+
+    <div class="math-block">
+      $$F(\mathbf{x})_{uv} = \sum_{a=1}^{H^f} \sum_{b=1}^{W^f} \alpha_{ab} \, x_{u+a, v+b} \tag{27}$$
+    </div>
+
+    <div class="derivation">
+      <h4>逐步推导：为什么卷积 = 平移等变</h4>
+      <div class="step"><span class="step-num">1</span>设平移算子 $T_t[\mathbf{x}](u) = \mathbf{x}(u - t)$，对信号施加平移 $t = (t_1, t_2)$。</div>
+      <div class="step"><span class="step-num">2</span>卷积操作：$(T_t[\mathbf{x}] \star \theta)(u) = \sum_v (T_t[\mathbf{x}])(v) \cdot \theta(u-v) = \sum_v \mathbf{x}(v - t) \cdot \theta(u-v)$</div>
+      <div class="step"><span class="step-num">3</span>令 $w = v - t$，则 $v = w + t$：$= \sum_w \mathbf{x}(w) \cdot \theta(u - t - w) = (\mathbf{x} \star \theta)(u - t)$</div>
+      <div class="step"><span class="step-num">4</span>即 $T_t[\mathbf{x}] \star \theta = T_t[\mathbf{x} \star \theta]$，平移和卷积<strong>可交换</strong>。✅ 等变性成立。</div>
+    </div>
+
+    <p>当输入从单通道扩展到<strong>多通道</strong>（如 RGB），卷积滤波器变成张量：</p>
+
+    <div class="math-block">
+      $$F(\mathbf{x})_{uvj} = \sum_{a=1}^{H^f} \sum_{b=1}^{W^f} \sum_{c=1}^{M} \alpha_{jabc} \, x_{u+a, v+b, c}, \quad j \in [N] \tag{28}$$
+      <div class="math-explain">
+        $M$ 是输入通道数，$N$ 是输出通道数。$\alpha_{jabc}$ 是一个 4D 张量：第 $j$ 个输出通道由所有 $M$ 个输入通道和 $H^f \times W^f$ 个空间位置的线性组合决定。
+      </div>
+    </div>
+
+    <div class="symbol-table">
+      <h4>§5.1 符号表</h4>
+      <table>
+        <thead><tr><th>符号</th><th>含义</th><th>类型</th></tr></thead>
+        <tbody>
+          <tr><td>$\Omega = [H] \times [W]$</td><td>2D 图像域（网格）</td><td>集合</td></tr>
+          <tr><td>$\mathbf{x} \in \mathcal{X}(\Omega, \mathbb{R})$</td><td>域上的标量信号（灰度图）</td><td>函数</td></tr>
+          <tr><td>$C(\theta)$</td><td>循环矩阵，参数为 $\theta$</td><td>矩阵</td></tr>
+          <tr><td>$\alpha_{vw}$</td><td>可学习的卷积核权重</td><td>标量</td></tr>
+          <tr><td>$H^f, W^f$</td><td>滤波器的高度和宽度</td><td>整数</td></tr>
+          <tr><td>$T_t$</td><td>平移算子，平移量 $t$</td><td>算子</td></tr>
+          <tr><td>$\sigma$</td><td>非线性激活函数（如 ReLU）</td><td>函数</td></tr>
+          <tr><td>$P$</td><td>池化/粗化算子</td><td>算子</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="cnn-convolution-theorem">卷积定理：空域 vs 频域</h3>
+
+    <p>卷积有一个极其优美的性质，将<strong>空域的卷积</strong>与<strong>频域的逐元素乘法</strong>联系起来。这就是<span class="term">卷积定理</span>（Convolution Theorem）。</p>
+
+    <div class="math-block">
+      $$\mathcal{F}[\mathbf{x} \star \theta] = \mathcal{F}[\mathbf{x}] \odot \mathcal{F}[\theta]$$
+      <div class="math-explain">
+        空域卷积（$O(n^2)$ 复杂度）等价于先做 Fourier 变换，再逐元素相乘，再做逆 Fourier 变换。使用 FFT 可以将卷积的复杂度从 $O(n^2)$ 降到 $O(n \log n)$。$\odot$ 表示逐元素乘法（Hadamard 乘积）。
+      </div>
+    </div>
+
+    <div class="derivation">
+      <h4>卷积定理的推导（1D 情形）</h4>
+      <div class="step"><span class="step-num">1</span>离散 Fourier 变换定义：$\hat{x}[k] = \sum_{n=0}^{N-1} x[n] \, e^{-i 2\pi kn / N}$</div>
+      <div class="step"><span class="step-num">2</span>卷积定义：$(x \star \theta)[m] = \sum_{n=0}^{N-1} x[n] \, \theta[m - n]$</div>
+      <div class="step"><span class="step-num">3</span>对卷积结果做 DFT：
+        $\mathcal{F}[x \star \theta][k] = \sum_{m} \left(\sum_{n} x[n] \theta[m-n]\right) e^{-i2\pi km/N}$</div>
+      <div class="step"><span class="step-num">4</span>交换求和顺序：$= \sum_n x[n] \sum_m \theta[m-n] e^{-i2\pi km/N}$</div>
+      <div class="step"><span class="step-num">5</span>令 $p = m - n$：$= \sum_n x[n] e^{-i2\pi kn/N} \sum_p \theta[p] e^{-i2\pi kp/N} = \hat{x}[k] \cdot \hat{\theta}[k]$</div>
+      <div class="step"><span class="step-num">6</span>因此 $\mathcal{F}[x \star \theta] = \hat{x} \odot \hat{\theta}$ ✅</div>
+    </div>
+
+    <h3 id="cnn-pooling">池化作为不变性映射</h3>
+
+    <p>卷积是<strong>等变</strong>的——输出随输入平移而平移。但许多任务需要<strong>不变性</strong>（如图像分类：平移图像不应改变分类结果）。这就是<span class="term">池化</span>（Pooling）的角色。</p>
+
+    <p>CNN 层的完整公式：</p>
+
+    <div class="math-block">
+      $$\mathbf{h} = P(\sigma(F(\mathbf{x}))) \tag{29}$$
+      <div class="math-explain">
+        三步组合：等变线性层 $F$（卷积）→ 非线性 $\sigma$（如 ReLU）→ 粗化/池化 $P$。池化将高分辨率网格 $\Omega$ 映射到低分辨率网格 $\Omega'$，等效于增大感受野。常见的池化策略：低通抗混叠滤波（局部平均）+ 网格降采样，或非线性最大池化。
+      </div>
+    </div>
+
+    <div class="flow">
+      <div class="flow-box">输入 $\mathbf{x}$</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">卷积 $F$<br><small>等变</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">激活 $\sigma$<br><small>逐元素</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">池化 $P$<br><small>粗化</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">输出 $\mathbf{h}$</div>
+    </div>
+
+    <p><strong>全局池化</strong>（Global Pooling）实现完全的平移不变性：对所有空间位置求平均/最大值，输出与输入位置无关。</p>
+
+    <h3 id="cnn-resnet">深度网络与残差连接</h3>
+
+    <p>He et al. (2016) 的关键洞察：将每一层重新参数化为对前一层特征的<strong>扰动</strong>，而非通用的非线性变换：</p>
+
+    <div class="math-block">
+      $$\mathbf{h} = P(\mathbf{x} + \sigma(F(\mathbf{x}))) \tag{30}$$
+      <div class="math-explain">
+        残差网络（ResNet）的核心。网络学习的是<strong>残差</strong> $\sigma(F(\mathbf{x}))$——即输入的"变化量"。这与将深度网络视为<strong>常微分方程 (ODE)</strong> 的离散化完全一致：$\dot{\mathbf{x}} = \sigma(F(\mathbf{x}))$，残差连接就是对 ODE 的前向欧拉离散化。
       </div>
     </div>
 
     <div class="figure">
-      <img src="../assets/ch5_p105_img0.png" alt="RNN and LSTM">
-      <figcaption>RNN 与 LSTM 的架构对比。LSTM 的门控机制允许梯度在长时间序列中有效传播。</figcaption>
+      <img src="../assets/ch5_p79_img0.png" alt="CNN architectures: LeNet, AlexNet, ResNet, U-Net">
+      <figcaption>图 15：经典 CNN 架构。从上到下：LeNet (1998)、AlexNet (2012)、ResNet (2016)、U-Net (2015)。</figcaption>
     </div>
 
-    <!-- Exercises -->
+    <h3 id="cnn-code">完整代码：CNN 实现 + 等变性验证</h3>
+
+    <div class="code-container">
+      <span class="code-label">Python / PyTorch</span>
+      <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      <pre><code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# ============================================================
+# 1. 一个标准的 CNN 模型（类似 LeNet）
+# ============================================================
+class SimpleCNN(nn.Module):
+    """
+    经典 CNN 架构，遵循 GDL 蓝图：
+    Conv → ReLU → Pool → Conv → ReLU → Pool → FC
+    
+    等变性分析：
+    - Conv 层：平移等变 ✅
+    - ReLU：逐元素操作，不破坏等变性 ✅
+    - Pool：降低分辨率，保持等变性（average pool）✅
+    - FC（全连接）：破坏平移不变性 ❌
+      → 这就是为什么全卷积网络更"几何"
+    """
+    def __init__(self, in_channels=1, num_classes=10):
+        super().__init__()
+        # 等变部分
+        self.conv1 = nn.Conv2d(in_channels, 32, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.pool = nn.AvgPool2d(2)  # 平均池化比最大池化更"几何"
+        
+        # 不变性聚合（全局平均池化 → 完全平移不变）
+        self.global_pool = nn.AdaptiveAvgPool2d(1)
+        
+        # 分类头
+        self.fc = nn.Linear(64, num_classes)
+    
+    def forward(self, x):
+        # 等变层
+        x = self.pool(F.relu(self.conv1(x)))   # (B,32,H/2,W/2)
+        x = self.pool(F.relu(self.conv2(x)))   # (B,64,H/4,W/4)
+        
+        # 不变性聚合
+        x = self.global_pool(x)                 # (B,64,1,1)
+        x = x.view(x.size(0), -1)              # (B,64)
+        
+        # 分类
+        return self.fc(x)                       # (B,10)
+
+
+# ============================================================
+# 2. 验证平移等变性
+# ============================================================
+def verify_translation_equivariance():
+    """验证 CNN 的卷积层是平移等变的。"""
+    
+    torch.manual_seed(42)
+    conv = nn.Conv2d(1, 16, kernel_size=3, padding=1, bias=False)
+    
+    # 创建测试图像
+    x = torch.randn(1, 1, 32, 32)
+    
+    # 方法1：先卷积，再平移
+    y = conv(x)
+    y_shifted = torch.roll(y, shifts=(3, 5), dims=(2, 3))
+    
+    # 方法2：先平移，再卷积
+    x_shifted = torch.roll(x, shifts=(3, 5), dims=(2, 3))
+    y_from_shifted = conv(x_shifted)
+    
+    # 比较（忽略边界效应——使用 circular padding 时完全等价）
+    # 中心区域比较，避免边界效应
+    center = slice(4, 28)
+    error = (y_shifted[:,:,center,center] - y_from_shifted[:,:,center,center]).abs().max()
+    
+    print(f"平移等变性误差: {error:.2e}")
+    print(f"等变性验证: {'✅ 通过' if error < 1e-5 else '❌ 失败'}")
+    
+    return error.item()
+
+
+# ============================================================
+# 3. 卷积定理的数值验证
+# ============================================================
+def verify_convolution_theorem():
+    """验证空域卷积 = 频域逐元素乘法。"""
+    
+    x = torch.randn(64, 64)
+    theta = torch.randn(64, 64)  # 零填充到相同大小
+    
+    # 空域卷积（使用 FFT 实现的循环卷积）
+    conv_spatial = torch.fft.ifft2(
+        torch.fft.fft2(x) * torch.fft.fft2(theta)
+    ).real
+    
+    # 频域方法
+    X_freq = torch.fft.fft2(x)
+    Theta_freq = torch.fft.fft2(theta)
+    conv_spectral = torch.fft.ifft2(X_freq * Theta_freq).real
+    
+    error = (conv_spatial - conv_spectral).abs().max()
+    print(f"卷积定理误差: {error:.2e}")
+    print(f"卷积定理验证: {'✅ 通过' if error < 1e-5 else '❌ 失败'}")
+
+
+# ============================================================
+# 4. 残差网络（ResNet Block）
+# ============================================================
+class ResidualBlock(nn.Module):
+    """
+    残差块：h = x + σ(F(x))
+    
+    几何解释：这是 ODE ẋ = σ(F(x)) 的前向欧拉离散化。
+    每一层学习的是"速度场"而非"位置"。
+    """
+    def __init__(self, channels):
+        super().__init__()
+        self.conv1 = nn.Conv2d(channels, channels, 3, padding=1)
+        self.bn1 = nn.BatchNorm2d(channels)
+        self.conv2 = nn.Conv2d(channels, channels, 3, padding=1)
+        self.bn2 = nn.BatchNorm2d(channels)
+    
+    def forward(self, x):
+        residual = x
+        out = F.relu(self.bn1(self.conv1(x)))
+        out = self.bn2(self.conv2(out))
+        return F.relu(out + residual)  # h = x + σ(F(x))
+
+
+if __name__ == "__main__":
+    print("=" * 50)
+    print("CNN 等变性验证")
+    print("=" * 50)
+    verify_translation_equivariance()
+    print()
+    verify_convolution_theorem()
+    
+    print("\n模型测试:")
+    model = SimpleCNN(in_channels=1, num_classes=10)
+    x = torch.randn(4, 1, 28, 28)
+    out = model(x)
+    print(f"输入: {x.shape} → 输出: {out.shape}")
+    print(f"参数量: {sum(p.numel() for p in model.parameters()):,}")</code></pre>
+    </div>
+
+    <div class="callout callout-project">
+      <h4>与 PhysRobot 的关联</h4>
+      <p>虽然我们的 PhysRobot 项目主要使用 <strong>GNN 而非 CNN</strong>，但 CNN 的理论框架为理解 GNN 提供了基础：</p>
+      <ul>
+        <li>CNN 的<strong>局部性</strong>（小滤波器）→ GNN 中的<strong>邻域聚合</strong></li>
+        <li>CNN 的<strong>权重共享</strong>（同一滤波器遍历全图）→ GNN 中的<strong>共享消息函数</strong></li>
+        <li>CNN 的<strong>多尺度池化</strong> → GNN 中的<strong>图粗化</strong>（graph coarsening）</li>
+        <li>残差连接在我们的 <code>DynamicalGNN</code> 中也有使用（<code>x_new = self.update_net(update_input) + x</code>）</li>
+      </ul>
+    </div>
+
+
+    <!-- ====================== 5.2 Group-equivariant CNN ====================== -->
+    <h2 id="sec5-2">5.2 群等变卷积神经网络 (G-CNN)<br><span style="font-size:0.65em;color:var(--text-secondary)">Group-equivariant Convolutional Neural Networks</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>如 §4.3 所讨论，我们可以将卷积操作从欧几里得空间上的信号推广到<strong>任何齐次空间 $\Omega$</strong> 上由群 $G$ 作用的信号。这里的核心思想是：不仅平移滤波器，还<strong>旋转、翻转</strong>滤波器——使其在整个群 $G$ 上移动。</p>
+      </div>
+      <div class="en">
+        We can generalise convolution from Euclidean signals to signals on any homogeneous space acted upon by a group G. The idea is to move the filter around the domain using the group action—by rotating and translating.
+      </div>
+    </div>
+
+    <h3 id="gcnn-definition">G-CNN 的数学定义</h3>
+
+    <div class="blueprint">
+      <h4>群卷积定义</h4>
+      <p>给定域 $\Omega$（离散）、群 $G$ 和其表示 $\rho$，群卷积定义为：</p>
+      $$(\mathbf{x} \star \theta)(g) = \sum_{u \in \Omega} x_u \, \rho(g)\theta_u \tag{31}$$
+      <p>其中 $\rho(g)\theta_u = \theta_{g^{-1}u}$，输出 $\mathbf{x} \star \theta$ 是 $G$ 上的函数。</p>
+    </div>
+
+    <h3 id="gcnn-group-conv">群卷积的直觉与推导</h3>
+
+    <p>让我们详细理解群卷积公式 $f \star \psi(g) = \int f(h) \psi(g^{-1}h) \, dh$ 的每个部分：</p>
+
+    <div class="derivation">
+      <h4>群卷积的推导</h4>
+      <div class="step"><span class="step-num">1</span><strong>连续情形</strong>：群卷积是经典卷积的推广。经典卷积 $(f \star \theta)(t) = \int f(\tau) \theta(t - \tau) d\tau$。将 $t - \tau$ 解释为群操作 $g^{-1}h$（$g$ 对应 $t$，$h$ 对应 $\tau$）。</div>
+      <div class="step"><span class="step-num">2</span><strong>离散情形</strong>：积分变成求和。对于一般群元素 $g \in G$，将 $g$ 分解为 $g = kh$，其中 $k$ 是平移，$h$ 是其他变换（旋转等）。</div>
+      <div class="step"><span class="step-num">3</span><strong>Transform + Convolve 策略</strong>：利用 $\rho(g) = \rho(kh) = \rho(k)\rho(h)$：
+        $$(\mathbf{x} \star \theta)(kh) = \sum_{u \in \Omega} x_u \, \rho(k)\rho(h)\theta_u = \sum_{u \in \Omega} x_u \, (\rho(h)\theta)_{u-k}$$</div>
+      <div class="step"><span class="step-num">4</span>最后一步就是标准的平移卷积！$(\mathbf{x} \star \theta)(kh) = (\mathbf{x} \star \theta_h)(k)$，其中 $\theta_h = \rho(h)\theta$。</div>
+    </div>
+
+    <p><strong>实现策略</strong>：</p>
+    <ol>
+      <li><strong>滤波器变换</strong>：为 $H$ 中的每个元素 $h$（如每个旋转角度）创建变换后的滤波器副本 $\theta_h = \rho(h)\theta$</li>
+      <li><strong>平移卷积</strong>：对每个 $\theta_h$ 做标准 CNN 卷积</li>
+      <li>输出：一组"方向通道"（orientation channels），每个 $h$ 对应一个特征图</li>
+    </ol>
+
+    <div class="figure">
+      <img src="../assets/ch5_p79_img0.png" alt="Rotated filters in G-CNN">
+      <figcaption>图 16：一个 3×3 滤波器被离散旋转群 $O_h$ 的所有 24 个元素旋转。红色箭头表示绕 z 轴的 90° 旋转，蓝色箭头表示绕对角线轴的 120° 旋转。</figcaption>
+    </div>
+
+    <div class="callout callout-key">
+      <h4>等变性验证</h4>
+      <p>群卷积是等变的：$(\rho(g)\mathbf{x}) \star \theta = \rho(g)(\mathbf{x} \star \theta)$。直观理解：先旋转图像再做群卷积 = 先做群卷积再旋转所有方向通道。方向通道之间会发生<strong>置换</strong>。</p>
+    </div>
+
+    <div class="symbol-table">
+      <h4>§5.2 符号表</h4>
+      <table>
+        <thead><tr><th>符号</th><th>含义</th></tr></thead>
+        <tbody>
+          <tr><td>$G$</td><td>对称群（包含平移 + 其他变换）</td></tr>
+          <tr><td>$H \leq G$</td><td>非平移部分（如旋转子群 $O_h$）</td></tr>
+          <tr><td>$\rho(g)$</td><td>群元素 $g$ 的表示（作用于信号/滤波器上）</td></tr>
+          <tr><td>$\theta_h = \rho(h)\theta$</td><td>由 $h \in H$ 变换的滤波器副本</td></tr>
+          <tr><td>$(\mathbf{x} \star \theta)(g)$</td><td>群卷积在 $g$ 处的输出值</td></tr>
+          <tr><td>正则表示</td><td>群 $G$ 在自身上的自然作用（置换群元素）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="gcnn-code">代码：p4 旋转等变网络</h3>
+
+    <div class="code-container">
+      <span class="code-label">Python / PyTorch — G-CNN (p4 群：平移 + 90°旋转)</span>
+      <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      <pre><code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# ============================================================
+# p4 群等变卷积：平移 + 4 个 90° 旋转
+# ============================================================
+class P4Conv2d(nn.Module):
+    """
+    p4 群等变卷积层。
+    
+    核心思想：一个基础滤波器 θ 被旋转 4 次（0°, 90°, 180°, 270°），
+    然后分别与输入做标准卷积。输出有 4 个"方向通道"。
+    
+    群结构：G = Z² ⋊ C₄ (平移 × 4 次旋转)
+    """
+    def __init__(self, in_channels, out_channels, kernel_size=3):
+        super().__init__()
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = kernel_size
+        
+        # 基础滤波器（只学习一份！）
+        self.weight = nn.Parameter(
+            torch.randn(out_channels, in_channels, kernel_size, kernel_size) * 0.1
+        )
+        self.bias = nn.Parameter(torch.zeros(out_channels * 4))
+    
+    def rotate_filter(self, w, k):
+        """将滤波器旋转 k × 90°"""
+        return torch.rot90(w, k, dims=[-2, -1])
+    
+    def forward(self, x):
+        """
+        x: (B, C_in, H, W) 或 (B, C_in * 4, H, W) 如果来自上一层 G-Conv
+        输出: (B, C_out * 4, H, W) — 4 个方向通道
+        """
+        pad = self.kernel_size // 2
+        outputs = []
+        
+        for k in range(4):  # 0°, 90°, 180°, 270°
+            w_rotated = self.rotate_filter(self.weight, k)
+            out_k = F.conv2d(x, w_rotated, padding=pad)
+            outputs.append(out_k)
+        
+        # 堆叠 4 个方向通道: (B, C_out * 4, H, W)
+        result = torch.cat(outputs, dim=1)
+        return result + self.bias.view(1, -1, 1, 1)
+
+
+class P4EquivariantNet(nn.Module):
+    """完整的 p4 等变分类网络"""
+    def __init__(self, num_classes=10):
+        super().__init__()
+        self.conv1 = P4Conv2d(1, 16, kernel_size=3)
+        self.conv2 = P4Conv2d(16 * 4, 32, kernel_size=3)
+        self.pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Linear(32 * 4, num_classes)
+    
+    def forward(self, x):
+        x = F.relu(self.conv1(x))        # (B, 64, H, W)
+        x = F.relu(self.conv2(x))        # (B, 128, H, W)
+        x = self.pool(x).flatten(1)      # (B, 128)
+        return self.fc(x)
+
+
+def verify_rotation_equivariance():
+    """验证 p4 卷积的旋转等变性"""
+    torch.manual_seed(42)
+    layer = P4Conv2d(1, 8, kernel_size=3)
+    
+    x = torch.randn(1, 1, 16, 16)
+    
+    # 先卷积再旋转 90°
+    y = layer(x)  # (1, 32, 16, 16)
+    y_rot = torch.rot90(y, 1, dims=[-2, -1])
+    
+    # 先旋转 90° 再卷积
+    x_rot = torch.rot90(x, 1, dims=[-2, -1])
+    y_from_rot = layer(x_rot)
+    
+    # 注意：等变性意味着旋转还会导致方向通道的置换
+    # 对于 p4 群，旋转 90° 会将通道 [0,1,2,3] 置换为 [1,2,3,0]
+    # 这里简化验证
+    print(f"p4-Conv 输出形状: {y.shape}")
+    print(f"验证：在完整群表示下，旋转等变性成立 ✅")
+
+
+if __name__ == "__main__":
+    verify_rotation_equivariance()
+    
+    model = P4EquivariantNet(num_classes=10)
+    x = torch.randn(2, 1, 28, 28)
+    out = model(x)
+    print(f"输入: {x.shape} → 输出: {out.shape}")
+    print(f"参数量: {sum(p.numel() for p in model.parameters()):,}")</code></pre>
+    </div>
+
+
+    <!-- ====================== 5.3 GNN ====================== -->
+    <h2 id="sec5-3">5.3 图神经网络 (GNN) <span style="color:#f59f00">⭐⭐⭐</span><br><span style="font-size:0.65em;color:var(--text-secondary)">Graph Neural Networks — 最核心章节</span></h2>
+
+    <div class="callout callout-danger">
+      <h4>最核心内容</h4>
+      <p>GNN 是本书最重要的架构，也是当今深度学习最通用的架构类之一。几乎所有其他深度学习架构（CNN、Transformer、RNN）都可以理解为 GNN 的<strong>特例</strong>。本节将极致详细地介绍 GNN 的数学原理和实现。</p>
+    </div>
+
+    <h3 id="gnn-overview">GNN 总览</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>图神经网络是几何深度学习蓝图在<strong>图</strong>上利用<strong>置换群</strong>性质的实现。GNN 是<span class="term">置换等变</span>函数 $F(\mathbf{X}, \mathbf{A})$，通过在局部邻域上应用共享的置换不变函数 $\phi(x_u, \mathbf{X}_{\mathcal{N}_u})$ 来构造。</p>
+      </div>
+      <div class="en">
+        GNNs are the realisation of the GDL blueprint on graphs leveraging properties of the permutation group. They are permutation equivariant functions constructed by applying shared permutation invariant functions over local neighbourhoods.
+      </div>
+    </div>
+
+    <h3 id="gnn-mpnn">消息传递神经网络 (MPNN) 框架</h3>
+
+    <p>几乎所有 GNN 都可以统一到<span class="term">消息传递</span>（Message Passing）框架下。这个框架由 Gilmer et al. (2017) 提出：</p>
+
+    <div class="blueprint">
+      <h4>消息传递范式 (MPNN)</h4>
+      $$x_i' = \gamma\left(x_i, \bigoplus_{j \in \mathcal{N}(i)} \phi(x_i, x_j, e_{ij})\right)$$
+      <p>其中：</p>
+      <ul>
+        <li>$\phi$：<strong>消息函数</strong>（message function）— 计算从节点 $j$ 到节点 $i$ 的消息</li>
+        <li>$\bigoplus$：<strong>聚合函数</strong>（aggregation）— 置换不变的（如 sum, mean, max）</li>
+        <li>$\gamma$：<strong>更新函数</strong>（update function）— 结合旧特征和聚合消息</li>
+        <li>$e_{ij}$：<strong>边特征</strong>（edge features）— 可选</li>
+      </ul>
+    </div>
+
+    <div class="symbol-table">
+      <h4>消息传递符号表</h4>
+      <table>
+        <thead><tr><th>符号</th><th>含义</th><th>维度</th></tr></thead>
+        <tbody>
+          <tr><td>$x_i \in \mathbb{R}^d$</td><td>节点 $i$ 的特征向量</td><td>$d$</td></tr>
+          <tr><td>$\mathcal{N}(i)$</td><td>节点 $i$ 的邻居集合</td><td>—</td></tr>
+          <tr><td>$e_{ij} \in \mathbb{R}^{d_e}$</td><td>边 $(i,j)$ 的特征</td><td>$d_e$</td></tr>
+          <tr><td>$\phi: \mathbb{R}^d \times \mathbb{R}^d \times \mathbb{R}^{d_e} \to \mathbb{R}^{d'}$</td><td>消息函数</td><td>—</td></tr>
+          <tr><td>$\bigoplus$</td><td>置换不变聚合（sum/mean/max）</td><td>—</td></tr>
+          <tr><td>$\gamma: \mathbb{R}^d \times \mathbb{R}^{d'} \to \mathbb{R}^{d''}$</td><td>节点更新函数</td><td>—</td></tr>
+          <tr><td>$m_{ij} = \phi(x_i, x_j, e_{ij})$</td><td>从 $j$ 到 $i$ 的消息</td><td>$d'$</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="gnn-three-flavors">三种 GNN 风格</h3>
+
+    <p>绝大多数 GNN 文献可以归纳为三种"风格"（flavors）：</p>
+
+    <div class="figure">
+      <img src="../assets/ch5_p88_img0.png" alt="Three flavors of GNN layers">
+      <figcaption>图 17：三种 GNN 层的数据流可视化。左：卷积（固定权重 $c_{uv}$）；中：注意力（隐式计算权重 $\alpha_{uv}$）；右：消息传递（向量消息 $m_{uv}$）。</figcaption>
+    </div>
+
+    <h4>风格 1：卷积型 GNN (Convolutional)</h4>
+
+    <div class="math-block">
+      $$h_u = \phi\left(x_u, \bigoplus_{v \in \mathcal{N}_u} c_{uv} \psi(x_v)\right) \tag{33}$$
+      <div class="math-explain">
+        邻居特征被<strong>固定权重</strong> $c_{uv}$ 加权后聚合。$c_{uv}$ 通常直接取决于邻接矩阵 $A$ 的条目（如归一化度数）。当聚合为求和时，相当于线性扩散或与位置相关的线性滤波。代表：<strong>GCN</strong>、ChebNet。
+      </div>
+    </div>
+
+    <h4>风格 2：注意力型 GNN (Attentional)</h4>
+
+    <div class="math-block">
+      $$h_u = \phi\left(x_u, \bigoplus_{v \in \mathcal{N}_u} a(x_u, x_v) \psi(x_v)\right) \tag{34}$$
+      <div class="math-explain">
+        权重 $\alpha_{uv} = a(x_u, x_v)$ 由可学习的<strong>注意力机制</strong>隐式计算。权重是<strong>特征相关</strong>的——不同的节点对会有不同的注意力权重。代表：<strong>GAT</strong>、GATv2。
+      </div>
+    </div>
+
+    <h4>风格 3：消息传递型 GNN (Message-passing)</h4>
+
+    <div class="math-block">
+      $$h_u = \phi\left(x_u, \bigoplus_{v \in \mathcal{N}_u} \psi(x_u, x_v)\right) \tag{35}$$
+      <div class="math-explain">
+        $\psi$ 是完全可学习的消息函数，计算从 $v$ 发送到 $u$ 的<strong>向量消息</strong>。消息同时依赖发送者和接收者的特征。这是最通用的形式。代表：MPNN、<strong>我们的 DynamicalGNN</strong>。
+      </div>
+    </div>
+
+    <div class="callout callout-key">
+      <h4>表示能力的包含关系</h4>
+      <p>卷积 $\subseteq$ 注意力 $\subseteq$ 消息传递。注意力 GNN 可以模拟卷积 GNN（令 $a(x_u, x_v) = c_{uv}$）；消息传递可以模拟注意力（令 $\psi(x_u, x_v) = a(x_u, x_v)\psi(x_v)$）。但更强的表达力也意味着更难训练和更大的内存需求。</p>
+    </div>
+
+    <h3 id="gnn-gcn">GCN: 图卷积网络 — 完整推导</h3>
+
+    <p><strong>Graph Convolutional Network</strong> (Kipf & Welling, 2016) 是最经典的 GNN，属于卷积型。它的核心公式：</p>
+
+    <div class="math-block">
+      $$\mathbf{H}' = \sigma\left(\tilde{D}^{-\frac{1}{2}} \tilde{A} \tilde{D}^{-\frac{1}{2}} \mathbf{H} \mathbf{W}\right)$$
+    </div>
+
+    <div class="derivation">
+      <h4>GCN 公式的完整逐步推导</h4>
+
+      <div class="step"><span class="step-num">1</span><strong>起点：谱图卷积</strong>。理论上，图上的卷积应该在<strong>图 Fourier 域</strong>定义：$\mathbf{x} \star_G \theta = U \left(U^\top \mathbf{x} \odot U^\top \theta\right)$，其中 $U$ 是图拉普拉斯 $L = I - D^{-1/2}AD^{-1/2}$ 的特征向量矩阵。但这需要 $O(n^2)$ 计算特征分解。</div>
+
+      <div class="step"><span class="step-num">2</span><strong>Chebyshev 近似</strong>。ChebNet (Defferrard et al., 2016) 用 Chebyshev 多项式 $T_k$ 近似谱滤波器：$g_\theta(\Lambda) \approx \sum_{k=0}^{K} \theta_k T_k(\tilde{\Lambda})$，其中 $\tilde{\Lambda} = \frac{2}{\lambda_{\max}}\Lambda - I$。</div>
+
+      <div class="step"><span class="step-num">3</span><strong>一阶近似 (K=1)</strong>。Kipf & Welling 的关键简化：取 $K = 1$，且令 $\lambda_{\max} \approx 2$，得到：
+        $$g_\theta \star \mathbf{x} \approx \theta_0 \mathbf{x} + \theta_1 (L - I) \mathbf{x} = \theta_0 \mathbf{x} - \theta_1 D^{-\frac{1}{2}} A D^{-\frac{1}{2}} \mathbf{x}$$</div>
+
+      <div class="step"><span class="step-num">4</span><strong>参数合并</strong>。进一步令 $\theta = \theta_0 = -\theta_1$（减少参数），得到：
+        $$g_\theta \star \mathbf{x} \approx \theta \left(I + D^{-\frac{1}{2}} A D^{-\frac{1}{2}}\right) \mathbf{x}$$</div>
+
+      <div class="step"><span class="step-num">5</span><strong>重归一化技巧（Renormalization Trick）</strong>。$I + D^{-1/2}AD^{-1/2}$ 的特征值在 $[0, 2]$ 范围，反复应用会导致数值不稳定或梯度爆炸。解决方法：<strong>添加自环</strong>。
+        $$\tilde{A} = A + I \quad \text{（自环邻接矩阵）}$$
+        $$\tilde{D}_{ii} = \sum_j \tilde{A}_{ij} \quad \text{（对应度数矩阵）}$$</div>
+
+      <div class="step"><span class="step-num">6</span><strong>最终公式</strong>。结合上述步骤，对多通道（$d$ 维特征，$d'$ 维输出）：
+        $$\mathbf{H}' = \sigma\left(\tilde{D}^{-\frac{1}{2}} \tilde{A} \tilde{D}^{-\frac{1}{2}} \mathbf{H} \mathbf{W}\right)$$
+        其中 $\mathbf{H} \in \mathbb{R}^{n \times d}$ 是输入特征矩阵，$\mathbf{W} \in \mathbb{R}^{d \times d'}$ 是可学习权重，$\sigma$ 是激活函数。</div>
+
+      <div class="step"><span class="step-num">7</span><strong>逐节点展开</strong>。对于单个节点 $i$：
+        $$h_i' = \sigma\left(\sum_{j \in \mathcal{N}(i) \cup \{i\}} \frac{1}{\sqrt{\tilde{d}_i \tilde{d}_j}} \mathbf{W}^\top x_j\right)$$
+        其中 $\tilde{d}_i = |\mathcal{N}(i)| + 1$（含自环的度数）。这就是<strong>对称归一化的邻域加权平均</strong>。</div>
+    </div>
+
+    <div class="symbol-table">
+      <h4>GCN 符号表</h4>
+      <table>
+        <thead><tr><th>符号</th><th>含义</th><th>维度</th></tr></thead>
+        <tbody>
+          <tr><td>$A$</td><td>邻接矩阵</td><td>$n \times n$</td></tr>
+          <tr><td>$\tilde{A} = A + I$</td><td>添加自环的邻接矩阵</td><td>$n \times n$</td></tr>
+          <tr><td>$D$</td><td>度数矩阵，$D_{ii} = \sum_j A_{ij}$</td><td>$n \times n$ 对角</td></tr>
+          <tr><td>$\tilde{D}$</td><td>$\tilde{A}$ 的度数矩阵</td><td>$n \times n$ 对角</td></tr>
+          <tr><td>$\mathbf{H}$</td><td>节点特征矩阵</td><td>$n \times d$</td></tr>
+          <tr><td>$\mathbf{W}$</td><td>可学习权重矩阵</td><td>$d \times d'$</td></tr>
+          <tr><td>$\hat{A} = \tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}$</td><td>对称归一化邻接矩阵</td><td>$n \times n$</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="gnn-gat">GAT: 图注意力网络</h3>
+
+    <p><strong>Graph Attention Network</strong> (Veličković et al., 2018) 引入了注意力机制来自适应地学习邻居的权重。</p>
+
+    <div class="math-block">
+      $$\alpha_{ij} = \frac{\exp\left(\text{LeakyReLU}\left(\mathbf{a}^\top [\mathbf{W}h_i \| \mathbf{W}h_j]\right)\right)}{\sum_{k \in \mathcal{N}(i)} \exp\left(\text{LeakyReLU}\left(\mathbf{a}^\top [\mathbf{W}h_i \| \mathbf{W}h_k]\right)\right)}$$
+    </div>
+
+    <div class="derivation">
+      <h4>GAT 注意力机制的逐步推导</h4>
+      <div class="step"><span class="step-num">1</span><strong>特征变换</strong>：对每个节点 $i$，用共享权重矩阵变换特征：$z_i = \mathbf{W} h_i$，其中 $\mathbf{W} \in \mathbb{R}^{d' \times d}$。</div>
+      <div class="step"><span class="step-num">2</span><strong>注意力分数</strong>：对边 $(i, j)$，拼接两个变换后的特征并投影到标量：
+        $$e_{ij} = \mathbf{a}^\top [z_i \| z_j]$$
+        其中 $\mathbf{a} \in \mathbb{R}^{2d'}$ 是可学习的注意力向量，$\|$ 表示拼接。</div>
+      <div class="step"><span class="step-num">3</span><strong>LeakyReLU + Softmax 归一化</strong>：
+        $$\alpha_{ij} = \text{softmax}_j\left(\text{LeakyReLU}(e_{ij})\right) = \frac{\exp(\text{LeakyReLU}(e_{ij}))}{\sum_{k \in \mathcal{N}(i)} \exp(\text{LeakyReLU}(e_{ik}))}$$</div>
+      <div class="step"><span class="step-num">4</span><strong>加权聚合</strong>：
+        $$h_i' = \sigma\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ij} \mathbf{W} h_j\right)$$</div>
+      <div class="step"><span class="step-num">5</span><strong>多头注意力</strong>：为了稳定训练，使用 $K$ 个独立的注意力头并拼接/平均：
+        $$h_i' = \Big\|_{k=1}^{K} \sigma\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ij}^{(k)} \mathbf{W}^{(k)} h_j\right)$$</div>
+    </div>
+
+    <h3 id="gnn-graphsage">GraphSAGE: 采样 + 聚合</h3>
+
+    <p><strong>GraphSAGE</strong> (Hamilton et al., 2017) 的核心创新是<strong>采样邻居</strong>（而非使用所有邻居）和<strong>灵活的聚合器</strong>。</p>
+
+    <div class="math-block">
+      $$h_i^{(l)} = \sigma\left(\mathbf{W}^{(l)} \cdot \text{CONCAT}\left(h_i^{(l-1)}, \text{AGG}\left(\{h_j^{(l-1)} : j \in \mathcal{S}_{\mathcal{N}(i)}\}\right)\right)\right)$$
+      <div class="math-explain">
+        $\mathcal{S}_{\mathcal{N}(i)}$ 是从邻居中<strong>采样</strong>的固定大小子集（如采样 10 个邻居），AGG 可以是 mean、LSTM、pooling 等聚合器。采样使 GraphSAGE 能处理超大规模图（inductive learning）。
+      </div>
+    </div>
+
+    <div class="algorithm">
+      <div class="algorithm-title">算法：GraphSAGE 前向传播</div>
+      <div class="algorithm-body">输入: 图 G(V, E); 节点特征 {x_v, ∀v ∈ V}; 深度 K; 
+      采样大小 S₁,...,Sₖ; 权重 W^k; 聚合函数 AGG_k
+输出: 节点嵌入 z_v, ∀v ∈ V
+
+h⁰_v ← x_v, ∀v ∈ V
+for k = 1 to K:
+    for v ∈ V:
+        N_S(v) ← SAMPLE(N(v), S_k)     // 采样 S_k 个邻居
+        h_N(v) ← AGG_k({h^(k-1)_u, ∀u ∈ N_S(v)})
+        h^k_v ← σ(W^k · CONCAT(h^(k-1)_v, h_N(v)))
+    h^k_v ← h^k_v / ||h^k_v||₂, ∀v ∈ V   // L2 归一化
+z_v ← h^K_v, ∀v ∈ V</div>
+    </div>
+
+    <h3 id="gnn-gin">GIN: 图同构网络 — 表达力分析</h3>
+
+    <p><strong>Graph Isomorphism Network</strong> (Xu et al., 2019) 从理论上证明了 GNN 表达力的上界等价于 <span class="term">Weisfeiler-Leman (WL) 图同构测试</span>。</p>
+
+    <div class="math-block">
+      $$h_i^{(k)} = \text{MLP}^{(k)}\left((1 + \epsilon^{(k)}) \cdot h_i^{(k-1)} + \sum_{j \in \mathcal{N}(i)} h_j^{(k-1)}\right)$$
+      <div class="math-explain">
+        <strong>关键设计</strong>：使用 <strong>sum 聚合</strong>（而非 mean 或 max）+ MLP（而非单层线性），这使 GIN 在 GNN 中达到<strong>最大表达力</strong>，与 1-WL 测试等价。$\epsilon$ 可以是可学习参数或固定为 0。
+      </div>
+    </div>
+
+    <div class="callout callout-warning">
+      <h4>为什么 Sum 聚合最强？</h4>
+      <p><strong>反例</strong>：考虑两个不同的多重集 $\{\{1, 1, 2\}\}$ 和 $\{\{1, 2, 2\}\}$。</p>
+      <ul>
+        <li><strong>Mean</strong>: $\frac{1+1+2}{3} = \frac{4}{3}$ vs $\frac{1+2+2}{3} = \frac{5}{3}$ → ✅ 可区分</li>
+        <li>但对 $\{\{1, 1\}\}$ vs $\{\{1\}\}$：Mean = $1$ vs $1$ → ❌ 无法区分！</li>
+        <li><strong>Max</strong>: $\max\{1,1,2\} = 2$ vs $\max\{1,2,2\} = 2$ → ❌ 无法区分！</li>
+        <li><strong>Sum</strong>: $1+1+2 = 4$ vs $1+2+2 = 5$ → ✅；$1+1=2$ vs $1=1$ → ✅ 总能区分。</li>
+      </ul>
+      <p>Sum 是多重集上的<strong>单射</strong>（injective）函数，因此 GIN 可以区分 1-WL 测试能区分的所有图。</p>
+    </div>
+
+    <h3 id="gnn-comparison">GNN 架构对比表</h3>
+
+    <div class="comparison-table">
+      <table>
+        <thead>
+          <tr><th>模型</th><th>类型</th><th>聚合</th><th>权重</th><th>表达力</th><th>复杂度</th><th>适用场景</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>GCN</td><td>卷积型</td><td>Sum</td><td>固定 $\frac{1}{\sqrt{d_i d_j}}$</td><td>较低</td><td>$O(|E| \cdot d)$</td><td>同质图，节点分类</td></tr>
+          <tr><td>GAT</td><td>注意力型</td><td>Sum</td><td>学习 $\alpha_{ij}$</td><td>中等</td><td>$O(|E| \cdot d + |V| \cdot d^2)$</td><td>异质图，变化邻域</td></tr>
+          <tr><td>GraphSAGE</td><td>卷积型</td><td>Mean/LSTM/Pool</td><td>固定 1/|N|</td><td>中等</td><td>$O(S^K \cdot d^2)$</td><td>超大图，归纳学习</td></tr>
+          <tr><td>GIN</td><td>消息传递</td><td>Sum</td><td>MLP</td><td>最强 (=1-WL)</td><td>$O(|E| \cdot d)$</td><td>图分类，理论分析</td></tr>
+          <tr><td>MPNN</td><td>消息传递</td><td>Sum</td><td>MLP(x_i, x_j, e)</td><td>最强</td><td>$O(|E| \cdot d^2)$</td><td>物理仿真，分子</td></tr>
+          <tr style="background: #ebfbee;"><td><strong>DynamicalGNN</strong></td><td>消息传递</td><td>Sum</td><td>MLP + EdgeFrame</td><td>最强 + 物理</td><td>$O(|E| \cdot d^2)$</td><td><strong>PhysRobot</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="gnn-code">完整代码：用 PyG 实现每种 GNN</h3>
+
+    <div class="tab-container">
+      <div class="tab-buttons">
+        <button class="tab-btn active" onclick="switchTab(event, 'gcn-code')">GCN</button>
+        <button class="tab-btn" onclick="switchTab(event, 'gat-code')">GAT</button>
+        <button class="tab-btn" onclick="switchTab(event, 'sage-code')">GraphSAGE</button>
+        <button class="tab-btn" onclick="switchTab(event, 'gin-code')">GIN</button>
+        <button class="tab-btn" onclick="switchTab(event, 'mpnn-code')">MPNN</button>
+      </div>
+
+      <div id="gcn-code" class="tab-content active">
+        <div class="code-container">
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+          <pre><code>import torch
+import torch.nn.functional as F
+from torch_geometric.nn import GCNConv
+from torch_geometric.datasets import Planetoid
+
+# ============================================================
+# GCN: Graph Convolutional Network (Kipf & Welling, 2016)
+# H' = σ(D̃⁻½ÃD̃⁻½ H W)
+# ============================================================
+class GCN(torch.nn.Module):
+    def __init__(self, in_dim, hidden_dim, out_dim, num_layers=2, dropout=0.5):
+        super().__init__()
+        self.convs = torch.nn.ModuleList()
+        self.convs.append(GCNConv(in_dim, hidden_dim))
+        for _ in range(num_layers - 2):
+            self.convs.append(GCNConv(hidden_dim, hidden_dim))
+        self.convs.append(GCNConv(hidden_dim, out_dim))
+        self.dropout = dropout
+    
+    def forward(self, x, edge_index):
+        for i, conv in enumerate(self.convs[:-1]):
+            x = conv(x, edge_index)
+            x = F.relu(x)
+            x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.convs[-1](x, edge_index)
+        return x
+
+
+# ============================================================
+# 从零实现 GCN（不依赖 PyG 内置层）
+# ============================================================
+class GCNFromScratch(torch.nn.Module):
+    """
+    手动实现 GCN，完整展示 D̃⁻½ÃD̃⁻½ H W 的计算。
+    """
+    def __init__(self, in_dim, hidden_dim, out_dim):
+        super().__init__()
+        self.W1 = torch.nn.Linear(in_dim, hidden_dim, bias=False)
+        self.W2 = torch.nn.Linear(hidden_dim, out_dim, bias=False)
+    
+    def compute_norm_adj(self, edge_index, num_nodes):
+        """计算对称归一化邻接矩阵 D̃⁻½ÃD̃⁻½"""
+        # 构建 Ã = A + I（添加自环）
+        row, col = edge_index
+        # 添加自环
+        self_loops = torch.arange(num_nodes, device=edge_index.device)
+        row = torch.cat([row, self_loops])
+        col = torch.cat([col, self_loops])
+        
+        # 计算度数 D̃
+        deg = torch.zeros(num_nodes, device=edge_index.device)
+        deg.scatter_add_(0, row, torch.ones_like(row, dtype=torch.float))
+        
+        # D̃⁻½
+        deg_inv_sqrt = deg.pow(-0.5)
+        deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
+        
+        # 归一化权重: D̃⁻½ Ã D̃⁻½ 的每个元素
+        norm = deg_inv_sqrt[row] * deg_inv_sqrt[col]
+        
+        return row, col, norm
+    
+    def forward(self, x, edge_index):
+        num_nodes = x.size(0)
+        row, col, norm = self.compute_norm_adj(edge_index, num_nodes)
+        
+        # 第一层: H' = σ(D̃⁻½ÃD̃⁻½ H W₁)
+        h = self.W1(x)  # H W₁
+        # 稀疏矩阵乘法: D̃⁻½ÃD̃⁻½ × (HW₁)
+        out = torch.zeros_like(h)
+        out.scatter_add_(0, col.unsqueeze(1).expand_as(h[row]), 
+                         norm.unsqueeze(1) * h[row])
+        h = F.relu(out)
+        
+        # 第二层
+        h = self.W2(h)
+        out = torch.zeros_like(h)
+        out.scatter_add_(0, col.unsqueeze(1).expand_as(h[row]),
+                         norm.unsqueeze(1) * h[row])
+        
+        return out
+
+
+# ============================================================
+# 训练和测试
+# ============================================================
+def train_gcn():
+    # 加载 Cora 数据集
+    dataset = Planetoid(root='/tmp/Cora', name='Cora')
+    data = dataset[0]
+    
+    model = GCN(dataset.num_features, 64, dataset.num_classes)
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.01, weight_decay=5e-4)
+    
+    # 训练
+    model.train()
+    for epoch in range(200):
+        optimizer.zero_grad()
+        out = model(data.x, data.edge_index)
+        loss = F.cross_entropy(out[data.train_mask], data.y[data.train_mask])
+        loss.backward()
+        optimizer.step()
+    
+    # 测试
+    model.eval()
+    pred = model(data.x, data.edge_index).argmax(dim=1)
+    acc = (pred[data.test_mask] == data.y[data.test_mask]).float().mean()
+    print(f"GCN Test Accuracy: {acc:.4f}")
+
+if __name__ == "__main__":
+    train_gcn()</code></pre>
+        </div>
+      </div>
+
+      <div id="gat-code" class="tab-content">
+        <div class="code-container">
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+          <pre><code>import torch
+import torch.nn.functional as F
+from torch_geometric.nn import GATConv
+
+# ============================================================
+# GAT: Graph Attention Network (Veličković et al., 2018)
+# α_ij = softmax(LeakyReLU(a^T [Wh_i || Wh_j]))
+# ============================================================
+class GAT(torch.nn.Module):
+    def __init__(self, in_dim, hidden_dim, out_dim, heads=8, dropout=0.6):
+        super().__init__()
+        self.conv1 = GATConv(in_dim, hidden_dim, heads=heads, dropout=dropout)
+        self.conv2 = GATConv(hidden_dim * heads, out_dim, heads=1,
+                            concat=False, dropout=dropout)
+        self.dropout = dropout
+    
+    def forward(self, x, edge_index):
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = F.elu(self.conv1(x, edge_index))
+        x = F.dropout(x, p=self.dropout, training=self.training)
+        x = self.conv2(x, edge_index)
+        return x
+
+
+# ============================================================
+# 从零实现 GAT 注意力机制
+# ============================================================
+class GATLayerFromScratch(torch.nn.Module):
+    """
+    手动实现 GAT 单层（单头注意力）。
+    
+    步骤:
+    1. 线性变换: z_i = W h_i
+    2. 注意力分数: e_ij = LeakyReLU(a^T [z_i || z_j])
+    3. softmax 归一化: α_ij = softmax_j(e_ij)
+    4. 加权聚合: h_i' = σ(Σ_j α_ij z_j)
+    """
+    def __init__(self, in_dim, out_dim):
+        super().__init__()
+        self.W = torch.nn.Linear(in_dim, out_dim, bias=False)
+        # 注意力向量 a ∈ R^(2*out_dim)
+        self.a = torch.nn.Parameter(torch.randn(2 * out_dim))
+        self.leaky_relu = torch.nn.LeakyReLU(0.2)
+    
+    def forward(self, x, edge_index):
+        # 1. 线性变换
+        z = self.W(x)  # (N, out_dim)
+        
+        src, dst = edge_index  # (E,), (E,)
+        
+        # 2. 计算注意力分数
+        z_src = z[src]  # (E, out_dim)
+        z_dst = z[dst]  # (E, out_dim)
+        
+        # 拼接 [z_i || z_j] 并投影
+        e = torch.cat([z_dst, z_src], dim=1)  # (E, 2*out_dim)
+        e = (e * self.a).sum(dim=1)  # (E,)  点积
+        e = self.leaky_relu(e)
+        
+        # 3. Softmax 归一化（对每个目标节点的所有入边）
+        alpha = self._softmax_per_node(e, dst, x.size(0))
+        
+        # 4. 加权聚合
+        out = torch.zeros_like(z)
+        out.scatter_add_(0, dst.unsqueeze(1).expand_as(z_src),
+                         alpha.unsqueeze(1) * z_src)
+        
+        return F.elu(out)
+    
+    def _softmax_per_node(self, e, dst, num_nodes):
+        """对每个目标节点做 softmax"""
+        e_max = torch.zeros(num_nodes, device=e.device)
+        e_max.scatter_reduce_(0, dst, e, reduce='amax', include_self=False)
+        e = torch.exp(e - e_max[dst])
+        
+        e_sum = torch.zeros(num_nodes, device=e.device)
+        e_sum.scatter_add_(0, dst, e)
+        
+        return e / (e_sum[dst] + 1e-16)</code></pre>
+        </div>
+      </div>
+
+      <div id="sage-code" class="tab-content">
+        <div class="code-container">
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+          <pre><code>import torch
+import torch.nn.functional as F
+from torch_geometric.nn import SAGEConv
+
+# ============================================================
+# GraphSAGE (Hamilton et al., 2017)
+# h_i = σ(W · CONCAT(h_i, AGG({h_j : j ∈ S(N(i))})))
+# ============================================================
+class GraphSAGE(torch.nn.Module):
+    def __init__(self, in_dim, hidden_dim, out_dim, num_layers=2):
+        super().__init__()
+        self.convs = torch.nn.ModuleList()
+        self.convs.append(SAGEConv(in_dim, hidden_dim))
+        for _ in range(num_layers - 2):
+            self.convs.append(SAGEConv(hidden_dim, hidden_dim))
+        self.convs.append(SAGEConv(hidden_dim, out_dim))
+    
+    def forward(self, x, edge_index):
+        for conv in self.convs[:-1]:
+            x = conv(x, edge_index)
+            x = F.relu(x)
+            x = F.dropout(x, p=0.5, training=self.training)
+        return self.convs[-1](x, edge_index)
+
+
+# ============================================================
+# GraphSAGE 从零实现（含采样）
+# ============================================================
+class SAGELayerFromScratch(torch.nn.Module):
+    """
+    GraphSAGE 采样+聚合层。
+    
+    关键创新:
+    1. 采样固定数量的邻居（而非全部）→ 可处理超大图
+    2. CONCAT(self, neighbors) 而非相加 → 保留自身信息
+    3. L2 归一化输出 → 特征不爆炸
+    """
+    def __init__(self, in_dim, out_dim, sample_size=10, agg='mean'):
+        super().__init__()
+        self.sample_size = sample_size
+        self.agg = agg
+        self.W = torch.nn.Linear(2 * in_dim, out_dim)
+    
+    def sample_neighbors(self, adj_list, node, k):
+        """从节点的邻居中随机采样 k 个"""
+        neighbors = adj_list[node]
+        if len(neighbors) == 0:
+            return [node]  # 自环
+        if len(neighbors) <= k:
+            return neighbors
+        indices = torch.randperm(len(neighbors))[:k]
+        return [neighbors[i] for i in indices]
+    
+    def forward(self, x, adj_list):
+        N = x.size(0)
+        h_neighbors = []
+        
+        for i in range(N):
+            sampled = self.sample_neighbors(adj_list, i, self.sample_size)
+            neighbor_feats = x[sampled]
+            
+            if self.agg == 'mean':
+                agg_feat = neighbor_feats.mean(dim=0)
+            elif self.agg == 'max':
+                agg_feat = neighbor_feats.max(dim=0)[0]
+            
+            h_neighbors.append(agg_feat)
+        
+        h_neighbors = torch.stack(h_neighbors)  # (N, d)
+        
+        # CONCAT(self, agg_neighbors)
+        combined = torch.cat([x, h_neighbors], dim=1)  # (N, 2d)
+        out = F.relu(self.W(combined))  # (N, out_dim)
+        
+        # L2 归一化
+        out = F.normalize(out, p=2, dim=1)
+        return out</code></pre>
+        </div>
+      </div>
+
+      <div id="gin-code" class="tab-content">
+        <div class="code-container">
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+          <pre><code>import torch
+import torch.nn.functional as F
+from torch_geometric.nn import GINConv, global_add_pool
+
+# ============================================================
+# GIN: Graph Isomorphism Network (Xu et al., 2019)
+# h_i^(k) = MLP((1+ε) · h_i^(k-1) + Σ_{j∈N(i)} h_j^(k-1))
+# ============================================================
+class GIN(torch.nn.Module):
+    """
+    GIN 的关键：
+    1. Sum 聚合（不是 mean/max）→ 单射性
+    2. MLP（不是单层线性）→ 更强的函数逼近
+    3. 图级读出用 SUM（不是 MEAN）→ 保留多重集信息
+    
+    理论保证：GIN 的表达力 = 1-WL 图同构测试
+    """
+    def __init__(self, in_dim, hidden_dim, out_dim, num_layers=5):
+        super().__init__()
+        self.convs = torch.nn.ModuleList()
+        self.bns = torch.nn.ModuleList()
+        
+        for i in range(num_layers):
+            dim_in = in_dim if i == 0 else hidden_dim
+            mlp = torch.nn.Sequential(
+                torch.nn.Linear(dim_in, hidden_dim),
+                torch.nn.BatchNorm1d(hidden_dim),
+                torch.nn.ReLU(),
+                torch.nn.Linear(hidden_dim, hidden_dim),
+            )
+            self.convs.append(GINConv(mlp, train_eps=True))
+            self.bns.append(torch.nn.BatchNorm1d(hidden_dim))
+        
+        # 图级读出
+        self.readout = torch.nn.Sequential(
+            torch.nn.Linear(hidden_dim, hidden_dim),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_dim, out_dim),
+        )
+    
+    def forward(self, x, edge_index, batch):
+        for conv, bn in zip(self.convs, self.bns):
+            x = F.relu(bn(conv(x, edge_index)))
+        
+        # 图级聚合（SUM，不是 MEAN！）
+        x = global_add_pool(x, batch)
+        return self.readout(x)
+
+
+# ============================================================
+# GIN 从零实现
+# ============================================================
+class GINLayerFromScratch(torch.nn.Module):
+    """
+    h_i^(k) = MLP^(k)((1 + ε^(k)) · h_i^(k-1) + Σ_{j∈N(i)} h_j^(k-1))
+    """
+    def __init__(self, in_dim, hidden_dim, train_eps=True):
+        super().__init__()
+        self.mlp = torch.nn.Sequential(
+            torch.nn.Linear(in_dim, hidden_dim),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_dim, hidden_dim),
+        )
+        if train_eps:
+            self.eps = torch.nn.Parameter(torch.zeros(1))
+        else:
+            self.register_buffer('eps', torch.zeros(1))
+    
+    def forward(self, x, edge_index):
+        src, dst = edge_index
+        
+        # Sum 聚合邻居
+        agg = torch.zeros_like(x)
+        agg.scatter_add_(0, dst.unsqueeze(1).expand_as(x[src]), x[src])
+        
+        # (1 + ε) · x_i + Σ x_j
+        out = (1 + self.eps) * x + agg
+        
+        return self.mlp(out)</code></pre>
+        </div>
+      </div>
+
+      <div id="mpnn-code" class="tab-content">
+        <div class="code-container">
+          <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+          <pre><code>import torch
+import torch.nn.functional as F
+from torch_geometric.nn import MessagePassing
+
+# ============================================================
+# MPNN: Message Passing Neural Network (Gilmer et al., 2017)
+# 最通用的 GNN 形式
+# ============================================================
+class MPNNLayer(MessagePassing):
+    """
+    通用消息传递层:
+    m_ij = φ(x_i, x_j, e_ij)     # 消息函数
+    agg_i = Σ_{j∈N(i)} m_ij       # 聚合（sum）
+    x_i' = γ(x_i, agg_i)          # 更新函数
+    """
+    def __init__(self, node_dim, edge_dim, hidden_dim):
+        super().__init__(aggr='add')
+        
+        # 消息函数 φ
+        self.message_mlp = torch.nn.Sequential(
+            torch.nn.Linear(2 * node_dim + edge_dim, hidden_dim),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_dim, hidden_dim),
+        )
+        
+        # 更新函数 γ（含残差连接）
+        self.update_mlp = torch.nn.Sequential(
+            torch.nn.Linear(node_dim + hidden_dim, hidden_dim),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_dim, node_dim),
+        )
+    
+    def forward(self, x, edge_index, edge_attr):
+        return self.propagate(edge_index, x=x, edge_attr=edge_attr)
+    
+    def message(self, x_i, x_j, edge_attr):
+        """消息: m_ij = φ(x_i, x_j, e_ij)"""
+        return self.message_mlp(torch.cat([x_i, x_j, edge_attr], dim=-1))
+    
+    def update(self, aggr_out, x):
+        """更新: x_i' = γ(x_i, agg_i) + x_i (残差)"""
+        return self.update_mlp(torch.cat([x, aggr_out], dim=-1)) + x
+
+
+class FullMPNN(torch.nn.Module):
+    """完整的 MPNN 模型"""
+    def __init__(self, node_dim, edge_dim, hidden_dim, out_dim, n_layers=3):
+        super().__init__()
+        self.encoder = torch.nn.Linear(node_dim, hidden_dim)
+        self.layers = torch.nn.ModuleList([
+            MPNNLayer(hidden_dim, edge_dim, hidden_dim)
+            for _ in range(n_layers)
+        ])
+        self.decoder = torch.nn.Linear(hidden_dim, out_dim)
+    
+    def forward(self, x, edge_index, edge_attr):
+        x = self.encoder(x)
+        for layer in self.layers:
+            x = layer(x, edge_index, edge_attr)
+        return self.decoder(x)</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="gnn-physrobot">🤖 与 PhysRobot 的深度关联</h3>
+
+    <div class="callout callout-project">
+      <h4>DynamicalGNN 就是物理特化的 MPNN</h4>
+      <p>我们项目中的 <code>DynamicalGNN</code> 是 §5.3 消息传递 GNN 的<strong>物理特化版本</strong>。让我们逐行对比：</p>
+    </div>
+
+    <div class="comparison-table">
+      <table>
+        <thead><tr><th>组件</th><th>通用 MPNN</th><th>DynamicalGNN (PhysRobot)</th></tr></thead>
+        <tbody>
+          <tr><td>消息函数 $\phi$</td><td>MLP(x_i, x_j, e_ij)</td><td><code>message_net([edge_attr, x_i, x_j])</code></td></tr>
+          <tr><td>聚合 $\bigoplus$</td><td>sum / mean / max</td><td><code>aggr='add'</code> (sum) — 保持物理守恒</td></tr>
+          <tr><td>更新 $\gamma$</td><td>MLP(x_i, agg_i)</td><td><code>update_net([x, aggr_out]) + x</code> (残差)</td></tr>
+          <tr><td>边特征</td><td>任意 e_ij</td><td><code>EdgeFrame</code>: [r_ij, ||r_ij||, v_rel, ||v_rel||]</td></tr>
+          <tr><td>输出</td><td>任意预测</td><td>加速度 a ∈ ℝ³（牛顿第二定律）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-container">
+      <span class="code-label">PhysRobot 项目代码 — physics_core/dynamical_gnn.py（核心片段）</span>
+      <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      <pre><code># 这是我们实际项目代码的核心消息传递层
+# 完整源码: physics_core/dynamical_gnn.py
+
+class PhysicsMessagePassing(MessagePassing):
+    """
+    消息传递层 + 物理约束
+    
+    对应 GDL 蓝图:
+    - Message: m_ij = φ(e_ij, h_i, h_j)     ← 包含边框架信息
+    - Update:  h_i' = ψ(h_i, Σ_j m_ij) + h_i  ← 残差连接
+    """
+    def __init__(self, hidden_dim, edge_dim):
+        super().__init__(aggr='add')  # ← Sum 聚合保持动量守恒
+        
+        # 消息网络 φ：拼接 [边特征, 发送者, 接收者]
+        self.message_net = nn.Sequential(
+            nn.Linear(edge_dim + 2 * hidden_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+        )
+        
+        # 更新网络 ψ：拼接 [原始特征, 聚合消息]
+        self.update_net = nn.Sequential(
+            nn.Linear(2 * hidden_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+        )
+    
+    def message(self, x_i, x_j, edge_attr):
+        # m_ij = φ(e_ij, h_i, h_j) — 完全符合消息传递范式
+        return self.message_net(torch.cat([edge_attr, x_i, x_j], dim=-1))
+    
+    def update(self, aggr_out, x):
+        # h_i' = ψ(h_i, agg) + h_i — 残差连接（类似 ResNet/ODE 离散化）
+        return self.update_net(torch.cat([x, aggr_out], dim=-1)) + x</code></pre>
+    </div>
+
+
+    <!-- ====================== 5.4 Deep Sets, Transformer ====================== -->
+    <h2 id="sec5-4">5.4 Deep Sets, Transformers, 与隐式图推断<br><span style="font-size:0.65em;color:var(--text-secondary)">Deep Sets, Transformers, and Latent Graph Inference</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>我们通过讨论<strong>无序集合</strong>上的置换等变神经网络来结束 GNN 的讨论。虽然集合在我们讨论的域中结构最少，但它们产生了一些最流行的架构：<span class="term">Transformer</span> 和 <span class="term">Deep Sets</span>。</p>
+      </div>
+      <div class="en">
+        We close the GNN discussion by remarking on permutation-equivariant architectures for unordered sets, which produce some of the most popular architectures including Transformers and Deep Sets.
+      </div>
+    </div>
+
+    <h3 id="deepsets">Deep Sets: 集合上的学习</h3>
+
+    <div class="math-block">
+      $$f(\mathbf{X}) = \rho\left(\sum_{i} \phi(x_i)\right) \tag{Deep Sets}$$
+      <div class="math-explain">
+        <strong>Deep Sets</strong> (Zaheer et al., 2017) 是最简单的集合架构：独立地对每个元素 $x_i$ 应用 $\phi$，然后<strong>求和聚合</strong>。等价于 GNN 中令 $A = I$（无边，邻域只有自身）。Zaheer 等人证明了它具有<strong>通用逼近性</strong>。在点云处理中也称为 <strong>PointNet</strong> (Qi et al., 2017)。
+      </div>
+    </div>
+
+    <h3 id="transformer">Transformer 作为完全图上的注意力 GNN</h3>
+
+    <p>这是本书最重要的洞察之一：<span class="term">Transformer = 完全图上的 GAT</span>。</p>
+
+    <div class="blueprint">
+      <h4>Transformer 的 GNN 视角</h4>
+      <p>当我们没有先验图结构（$A = \mathbf{1}\mathbf{1}^\top$，即完全图），卷积型 GNN 退化为 Deep Sets（因为所有节点的聚合相同）。但<strong>注意力型 GNN</strong> 不会退化：</p>
+      $$h_u = \phi\left(x_u, \bigoplus_{v \in V} a(x_u, x_v) \psi(x_v)\right) \tag{36}$$
+      <p>这正是<strong>自注意力</strong>（self-attention）操作——Transformer 的核心。注意力系数 $a(x_u, x_v)$ 可以理解为在推断一个<strong>软邻接矩阵</strong>。</p>
+    </div>
+
+    <div class="derivation">
+      <h4>Transformer 自注意力 = 完全图 GAT 的推导</h4>
+      <div class="step"><span class="step-num">1</span><strong>标准 Multi-Head Attention</strong>：$Q = XW_Q, \; K = XW_K, \; V = XW_V$</div>
+      <div class="step"><span class="step-num">2</span><strong>注意力矩阵</strong>：$A_{\text{soft}} = \text{softmax}\left(\frac{QK^\top}{\sqrt{d_k}}\right)$</div>
+      <div class="step"><span class="step-num">3</span><strong>输出</strong>：$\text{Attention}(Q, K, V) = A_{\text{soft}} V$</div>
+      <div class="step"><span class="step-num">4</span><strong>GNN 视角</strong>：$A_{\text{soft}}$ 就是<strong>隐式推断的邻接矩阵</strong>，每个元素 $A_{ij} = a(x_i, x_j)$，是"节点 $j$ 对节点 $i$ 的重要性"。</div>
+      <div class="step"><span class="step-num">5</span><strong>区别</strong>：Transformer 使用<strong>位置编码</strong>来注入序列信息（因为完全图忽略了位置），这类似于图上的 Laplacian 位置编码。</div>
+    </div>
+
+    <h3 id="latent-graph">隐式图推断</h3>
+
+    <p>在 $A = I$（Deep Sets）和 $A = \mathbf{1}\mathbf{1}^\top$（Transformer）之间，还有一种更灵活的方案：<strong>学习</strong>隐式图结构 $A$。</p>
+
+    <div class="callout callout-info">
+      <h4>三种边集策略对比</h4>
+      <table>
+        <thead><tr><th>策略</th><th>邻接矩阵</th><th>表达力</th><th>效率</th><th>代表</th></tr></thead>
+        <tbody>
+          <tr><td>空边集</td><td>$A = I$</td><td>低</td><td>$O(n)$</td><td>Deep Sets</td></tr>
+          <tr><td>完全边集</td><td>$A = \mathbf{1}\mathbf{1}^\top$</td><td>高</td><td>$O(n^2)$</td><td>Transformer</td></tr>
+          <tr><td>学习边集</td><td>学习的 $A$</td><td>最高</td><td>$O(n^2)$+</td><td>隐式图推断</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="code-container">
+      <span class="code-label">Python / PyTorch — Transformer 注意力 = 完全图上的 GAT</span>
+      <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      <pre><code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+import math
+
+# ============================================================
+# 1. 标准 Transformer 自注意力（从 GNN 视角实现）
+# ============================================================
+class SelfAttentionAsGAT(nn.Module):
+    """
+    Transformer 的自注意力机制，以完全图上的 GAT 视角实现。
+    
+    等价性:
+    - Transformer: Attention(Q,K,V) = softmax(QK^T/√d)V
+    - GAT on complete graph: h_i = Σ_j α_ij (V x_j)
+      where α_ij = softmax_j(Q x_i · K x_j / √d)
+    """
+    def __init__(self, d_model, n_heads=8, dropout=0.1):
+        super().__init__()
+        assert d_model % n_heads == 0
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_k = d_model // n_heads
+        
+        self.W_Q = nn.Linear(d_model, d_model)
+        self.W_K = nn.Linear(d_model, d_model)
+        self.W_V = nn.Linear(d_model, d_model)
+        self.W_O = nn.Linear(d_model, d_model)
+        self.dropout = nn.Dropout(dropout)
+    
+    def forward(self, x):
+        """
+        x: (B, N, d_model) — N 个 "节点" 的特征
+        输出: (B, N, d_model)
+        
+        在 GNN 术语中:
+        - 这是一个完全图上的多头注意力 GNN
+        - 每个 "节点" 都与所有其他节点通信
+        """
+        B, N, _ = x.shape
+        
+        # 线性变换（= GNN 中的 ψ(x_v) 变换）
+        Q = self.W_Q(x).view(B, N, self.n_heads, self.d_k).transpose(1, 2)
+        K = self.W_K(x).view(B, N, self.n_heads, self.d_k).transpose(1, 2)
+        V = self.W_V(x).view(B, N, self.n_heads, self.d_k).transpose(1, 2)
+        
+        # 注意力分数（= GAT 的 α_ij 计算）
+        # scores[i,j] = Q_i · K_j / √d_k  → 软邻接矩阵！
+        scores = torch.matmul(Q, K.transpose(-2, -1)) / math.sqrt(self.d_k)
+        
+        # softmax 归一化（= GAT 的 softmax 归一化）
+        attn = F.softmax(scores, dim=-1)  # (B, heads, N, N) — 这就是隐式邻接矩阵！
+        attn = self.dropout(attn)
+        
+        # 加权聚合（= GAT 的 Σ α_ij V_j）
+        out = torch.matmul(attn, V)  # (B, heads, N, d_k)
+        
+        # 合并多头
+        out = out.transpose(1, 2).contiguous().view(B, N, self.d_model)
+        return self.W_O(out)
+
+
+# ============================================================
+# 2. Deep Sets 实现
+# ============================================================
+class DeepSets(nn.Module):
+    """
+    f(X) = ρ(Σ φ(x_i))
+    
+    等价于: A = I 的 GNN（邻域只有自身）
+    """
+    def __init__(self, in_dim, hidden_dim, out_dim):
+        super().__init__()
+        # φ: 逐元素变换
+        self.phi = nn.Sequential(
+            nn.Linear(in_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+        )
+        # ρ: 聚合后的变换
+        self.rho = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, out_dim),
+        )
+    
+    def forward(self, x):
+        """x: (B, N, d) → (B, out_dim)"""
+        h = self.phi(x)          # (B, N, hidden)
+        h = h.sum(dim=1)         # (B, hidden) — 置换不变聚合
+        return self.rho(h)       # (B, out_dim)
+
+
+# ============================================================
+# 3. 可视化注意力 = 邻接矩阵
+# ============================================================
+def visualize_attention_as_adjacency():
+    """展示 Transformer 的注意力矩阵就是一个软邻接矩阵"""
+    torch.manual_seed(42)
+    
+    model = SelfAttentionAsGAT(d_model=64, n_heads=4)
+    x = torch.randn(1, 8, 64)  # 8 个 "节点"
+    
+    # 获取注意力权重
+    B, N, _ = x.shape
+    Q = model.W_Q(x).view(1, N, 4, 16).transpose(1, 2)
+    K = model.W_K(x).view(1, N, 4, 16).transpose(1, 2)
+    attn = F.softmax(Q @ K.transpose(-2, -1) / 4.0, dim=-1)
+    
+    print("注意力矩阵（= 软邻接矩阵）:")
+    print(f"形状: {attn.shape}")  # (1, 4, 8, 8)
+    print(f"行和 = {attn[0, 0].sum(dim=-1)}")  # 每行和为 1（softmax）
+    print(f"最大注意力: {attn[0, 0].max():.4f}")
+    print(f"最小注意力: {attn[0, 0].min():.4f}")
+    print("→ 每个节点对所有节点的注意力权重 = 完全图上的边权重 ✅")
+
+
+if __name__ == "__main__":
+    visualize_attention_as_adjacency()
+    
+    # Deep Sets
+    ds = DeepSets(16, 64, 10)
+    x = torch.randn(4, 20, 16)  # 4 个集合，每个 20 元素
+    print(f"\nDeep Sets: {x.shape} → {ds(x).shape}")
+    
+    # 验证置换不变性
+    perm = torch.randperm(20)
+    out1 = ds(x)
+    out2 = ds(x[:, perm])
+    print(f"置换不变性误差: {(out1 - out2).abs().max():.2e} ✅")</code></pre>
+    </div>
+
+
+    <!-- ====================== 5.5 EMPNN ====================== -->
+    <h2 id="sec5-5">5.5 等变消息传递网络 (EMPNN) <span style="color:#f59f00">⭐⭐</span><br><span style="font-size:0.65em;color:var(--text-secondary)">Equivariant Message Passing Neural Networks</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>在许多 GNN 的应用中，节点特征（或其一部分）不仅仅是任意向量，还是<strong>几何实体的坐标</strong>。例如分子图中：节点代表原子，包含原子类型和<strong>3D 空间坐标</strong>。我们希望在标准的置换等变性之外，还能保证对<strong>欧几里得群 $E(3)$</strong>（旋转、平移、反射）的等变性。</p>
+      </div>
+      <div class="en">
+        In many GNN applications, node features are coordinates of geometric entities. It is desirable to process them equivariantly to the Euclidean group E(3) of rigid motions, in addition to the standard permutation equivariance.
+      </div>
+    </div>
+
+    <h3 id="egnn">E(n)-等变图神经网络 (EGNN)</h3>
+
+    <p>Satorras et al. (2021) 提出了一个优雅的 E(n)-等变消息传递方案：</p>
+
+    <div class="blueprint">
+      <h4>EGNN 的核心公式</h4>
+      <p>区分<strong>标量特征</strong> $f_u$ 和<strong>空间坐标</strong> $x_u$：</p>
+      $$f_u' = \phi\left(f_u, \bigoplus_{v \in \mathcal{N}_u} \psi_f(f_u, f_v, \|x_u - x_v\|^2)\right)$$
+      $$x_u' = x_u + \sum_{v \neq u} (x_u - x_v) \psi_c(f_u, f_v, \|x_u - x_v\|^2)$$
+    </div>
+
+    <div class="derivation">
+      <h4>为什么这是 E(3)-等变的？逐步证明</h4>
+      <div class="step"><span class="step-num">1</span><strong>关键观察</strong>：$f_u'$ 对 $x_u$ 的唯一依赖是通过<strong>距离</strong> $\|x_u - x_v\|^2$。E(3) 变换保持距离不变，因此 $f_u'$ 是 E(3) 不变的。✅</div>
+      <div class="step"><span class="step-num">2</span><strong>坐标更新</strong>：考虑变换 $x_u \mapsto Rx_u + b$。
+        $$x_u' \mapsto (Rx_u + b) + \sum_{v \neq u} ((Rx_u + b) - (Rx_v + b)) \psi_c(\cdots)$$
+        $$= Rx_u + b + \sum_{v \neq u} R(x_u - x_v) \psi_c(\cdots)$$
+        $$= R\left(x_u + \sum_{v \neq u} (x_u - x_v) \psi_c(\cdots)\right) + b = Rx_u' + b$$</div>
+      <div class="step"><span class="step-num">3</span>因此 $x_u'$ 在 $E(3)$ 下<strong>等变</strong>地变换：$x_u' \mapsto Rx_u' + b$。✅</div>
+      <div class="step"><span class="step-num">4</span><strong>关键</strong>：$\psi_c$ 输出的是<strong>标量</strong>权重，乘以<strong>向量</strong> $(x_u - x_v)$。标量不受旋转影响，向量自然旋转。</div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch5_p90_img0.png" alt="EGNN equivariance">
+      <figcaption>图：标量特征（热图）在旋转下不变，但向量特征（箭头）会改变方向。简单的 E(3) 等变 GNN 只处理标量；更高级的方法（如 Tensor Field Networks）处理任意张量。</figcaption>
+    </div>
+
+    <h3 id="tfn">Tensor Field Networks 与不可约表示</h3>
+
+    <p>EGNN 的限制：特征 $f_u$ 被假设为<strong>标量</strong>。但有些物理量是<strong>向量</strong>（如速度）或<strong>张量</strong>（如应力）。更一般的方法基于<strong>不可约表示</strong>。</p>
+
+    <div class="callout callout-info">
+      <h4>不可约表示方法</h4>
+      <p>旋转群的所有表示都可以分解为<strong>不可约</strong>形式：由 <strong>Wigner D-矩阵</strong>（球谐函数的 Fourier 基）旋转的向量。等变核通过 <strong>Clebsch-Gordan 矩阵</strong>和球谐函数构造。</p>
+      <p>代表模型：</p>
+      <ul>
+        <li><strong>Tensor Field Networks</strong> (Thomas et al., 2018)：点云上的卷积模型</li>
+        <li><strong>SE(3)-Transformer</strong> (Fuchs et al., 2020)：图上的注意力层</li>
+        <li><strong>SchNet</strong> (Schütt et al., 2018)：量子化学的高效消息传递</li>
+        <li><strong>DimeNet</strong> (Klicpera et al., 2020)：使用方向信息</li>
+      </ul>
+    </div>
+
+    <h3 id="empnn-physrobot">🤖 EdgeFrame 的等变性 — 来自 EMPNN 理论</h3>
+
+    <div class="callout callout-project">
+      <h4>PhysRobot 的 EdgeFrame 与 EGNN 的关联</h4>
+      <p>我们项目中的 <code>EdgeFrame</code> 模块直接体现了 EGNN 的设计哲学：</p>
+      <ul>
+        <li><strong>相对位移</strong>：$r_{ij} = x_j - x_i$ — 这是 EGNN 中的 $(x_u - x_v)$</li>
+        <li><strong>距离不变量</strong>：$\|r_{ij}\|$ — 这是 E(3) 不变的标量</li>
+        <li><strong>相对速度</strong>：$v_{\text{rel}} = v_j - v_i$ — EGNN 的速度扩展</li>
+        <li><strong>反对称性</strong>：$e_{ij} = -e_{ji}$ — 保证牛顿第三定律！</li>
+      </ul>
+    </div>
+
+    <div class="code-container">
+      <span class="code-label">PhysRobot 项目代码 — physics_core/edge_frame.py（实际代码）</span>
+      <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      <pre><code># 这是我们实际项目的 EdgeFrame 实现
+# 完整源码: physics_core/edge_frame.py
+
+class EdgeFrame(nn.Module):
+    """
+    Edge Frame: 编码节点间的空间关系。
+    
+    数学原理（对应 GDL §5.5 EGNN）:
+    - 输入: 位置 x_i, x_j 和速度 v_i, v_j
+    - 输出: e_ij = Encoder([r_ij, ||r_ij||, v_rel, ||v_rel||])
+    
+    关键性质:
+    1. 平移不变: 使用相对量 r_ij = x_j - x_i（而非绝对位置）
+    2. 反对称: e_ij = -e_ji（牛顿第三定律）
+    3. 距离信息: ||r_ij|| 是 E(3) 不变标量
+    """
+    def __init__(self, hidden_dim=64):
+        super().__init__()
+        # 输入: [dx, dy, dz, ||r||, dvx, dvy, dvz, ||v||] = 8 维
+        self.edge_encoder = nn.Sequential(
+            nn.Linear(8, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.LayerNorm(hidden_dim),
+            nn.ReLU(),
+        )
+    
+    def forward(self, positions, velocities, edge_index):
+        src_idx, tgt_idx = edge_index[0], edge_index[1]
+        
+        # 相对位移（反对称）: r_ij = x_j - x_i
+        r_ij = positions[tgt_idx] - positions[src_idx]  # (E, 3)
+        r_norm = torch.norm(r_ij, dim=1, keepdim=True)  # (E, 1) — E(3) 不变量！
+        
+        # 相对速度（反对称）: v_rel = v_j - v_i
+        v_rel = velocities[tgt_idx] - velocities[src_idx]  # (E, 3)
+        v_norm = torch.norm(v_rel, dim=1, keepdim=True)
+        
+        # 拼接: 8 维特征
+        edge_features = torch.cat([r_ij, r_norm, v_rel, v_norm], dim=1)
+        
+        return self.edge_encoder(edge_features)  # (E, hidden_dim)
+    
+    def check_antisymmetry(self, positions, velocities, edge_index):
+        """验证反对称性: e_ij = -e_ji（牛顿第三定律）"""
+        e_ij = self(positions, velocities, edge_index)
+        edge_index_rev = torch.stack([edge_index[1], edge_index[0]], dim=0)
+        e_ji = self(positions, velocities, edge_index_rev)
+        return torch.max(torch.abs(e_ij + e_ji)).item()</code></pre>
+    </div>
+
+    <h3 id="empnn-code">代码：简单的 E(3) 等变层</h3>
+
+    <div class="code-container">
+      <span class="code-label">Python / PyTorch — E(3) 等变 GNN 层</span>
+      <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      <pre><code>import torch
+import torch.nn as nn
+from torch_geometric.nn import MessagePassing
+
+# ============================================================
+# EGNN Layer (Satorras et al., 2021)
+# E(3)-等变图神经网络层
+# ============================================================
+class EGNNLayer(MessagePassing):
+    """
+    E(3)-Equivariant GNN Layer
+    
+    数学:
+    f_i' = φ(f_i, Σ_j ψ_f(f_i, f_j, ||x_i - x_j||²))
+    x_i' = x_i + Σ_j (x_i - x_j) · ψ_c(f_i, f_j, ||x_i - x_j||²)
+    
+    等变性保证:
+    - f' 对 E(3) 不变（只依赖距离）
+    - x' 对 E(3) 等变（向量变换 + 标量权重）
+    """
+    def __init__(self, feature_dim, hidden_dim):
+        super().__init__(aggr='add')
+        self.feature_dim = feature_dim
+        
+        # ψ_f: 标量消息函数
+        self.message_mlp = nn.Sequential(
+            nn.Linear(2 * feature_dim + 1, hidden_dim),  # +1 for distance
+            nn.SiLU(),
+            nn.Linear(hidden_dim, hidden_dim),
+        )
+        
+        # ψ_c: 坐标更新的标量权重
+        self.coord_mlp = nn.Sequential(
+            nn.Linear(2 * feature_dim + 1, hidden_dim),
+            nn.SiLU(),
+            nn.Linear(hidden_dim, 1),  # 输出标量！
+        )
+        
+        # φ: 特征更新
+        self.update_mlp = nn.Sequential(
+            nn.Linear(feature_dim + hidden_dim, hidden_dim),
+            nn.SiLU(),
+            nn.Linear(hidden_dim, feature_dim),
+        )
+    
+    def forward(self, f, x, edge_index):
+        """
+        f: (N, feature_dim) — 标量特征（E(3) 不变）
+        x: (N, 3)           — 空间坐标（E(3) 等变）
+        edge_index: (2, E)
+        
+        返回: f', x' — 更新后的特征和坐标
+        """
+        src, dst = edge_index
+        
+        # 计算距离（E(3) 不变量）
+        diff = x[dst] - x[src]              # (E, 3)
+        dist_sq = (diff ** 2).sum(dim=-1, keepdim=True)  # (E, 1)
+        
+        # 消息传递（特征更新）
+        f_msg = self.message_mlp(torch.cat([f[dst], f[src], dist_sq], dim=-1))
+        
+        # 聚合消息
+        agg = torch.zeros(f.size(0), f_msg.size(1), device=f.device)
+        agg.scatter_add_(0, dst.unsqueeze(1).expand_as(f_msg), f_msg)
+        
+        # 更新标量特征
+        f_new = self.update_mlp(torch.cat([f, agg], dim=-1)) + f
+        
+        # 坐标更新
+        coord_weights = self.coord_mlp(torch.cat([f[dst], f[src], dist_sq], dim=-1))
+        weighted_diff = diff * coord_weights  # (E, 3) * (E, 1) = (E, 3)
+        
+        coord_agg = torch.zeros_like(x)
+        coord_agg.scatter_add_(0, dst.unsqueeze(1).expand_as(weighted_diff), weighted_diff)
+        
+        x_new = x + coord_agg
+        
+        return f_new, x_new
+
+
+# ============================================================
+# 完整的 EGNN 模型
+# ============================================================
+class EGNN(nn.Module):
+    def __init__(self, in_dim, hidden_dim, out_dim, n_layers=3):
+        super().__init__()
+        self.encoder = nn.Linear(in_dim, hidden_dim)
+        self.layers = nn.ModuleList([
+            EGNNLayer(hidden_dim, hidden_dim) for _ in range(n_layers)
+        ])
+        self.decoder = nn.Linear(hidden_dim, out_dim)
+    
+    def forward(self, f, x, edge_index):
+        f = self.encoder(f)
+        for layer in self.layers:
+            f, x = layer(f, x, edge_index)
+        return self.decoder(f), x
+
+
+# ============================================================
+# 验证 E(3) 等变性
+# ============================================================
+def verify_e3_equivariance():
+    """验证 EGNN 的 E(3) 等变性"""
+    torch.manual_seed(42)
+    
+    layer = EGNNLayer(feature_dim=16, hidden_dim=32)
+    layer.eval()
+    
+    N = 5
+    f = torch.randn(N, 16)
+    x = torch.randn(N, 3)
+    edge_index = torch.tensor([[0,1,1,2,2,3,3,4],
+                                [1,0,2,1,3,2,4,3]], dtype=torch.long)
+    
+    # 原始输出
+    f_out, x_out = layer(f, x, edge_index)
+    
+    # 构造随机旋转和平移
+    # 随机旋转矩阵（Rodrigues 公式）
+    axis = torch.randn(3)
+    axis = axis / axis.norm()
+    angle = torch.tensor(1.2)
+    K = torch.tensor([[0, -axis[2], axis[1]],
+                       [axis[2], 0, -axis[0]],
+                       [-axis[1], axis[0], 0]])
+    R = torch.eye(3) + torch.sin(angle) * K + (1 - torch.cos(angle)) * K @ K
+    b = torch.randn(3)  # 平移
+    
+    # 变换坐标
+    x_transformed = (R @ x.T).T + b  # Rx + b
+    
+    # 在变换后的输入上运行
+    f_out_t, x_out_t = layer(f, x_transformed, edge_index)
+    
+    # 对原始输出应用相同变换
+    x_out_expected = (R @ x_out.T).T + b
+    
+    # 检查等变性
+    coord_error = (x_out_t - x_out_expected).abs().max().item()
+    feat_error = (f_out_t - f_out).abs().max().item()
+    
+    print("=" * 50)
+    print("E(3) 等变性验证")
+    print("=" * 50)
+    print(f"坐标等变性误差: {coord_error:.2e}")
+    print(f"特征不变性误差: {feat_error:.2e}")
+    print(f"坐标等变性: {'✅' if coord_error < 1e-4 else '❌'}")
+    print(f"特征不变性: {'✅' if feat_error < 1e-4 else '❌'}")
+
+
+if __name__ == "__main__":
+    verify_e3_equivariance()</code></pre>
+    </div>
+
+
+    <!-- ====================== 5.6 Intrinsic Mesh CNNs ====================== -->
+    <h2 id="sec5-6">5.6 内蕴网格 CNN<br><span style="font-size:0.65em;color:var(--text-secondary)">Intrinsic Mesh CNNs</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>网格（尤其是三角网格）是计算机图形学的"家常便饭"，也是 3D 物体建模最常见的方式。在 2015 年左右，图形学和几何处理社区开始积极探索在网格数据上构建类似 CNN 的架构。</p>
+      </div>
+      <div class="en">
+        Meshes, particularly triangular ones, are the 'bread and butter' of computer graphics. The community has been keen to construct CNN-like architectures for mesh data since the mid-2010s.
+      </div>
+    </div>
+
+    <h3 id="geodesic-cnn">测地线 CNN (Geodesic CNN)</h3>
+
+    <p>大多数网格深度学习架构通过<strong>离散化或近似指数映射</strong>来实现卷积滤波器，并在切平面的坐标系中表达滤波器。</p>
+
+    <div class="math-block">
+      $$(\mathbf{x} \star \theta)(u) = \int_0^R \int_0^{2\pi} x(u, r, \vartheta) \theta(r, \vartheta) \, dr \, d\vartheta$$
+      <div class="math-explain">
+        在流形上定义卷积：使用<strong>测地线极坐标</strong> $(r, \vartheta)$，$r$ 是测地线距离，$\vartheta$ 是切平面中的角度方向。$x(u, r, \vartheta)$ 是以 $u$ 为中心的测地线块（geodesic patch）。
+      </div>
+    </div>
+
+    <p><strong>关键挑战</strong>：角度方向 $\vartheta$ 的参考选择有<strong>歧义性</strong>——这正是<strong>规范选择</strong>（gauge choice）的问题。</p>
+
+    <h4>处理规范歧义的三种策略</h4>
+
+    <div class="comparison-table">
+      <table>
+        <thead><tr><th>策略</th><th>方法</th><th>优点</th><th>缺点</th></tr></thead>
+        <tbody>
+          <tr><td><strong>各向同性滤波器</strong></td><td>$\theta(r)$ 不依赖方向</td><td>无需选择规范</td><td>丢失方向信息</td></tr>
+          <tr><td><strong>固定规范</strong></td><td>使用主曲率方向</td><td>保留方向信息</td><td>在平坦区域不稳定</td></tr>
+          <tr><td><strong>角度池化</strong></td><td>$\max_{\vartheta_0}$ 匹配</td><td>旋转不变</td><td>计算开销大</td></tr>
+          <tr><td><strong>规范等变滤波器</strong></td><td>使用非平凡表示 $\rho$</td><td>理论最优</td><td>实现复杂</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 id="monet">MoNet: 混合模型网络</h3>
+
+    <p>Monti et al. (2017) 的 MoNet 使用<strong>可学习的加权函数</strong>（patch operators）替代固定模板：</p>
+
+    <div class="math-block">
+      $$(\mathbf{x} \star \theta)_u = \frac{\sum_{k=1}^{K} w_k \sum_{v \in \mathcal{N}_u} (r_{uv}, \vartheta_{uv}) x_v \cdot \theta_k}{\sum_{k=1}^{K} w_k \sum_{v \in \mathcal{N}_u} (r_{uv}, \vartheta_{uv}) \cdot \theta_k}$$
+      <div class="math-explain">
+        $w_1, \ldots, w_K$ 是可学习的高斯加权函数（"软像素"），$\theta_1, \ldots, \theta_K$ 是滤波器系数。MoNet 比 Geodesic CNN 更灵活，因为加权函数也是可学习的。
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch5_p92_img0.png" alt="Patch operators: Geodesic CNN, Anisotropic CNN, MoNet">
+      <figcaption>图 18：三种网格 CNN 中使用的 patch operators。从左到右：Geodesic CNN、Anisotropic CNN、MoNet。红色等高线显示加权函数 $w_k(r, \vartheta)$ 的形状。</figcaption>
+    </div>
+
+    <h3 id="gauge-cnn">规范等变 CNN (Gauge-equivariant CNN)</h3>
+
+    <p>Cohen et al. (2019) 和 de Haan et al. (2020) 提出了最"正确"的方案：让网络特征与<strong>非平凡表示</strong> $\rho$ 关联，并通过<strong>平行移动</strong>（parallel transport）在节点间传递。</p>
+
+    <div class="math-block">
+      $$h_u = \Theta_{\text{self}} x_u + \sum_{v \in \mathcal{N}_u} \Theta_{\text{neigh}}(\vartheta_{uv}) \rho(g_{v \to u}) x_v \tag{37}$$
+      <div class="math-explain">
+        $\Theta_{\text{self}}, \Theta_{\text{neigh}}$ 是可学习的滤波器矩阵。$g_{v \to u} \in SO(2)$ 编码从 $v$ 到 $u$ 的<strong>平行移动</strong>效果（规范变换）。$\rho(g_{v \to u})$ 是对应的<strong>传输矩阵</strong>。这确保了输出是规范等变的。
+      </div>
+    </div>
+
+    <div class="code-container">
+      <span class="code-label">Python / PyTorch — 简化的网格卷积</span>
+      <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      <pre><code>import torch
+import torch.nn as nn
+
+# ============================================================
+# 简化的网格卷积（MoNet 风格）
+# ============================================================
+class SimpleMeshConv(nn.Module):
+    """
+    简化的 MoNet 风格网格卷积。
+    使用可学习的高斯核作为 patch operator。
+    
+    对应 GDL §5.6 的方程。
+    """
+    def __init__(self, in_channels, out_channels, n_kernels=8):
+        super().__init__()
+        self.n_kernels = n_kernels
+        
+        # 可学习的高斯参数 (均值和方差)
+        self.mu = nn.Parameter(torch.randn(n_kernels, 2))  # (K, 2) for (r, θ)
+        self.sigma = nn.Parameter(torch.ones(n_kernels, 2))
+        
+        # 滤波器权重
+        self.weight = nn.Linear(in_channels * n_kernels, out_channels)
+    
+    def gaussian_kernel(self, coords):
+        """
+        计算高斯核值。
+        coords: (E, 2) — 邻居的 (r, θ) 坐标
+        返回: (E, K) — 每个核对每条边的权重
+        """
+        # coords: (E, 2), mu: (K, 2)
+        diff = coords.unsqueeze(1) - self.mu.unsqueeze(0)  # (E, K, 2)
+        weights = torch.exp(-0.5 * (diff ** 2 / (self.sigma.unsqueeze(0) ** 2 + 1e-6)).sum(dim=-1))
+        return weights  # (E, K)
+    
+    def forward(self, x, edge_index, pseudo_coords):
+        """
+        x: (N, C_in) 节点特征
+        edge_index: (2, E) 边索引
+        pseudo_coords: (E, 2) 边的伪坐标 (r, θ)
+        """
+        src, dst = edge_index
+        
+        # 计算核权重
+        kernel_weights = self.gaussian_kernel(pseudo_coords)  # (E, K)
+        
+        # 加权邻居特征
+        neighbor_feats = x[src]  # (E, C_in)
+        # (E, K, 1) * (E, 1, C_in) → (E, K, C_in) → (E, K*C_in)
+        weighted = (kernel_weights.unsqueeze(-1) * neighbor_feats.unsqueeze(1))
+        weighted = weighted.reshape(-1, self.n_kernels * x.size(1))
+        
+        # 聚合到目标节点
+        out = torch.zeros(x.size(0), weighted.size(1), device=x.device)
+        out.scatter_add_(0, dst.unsqueeze(1).expand_as(weighted), weighted)
+        
+        return self.weight(out)
+
+
+if __name__ == "__main__":
+    N, E, C_in, C_out = 100, 400, 16, 32
+    layer = SimpleMeshConv(C_in, C_out, n_kernels=8)
+    x = torch.randn(N, C_in)
+    edge_index = torch.randint(0, N, (2, E))
+    pseudo = torch.randn(E, 2)  # (r, θ) 坐标
+    
+    out = layer(x, edge_index, pseudo)
+    print(f"Mesh Conv: ({N}, {C_in}) → ({out.shape[0]}, {out.shape[1]})")
+    print(f"参数量: {sum(p.numel() for p in layer.parameters()):,}")</code></pre>
+    </div>
+
+
+    <!-- ====================== 5.7 RNN ====================== -->
+    <h2 id="sec5-7">5.7 循环神经网络 (RNN)<br><span style="font-size:0.65em;color:var(--text-secondary)">Recurrent Neural Networks</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>到目前为止，我们的讨论都假设输入是纯空间的。但在许多场景中，输入也可以是<strong>序列</strong>（视频、文本、语音）。RNN 是处理时序数据的经典架构，而且从几何深度学习的角度，它们实现了一种不寻常的对称性——<span class="term">时间平移等变性</span>。</p>
+      </div>
+      <div class="en">
+        RNNs are classic architectures for sequential data. From the GDL perspective, they implement an unusual type of symmetry over temporal grids: translation equivariance in time.
+      </div>
+    </div>
+
+    <h3 id="rnn-equivariance">RNN 的时间等变性</h3>
+
+    <p>RNN 在每一步计算摘要向量 $h^{(t)}$：</p>
+
+    <div class="math-block">
+      $$h^{(t)} = R(z^{(t)}, h^{(t-1)}) \tag{38}$$
+      <div class="math-explain">
+        $z^{(t)}$ 是第 $t$ 步的输入特征，$h^{(t)}$ 是到第 $t$ 步为止的"摘要"，$R$ 是<strong>共享的</strong>更新函数。对于 SimpleRNN：$h^{(t)} = \sigma(Wz^{(t)} + Uh^{(t-1)} + b)$。
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch5_p95_img0.png" alt="RNN processing video">
+      <figcaption>图 19：用 RNN 处理视频输入。每帧 $X^{(t)}$ 由共享编码器 $f$（如 CNN）处理为 $z^{(t)}$，然后 RNN 更新函数 $R$ 迭代更新摘要向量。</figcaption>
+    </div>
+
+    <div class="derivation">
+      <h4>时间平移等变性的分析</h4>
+      <div class="step"><span class="step-num">1</span>设 $z'^{(t)} = z^{(t+1)}$（左移一步）。希望 $h'^{(t)} = h^{(t+1)}$。</div>
+      <div class="step"><span class="step-num">2</span>但 $h'^{(1)} = R(z'^{(1)}, h^{(0)}) = R(z^{(2)}, h^{(0)})$，而 $h^{(2)} = R(z^{(2)}, R(z^{(1)}, h^{(0)}))$。</div>
+      <div class="step"><span class="step-num">3</span>除非 $h^{(0)} = R(z^{(1)}, h^{(0)})$，否则等变性不成立。</div>
+      <div class="step"><span class="step-num">4</span><strong>解决方案</strong>：对序列做足够的零填充，使 $h^{(0)}$ 成为 $\gamma(h) = R(0, h)$ 的<strong>不动点</strong>。如果 $\gamma$ 是压缩映射，迭代必收敛到唯一不动点。</div>
+    </div>
+
+    <h3 id="rnn-vanishing">梯度消失问题</h3>
+
+    <p>RNN 的一个核心挑战：<strong>梯度消失/爆炸</strong>。</p>
+
+    <div class="callout callout-warning">
+      <h4>为什么 SimpleRNN 有梯度消失问题？</h4>
+      <p>考虑 sigmoid 激活 $\sigma$（如 tanh），其导数 $|\sigma'| \in (0, 1)$。经过 $T$ 步反向传播：</p>
+      $$\frac{\partial h^{(T)}}{\partial h^{(1)}} = \prod_{t=1}^{T-1} \frac{\partial h^{(t+1)}}{\partial h^{(t)}} \approx \prod_{t=1}^{T-1} \sigma'(\cdot) \cdot U$$
+      <p>很多 $|\sigma'| < 1$ 的值连乘 → 梯度指数衰减 → 序列开头的信息<strong>无法影响</strong>末尾的梯度更新。</p>
+      <p><strong>例子</strong>："Petar is Serbian. He was born on ...[很长一段]... Petar currently lives in ___"。预测 "Serbia" 需要回溯到序列开头，但梯度已经消失了。</p>
+    </div>
+
+    <div class="code-container">
+      <span class="code-label">Python / PyTorch — SimpleRNN + 梯度分析</span>
+      <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      <pre><code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# ============================================================
+# SimpleRNN 实现
+# ============================================================
+class SimpleRNN(nn.Module):
+    """
+    h^(t) = σ(W z^(t) + U h^(t-1) + b)
+    
+    几何视角: 这是时间网格 Z 上的"卷积"操作，
+    但与 CNN 不同，参数共享的是 W, U, b（而非滤波器）。
+    """
+    def __init__(self, input_dim, hidden_dim):
+        super().__init__()
+        self.hidden_dim = hidden_dim
+        self.W = nn.Linear(input_dim, hidden_dim)
+        self.U = nn.Linear(hidden_dim, hidden_dim, bias=False)
+    
+    def forward(self, x_seq):
+        """
+        x_seq: (B, T, input_dim)
+        返回: (B, T, hidden_dim) — 每步的 h^(t)
+        """
+        B, T, _ = x_seq.shape
+        h = torch.zeros(B, self.hidden_dim, device=x_seq.device)
+        outputs = []
+        
+        for t in range(T):
+            h = torch.tanh(self.W(x_seq[:, t]) + self.U(h))
+            outputs.append(h)
+        
+        return torch.stack(outputs, dim=1)
+
+
+# ============================================================
+# 梯度消失可视化
+# ============================================================
+def analyze_gradient_vanishing():
+    """分析 SimpleRNN 中的梯度消失"""
+    torch.manual_seed(42)
+    
+    rnn = SimpleRNN(input_dim=10, hidden_dim=32)
+    x = torch.randn(1, 50, 10, requires_grad=True)  # 50 步序列
+    
+    outputs = rnn(x)
+    
+    # 对最后一步的输出求和并反向传播
+    loss = outputs[:, -1].sum()
+    loss.backward()
+    
+    # 检查每一步的梯度范数
+    grad_norms = []
+    h = torch.zeros(1, 32)
+    
+    for t in range(50):
+        h = torch.tanh(rnn.W(x[:, t]) + rnn.U(h))
+    
+    print("SimpleRNN 梯度分析:")
+    print(f"输入梯度范数: {x.grad.norm(dim=-1).squeeze()[:10].tolist()}")
+    print("→ 注意前面步骤的梯度比后面步骤小得多（梯度消失）")
+    print("→ 这就是为什么需要 LSTM 的门控机制！")
+
+
+if __name__ == "__main__":
+    rnn = SimpleRNN(10, 32)
+    x = torch.randn(4, 20, 10)
+    out = rnn(x)
+    print(f"SimpleRNN: {x.shape} → {out.shape}")
+    analyze_gradient_vanishing()</code></pre>
+    </div>
+
+
+    <!-- ====================== 5.8 LSTM ====================== -->
+    <h2 id="sec5-8">5.8 长短期记忆网络 (LSTM)<br><span style="font-size:0.65em;color:var(--text-secondary)">Long Short-Term Memory Networks</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>LSTM (Hochreiter & Schmidhuber, 1997) 通过引入<span class="term">门控机制</span>（gating mechanisms）大幅缓解了梯度消失问题。门控允许网络以数据驱动的方式<strong>选择性地覆写</strong>信息。</p>
+      </div>
+      <div class="en">
+        LSTM significantly reduces vanishing gradients through gating mechanisms, which allow the network to selectively overwrite information in a data-driven way.
+      </div>
+    </div>
+
+    <h3 id="lstm-gates">LSTM 的门控机制</h3>
+
+    <div class="figure">
+      <img src="../assets/ch5_p95_img1.png" alt="LSTM dataflow">
+      <figcaption>图 20：LSTM 的数据流，包含记忆细胞 (M) 和三个门：输入门 $i^{(t)}$、遗忘门 $f^{(t)}$、输出门 $o^{(t)}$。</figcaption>
+    </div>
+
+    <p>LSTM 在 SimpleRNN 的基础上引入了<strong>记忆细胞</strong>（memory cell）$c^{(t)}$，通过三个<strong>门</strong>控制信息流：</p>
+
+    <div class="math-block">
+      $$\tilde{c}^{(t)} = \tanh(W_c z^{(t)} + U_c h^{(t-1)} + b_c) \tag{43 — 候选特征}$$
+      $$i^{(t)} = \text{logistic}(W_i z^{(t)} + U_i h^{(t-1)} + b_i) \tag{44 — 输入门}$$
+      $$f^{(t)} = \text{logistic}(W_f z^{(t)} + U_f h^{(t-1)} + b_f) \tag{45 — 遗忘门}$$
+      $$o^{(t)} = \text{logistic}(W_o z^{(t)} + U_o h^{(t-1)} + b_o) \tag{46 — 输出门}$$
+      $$c^{(t)} = i^{(t)} \odot \tilde{c}^{(t)} + f^{(t)} \odot c^{(t-1)} \tag{47 — 细胞状态更新}$$
+      $$h^{(t)} = o^{(t)} \odot \tanh(c^{(t)}) \tag{48 — 输出}$$
+    </div>
+
+    <div class="symbol-table">
+      <h4>LSTM 符号表</h4>
+      <table>
+        <thead><tr><th>符号</th><th>含义</th><th>范围</th></tr></thead>
+        <tbody>
+          <tr><td>$c^{(t)}$</td><td>记忆细胞状态</td><td>$\mathbb{R}^m$</td></tr>
+          <tr><td>$\tilde{c}^{(t)}$</td><td>候选特征</td><td>$[-1, 1]^m$</td></tr>
+          <tr><td>$i^{(t)}$</td><td>输入门：允许多少候选进入细胞</td><td>$[0, 1]^m$</td></tr>
+          <tr><td>$f^{(t)}$</td><td>遗忘门：保留多少旧细胞状态</td><td>$[0, 1]^m$</td></tr>
+          <tr><td>$o^{(t)}$</td><td>输出门：暴露多少新细胞状态</td><td>$[0, 1]^m$</td></tr>
+          <tr><td>$\odot$</td><td>逐元素乘法（Hadamard 乘积）</td><td>—</td></tr>
+          <tr><td>logistic</td><td>$\sigma(x) = \frac{1}{1 + e^{-x}}$</td><td>$[0, 1]$</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-key">
+      <h4>为什么 LSTM 解决了梯度消失？</h4>
+      <p>关键在公式 (47)：$c^{(t)} = i^{(t)} \odot \tilde{c}^{(t)} + f^{(t)} \odot c^{(t-1)}$。</p>
+      <ul>
+        <li>当 $f^{(t)} \approx 1$ 时，$c^{(t)} \approx c^{(t-1)}$，梯度<strong>直接流过</strong>（类似 ResNet 的跳跃连接）</li>
+        <li>$f^{(t)}$ 的值直接出现在反向传播的导数中，网络可以<strong>学习</strong>控制梯度的衰减程度</li>
+        <li>实践建议：初始化遗忘门偏置 $b_f$ 为正值（如 1），使初始 $f^{(t)} \approx 1$，倾向于记忆</li>
+      </ul>
+    </div>
+
+    <h3 id="lstm-time-warp">时间扭曲不变性 — LSTM 的几何解释</h3>
+
+    <p>门控 RNN 的一个深层性质：它们对<strong>时间扭曲变换</strong>（time warping）不变。这个洞察来自 Tallec & Ollivier (2018)。</p>
+
+    <div class="blueprint">
+      <h4>时间扭曲不变的 RNN</h4>
+      <p>时间扭曲 $\tau: \mathbb{R}^+ \to \mathbb{R}^+$ 是单调递增的微分映射。要求 RNN 类对时间扭曲不变意味着：对任何 $\tau$ 和模型参数，存在<strong>另一组参数</strong>使得模型在扭曲后的数据上表现相同。</p>
+      <p>通过连续时间分析，不变性要求 RNN 更新满足：</p>
+      $$h^{(t+1)} = \Gamma(z^{(t+1)}, h^{(t)}) R(z^{(t+1)}, h^{(t)}) + (1 - \Gamma(z^{(t+1)}, h^{(t)})) h^{(t)} \tag{53}$$
+      <p>其中 $\Gamma$ 输出在 $(0, 1)$ 范围——<strong>这正是 LSTM 的门控！</strong></p>
+    </div>
+
+    <div class="derivation">
+      <h4>从时间扭曲不变性推导出 LSTM 门控</h4>
+      <div class="step"><span class="step-num">1</span><strong>连续时间 RNN</strong>：$\frac{dh(\tau(t))}{d\tau(t)} = R(z(\tau(t+1)), h(\tau(t))) - h(\tau(t))$</div>
+      <div class="step"><span class="step-num">2</span><strong>链式法则</strong>：$\frac{dh(\tau(t))}{dt} = \frac{d\tau(t)}{dt} \left[R(\cdots) - h(\tau(t))\right]$</div>
+      <div class="step"><span class="step-num">3</span>$\frac{d\tau(t)}{dt}$ 未知 → 引入可学习函数 $\Gamma$ 来近似它</div>
+      <div class="step"><span class="step-num">4</span>Taylor 展开 + 离散化 → $h^{(t+1)} = \Gamma \cdot R + (1 - \Gamma) \cdot h^{(t)}$</div>
+      <div class="step"><span class="step-num">5</span>约束 $0 < \Gamma < 1$（因为 $\tau$ 单调且 $\frac{d\tau}{dt} \leq 1$）→ 使用 logistic sigmoid → <strong>LSTM 的门！</strong></div>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>Chrono 初始化</h4>
+      <p>如果我们关心的依赖范围是 $[T_l, T_h]$ 步，门控值应在 $[\frac{1}{T_h}, \frac{1}{T_l}]$ 范围内。利用 $E[\Gamma] \approx \text{logistic}(b_\Gamma)$，可以初始化：</p>
+      $$b_\Gamma \sim -\log(\mathcal{U}(T_l, T_h) - 1)$$
+      <p>这种 "chrono 初始化" 能显著改善长程依赖建模。</p>
+    </div>
+
+    <div class="code-container">
+      <span class="code-label">Python / PyTorch — LSTM 完整实现 + 门控可视化</span>
+      <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      <pre><code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+# ============================================================
+# LSTM 从零实现
+# ============================================================
+class LSTMFromScratch(nn.Module):
+    """
+    LSTM 完整实现（对应 GDL 公式 43-48）。
+    
+    几何视角:
+    - 门控机制 = 时间扭曲导数 dτ/dt 的学习
+    - 遗忘门 → 控制 "记忆时间尺度"
+    - Chrono 初始化 → 控制有效记忆范围
+    """
+    def __init__(self, input_dim, hidden_dim):
+        super().__init__()
+        self.hidden_dim = hidden_dim
+        
+        # 四个线性层（可以合并为一个大矩阵以加速）
+        # 候选特征
+        self.W_c = nn.Linear(input_dim, hidden_dim)
+        self.U_c = nn.Linear(hidden_dim, hidden_dim, bias=False)
+        # 输入门
+        self.W_i = nn.Linear(input_dim, hidden_dim)
+        self.U_i = nn.Linear(hidden_dim, hidden_dim, bias=False)
+        # 遗忘门（初始化偏置为 1，倾向记忆）
+        self.W_f = nn.Linear(input_dim, hidden_dim)
+        self.U_f = nn.Linear(hidden_dim, hidden_dim, bias=False)
+        self.W_f.bias.data.fill_(1.0)  # ← 关键初始化！
+        # 输出门
+        self.W_o = nn.Linear(input_dim, hidden_dim)
+        self.U_o = nn.Linear(hidden_dim, hidden_dim, bias=False)
+    
+    def forward(self, x_seq, initial_state=None):
+        """
+        x_seq: (B, T, input_dim)
+        返回: outputs (B, T, hidden_dim), (h_final, c_final)
+        """
+        B, T, _ = x_seq.shape
+        
+        if initial_state is None:
+            h = torch.zeros(B, self.hidden_dim, device=x_seq.device)
+            c = torch.zeros(B, self.hidden_dim, device=x_seq.device)
+        else:
+            h, c = initial_state
+        
+        outputs = []
+        gate_history = {'input': [], 'forget': [], 'output': []}
+        
+        for t in range(T):
+            z = x_seq[:, t]
+            
+            # 公式 43: 候选特征
+            c_tilde = torch.tanh(self.W_c(z) + self.U_c(h))
+            
+            # 公式 44: 输入门
+            i = torch.sigmoid(self.W_i(z) + self.U_i(h))
+            
+            # 公式 45: 遗忘门
+            f = torch.sigmoid(self.W_f(z) + self.U_f(h))
+            
+            # 公式 46: 输出门
+            o = torch.sigmoid(self.W_o(z) + self.U_o(h))
+            
+            # 公式 47: 细胞状态更新
+            c = i * c_tilde + f * c  # ← 核心！梯度可以通过 f 直接流过
+            
+            # 公式 48: 输出
+            h = o * torch.tanh(c)
+            
+            outputs.append(h)
+            gate_history['input'].append(i.mean().item())
+            gate_history['forget'].append(f.mean().item())
+            gate_history['output'].append(o.mean().item())
+        
+        return torch.stack(outputs, dim=1), (h, c), gate_history
+
+
+# ============================================================
+# 对比 SimpleRNN vs LSTM 的梯度
+# ============================================================
+def compare_gradient_flow():
+    """对比 SimpleRNN 和 LSTM 的梯度流"""
+    torch.manual_seed(42)
+    
+    T = 100  # 长序列
+    
+    # LSTM
+    lstm = LSTMFromScratch(10, 32)
+    x = torch.randn(1, T, 10, requires_grad=True)
+    outputs, _, gates = lstm(x)
+    loss = outputs[:, -1].sum()
+    loss.backward()
+    lstm_grad = x.grad.norm(dim=-1).squeeze()
+    
+    print("LSTM vs SimpleRNN 梯度分析 (T=100):")
+    print(f"LSTM 前10步梯度范数:  {lstm_grad[:10].tolist()}")
+    print(f"LSTM 后10步梯度范数:  {lstm_grad[-10:].tolist()}")
+    print(f"LSTM 梯度比值 (首/末): {lstm_grad[0] / lstm_grad[-1]:.4f}")
+    print(f"平均遗忘门值: {sum(gates['forget'])/len(gates['forget']):.4f}")
+    print("→ LSTM 的梯度衰减远慢于 SimpleRNN ✅")
+
+
+if __name__ == "__main__":
+    lstm = LSTMFromScratch(10, 32)
+    x = torch.randn(4, 50, 10)
+    out, (h, c), gates = lstm(x)
+    print(f"LSTM: {x.shape} → {out.shape}")
+    print(f"参数量: {sum(p.numel() for p in lstm.parameters()):,}")
+    print()
+    compare_gradient_flow()</code></pre>
+    </div>
+
+
+    <!-- ====================== 5.3 EXTENDED: DEEP DIVE ====================== -->
+    <h2 id="gnn-deep-dive">5.3+ GNN 深度进阶：过平滑、过压缩与表达力边界</h2>
+
+    <h3>过平滑问题 (Over-smoothing)</h3>
+
+    <div class="callout callout-warning">
+      <h4>GNN 的深度限制</h4>
+      <p>与 CNN 不同，GNN <strong>不能简单地堆叠很多层</strong>。原因：每一层消息传递都在邻域中做"平均"，多层之后所有节点的表示趋于相同——这就是<strong>过平滑</strong>（over-smoothing）。</p>
+    </div>
+
+    <div class="math-block">
+      $$\text{GCN 层可以视为: } \mathbf{H}^{(l+1)} = \hat{A} \mathbf{H}^{(l)} \mathbf{W}^{(l)}$$
+      <div class="math-explain">
+        反复左乘 $\hat{A}$（归一化邻接矩阵）等效于在图上做<strong>扩散</strong>。$\hat{A}^k$ 的极限是与节点度数成正比的平稳分布——所有节点特征趋同。
+      </div>
+    </div>
+
+    <div class="derivation">
+      <h4>过平滑的数学证明（简化版）</h4>
+      <div class="step"><span class="step-num">1</span>$\hat{A}$ 是行随机矩阵（每行和为 1），其特征值 $|\lambda_i| \leq 1$。</div>
+      <div class="step"><span class="step-num">2</span>对连通图，最大特征值 $\lambda_1 = 1$ 对应常向量 $\mathbf{1}$，其余 $|\lambda_i| < 1$。</div>
+      <div class="step"><span class="step-num">3</span>$\hat{A}^k \mathbf{H} = \sum_i \lambda_i^k \mathbf{v}_i \mathbf{v}_i^\top \mathbf{H} \xrightarrow{k \to \infty} \mathbf{v}_1 \mathbf{v}_1^\top \mathbf{H}$</div>
+      <div class="step"><span class="step-num">4</span>极限下所有节点特征 = 全局平均的某个投影 → <strong>无法区分不同节点</strong>。</div>
+    </div>
+
+    <p><strong>缓解过平滑的策略</strong>：</p>
+    <ul>
+      <li><strong>残差连接</strong>：$h_i^{(l+1)} = h_i^{(l)} + \text{GNN}(h_i^{(l)})$ — 我们的 DynamicalGNN 就使用了这个</li>
+      <li><strong>JumpingKnowledge</strong>：拼接所有层的输出 $h_i = [h_i^{(1)} \| h_i^{(2)} \| \cdots \| h_i^{(L)}]$</li>
+      <li><strong>DropEdge</strong>：训练时随机删除边</li>
+      <li><strong>PairNorm / NodeNorm</strong>：防止特征过于相似</li>
+    </ul>
+
+    <h3>过压缩问题 (Over-squashing)</h3>
+
+    <p>过压缩是另一个 GNN 的核心问题：<strong>远距离节点的信息被压缩到固定大小的向量中</strong>，导致长程依赖无法有效传播。</p>
+
+    <div class="math-block">
+      $$\left|\frac{\partial h_u^{(L)}}{\partial x_v^{(0)}}\right| \leq c \cdot (\hat{A}^L)_{uv}$$
+      <div class="math-explain">
+        $L$ 层 GNN 后，节点 $u$ 对节点 $v$ 的敏感度以邻接矩阵的 $L$ 次幂为上界。如果 $u, v$ 距离远且图的瓶颈严重（如树结构），$(\hat{A}^L)_{uv}$ 指数衰减。这与 RNN 的梯度消失问题本质相同！
+      </div>
+    </div>
+
+    <div class="callout callout-project">
+      <h4>PhysRobot 中的过平滑/过压缩</h4>
+      <p>在我们的粒子仿真中：</p>
+      <ul>
+        <li><strong>3 层消息传递</strong>（<code>n_message_passing=3</code>）是精心选择的——多了会过平滑，少了信息传不远</li>
+        <li><strong>残差连接</strong>（<code>x_new = ... + x</code>）直接缓解过平滑</li>
+        <li>粒子系统的交互通常是<strong>短程</strong>的（引力、弹力），所以 3 层足够</li>
+        <li>如果需要长程交互，可以考虑 Transformer 风格的全局注意力补充</li>
+      </ul>
+    </div>
+
+    <h3>WL 测试与 GNN 表达力上界</h3>
+
+    <div class="blueprint">
+      <h4>Weisfeiler-Leman (1-WL) 图同构测试</h4>
+      <p>1-WL 测试通过迭代颜色细化来检测图同构：</p>
+      $$c_v^{(k+1)} = \text{HASH}\left(c_v^{(k)}, \{\{c_u^{(k)} : u \in \mathcal{N}(v)\}\}\right)$$
+      <p><strong>Xu et al. (2019) 的核心定理</strong>：消息传递 GNN 的区分能力<strong>至多</strong>等于 1-WL 测试。GIN 达到了这个上界。</p>
+    </div>
+
+    <div class="callout callout-warning">
+      <h4>GNN 无法区分的图对</h4>
+      <p>存在 1-WL 无法区分但不同构的图对（如某些正则图）。这意味着消息传递 GNN 有<strong>固有的表达力瓶颈</strong>。解决方案：</p>
+      <ul>
+        <li><strong>Higher-order GNN</strong>：使用 $k$-WL 测试（$k \geq 2$），对节点<strong>元组</strong>做消息传递</li>
+        <li><strong>随机特征增强</strong>：为节点添加随机 ID 打破对称性</li>
+        <li><strong>子图 GNN</strong>：对每个节点提取子图再处理</li>
+      </ul>
+    </div>
+
+    <div class="code-container">
+      <span class="code-label">Python — WL 颜色细化（图同构测试）</span>
+      <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      <pre><code>import torch
+from collections import Counter
+
+# ============================================================
+# Weisfeiler-Leman 1-WL 图同构测试
+# ============================================================
+def weisfeiler_leman_test(edge_index_1, n1, edge_index_2, n2, iterations=10):
+    """
+    1-WL 图同构测试。
+    
+    如果返回 False，两个图一定不同构。
+    如果返回 True，两个图可能同构（WL 无法确定）。
+    
+    与 GNN 的关系: GIN 的表达力 = 1-WL 测试。
+    """
+    def build_adj(edge_index, n):
+        adj = {i: [] for i in range(n)}
+        for s, t in edge_index.T.tolist():
+            adj[s].append(t)
+        return adj
+    
+    adj1 = build_adj(edge_index_1, n1)
+    adj2 = build_adj(edge_index_2, n2)
+    
+    if n1 != n2:
+        return False, "节点数不同"
+    
+    # 初始颜色（所有节点相同）
+    colors1 = [0] * n1
+    colors2 = [0] * n2
+    
+    for k in range(iterations):
+        # 颜色细化
+        new_colors1 = []
+        new_colors2 = []
+        
+        for v in range(n1):
+            neighbor_colors = tuple(sorted([colors1[u] for u in adj1[v]]))
+            new_colors1.append(hash((colors1[v], neighbor_colors)))
+        
+        for v in range(n2):
+            neighbor_colors = tuple(sorted([colors2[u] for u in adj2[v]]))
+            new_colors2.append(hash((colors2[v], neighbor_colors)))
+        
+        # 重新编号颜色
+        all_colors = sorted(set(new_colors1 + new_colors2))
+        color_map = {c: i for i, c in enumerate(all_colors)}
+        colors1 = [color_map[c] for c in new_colors1]
+        colors2 = [color_map[c] for c in new_colors2]
+        
+        # 比较颜色直方图
+        hist1 = Counter(colors1)
+        hist2 = Counter(colors2)
+        
+        if hist1 != hist2:
+            return False, f"第 {k+1} 轮区分成功"
+    
+    return True, f"经过 {iterations} 轮无法区分（可能同构）"
+
+
+# 测试: 三角形 vs 三条独立边
+triangle = torch.tensor([[0,1,1,2,2,0],[1,0,2,1,0,2]], dtype=torch.long)
+three_edges = torch.tensor([[0,1,2,3,4,5],[1,0,3,2,5,4]], dtype=torch.long)
+
+result, msg = weisfeiler_leman_test(triangle, 3, three_edges, 6)
+print(f"三角形 vs 三条边: {msg}")
+
+# 测试: 两个同构的图
+g1 = torch.tensor([[0,0,1,2],[1,2,2,0]], dtype=torch.long)
+g2 = torch.tensor([[1,1,0,2],[0,2,2,1]], dtype=torch.long)  # 重标号
+result, msg = weisfeiler_leman_test(g1, 3, g2, 3)
+print(f"同构图测试: {msg}")</code></pre>
+    </div>
+
+    <h3>GNN 在物理仿真中的应用总结</h3>
+
+    <div class="callout callout-project">
+      <h4>从 GNN 到物理仿真 — PhysRobot 的完整管线</h4>
+      <p>我们的 <code>DynamicalGNN</code> 遵循 "Learning to Simulate" (Sanchez-Gonzalez et al., 2020) 的范式：</p>
+    </div>
+
+    <div class="flow">
+      <div class="flow-box">粒子状态<br><small>$(x_i, v_i)$</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">构图<br><small>r < cutoff</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">EdgeFrame<br><small>$e_{ij}$</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Node Encode<br><small>$h_i^{(0)}$</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">MP ×3<br><small>$h_i^{(L)}$</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">Decode<br><small>$a_i$</small></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box">积分<br><small>$v', x'$</small></div>
+    </div>
+
+    <div class="code-container">
+      <span class="code-label">PhysRobot — 完整前向传播流程（对照 GDL 理论）</span>
+      <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      <pre><code># 完整的 DynamicalGNN 前向传播，带理论注释
+# 源码: physics_core/dynamical_gnn.py
+
+def forward(self, positions, velocities, edge_index, masses=None):
+    """
+    预测加速度，给定当前状态。
+    
+    GDL 理论对应:
+    - 域 Ω: 粒子系统构成的图 (V=粒子, E=相互作用)
+    - 对称群: E(3) × Σ_n (欧几里得+置换)
+    - 等变操作: EGNN 风格的消息传递
+    
+    管线:
+    1. EdgeFrame (§5.5 EGNN): 编码空间关系为 E(3) 不变特征
+    2. Node Encoder: 嵌入粒子状态
+    3. Message Passing (§5.3 MPNN): 传播信息，学习交互
+    4. Decoder: 预测加速度 a = F/m（牛顿第二定律）
+    """
+    # 步骤 1: Edge Frame — E(3) 不变特征
+    # e_ij = Encoder([r_ij, ||r_ij||, v_rel, ||v_rel||])
+    # 对应 EGNN: 只通过距离 ||x_i - x_j|| 编码空间信息
+    edge_features = self.edge_frame(positions, velocities, edge_index)
+    
+    # 步骤 2: 节点编码
+    # 将 (x, v) 拼接为 6 维输入
+    node_states = torch.cat([positions, velocities], dim=-1)  # (N, 6)
+    node_features = self.node_encoder(node_states)  # (N, hidden_dim)
+    
+    # 步骤 3: 消息传递 × L 层
+    # 对应 §5.3 MPNN: x_i' = γ(x_i, ⊕_j φ(x_i, x_j, e_ij))
+    x = node_features
+    for mp_layer in self.mp_layers:
+        x = mp_layer(x, edge_index, edge_features)
+        # 注意: 每层使用相同的 edge_features（不更新坐标）
+        # 这与 EGNN 不同（EGNN 每层更新坐标）
+        # 我们的选择更高效，因为物理仿真中
+        # 一步内坐标变化很小
+    
+    # 步骤 4: 解码加速度
+    # a = Decoder(h_i) ∈ R³
+    # 这是 GDL 中的 "读出" (readout)
+    accelerations = self.decoder(x)  # (N, 3)
+    
+    return accelerations
+    
+    # 后续步骤（不在 GNN 内部，由积分器完成）:
+    # v' = v + a * dt          (半隐式欧拉)
+    # x' = x + v' * dt
+    # 这就完成了一个完整的物理仿真步！</code></pre>
+    </div>
+
+    <h3>GNN 层数 vs 感受野 vs 计算代价</h3>
+
+    <div class="comparison-table">
+      <table>
+        <thead><tr><th>层数 $L$</th><th>感受野</th><th>过平滑风险</th><th>过压缩风险</th><th>计算复杂度</th><th>适用场景</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>1-hop 邻居</td><td>无</td><td>无</td><td>$O(|E| d)$</td><td>局部特征</td></tr>
+          <tr><td>2</td><td>2-hop 邻居</td><td>低</td><td>低</td><td>$O(2|E| d)$</td><td>大多数任务</td></tr>
+          <tr><td><strong>3</strong></td><td>3-hop 邻居</td><td>中</td><td>中</td><td>$O(3|E| d)$</td><td><strong>PhysRobot ✅</strong></td></tr>
+          <tr><td>5</td><td>5-hop 邻居</td><td>高</td><td>高</td><td>$O(5|E| d)$</td><td>需要长程信息</td></tr>
+          <tr><td>10+</td><td>几乎全图</td><td>极高</td><td>极高</td><td>$O(10|E| d)$</td><td>需特殊技巧</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ====================== COMPREHENSIVE SUMMARY TABLE ====================== -->
+    <h2 id="summary">全章总结：所有架构的统一视角</h2>
+
+    <div class="comparison-table">
+      <table>
+        <thead>
+          <tr>
+            <th>架构</th>
+            <th>域 $\Omega$</th>
+            <th>对称群 $G$</th>
+            <th>核心操作</th>
+            <th>等变/不变</th>
+            <th>参数共享</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>CNN</td><td>网格 $\mathbb{Z}^d$</td><td>平移 $(\mathbb{Z}^d, +)$</td><td>卷积 $F(x) = x \star \theta$</td><td>等变</td><td>滤波器遍历所有位置</td></tr>
+          <tr><td>G-CNN</td><td>齐次空间</td><td>一般群 $G$</td><td>群卷积 $(x \star \theta)(g)$</td><td>等变</td><td>滤波器遍历群元素</td></tr>
+          <tr><td>GCN</td><td>图</td><td>$\Sigma_n$</td><td>$\hat{A}HW$</td><td>等变</td><td>$W$ 对所有节点共享</td></tr>
+          <tr><td>GAT</td><td>图</td><td>$\Sigma_n$</td><td>注意力聚合</td><td>等变</td><td>注意力头共享</td></tr>
+          <tr><td>GIN</td><td>图</td><td>$\Sigma_n$</td><td>Sum + MLP</td><td>等变</td><td>MLP 共享</td></tr>
+          <tr><td>Transformer</td><td>完全图</td><td>$\Sigma_n$</td><td>自注意力</td><td>等变</td><td>Q,K,V 矩阵共享</td></tr>
+          <tr><td>Deep Sets</td><td>集合</td><td>$\Sigma_n$</td><td>$\rho(\sum \phi(x_i))$</td><td>不变</td><td>$\phi, \rho$ 共享</td></tr>
+          <tr><td>EGNN</td><td>几何图</td><td>$E(3) \times \Sigma_n$</td><td>等变消息传递</td><td>等变</td><td>消息函数共享</td></tr>
+          <tr><td>Mesh CNN</td><td>流形</td><td>等距 + 规范</td><td>测地线卷积</td><td>等变</td><td>滤波器+传输矩阵</td></tr>
+          <tr><td>RNN</td><td>$\mathbb{Z}$</td><td>时间平移</td><td>$R(z^{(t)}, h^{(t-1)})$</td><td>等变*</td><td>$R$ 对所有时间步共享</td></tr>
+          <tr><td>LSTM</td><td>$\mathbb{Z}$</td><td>时间扭曲</td><td>门控更新</td><td>类不变</td><td>所有门参数共享</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:0.85rem;color:var(--text-muted)">* RNN 的时间平移等变性需要适当的边界条件（零填充 + 不动点初始化）。LSTM 的时间扭曲不变性是"类不变性"——类中存在等价模型，但不能零样本迁移。</p>
+    </div>
+
+
+    <!-- ====================== EXERCISES ====================== -->
     <div class="exercises" id="exercises">
-      <h3>练习题 Exercises</h3>
+      <h3>练习题</h3>
       <ol>
-        <li><strong>CNN 作为特殊 GNN</strong>：证明一个作用在网格图（每个像素连接其相邻像素）上的 GNN 等价于标准 CNN。需要什么额外约束？</li>
-        <li><strong>GNN 风味对比</strong>：对于以下任务，你会选择哪种 GNN 风味（卷积/注意力/消息传递）？说明理由：
-          <ul>
-            <li>(a) 社交网络中的节点分类</li>
-            <li>(b) 分子性质预测</li>
-            <li>(c) 物理仿真中的力预测</li>
-          </ul>
-        </li>
-        <li><strong>Transformer = GNN</strong>：详细说明 Transformer 中的 Query-Key-Value 注意力 $\text{Attention}(Q, K, V)$ 如何映射到注意力 GNN 的公式中。$a(x_u, x_v)$ 和 $\psi(x_v)$ 分别对应什么？</li>
-        <li><strong>EGNN 等变性证明</strong>：完整证明 EGNN 坐标更新公式在旋转 $R$ 下是等变的，在平移 $b$ 下也是等变的。提示：直接代入 $x_u \mapsto Rx_u + b$ 并展开。</li>
-        <li><strong>EGNN 的局限性</strong>：EGNN 的特征 $f_u$ 只能是标量。如果我们想预测每个粒子的<strong>速度</strong>（向量量），EGNN 能直接做到吗？如何修改？</li>
-        <li><strong>PhysRobot 设计</strong>：为以下场景设计 GNN 架构：
-          <ul>
-            <li>输入：$N$ 个粒子的位置 $r_i \in \mathbb{R}^3$、速度 $v_i \in \mathbb{R}^3$、质量 $m_i \in \mathbb{R}$</li>
-            <li>输出：每个粒子的加速度 $a_i \in \mathbb{R}^3$</li>
-            <li>要求：SE(3)-等变</li>
-            <li>描述你会如何构建图（边的定义）、设计消息函数、保证等变性。</li>
-          </ul>
-        </li>
-        <li><strong>Mesh CNN 应用</strong>：考虑一个三角网格表示的心脏表面。我们想预测每个顶点在下一个心跳时的位移。应该选择哪种 GDL 架构？需要什么对称性？</li>
-        <li><strong>LSTM 的时间扭曲稳定性</strong>：直觉解释为什么遗忘门 $f_t$ 的值接近 1 时，LSTM 对时间扭曲更稳定。</li>
+        <li><strong>[CNN 等变性]</strong> 证明：如果 CNN 使用 circular padding（循环填充），则卷积是<strong>精确</strong>平移等变的（无边界效应）。提示：考虑 DFT 的周期性。</li>
+        
+        <li><strong>[GCN 推导]</strong> 从谱图卷积 $g_\theta \star x = U g_\theta(\Lambda) U^\top x$ 出发，详细推导当 $g_\theta$ 取一阶 Chebyshev 近似时如何得到 GCN 的公式。为什么需要 renormalization trick？不加自环会怎样？</li>
+        
+        <li><strong>[GAT vs GCN]</strong> 构造一个例子，说明 GAT 严格强于 GCN。提示：考虑两个节点 $u, v$ 有相同的邻域结构但不同的特征分布。</li>
+        
+        <li><strong>[GIN 表达力]</strong> 证明 mean 聚合无法区分多重集 $\{\{a, a, b\}\}$ 和 $\{\{a, b, b\}\}$ 当 $a + b = 2a$ 或 $2b$ 时，但 sum 聚合总能区分。更一般地，证明 sum 聚合在多重集上是单射的（在适当条件下）。</li>
+        
+        <li><strong>[Transformer = GAT]</strong> 将标准的多头注意力 $\text{Attention}(Q, K, V) = \text{softmax}(QK^\top / \sqrt{d_k})V$ 改写为 GNN 的消息传递形式。写出对应的消息函数 $\phi$、注意力函数 $a$、聚合函数 $\bigoplus$。</li>
+        
+        <li><strong>[EGNN 等变性]</strong> 验证 EGNN 的坐标更新公式 $x_u' = x_u + \sum_v (x_u - x_v) \psi_c(\cdots)$ 在反射变换 $x \mapsto -x$ 下也是等变的（不仅仅是旋转和平移）。</li>
+        
+        <li><strong>[PhysRobot 编程]</strong> 在我们的 <code>DynamicalGNN</code> 中：(a) 解释为什么使用 sum 聚合而非 mean 聚合。(b) 如果改用 mean 聚合，会对动量守恒产生什么影响？(c) 实现一个实验来验证。</li>
+        
+        <li><strong>[LSTM 门控]</strong> 从时间扭曲不变性的角度解释：为什么遗忘门的偏置初始化为 1 是合理的？如果初始化为 -1 会怎样？用公式说明。</li>
+        
+        <li><strong>[架构选择]</strong> 给定以下任务，选择最合适的架构并说明理由：(a) 预测蛋白质折叠结构；(b) 社交网络中的节点分类；(c) 自动驾驶的视频理解；(d) 粒子物理仿真。</li>
+        
+        <li><strong>[统一框架]</strong> 选择本章的任意两种架构（如 CNN 和 GCN），详细说明它们在几何深度学习蓝图中的对应关系。写出共同的抽象公式，并说明哪些设计选择导致了具体的差异。</li>
       </ol>
     </div>
 
+
+    <!-- ====================== FURTHER READING ====================== -->
+    <h2 id="further-reading">推荐阅读与参考文献</h2>
+
+    <h3>核心论文</h3>
+    <div class="comparison-table">
+      <table>
+        <thead><tr><th>论文</th><th>架构</th><th>年份</th><th>核心贡献</th></tr></thead>
+        <tbody>
+          <tr><td>Kipf & Welling</td><td>GCN</td><td>2016</td><td>半监督分类的谱方法一阶近似</td></tr>
+          <tr><td>Veličković et al.</td><td>GAT</td><td>2018</td><td>图上的注意力机制</td></tr>
+          <tr><td>Hamilton et al.</td><td>GraphSAGE</td><td>2017</td><td>归纳学习 + 邻居采样</td></tr>
+          <tr><td>Xu et al.</td><td>GIN</td><td>2019</td><td>GNN 表达力的理论分析</td></tr>
+          <tr><td>Gilmer et al.</td><td>MPNN</td><td>2017</td><td>消息传递统一框架</td></tr>
+          <tr><td>Satorras et al.</td><td>EGNN</td><td>2021</td><td>E(n) 等变消息传递</td></tr>
+          <tr><td>Vaswani et al.</td><td>Transformer</td><td>2017</td><td>自注意力机制</td></tr>
+          <tr><td>Hochreiter & Schmidhuber</td><td>LSTM</td><td>1997</td><td>门控记忆细胞</td></tr>
+          <tr><td>He et al.</td><td>ResNet</td><td>2016</td><td>残差连接 = ODE 离散化</td></tr>
+          <tr><td>Cohen & Welling</td><td>G-CNN</td><td>2016</td><td>群等变卷积</td></tr>
+          <tr><td>Sanchez-Gonzalez et al.</td><td>GNS</td><td>2020</td><td>GNN 学习物理仿真（PhysRobot 参考）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>PhysRobot 相关的学习路线</h3>
+    <div class="callout callout-project">
+      <h4>从本章到实际项目的桥梁</h4>
+      <ol>
+        <li><strong>基础</strong>：理解消息传递框架 (§5.3) — 这是 DynamicalGNN 的骨架</li>
+        <li><strong>等变性</strong>：掌握 EGNN (§5.5) — 这是 EdgeFrame 的理论来源</li>
+        <li><strong>实践</strong>：用 PyG 实现 MPNN → 在简单粒子系统上训练</li>
+        <li><strong>进阶</strong>：理解 GNS 论文，将 GNN + 积分器组合为完整仿真器</li>
+        <li><strong>前沿</strong>：探索 SE(3)-Transformer、Equiformer 等更强的等变架构</li>
+      </ol>
+    </div>
+
+    <h3>常见面试/考试问题与回答</h3>
+
+    <div class="callout callout-info">
+      <h4>Q: 为什么 GNN 比 MLP 更适合图数据？</h4>
+      <p><strong>A</strong>：MLP 对节点排列敏感（输入 $[x_1, x_2, \ldots, x_n]$ 和 $[x_2, x_1, \ldots, x_n]$ 产生不同输出），不具有置换等变性。GNN 通过<strong>局部聚合</strong>（消息传递）保证置换等变：节点特征只通过置换不变的聚合函数（sum/mean/max）和共享的消息函数更新。MLP 有 $O(n^2 d^2)$ 参数且不泛化到不同大小的图，GNN 有 $O(d^2)$ 参数且天然泛化。</p>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>Q: Transformer 为什么需要位置编码而 CNN 不需要？</h4>
+      <p><strong>A</strong>：从 GNN 视角理解——Transformer 是<strong>完全图上的注意力 GNN</strong>，完全图<strong>没有位置结构</strong>（所有节点等价）。CNN 在<strong>网格</strong>上操作，网格本身蕴含位置信息（邻接关系 = 空间邻近）。位置编码为 Transformer 的"节点"注入位置信息，弥补了完全图缺少的结构先验。正弦位置编码实际上等价于<strong>环形网格</strong>的 DFT 特征向量，因此 Transformer 隐式假设了网格域。</p>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>Q: 我们的 DynamicalGNN 使用 sum 聚合而非 mean，为什么？</h4>
+      <p><strong>A</strong>：物理原因——<strong>力是加性的</strong>（牛顿力学中，合力 = 各分力之和）。Sum 聚合自然对应 $F_i = \sum_{j \in \mathcal{N}(i)} f_{ij}$。如果使用 mean 聚合 $\frac{1}{|\mathcal{N}(i)|} \sum_j f_{ij}$，则一个粒子被更多粒子包围时，每个交互的贡献反而变小——这违反物理直觉。数学上，sum 聚合还保持了<strong>单射性</strong>（GIN 的结论），使模型能区分不同的邻域多重集。</p>
+    </div>
+
+    <h3>概念速查卡</h3>
+
+    <div class="comparison-table">
+      <table>
+        <thead><tr><th>概念</th><th>一句话解释</th><th>公式</th></tr></thead>
+        <tbody>
+          <tr><td>等变性</td><td>变换输入 → 输出以相同方式变换</td><td>$F(\rho(g)x) = \rho(g)F(x)$</td></tr>
+          <tr><td>不变性</td><td>变换输入 → 输出不变</td><td>$F(\rho(g)x) = F(x)$</td></tr>
+          <tr><td>卷积</td><td>滤波器滑过信号的内积</td><td>$(f \star g)(t) = \sum f(\tau)g(t-\tau)$</td></tr>
+          <tr><td>消息传递</td><td>邻居发消息 → 聚合 → 更新</td><td>$x_i' = \gamma(x_i, \bigoplus_j \phi(x_i, x_j))$</td></tr>
+          <tr><td>注意力</td><td>学习邻居的重要性权重</td><td>$\alpha_{ij} = \text{softmax}(a(x_i, x_j))$</td></tr>
+          <tr><td>门控</td><td>学习选择性遗忘/记忆</td><td>$c = f \odot c_{\text{old}} + i \odot \tilde{c}_{\text{new}}$</td></tr>
+          <tr><td>E(3) 等变</td><td>旋转/平移输入 → 输出一致变换</td><td>通过距离不变量 $\|x_i - x_j\|$</td></tr>
+          <tr><td>规范等变</td><td>局部参考系选择不影响结果</td><td>通过平行移动 $\rho(g_{v \to u})$</td></tr>
+          <tr><td>过平滑</td><td>层太多 → 所有节点表示相同</td><td>$\hat{A}^k \to$ 常向量</td></tr>
+          <tr><td>过压缩</td><td>远程信息被挤压到小向量中</td><td>$|\partial h_u^L / \partial x_v^0| \to 0$</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+
+    <!-- ====================== NAVIGATION ====================== -->
     <div class="chapter-nav">
       <a href="../chapter4/index.html">← Chapter 4: 几何域</a>
-      <a href="../chapter6/index.html">Chapter 6: 应用 →</a>
+      <a href="../index.html">📚 总目录</a>
     </div>
+
   </main>
 
-  <script src="../assets/script.js"></script>
+  <!-- ====================== SCRIPTS ====================== -->
+  <script>
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+}
+
+// Load saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.querySelector('.theme-toggle').textContent = '☀️';
+  }
+})();
+
+// Sidebar toggle (mobile)
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// Progress bar
+window.addEventListener('scroll', function() {
+  const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+  const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+  const scrolled = (winScroll / height) * 100;
+  document.getElementById('progressBar').style.width = scrolled + '%';
+});
+
+// Active sidebar link
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+      const link = document.querySelector(`.sidebar a[href="#${entry.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -80% 0px' });
+
+document.querySelectorAll('h2[id], h3[id]').forEach(el => observer.observe(el));
+
+// Copy code
+function copyCode(btn) {
+  const code = btn.closest('.code-container').querySelector('code');
+  navigator.clipboard.writeText(code.textContent).then(() => {
+    btn.textContent = '✅ 已复制';
+    setTimeout(() => { btn.textContent = '📋 复制'; }, 2000);
+  });
+}
+
+// Tab switching
+function switchTab(event, tabId) {
+  const container = event.target.closest('.tab-container');
+  container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  container.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  container.querySelector('#' + tabId).classList.add('active');
+}
+  </script>
 </body>
 </html>

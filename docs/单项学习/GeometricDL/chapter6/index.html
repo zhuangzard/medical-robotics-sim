@@ -30,251 +30,1040 @@
   <nav class="sidebar">
     <h3>Chapter 6</h3>
     <a href="#overview">概述</a>
-    <a href="#chemistry">化学与药物设计</a>
+    <a href="#chemistry">6.1 化学与药物发现</a>
+    <a href="#mol-graphs" class="sub">分子图</a>
+    <a href="#halicin" class="sub">Halicin 的发现</a>
     <a href="#drug-repo" class="sub">药物重定位</a>
-    <a href="#protein" class="sub">蛋白质结构</a>
-    <a href="#physics">物理仿真 🤖</a>
-    <a href="#particle-physics" class="sub">粒子物理</a>
-    <a href="#dynamics" class="sub">动力学仿真</a>
-    <a href="#social">社交网络</a>
-    <a href="#recommender">推荐系统</a>
-    <a href="#combinatorial">组合优化</a>
-    <a href="#cv">计算机视觉</a>
-    <a href="#nlp">自然语言处理</a>
+    <a href="#equivariant-mol" class="sub">等变分子网络</a>
+    <a href="#proteins">6.2 蛋白质生物学</a>
+    <a href="#protein-folding" class="sub">蛋白质折叠</a>
+    <a href="#alphafold" class="sub">AlphaFold</a>
+    <a href="#masif" class="sub">MaSIF 表面方法</a>
+    <a href="#recommender">6.3 推荐系统与社交网络</a>
+    <a href="#pinsage" class="sub">PinSage</a>
+    <a href="#misinformation" class="sub">虚假信息检测</a>
+    <a href="#traffic">6.4 交通预测</a>
+    <a href="#google-maps" class="sub">Google Maps</a>
+    <a href="#vision">6.5 计算机视觉</a>
+    <a href="#imagenet" class="sub">ImageNet 革命</a>
+    <a href="#detection" class="sub">目标检测</a>
+    <a href="#gaming">6.6 游戏 AI</a>
+    <a href="#alphago" class="sub">AlphaGo</a>
+    <a href="#atari" class="sub">Atari</a>
+    <a href="#text-speech">6.7 文本与语音</a>
+    <a href="#wavenet" class="sub">WaveNet</a>
+    <a href="#gpt" class="sub">GPT 系列</a>
+    <a href="#healthcare">6.8 医疗健康</a>
+    <a href="#brain" class="sub">脑网络</a>
+    <a href="#ehr" class="sub">电子健康记录</a>
+    <a href="#physics">6.9 粒子物理与天体物理</a>
+    <a href="#jets" class="sub">粒子 jet 分类</a>
+    <a href="#neutrino" class="sub">中微子天文学</a>
+    <a href="#vr">6.10 虚拟/增强现实</a>
+    <a href="#medical-robotics">6.11 医疗机器人</a>
+    <a href="#surgery-sim" class="sub">手术仿真</a>
+    <a href="#tissue-modeling" class="sub">软组织建模</a>
+    <a href="#instrument" class="sub">器械控制</a>
+    <a href="#summary">总结</a>
     <a href="#exercises">练习题</a>
     <h3>导航</h3>
     <a href="../index.html">📚 总目录</a>
     <a href="../chapter5/index.html">← Ch.5 GDL 模型</a>
-    <a href="../chapter7/index.html">→ Ch.7 历史</a>
+    <a href="../chapter7/index.html">→ Ch.7 历史视角</a>
   </nav>
 
   <main class="main">
-    <h1>Chapter 6: Problems and Applications<br><span style="font-size:0.6em;color:var(--text-secondary)">问题与应用</span></h1>
+    <h1>Chapter 6: Problems and Applications<br><span style="font-size:0.6em;color:var(--text-secondary)">问题与应用 — GDL 如何改变世界</span></h1>
 
     <div class="callout callout-info" id="overview">
       <h4>本章概述</h4>
-      <p>不变性和对称性在真实世界数据中无处不在。本章展示 GDL 在多个领域的成功应用，包括化学、物理、社交网络、推荐系统、组合优化等。</p>
-      <p><strong>预计阅读时间</strong>：1 小时</p>
+      <p>不变性和对称性在现实世界数据中<strong>无处不在</strong>。因此，21 世纪机器学习最受欢迎的应用有许多直接来自 Geometric Deep Learning，有时甚至并未完全意识到这一事实。本章提供 GDL 应用的全景扫描：</p>
+      <ul>
+        <li><strong>化学与药物</strong> — 分子图上的 GNN 革命</li>
+        <li><strong>蛋白质生物学</strong> — AlphaFold 和 MaSIF</li>
+        <li><strong>推荐系统</strong> — 影响数十亿用户</li>
+        <li><strong>交通预测</strong> — Google Maps 的 GNN 引擎</li>
+        <li><strong>计算机视觉</strong> — ImageNet 到目标检测</li>
+        <li><strong>粒子物理</strong> — 从 LHC 到中微子天文学</li>
+        <li><strong>医疗机器人</strong> — 与 PhysRobot 的直接关联 🤖</li>
+      </ul>
+      <p><strong>预计阅读时间</strong>：3 小时 &nbsp;|&nbsp; <strong>每个应用</strong>：问题定义 + 图结构 + 模型 + 代码 + 结果</p>
     </div>
 
-    <!-- Chemistry -->
-    <h2 id="chemistry">化学与药物设计<br><span style="font-size:0.7em;color:var(--text-secondary)">Chemistry and Drug Design</span></h2>
+    <!-- ========= 6.1 化学与药物发现 ========= -->
+    <h2 id="chemistry">6.1 化学与药物发现<br><span style="font-size:0.7em;color:var(--text-secondary)">Chemistry and Drug Design</span></h2>
+
+    <h3 id="mol-graphs">分子即图</h3>
 
     <div class="bilingual">
       <div class="zh">
-        <p>图表示学习在<span class="term">计算化学</span>和<strong>药物开发</strong>中是最有前途的应用之一。传统药物是设计来与目标蛋白质结合的小分子。药物开发极其漫长和昂贵：通常需要超过十年，花费超过十亿美元。</p>
-        <p>可化学合成的分子空间巨大（估计约 $10^{60}$），无法通过实验穷举搜索——因此需要<strong>虚拟筛选</strong>（virtual screening / in silico screening）。</p>
+        <p>图上表征学习最有前景的应用之一是<strong>计算化学</strong>和<strong>药物开发</strong>。传统药物是小分子，被设计为与目标分子（通常是蛋白质）化学结合（'结合'），以激活或破坏某些与疾病相关的化学过程。</p>
+        <p>药物开发是一个极其漫长且昂贵的过程：将一种新药推向市场通常需要<strong>超过十年</strong>，花费<strong>超过十亿美元</strong>。不到 5% 的候选药物能进入最后阶段。</p>
       </div>
       <div class="en">
-        One of the most promising applications of representation learning on graphs is in computational chemistry and drug development. The space of chemically synthesisable molecules is estimated around 10⁶⁰.
+        One of the most promising applications of representation learning on graphs is in computational chemistry and drug development. Drug development typically takes more than a decade and costs more than a billion dollars, with less than 5% of candidates making it to the last stage.
       </div>
     </div>
 
-    <div class="callout callout-info">
-      <h4>里程碑案例：Halicin 抗生素发现 (Stokes et al., 2020)</h4>
-      <p>使用 GNN 训练预测候选分子是否抑制大肠杆菌生长，发现 <strong>Halicin</strong>（一种原本用于治疗糖尿病的分子）是一种高效抗生素，甚至对已知抗药性的细菌株有效。该发现被科学界和大众媒体广泛报道。</p>
+    <div class="math-block">
+      $$\text{分子图: } G = (\mathcal{V}, \mathcal{E}) \quad \text{where } \mathcal{V} = \text{atoms}, \; \mathcal{E} = \text{bonds}$$
+      $$\text{节点特征: } x_v = (\text{原子类型}, \text{电荷}, \text{价态}, \text{手性}, \ldots)$$
+      $$\text{边特征: } e_{uv} = (\text{键类型: 单/双/三/芳香}, \text{是否在环中}, \ldots)$$
+      <div class="math-explain">
+        分子天然地表示为图：<strong>原子</strong>是节点，<strong>化学键</strong>是边。节点和边都有丰富的特征。化学合成空间估计约有 $10^{60}$ 种分子——这使得实验筛选不可能，必须依赖<strong>虚拟筛选</strong>（in silico screening）。
+      </div>
     </div>
 
     <div class="figure">
-      <img src="../assets/ch6_p107_img0.png" alt="Chemistry applications">
-      <figcaption>分子图上的 GNN 应用：将分子表示为图（原子 = 节点，化学键 = 边），使用 GNN 预测分子性质。</figcaption>
+      <img src="../assets/ch6_p107_img0.png" alt="Halicin molecular graph">
+      <figcaption>Halicin 的分子图。GNN 预测它是一种高效的广谱抗生素，甚至对已知具有抗药性的细菌株也有效。</figcaption>
     </div>
 
-    <p>相关的等变 GNN 架构：TFN (Thomas et al., 2018)、EGNN (Satorras et al., 2021) 等在分子建模中引入旋转/平移等变性。</p>
-
-    <h3 id="drug-repo">药物重定位 Drug Repositioning</h3>
+    <h3 id="halicin">里程碑：Halicin 的发现</h3>
 
     <div class="bilingual">
       <div class="zh">
-        <p>比设计全新药物更快更便宜的方式是<span class="term">药物重定位</span>——评估已批准药物的新用途。药物在人体中的作用及其相互作用可以建模为图，引出了 Barabási 提出的"<strong>网络医学</strong>"（Network Medicine）概念。</p>
-        <p>代表工作：Zitnik et al. (2018) 使用 GNN 预测<strong>多药联合治疗的副作用</strong>，将其形式化为图中的边预测任务。</p>
+        <p>Stokes et al. (2020) 使用 GNN 训练预测候选分子是否抑制大肠杆菌生长，成功发现 <strong>Halicin</strong>——一种原本用于治疗糖尿病的分子——实际上是一种高效的<strong>广谱抗生素</strong>，甚至对已知具有抗生素抗性的细菌株也有效。这一发现被科学界和大众媒体广泛报道。</p>
       </div>
       <div class="en">
-        Drug repositioning seeks to evaluate already-approved drugs for novel purposes. The action of drugs can be modeled as a graph, giving rise to 'network medicine'.
+        Stokes et al. (2020) used a GNN to effectively discover that Halicin, originally indicated for treating diabetes, is a highly potent antibiotic, even against bacteria strains with known antibiotic resistance.
       </div>
     </div>
 
-    <h3 id="protein">蛋白质结构与设计 Protein Structure</h3>
+    <pre><code># 分子属性预测的 GNN (简化版)
+import torch
+import torch.nn as nn
+from torch_geometric.nn import GCNConv, global_mean_pool
+from torch_geometric.data import Data
+
+class MolecularGNN(nn.Module):
+    """
+    分子属性预测的图神经网络
+    
+    GDL 视角:
+    - 域: 分子图 (原子=节点, 键=边)
+    - 对称群: Σ_n (原子排列对称)
+    - 等变层: GCN 消息传递
+    - 不变输出: 全局池化 → 分子级属性
+    """
+    def __init__(self, num_atom_features=9, hidden=64, num_classes=2):
+        super().__init__()
+        self.conv1 = GCNConv(num_atom_features, hidden)
+        self.conv2 = GCNConv(hidden, hidden)
+        self.conv3 = GCNConv(hidden, hidden)
+        self.classifier = nn.Sequential(
+            nn.Linear(hidden, 32),
+            nn.ReLU(),
+            nn.Linear(32, num_classes)
+        )
+        self.relu = nn.ReLU()
+    
+    def forward(self, data):
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        
+        # 等变层: 消息传递 (置换等变)
+        x = self.relu(self.conv1(x, edge_index))
+        x = self.relu(self.conv2(x, edge_index))
+        x = self.relu(self.conv3(x, edge_index))
+        
+        # 不变池化: 全局平均 (置换不变)
+        x = global_mean_pool(x, batch)
+        
+        # 分类: 分子级预测
+        return self.classifier(x)
+
+# 创建一个简单的分子图 (水分子 H2O)
+# 3 个原子: O, H, H
+x = torch.tensor([
+    [8, 0, 0, 0, 0, 0, 0, 0, 2],  # 氧 (原子序数=8, 价=2)
+    [1, 0, 0, 0, 0, 0, 0, 0, 1],  # 氢
+    [1, 0, 0, 0, 0, 0, 0, 0, 1],  # 氢
+], dtype=torch.float)
+
+edge_index = torch.tensor([[0,0,1,2],[1,2,0,0]], dtype=torch.long)
+data = Data(x=x, edge_index=edge_index, batch=torch.zeros(3, dtype=torch.long))
+
+model = MolecularGNN()
+pred = model(data)
+print(f"分子图: {data.num_nodes} 原子, {data.num_edges} 键")
+print(f"预测输出: {pred.shape} (抑菌活性概率)")</code></pre>
+
+    <h3 id="drug-repo">药物重定位 (Drug Repositioning)</h3>
 
     <div class="bilingual">
       <div class="zh">
-        <p><strong>蛋白质折叠</strong>问题是生物学中最重要的问题之一——从氨基酸序列预测蛋白质的 3D 结构。<strong>AlphaFold 2</strong> (Jumper et al., 2021) 结合了 Transformer 和等变 GNN 技术，在 CASP14 竞赛中取得突破性成功。</p>
-        <p>蛋白质可以在多个层面建模为图：</p>
+        <p>比生成全新药物更快、更便宜的途径是<span class="term">药物重定位</span>——评估已批准的药物用于新用途。在某个抽象层面上，药物对人体生化的作用及其之间的相互作用可以建模为<strong>图</strong>，催生了 Albert-László Barabási 提出的"<strong>网络医学</strong>"概念。</p>
+        <p>Zitnik et al. (2018) 用 GNN 预测联合用药的副作用（多药理学），将问题形式化为药物-药物交互图上的<strong>边预测</strong>任务。</p>
+      </div>
+      <div class="en">
+        Drug repositioning seeks to evaluate already-approved drugs for a novel purpose. The drug-drug interaction network is modeled as a graph, and GNNs predict side effects as an edge prediction task.
+      </div>
+    </div>
+
+    <h3 id="equivariant-mol">等变分子网络</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>更先进的分子 GNN 不仅考虑图拓扑，还考虑分子的<strong>3D 几何结构</strong>，并融入对旋转和平移的<strong>等变性</strong>：</p>
         <ul>
-          <li><strong>残基接触图</strong>：氨基酸残基作为节点，空间接触作为边</li>
-          <li><strong>原子级图</strong>：每个原子作为节点</li>
-          <li><strong>多序列比对</strong>（MSA）：进化信息作为输入特征</li>
+          <li><strong>SchNet</strong> (Schütt et al., 2018): 使用连续滤波器和原子间距离</li>
+          <li><strong>DimeNet</strong> (Gasteiger et al., 2020): 加入键角信息</li>
+          <li><strong>EGNN</strong> (Satorras et al., 2021): E(n)-等变，直接更新坐标</li>
+          <li><strong>PaiNN</strong> (Schütt et al., 2021): 等变消息传递，向量特征</li>
+          <li><strong>TFN</strong> (Thomas et al., 2018): 使用球谐函数的张量场网络</li>
         </ul>
       </div>
       <div class="en">
-        Protein folding — predicting 3D structure from amino acid sequence — is one of the most important problems in biology. AlphaFold 2 combined Transformers and equivariant GNNs for breakthrough results.
+        More advanced molecular GNNs incorporate 3D geometry with equivariance to rotations and translations: SchNet, DimeNet, EGNN, PaiNN, TFN.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\text{EGNN 更新规则:} \quad h_i^{(l+1)} = \phi_h\left(h_i^{(l)}, \sum_{j \neq i} \phi_e(h_i^{(l)}, h_j^{(l)}, \|r_i - r_j\|^2, a_{ij})\right)$$
+      $$r_i^{(l+1)} = r_i^{(l)} + \sum_{j \neq i} (r_i^{(l)} - r_j^{(l)}) \cdot \phi_r(m_{ij})$$
+      <div class="math-explain">
+        <strong>EGNN 的关键设计</strong>：
+        <br>• 标量特征 $h_i$ 的更新使用不变量 $\|r_i - r_j\|^2$（旋转不变）
+        <br>• 坐标 $r_i$ 的更新方向沿着 $(r_i - r_j)$（旋转等变）
+        <br>• 整个网络自动满足 E(n)-等变性，无需数据增强！
+      </div>
+    </div>
+
+    <pre><code># E(n) 等变图神经网络 (EGNN) 简化实现
+import torch
+import torch.nn as nn
+
+class EGNNLayer(nn.Module):
+    """
+    E(n)-Equivariant Graph Neural Network Layer
+    
+    性质:
+    - 标量特征 h 对旋转/平移/反射 不变
+    - 坐标 r 对旋转/平移/反射 等变
+    """
+    def __init__(self, hidden_dim=64):
+        super().__init__()
+        # 消息函数: 使用不变量 (距离)
+        self.edge_mlp = nn.Sequential(
+            nn.Linear(2 * hidden_dim + 1, hidden_dim),
+            nn.SiLU(),
+            nn.Linear(hidden_dim, hidden_dim)
+        )
+        # 节点更新
+        self.node_mlp = nn.Sequential(
+            nn.Linear(2 * hidden_dim, hidden_dim),
+            nn.SiLU(),
+            nn.Linear(hidden_dim, hidden_dim)
+        )
+        # 坐标更新权重
+        self.coord_mlp = nn.Sequential(
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.SiLU(),
+            nn.Linear(hidden_dim, 1)
+        )
+    
+    def forward(self, h, r, edge_index):
+        src, dst = edge_index
+        
+        # 1. 计算不变量: 距离的平方
+        r_diff = r[src] - r[dst]
+        dist_sq = (r_diff ** 2).sum(dim=-1, keepdim=True)  # 旋转不变!
+        
+        # 2. 边消息 (使用不变量)
+        edge_feat = torch.cat([h[src], h[dst], dist_sq], dim=-1)
+        m_ij = self.edge_mlp(edge_feat)
+        
+        # 3. 聚合消息
+        agg = torch.zeros_like(h)
+        agg.index_add_(0, dst, m_ij)
+        
+        # 4. 更新节点特征 (不变)
+        h_new = self.node_mlp(torch.cat([h, agg], dim=-1))
+        
+        # 5. 更新坐标 (等变!)
+        # r_new = r + Σ_j (r_i - r_j) * φ(m_ij)
+        coord_weights = self.coord_mlp(m_ij)
+        coord_agg = torch.zeros_like(r)
+        coord_agg.index_add_(0, dst, r_diff * coord_weights)
+        r_new = r + coord_agg
+        
+        return h_new, r_new
+
+# 演示
+layer = EGNNLayer(hidden_dim=32)
+h = torch.randn(5, 32)  # 5个原子的标量特征
+r = torch.randn(5, 3)    # 5个原子的3D坐标
+edges = torch.tensor([[0,1,2,3],[1,2,3,4]], dtype=torch.long)
+
+h_new, r_new = layer(h, r, edges)
+
+# 验证等变性: 旋转输入坐标
+theta = torch.tensor(0.5)
+R = torch.tensor([  # 绕z轴旋转
+    [torch.cos(theta), -torch.sin(theta), 0],
+    [torch.sin(theta),  torch.cos(theta), 0],
+    [0, 0, 1]
+], dtype=torch.float)
+
+r_rotated = r @ R.T
+h_rot, r_rot = layer(h, r_rotated, edges)
+
+# r_rot 应该等于 r_new @ R.T (等变!)
+print(f"等变性误差: {(r_rot - r_new @ R.T).abs().max():.6f}")
+# → 应该接近 0 (数值精度)</code></pre>
+
+    <!-- ========= 6.2 蛋白质生物学 ========= -->
+    <h2 id="proteins">6.2 蛋白质生物学<br><span style="font-size:0.7em;color:var(--text-secondary)">Protein Biology</span></h2>
+
+    <h3 id="protein-folding">蛋白质折叠问题</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>蛋白质是<strong>生物高分子</strong>，由氨基酸链在静电力的影响下折叠成复杂的 3D 结构。正是这种结构赋予蛋白质其功能：</p>
+        <ul>
+          <li><strong>抗体</strong>：保护身体抵御病原体</li>
+          <li><strong>胶原蛋白</strong>：赋予皮肤结构</li>
+          <li><strong>血红蛋白</strong>：将氧气输送到细胞</li>
+          <li><strong>酶</strong>：催化化学反应</li>
+        </ul>
+        <p>蛋白质生物信息学的典型层级问题：<strong>序列</strong>（1D 字符串）→ <strong>3D 结构</strong>（蛋白质折叠）→ <strong>功能</strong>（功能预测）。</p>
+      </div>
+      <div class="en">
+        Proteins are biopolymers that fold into complex 3D structures under electrostatic forces. The typical hierarchy: sequence → structure (folding) → function.
       </div>
     </div>
 
     <div class="figure">
       <img src="../assets/ch6_p108_img0.png" alt="Protein structure">
-      <figcaption>蛋白质的图表示：氨基酸残基作为节点，空间邻近关系和化学键作为边。</figcaption>
+      <figcaption>蛋白质从氨基酸序列到3D结构的折叠过程。Fischer 的"钥匙-锁原理"(1894)：两个蛋白质通常只有在具有几何和化学互补结构时才会相互作用。</figcaption>
     </div>
 
-    <!-- Physics -->
-    <h2 id="physics">物理仿真<br><span style="font-size:0.7em;color:var(--text-secondary)">Physics Simulations 🤖</span></h2>
-
-    <div class="callout callout-project">
-      <h4>与 PhysRobot 项目最直接相关的应用领域！</h4>
-    </div>
-
-    <h3 id="particle-physics">粒子物理 Particle Physics</h3>
+    <h3 id="alphafold">AlphaFold: 结构预测的革命</h3>
 
     <div class="bilingual">
       <div class="zh">
-        <p>高能物理实验（如 LHC）产生海量粒子碰撞数据。粒子碰撞事件可以自然地表示为<strong>点云</strong>或<strong>图</strong>。GNN 被用于：</p>
+        <p>DeepMind 的 <strong>AlphaFold</strong> (Senior et al., 2020) 使用<strong>接触图</strong>（contact graphs）表示蛋白质结构，在 CASP14 竞赛中以压倒性优势获胜，被认为<strong>"解决"了蛋白质结构预测问题</strong>——这是生物学中 50 年来的大挑战。</p>
+        <p>AlphaFold 2 的关键创新包括：</p>
         <ul>
-          <li><strong>粒子喷注分类</strong>（Jet classification）</li>
-          <li><strong>事件重建</strong>（Event reconstruction）</li>
-          <li><strong>异常检测</strong>（Anomaly detection）</li>
-        </ul>
-        <p>Lorentz 群等变性在这里至关重要——物理结果不应依赖于参考系的选择。</p>
-      </div>
-      <div class="en">
-        High-energy physics experiments generate massive particle collision data. GNNs are used for jet classification, event reconstruction, and anomaly detection with Lorentz equivariance.
-      </div>
-    </div>
-
-    <h3 id="dynamics">动力学仿真 Dynamics Simulation</h3>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>GNN 在物理动力学仿真中的应用是近年最激动人心的方向之一：</p>
-      </div>
-      <div class="en">
-        GNN applications in physical dynamics simulation is one of the most exciting directions.
-      </div>
-    </div>
-
-    <div class="callout callout-info">
-      <h4>关键论文</h4>
-      <ul>
-        <li><strong>Interaction Networks</strong> (Battaglia et al., 2016) — 最早用 GNN 学习物理交互的工作</li>
-        <li><strong>Graph Networks for Physics</strong> (Sanchez-Gonzalez et al., 2020) — 学习复杂的粒子和网格物理</li>
-        <li><strong>Learning to Simulate</strong> (Pfaff et al., 2021) — MeshGraphNets，在三角网格上学习流体/布料仿真</li>
-        <li><strong>Glass dynamics</strong> (Bapst et al., 2020) — GNN 预测玻璃动力学，优于传统物理模型</li>
-        <li><strong>Hamiltonian/Lagrangian NNs</strong> — 将守恒律硬编码进网络结构</li>
-      </ul>
-    </div>
-
-    <div class="callout callout-project">
-      <h4>动力学仿真与 PhysRobot 的直接联系</h4>
-      <p>我们的 PhysRobot 项目正是基于这些思想：</p>
-      <ul>
-        <li><strong>MeshGraphNets</strong>（Pfaff et al., 2021）的方法直接适用于我们的软组织仿真——在三角网格上用 GNN 学习物理</li>
-        <li><strong>粒子系统仿真</strong>（Sanchez-Gonzalez et al., 2020）启发了我们的粒子级物理模型</li>
-        <li><strong>SE(3)-等变性</strong>保证了物理一致性——旋转/平移仿真场景不会改变物理行为</li>
-        <li><strong>多尺度策略</strong>——结合粗粒度粒子系统和细粒度网格进行多分辨率仿真</li>
-      </ul>
-    </div>
-
-    <div class="figure">
-      <img src="../assets/ch6_p110_img0.png" alt="Physics simulation with GNNs">
-      <figcaption>GNN 在物理仿真中的应用：粒子系统、流体仿真、布料仿真等。</figcaption>
-    </div>
-
-    <!-- Social Networks -->
-    <h2 id="social">社交网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Social Networks</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>社交网络是图的经典应用场景。GNN 用于：</p>
-        <ul>
-          <li><strong>社区检测</strong>（Community Detection）</li>
-          <li><strong>用户分类</strong>（节点分类）</li>
-          <li><strong>链接预测</strong>（预测新的友谊关系）</li>
-          <li><strong>信息传播建模</strong>（谣言/病毒传播）</li>
-          <li><strong>影响力最大化</strong></li>
+          <li><strong>Evoformer</strong>: 在序列和空间两个维度上交替注意力</li>
+          <li><strong>SE(3)-等变结构模块</strong>: 将 2D 注意力输出转化为 3D 坐标</li>
+          <li><strong>多序列比对</strong> (MSA): 利用进化信息</li>
+          <li><strong>回收机制</strong>: 迭代精化结构预测</li>
         </ul>
       </div>
       <div class="en">
-        Social networks are a classical application of graphs. GNNs are used for community detection, node classification, link prediction, and influence maximization.
+        DeepMind's AlphaFold used contact graphs to represent protein structure, winning CASP14 by a large margin and effectively "solving" the protein structure prediction problem.
       </div>
     </div>
 
-    <!-- Recommender Systems -->
-    <h2 id="recommender">推荐系统<br><span style="font-size:0.7em;color:var(--text-secondary)">Recommender Systems</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>推荐系统可以建模为<strong>用户-物品二部图</strong>上的链接预测问题。GNN 通过在图上传播信息来学习用户和物品的表示。</p>
-        <p>代表工作：<strong>PinSage</strong> (Ying et al., 2018) — Pinterest 的大规模 GNN 推荐系统，处理数十亿节点和边。</p>
-      </div>
-      <div class="en">
-        Recommender systems can be modeled as link prediction on user-item bipartite graphs. PinSage scales to billions of nodes and edges.
+    <div class="math-block">
+      $$\text{AlphaFold 的 GDL 视角:}$$
+      $$\text{域: } \Omega = \text{氨基酸残基的完全图} \quad \text{对称群: } G = SE(3)$$
+      $$\text{输入: } \text{序列 + MSA + 模板} \xrightarrow{\text{Evoformer}} \text{距离矩阵} \xrightarrow{\text{SE(3)-等变}} \text{3D 坐标}$$
+      <div class="math-explain">
+        AlphaFold 是 GDL 原则的辉煌实践：它利用了蛋白质结构对 SE(3)（旋转+平移）的<strong>等变性</strong>（结构不依赖于坐标系选择），以及氨基酸残基之间的图结构上的<strong>置换等变性</strong>。
       </div>
     </div>
 
-    <!-- Combinatorial Optimization -->
-    <h2 id="combinatorial">组合优化<br><span style="font-size:0.7em;color:var(--text-secondary)">Combinatorial Optimization</span></h2>
+    <h3 id="masif">MaSIF: 蛋白质表面方法</h3>
 
     <div class="bilingual">
       <div class="zh">
-        <p>许多组合优化问题天然具有图结构（如 TSP、图着色、最大割等）。GNN 可以：</p>
-        <ul>
-          <li>学习启发式函数来指导搜索</li>
-          <li>直接输出（近似）解</li>
-          <li>与传统求解器结合（学习分支策略等）</li>
-        </ul>
+        <p>Gainza et al. (2020) 开发了 <strong>MaSIF</strong>（Molecular Surface Interaction Fingerprinting），从蛋白质的 3D 结构预测蛋白质-蛋白质相互作用。MaSIF 将蛋白质建模为<strong>分子表面</strong>（离散化为网格），在局部测地补丁上使用<strong>网格卷积神经网络</strong>。</p>
+        <p>MaSIF 成功实现了<strong>从头设计</strong>（de novo）蛋白质——可以抑制 PD-1/PD-L1 复合物的蛋白质-蛋白质相互作用，这在<strong>癌症免疫治疗</strong>中至关重要。</p>
       </div>
       <div class="en">
-        Many combinatorial optimization problems have natural graph structure. GNNs can learn heuristics, output approximate solutions, or guide traditional solvers.
-      </div>
-    </div>
-
-    <!-- CV -->
-    <h2 id="cv">计算机视觉<br><span style="font-size:0.7em;color:var(--text-secondary)">Computer Vision</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>CNN 已经彻底改变了计算机视觉。近年来 <strong>Vision Transformer</strong>（ViT, Dosovitskiy et al., 2020）表明自注意力也可以应用于图像——将图像分割为 patch 序列，每个 patch 作为一个"token"。从 GDL 的角度，ViT 是完全图上的注意力 GNN。</p>
-      </div>
-      <div class="en">
-        CNNs have revolutionized computer vision. Vision Transformers (ViT) show that self-attention can also be applied to images by treating image patches as tokens — from GDL's perspective, this is an attentional GNN on a complete graph.
+        MaSIF models proteins as molecular surfaces (meshes) and uses mesh CNNs on local geodesic patches. It enabled de novo protein design for cancer immunotherapy (PD-1/PD-L1 inhibition).
       </div>
     </div>
 
     <div class="figure">
-      <img src="../assets/ch6_p116_img0.jpeg" alt="Computer vision applications">
-      <figcaption>计算机视觉中的 GDL：从标准 CNN 到 Vision Transformer，再到 3D 点云处理。</figcaption>
+      <img src="../assets/ch6_p109_img0.png" alt="MaSIF protein surface">
+      <figcaption>PD-L1 蛋白质表面（热力图显示预测的结合位点）和设计的结合蛋白（显示为带状图）。这种从几何角度设计的蛋白质有潜力作为癌症免疫治疗药物。</figcaption>
     </div>
 
-    <!-- NLP -->
-    <h2 id="nlp">自然语言处理<br><span style="font-size:0.7em;color:var(--text-secondary)">Natural Language Processing</span></h2>
+    <!-- ========= 6.3 推荐系统 ========= -->
+    <h2 id="recommender">6.3 推荐系统与社交网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Recommender Systems and Social Networks</span></h2>
+
+    <h3 id="pinsage">PinSage: 工业级 GNN 推荐</h3>
 
     <div class="bilingual">
       <div class="zh">
-        <p>Transformer 在 NLP 中的成功（BERT、GPT 等）可以从 GDL 的角度理解：文本序列上的自注意力 = 完全图上的注意力 GNN + 位置编码。</p>
-        <p>更结构化的方法包括将语法树或知识图谱建模为图，使用 GNN 进行推理。</p>
+        <p>图表征学习的第一个大规模工业应用发生在<strong>社交网络</strong>中，主要是推荐系统。推荐系统负责决定向用户提供哪些内容，通常通过<strong>链接预测</strong>目标实现。</p>
+        <p>Pinterest 的 <strong>PinSage</strong> (Ying et al., 2018) 是第一个成功部署在生产环境中的 GNN，将图表征学习<strong>扩展到数百万节点和数十亿边</strong>的图。</p>
+        <p>后续在生产环境中部署的 GNN 推荐系统包括：</p>
+        <ul>
+          <li>阿里巴巴的 <strong>Aligraph</strong> (Zhu et al., 2019)</li>
+          <li>亚马逊的 <strong>P-Companion</strong> (Hao et al., 2020)</li>
+        </ul>
+        <p>通过这种方式，图深度学习每天影响着<strong>数百万</strong>人的日常生活。</p>
       </div>
       <div class="en">
-        Transformer's success in NLP (BERT, GPT) can be understood from GDL: self-attention on sequences = attentional GNN on complete graph + positional encoding.
+        PinSage (Pinterest) was the first successful production deployment of GNNs, scaling to graphs with millions of nodes and billions of edges. GNN-backed recommenders from Alibaba and Amazon followed.
       </div>
     </div>
 
-    <!-- Exercises -->
+    <pre><code># 推荐系统中的 GNN: 链接预测
+import torch
+import torch.nn as nn
+from torch_geometric.nn import SAGEConv
+
+class RecommenderGNN(nn.Module):
+    """
+    简化的推荐系统 GNN (PinSage 风格)
+    
+    GDL 视角:
+    - 域: 用户-物品二部图
+    - 对称群: 节点置换 Σ_n
+    - 任务: 链接预测 (预测用户是否会与物品交互)
+    """
+    def __init__(self, num_features=128, hidden=256, out=128):
+        super().__init__()
+        self.conv1 = SAGEConv(num_features, hidden)
+        self.conv2 = SAGEConv(hidden, out)
+        self.relu = nn.ReLU()
+    
+    def encode(self, x, edge_index):
+        """等变编码: 生成节点嵌入"""
+        h = self.relu(self.conv1(x, edge_index))
+        h = self.conv2(h, edge_index)
+        return h
+    
+    def predict_link(self, z, edge_label_index):
+        """链接预测: 内积 (不变)"""
+        src, dst = edge_label_index
+        return (z[src] * z[dst]).sum(dim=-1)  # 内积 → 不变
+    
+    def forward(self, x, edge_index, edge_label_index):
+        z = self.encode(x, edge_index)
+        return self.predict_link(z, edge_label_index)
+
+print("推荐系统 GNN: 等变编码 + 不变预测")
+print("嵌入空间中的近邻 = 推荐候选")</code></pre>
+
+    <h3 id="misinformation">虚假信息检测</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>Fabula AI（由本书作者之一创立，2019年被 Twitter 收购）开发了基于 GNN 的<strong>虚假信息检测</strong>技术。方法是将新闻传播建模为分享用户构成的图，然后用 GNN 对整个图进行分类（真实 vs 虚假）。分析节点嵌入揭示了"<strong>回音室效应</strong>"——倾向于分享错误信息的用户形成明显的聚类。</p>
+      </div>
+      <div class="en">
+        Fabula AI (acquired by Twitter in 2019) modeled news spread as a graph of sharing users, using GNN to classify the graph as true/fake content. Analyzing embeddings revealed clear "echo chamber" clustering.
+      </div>
+    </div>
+
+    <!-- ========= 6.4 交通预测 ========= -->
+    <h2 id="traffic">6.4 交通预测<br><span style="font-size:0.7em;color:var(--text-secondary)">Traffic Forecasting</span></h2>
+
+    <div class="figure">
+      <img src="../assets/ch6_p110_img0.png" alt="Road network graph">
+      <figcaption>道路网络（上）及其对应的图表示（下）。交叉口作为节点，道路段作为连接它们的边。</figcaption>
+    </div>
+
+    <h3 id="google-maps">Google Maps 中的 GNN</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>交通网络是 GDL 技术产生<strong>数十亿用户</strong>影响的另一个领域。在道路网络上，交叉口是节点，道路段是边——边可以用道路长度、当前或历史速度等特征化。</p>
+        <p>DeepMind 的基于 GNN 的 ETA 预测器现已部署在 <strong>Google Maps</strong> 生产环境中，在全球多个主要城市提供 ETA 查询服务。在悉尼等城市，<strong>预测质量提升超过 40%</strong>。</p>
+        <p>百度地图也使用 <strong>ConSTGAT</strong>（时空图注意力网络变体）来提供出行时间预测。</p>
+      </div>
+      <div class="en">
+        DeepMind's GNN-based ETA predictor is deployed in Google Maps, yielding 40+% improvements in prediction quality in cities like Sydney. Baidu Maps uses a spatio-temporal GAT variant (ConSTGAT).
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch6_p110_img1.png" alt="Google Maps GNN improvements">
+      <figcaption>GNN 在 Google Maps 中部署的城市及其预测质量的相对改善（悉尼等城市超过 40%）。</figcaption>
+    </div>
+
+    <pre><code># 交通预测的时空 GNN (简化版)
+import torch
+import torch.nn as nn
+
+class SpatioTemporalGNN(nn.Module):
+    """
+    时空图神经网络用于交通预测
+    
+    GDL 视角:
+    - 空间域: 道路网络图 (交叉口=节点, 道路=边)
+    - 时间域: 时间序列 (1D 网格)
+    - 对称群: 空间上的图置换 × 时间上的平移
+    - 任务: 预测到达时间 (ETA) — 图回归
+    """
+    def __init__(self, node_features=8, hidden=64, time_steps=12):
+        super().__init__()
+        # 空间编码: GNN
+        self.spatial_conv1 = nn.Linear(node_features, hidden)
+        self.spatial_conv2 = nn.Linear(hidden, hidden)
+        
+        # 时间编码: 1D 卷积 (时间平移等变)
+        self.temporal_conv = nn.Conv1d(hidden, hidden, kernel_size=3, padding=1)
+        
+        # 输出: 预测 ETA
+        self.predictor = nn.Linear(hidden, 1)
+    
+    def message_passing(self, x, adj):
+        """简单的消息传递 (空间等变)"""
+        return torch.relu(self.spatial_conv1(adj @ x))
+    
+    def forward(self, x_seq, adj):
+        """
+        x_seq: [batch, time, nodes, features]
+        adj: [nodes, nodes] 邻接矩阵
+        """
+        B, T, N, F = x_seq.shape
+        
+        # 1. 空间消息传递 (每个时间步)
+        spatial_out = []
+        for t in range(T):
+            h = self.message_passing(x_seq[:, t], adj)
+            spatial_out.append(h)
+        spatial = torch.stack(spatial_out, dim=1)  # [B, T, N, H]
+        
+        # 2. 时间卷积 (每个节点)
+        B, T, N, H = spatial.shape
+        temporal = spatial.permute(0, 2, 3, 1).reshape(B*N, H, T)
+        temporal = self.temporal_conv(temporal)  # 时间平移等变
+        temporal = temporal[:, :, -1]  # 最后时间步
+        temporal = temporal.reshape(B, N, H)
+        
+        # 3. 全局池化 → ETA 预测
+        graph_feat = temporal.mean(dim=1)  # 全局平均 (不变)
+        return self.predictor(graph_feat)
+
+print("时空 GNN: 空间消息传递 + 时间卷积")
+print("部署于 Google Maps, 影响数十亿用户")</code></pre>
+
+    <!-- ========= 6.5 计算机视觉 ========= -->
+    <h2 id="vision">6.5 计算机视觉<br><span style="font-size:0.7em;color:var(--text-secondary)">Object Recognition</span></h2>
+
+    <h3 id="imagenet">ImageNet 革命</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>机器学习在计算机视觉中的主要基准是<strong>对象分类</strong>——分类图像中的中心对象。<strong>ImageNet 大规模视觉识别挑战赛</strong>（ILSVRC）推动了早期 GDL 的大部分发展。</p>
+        <p><strong>AlexNet</strong> (Krizhevsky et al., 2012) 在 ILSVRC 2012 中以巨大优势获胜，<strong>开创了深度学习的大规模采用</strong>。此后，CNN 衍生了许多著名架构：</p>
+      </div>
+      <div class="en">
+        AlexNet's sweeping victory at ILSVRC 2012 spearheaded the adoption of deep learning. CNNs consistently ranked on top, spawning many popular architectures.
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch6_p111_img0.jpeg" alt="ImageNet cat">
+      <figcaption>ImageNet 示例图像，代表 "tabby cat" 类别。ImageNet 需要模型将真实图像分为 1000 个类别。</figcaption>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>架构</th><th>年份</th><th>关键创新</th><th>GDL 视角</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>AlexNet</strong></td><td>2012</td><td>ReLU, Dropout, GPU 训练</td><td>2D 网格上的平移等变</td></tr>
+        <tr><td><strong>VGG-16</strong></td><td>2014</td><td>小 3×3 滤波器堆叠</td><td>更深的等变层级</td></tr>
+        <tr><td><strong>Inception</strong></td><td>2015</td><td>多尺度并行滤波</td><td>不同尺度的等变特征</td></tr>
+        <tr><td><strong>ResNet</strong></td><td>2015</td><td>残差连接</td><td>深度等变网络 + skip</td></tr>
+        <tr><td><strong>ViT</strong></td><td>2020</td><td>图像 patch 上的 Transformer</td><td>从网格等变到集合等变</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="detection">目标检测与语义分割</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>与分类并行，<strong>目标检测</strong>也取得了重大进展——在图像中定位所有感兴趣的对象并标记类别。这需要更细粒度的方法，因为预测需要被<strong>定位</strong>——平移<strong>等变</strong>模型在此领域证明了其价值。</p>
+        <ul>
+          <li><strong>R-CNN 系列</strong> (Girshick et al., 2014-2017): Region-based CNN</li>
+          <li><strong>SegNet</strong> (Badrinarayanan et al., 2017): 编码器-解码器分割</li>
+          <li><strong>U-Net</strong>: 医学图像分割的标准架构</li>
+        </ul>
+      </div>
+      <div class="en">
+        Object detection requires localized predictions — translation equivariant models proved their worth. R-CNN family and SegNet are influential examples.
+      </div>
+    </div>
+
+    <!-- ========= 6.6 游戏 AI ========= -->
+    <h2 id="gaming">6.6 游戏 AI<br><span style="font-size:0.7em;color:var(--text-secondary)">Game Playing</span></h2>
+
+    <h3 id="alphago">AlphaGo: CNN + 强化学习</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>DeepMind 的 <strong>AlphaGo</strong> (Silver et al., 2016) 将 CNN 应用于 $19 \times 19$ 的围棋棋盘（2D 网格），结合蒙特卡洛树搜索和自我对弈，成功击败了最强围棋选手之一李世乭。</p>
+        <p>后续发展不断减少特定领域的偏置：</p>
+        <ul>
+          <li><strong>AlphaGo Zero</strong>: 纯自我对弈，无人类经验</li>
+          <li><strong>AlphaZero</strong>: 扩展到国际象棋和将棋</li>
+          <li><strong>MuZero</strong>: 在线学习游戏规则</li>
+        </ul>
+        <p>在所有这些发展中，<strong>CNN 始终是</strong>这些模型输入表示的骨干。</p>
+      </div>
+      <div class="en">
+        AlphaGo applied CNNs to the 19×19 Go board (2D grid), combined with MCTS and self-play. CNNs remained the backbone throughout AlphaGo → AlphaGo Zero → AlphaZero → MuZero.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\text{围棋状态空间: } \sim 2 \times 10^{170} \text{ 合法状态}$$
+      $$\text{远超宇宙原子数: } \sim 10^{80}$$
+      <div class="math-explain">
+        围棋的状态空间极其庞大，但 CNN 利用了棋盘的<strong>2D 网格结构</strong>和<strong>平移等变性</strong>（局部模式在不同位置有类似含义），使得学习可行。这是 GDL 原则在强化学习中的完美体现。
+      </div>
+    </div>
+
+    <h3 id="atari">Atari 与 Agent57</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>多年来许多高性能 RL 智能体被提出用于 Atari 2600 平台，但长期无法在所有 57 个游戏中达到人类水平。这个障碍最终被 <strong>Agent57</strong> (Badia et al., 2020) 打破——它使用参数化策略族和分阶段训练的优先级策略。它的计算骨干仍然是应用于游戏帧缓冲区的 CNN。</p>
+      </div>
+      <div class="en">
+        Agent57 broke the barrier of human-level performance on all 57 Atari 2600 games, using parametric policy families with CNN backbone applied to the game's framebuffer.
+      </div>
+    </div>
+
+    <!-- ========= 6.7 文本与语音 ========= -->
+    <h2 id="text-speech">6.7 文本与语音合成<br><span style="font-size:0.7em;color:var(--text-secondary)">Text and Speech Synthesis</span></h2>
+
+    <h3 id="wavenet">WaveNet: 空洞卷积</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>除了图像（2D 网格），GDL 在<strong>一维网格</strong>上也取得了巨大成功。<strong>WaveNet</strong> (van den Oord et al., 2016) 使用<strong>空洞卷积</strong>（dilated convolutions），以指数增长的感受野在原始波形级别合成语音——产生了比以前的 TTS 系统<strong>更像人类</strong>的语音样本。</p>
+        <p>WaveNet 的计算后来被蒸馏到更简单的 <strong>WaveRNN</strong> 模型中，使其能够在 Google Assistant 和 Google Duo 等服务中大规模部署。</p>
+      </div>
+      <div class="en">
+        WaveNet used dilated convolutions for raw waveform speech synthesis (16,000+ samples/sec), producing significantly more human-like speech than previous TTS systems. Later distilled into WaveRNN for industrial-scale deployment at Google.
+      </div>
+    </div>
+
+    <h3 id="gpt">GPT 与 Transformer 革命</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><strong>Transformer</strong> (Vaswani et al., 2017) 超越了循环和卷积架构的局限，展示了<strong>自注意力</strong>足以实现机器翻译的最先进性能。随后通过 <strong>BERT</strong> 和 <strong>GPT</strong> 系列模型，革命了自然语言处理。</p>
+        <p><strong>GPT-3</strong> (Brown et al., 2020) 将语言模型学习扩展到 <strong>1750 亿</strong>个可学习参数，训练于网络规模的文本语料上的下一词预测。这使它不仅成为强大的少样本学习器，还能生成连贯且听起来像人类的文本。</p>
+        <p>从 GDL 视角：GPT 是在<strong>词序列</strong>（1D 集合/完全图）上的<strong>置换等变</strong>（通过位置编码打破）计算。</p>
+      </div>
+      <div class="en">
+        Transformers surpassed the limitations of both recurrent and convolutional architectures. GPT-3 (175B parameters) demonstrated powerful few-shot learning and human-like text generation.
+      </div>
+    </div>
+
+    <!-- ========= 6.8 医疗健康 ========= -->
+    <h2 id="healthcare">6.8 医疗健康<br><span style="font-size:0.7em;color:var(--text-secondary)">Healthcare</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>医疗领域的应用是 GDL 的另一个有前景的方向。GDL 方法在医疗中的多种使用方式：</p>
+      </div>
+      <div class="en">
+        Applications in the medical domain are a promising area for GDL, with multiple ways these methods are being used.
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>方法</th><th>数据类型</th><th>GDL 域</th><th>任务</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>CNN</td><td>医学影像 (CT, MRI, 视网膜扫描)</td><td>网格 (2D/3D)</td><td>疾病诊断、ICU 住院时长预测</td></tr>
+        <tr><td>3D Roto-CNN</td><td>肺部 CT</td><td>群 (旋转)</td><td>肺结节检测（精度提升）</td></tr>
+        <tr><td>Mesh CNN</td><td>器官表面</td><td>流形</td><td>面部重建、脑皮层分割</td></tr>
+        <tr><td>GNN</td><td>脑功能网络</td><td>图</td><td>性别/年龄预测、自闭症诊断</td></tr>
+        <tr><td>GNN</td><td>患者网络</td><td>图</td><td>基于相似患者的诊断</td></tr>
+        <tr><td>GNN</td><td>电子健康记录</td><td>图</td><td>模式识别诊断</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="brain">脑网络分析</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>神经科学家越来越将大脑视为具有复杂褶皱的<strong>表面</strong>，产生高度非欧几里得的结构。功能性磁共振成像 (fMRI) 构建的<strong>脑功能网络</strong>表示在执行某些认知功能时一起激活的脑区域。</p>
+        <p><strong>Ktena et al. (2017)</strong> 率先使用 GNN 预测自闭症谱系障碍等神经学状况。<strong>Itani and Thanou (2021)</strong> 指出联合利用脑的几何和功能结构在神经疾病分析中的优势。</p>
+      </div>
+      <div class="en">
+        Neuroscientists increasingly view the brain as a surface with complex folds giving rise to non-Euclidean structures. fMRI-based functional networks are analyzed with GNNs for conditions like Autism Spectrum Disorder.
+      </div>
+    </div>
+
+    <h3 id="ehr">电子健康记录 (EHR)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>关于住院患者的大量数据可以在<strong>电子健康记录</strong> (EHR) 中找到。多项工作尝试基于 EHR 数据构建<strong>患者图</strong>：</p>
+        <ul>
+          <li>通过分析医生笔记的嵌入 (Malone et al., 2018)</li>
+          <li>通过入院诊断相似性 (Rocheteau et al., 2021)</li>
+          <li>通过假设完全连接图 (Zhu and Razavian, 2019)</li>
+        </ul>
+        <p>所有情况下，使用图表征学习处理 EHR 都显示了有前景的结果。</p>
+      </div>
+      <div class="en">
+        Electronic Health Records contain a wealth of patient data. Several works construct patient graphs from EHR data (doctor's notes embeddings, diagnosis similarity, or fully-connected), all showing promising results with graph representation learning.
+      </div>
+    </div>
+
+    <!-- ========= 6.9 粒子物理 ========= -->
+    <h2 id="physics">6.9 粒子物理与天体物理<br><span style="font-size:0.7em;color:var(--text-secondary)">Particle Physics and Astrophysics</span></h2>
+
+    <h3 id="jets">粒子 Jet 分类</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>高能物理学家可能是自然科学领域中最早拥抱 GNN 的专家。物理学中的许多问题涉及<strong>无序集合</strong>形式的数据，具有丰富的关系和相互作用——这自然地表示为图。</p>
+        <p>粒子 <strong>Jet</strong>（喷注）——由单个初始事件产生的稳定粒子喷雾——的重建和分类是高能物理中的重要应用。在大型强子对撞机 (LHC) 中，这些 Jet 是质子近光速碰撞的结果，可能提供新粒子存在的实验证据。</p>
+      </div>
+      <div class="en">
+        High energy physicists were among the first to embrace GNNs. Particle jet classification is crucial in the LHC, providing experimental evidence for new particles like the Higgs boson.
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch6_p112_img0.jpeg" alt="LHC detector">
+      <figcaption>大型强子对撞机探测器的一部分。GNN 用于对碰撞产生的粒子喷注进行分类，寻找希格斯玻色子等粒子的证据。</figcaption>
+    </div>
+
+    <div class="math-block">
+      $$\text{粒子 Jet 中的 GDL:}$$
+      $$\text{节点} = \text{粒子 (能量, 动量, PID)}, \quad \text{边} = \text{空间/能量邻近}$$
+      $$\text{对称群: 洛伦兹群 } SO(3,1) \text{ (时空的基本对称性)}$$
+      <div class="math-explain">
+        粒子物理的特殊之处在于其对称群不是 SE(3) 而是<strong>洛伦兹群</strong> $SO(3,1)$——时空的基本对称性。Bogatskiy et al. (2020) 开发了洛伦兹群等变的神经网络，提供了更好的泛化和可解释性。
+      </div>
+    </div>
+
+    <pre><code># 粒子 Jet 分类的 GNN (简化)
+import torch
+import torch.nn as nn
+from torch_geometric.nn import EdgeConv, global_mean_pool
+
+class ParticleJetGNN(nn.Module):
+    """
+    粒子 Jet 分类
+    
+    GDL 视角:
+    - 域: 粒子集合/图
+    - 对称群: Lorentz group SO(3,1)
+    - 等变层: EdgeConv (动态图 CNN)
+    - 不变输出: 全局池化 → Jet 类别
+    
+    类似于 DGCNN (Wang et al., 2019) 和 
+    ParticleNet (Qu & Gouskos, 2019)
+    """
+    def __init__(self, input_dim=4, hidden=64, n_classes=5):
+        super().__init__()
+        # 4-momentum: (E, px, py, pz)
+        
+        self.edge_conv1 = EdgeConv(
+            nn.Sequential(nn.Linear(2*input_dim, hidden), nn.ReLU()),
+            aggr='max'
+        )
+        self.edge_conv2 = EdgeConv(
+            nn.Sequential(nn.Linear(2*hidden, hidden), nn.ReLU()),
+            aggr='max'
+        )
+        self.classifier = nn.Sequential(
+            nn.Linear(hidden, 32),
+            nn.ReLU(),
+            nn.Linear(32, n_classes)
+        )
+    
+    def forward(self, data):
+        x, edge_index, batch = data.x, data.edge_index, data.batch
+        x = self.edge_conv1(x, edge_index)
+        x = self.edge_conv2(x, edge_index)
+        x = global_mean_pool(x, batch)  # 置换不变
+        return self.classifier(x)
+
+# Jet 类别: QCD jet, W/Z/Higgs/top jet
+jet_classes = ['QCD', 'W boson', 'Z boson', 'Higgs', 'Top quark']
+print(f"粒子 Jet 分类: {len(jet_classes)} 类")
+print("使用 Lorentz 不变量作为特征可以提升性能")</code></pre>
+
+    <h3 id="neutrino">中微子天文学</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><strong>IceCube</strong> 中微子天文台使用一立方公里的南极冰架作为探测器。<strong>Choma et al. (2018)</strong> 使用 GNN 模拟 IceCube 探测器的不规则几何结构，在检测天体物理源中微子和分离背景事件方面表现出显著更好的性能。</p>
+      </div>
+      <div class="en">
+        IceCube uses a cubic kilometer of Antarctic ice as a neutrino detector. Choma et al. (2018) used GNNs to model its irregular geometry, showing significantly better performance in detecting astrophysical neutrinos.
+      </div>
+    </div>
+
+    <!-- ========= 6.10 VR/AR ========= -->
+    <h2 id="vr">6.10 虚拟/增强现实<br><span style="font-size:0.7em;color:var(--text-secondary)">Virtual and Augmented Reality</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>计算机视觉和图形学是推动大量 GDL 方法发展的另一个应用领域。动作捕捉技术通常分两阶段运作：</p>
+        <ol>
+          <li><strong>分析</strong>：将 3D 扫描仪输入与标准形状（网格）对应</li>
+          <li><strong>合成</strong>：生成新形状以重复输入的运动</li>
+        </ol>
+        <p><strong>Kulon et al. (2020)</strong> 展示了混合管线：图像 CNN 编码器 + 几何解码器，从 2D 图像估计 3D 手势，在手机上实现<strong>超实时</strong>运行。该技术（Ariel AI, 2020年被 Snap 收购）现用于 Snap 的增强现实产品。</p>
+      </div>
+      <div class="en">
+        Motion capture for VR/AR operates in analysis (3D scan → mesh correspondence) and synthesis (generating new shapes). Kulon et al.'s hybrid CNN-encoder + geometric-decoder pipeline runs faster than real-time on mobile phones. Now used in Snap's AR products.
+      </div>
+    </div>
+
+    <!-- ========= 6.11 医疗机器人 ========= -->
+    <h2 id="medical-robotics">6.11 医疗机器人 — PhysRobot 直接关联<br><span style="font-size:0.7em;color:var(--text-secondary)">Medical Robotics — Direct PhysRobot Connection 🤖</span></h2>
+
+    <div class="callout callout-project">
+      <h4>这一节与我们的 PhysRobot 项目直接相关！</h4>
+      <p>虽然原书没有专门讨论医疗机器人，但书中描述的许多技术——GNN 物理仿真、等变网络、网格处理——正是 PhysRobot 的技术基础。这一节将原书的应用与我们的项目串联起来。</p>
+    </div>
+
+    <h3 id="surgery-sim">手术仿真</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>手术仿真是医疗机器人的核心需求：外科医生需要在虚拟环境中训练，机器人控制系统需要预测手术操作的物理后果。传统方法（FEM 有限元）精确但<strong>太慢</strong>——无法实现实时交互。</p>
+        <p>GDL 方法可以提供<strong>准确且快速</strong>的替代方案：</p>
+        <ul>
+          <li><strong>GNS</strong> (Graph Network Simulator): 用 GNN 学习物理定律</li>
+          <li><strong>MeshGraphNet</strong>: 用 GNN 在网格上仿真变形</li>
+          <li><strong>等变 GNN</strong>: 保证物理对称性</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\text{手术仿真的 GDL 框架:}$$
+      $$\underbrace{(\text{组织粒子}, \text{器械粒子})}_{\text{异构图}} \xrightarrow{\text{GNN}} \underbrace{(a_1, \ldots, a_N)}_{\text{加速度 (SE(3)-等变)}} \xrightarrow{\text{积分}} \underbrace{(r_1, \ldots, r_N)}_{\text{新位置}}$$
+      <div class="math-explain">
+        <strong>手术仿真 = 粒子系统物理仿真的特例</strong>：
+        <br>• 软组织 → 粒子（网格节点）+ 弹性约束（边）
+        <br>• 手术器械 → 刚体粒子 + 外力
+        <br>• 交互 → 器械-组织之间的碰撞和力传递
+        <br>• 物理对称性：SE(3)（旋转+平移不变性）
+      </div>
+    </div>
+
+    <h3 id="tissue-modeling">软组织建模</h3>
+
+    <pre><code># 软组织仿真的 GNN (PhysRobot 核心)
+import torch
+import torch.nn as nn
+
+class SoftTissueGNN(nn.Module):
+    """
+    软组织变形仿真的图神经网络
+    
+    GDL 设计原则:
+    1. 域: 粒子图 (组织节点 + 器械节点 + 边界节点)
+    2. 对称群: SE(3) (物理定律在旋转和平移下不变)
+    3. 等变性: 使用相对位置 (平移不变) 和距离 (旋转不变)
+    4. 局部性: 只对 k-NN 邻居做消息传递
+    """
+    def __init__(self, node_dim=16, edge_dim=4, hidden=128, n_layers=10):
+        super().__init__()
+        
+        # 节点编码器
+        self.node_encoder = nn.Sequential(
+            nn.Linear(node_dim, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden)
+        )
+        
+        # 边编码器 (使用 SE(3)-不变特征)
+        self.edge_encoder = nn.Sequential(
+            nn.Linear(edge_dim, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden)
+        )
+        
+        # 消息传递层
+        self.message_layers = nn.ModuleList([
+            MessagePassingLayer(hidden) for _ in range(n_layers)
+        ])
+        
+        # 加速度预测器
+        self.decoder = nn.Sequential(
+            nn.Linear(hidden, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, 3)  # 3D 加速度
+        )
+    
+    def compute_edge_features(self, pos, edge_index):
+        """
+        计算 SE(3)-不变的边特征
+        - 相对位置 (平移不变)
+        - 距离 (旋转不变)
+        """
+        src, dst = edge_index
+        rel_pos = pos[dst] - pos[src]  # 平移不变!
+        dist = rel_pos.norm(dim=-1, keepdim=True)  # 旋转不变!
+        return torch.cat([rel_pos, dist], dim=-1)  # [E, 4]
+    
+    def forward(self, node_feat, pos, edge_index):
+        # 编码
+        h = self.node_encoder(node_feat)
+        edge_attr = self.edge_encoder(
+            self.compute_edge_features(pos, edge_index)
+        )
+        
+        # 消息传递 (10 层, 等变)
+        for layer in self.message_layers:
+            h = h + layer(h, edge_index, edge_attr)  # 残差连接
+        
+        # 解码加速度
+        acc = self.decoder(h)
+        return acc
+
+class MessagePassingLayer(nn.Module):
+    def __init__(self, hidden):
+        super().__init__()
+        self.message_fn = nn.Sequential(
+            nn.Linear(3 * hidden, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden)
+        )
+        self.update_fn = nn.Sequential(
+            nn.Linear(2 * hidden, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden)
+        )
+    
+    def forward(self, h, edge_index, edge_attr):
+        src, dst = edge_index
+        # 消息: m_ij = φ(h_i, h_j, e_ij)
+        messages = self.message_fn(
+            torch.cat([h[src], h[dst], edge_attr], dim=-1)
+        )
+        # 聚合: Σ m_ij (置换不变)
+        agg = torch.zeros_like(h)
+        agg.index_add_(0, dst, messages)
+        # 更新: h_i' = ψ(h_i, agg_i)
+        return self.update_fn(torch.cat([h, agg], dim=-1))
+
+# 示例运行
+model = SoftTissueGNN()
+N = 100  # 100 个组织粒子
+node_feat = torch.randn(N, 16)
+pos = torch.randn(N, 3)
+# k-NN 图 (简化: 随机边)
+edge_index = torch.randint(0, N, (2, N * 10))
+
+acc = model(node_feat, pos, edge_index)
+print(f"软组织仿真:")
+print(f"  粒子数: {N}")
+print(f"  预测加速度: {acc.shape}")
+print(f"  模型参数: {sum(p.numel() for p in model.parameters()):,}")
+print(f"  SE(3) 不变性通过相对位置和距离保证")</code></pre>
+
+    <h3 id="instrument">手术器械控制</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>手术器械在 SE(3) 空间中运动——其姿态由 3D 位置和 3D 方向描述。GDL 原则在此的应用：</p>
+        <ul>
+          <li><strong>器械-组织交互</strong>：异构图中的消息传递（器械节点 ↔ 组织节点）</li>
+          <li><strong>力反馈预测</strong>：从几何接触信息预测力——力是 SE(3)-等变的向量量</li>
+          <li><strong>轨迹规划</strong>：在 SE(3) 空间中使用等变策略网络</li>
+          <li><strong>碰撞检测</strong>：GNN 预测器械与组织之间的碰撞</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout callout-project">
+      <h4>PhysRobot 中的完整 GDL 流程</h4>
+      <ol>
+        <li><strong>场景构建</strong>：将软组织和器械离散化为粒子图</li>
+        <li><strong>特征提取</strong>：SE(3)-不变特征（距离、相对位置、物质属性）</li>
+        <li><strong>GNN 消息传递</strong>：10 层等变消息传递，学习粒子间相互作用</li>
+        <li><strong>力/加速度预测</strong>：SE(3)-等变的向量输出</li>
+        <li><strong>时间积分</strong>：Verlet 积分更新位置和速度</li>
+        <li><strong>反馈</strong>：预测的力传回器械控制系统</li>
+      </ol>
+      <p>整个流程的每一步都遵循 GDL 蓝图：<strong>等变层</strong>→<strong>聚合</strong>→<strong>等变/不变输出</strong>。</p>
+    </div>
+
+    <!-- ========= 总结 ========= -->
+    <h2 id="summary">总结：GDL 应用全景<br><span style="font-size:0.7em;color:var(--text-secondary)">Summary</span></h2>
+
+    <table>
+      <thead>
+        <tr><th>应用领域</th><th>GDL 域</th><th>对称群</th><th>典型架构</th><th>代表性成果</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>药物发现</td><td>分子图</td><td>$\Sigma_n$, SE(3)</td><td>MPNN, EGNN</td><td>Halicin 抗生素</td></tr>
+        <tr><td>蛋白质</td><td>图/流形</td><td>SE(3)</td><td>AlphaFold, MaSIF</td><td>CASP14 革命</td></tr>
+        <tr><td>推荐系统</td><td>二部图</td><td>$\Sigma_n$</td><td>PinSage, GCN</td><td>数十亿用户</td></tr>
+        <tr><td>交通</td><td>时空图</td><td>$\Sigma_n$ × 时间</td><td>ST-GNN, GAT</td><td>Google Maps</td></tr>
+        <tr><td>计算机视觉</td><td>2D 网格</td><td>$\mathbb{Z}^2$</td><td>CNN, ViT</td><td>ImageNet 超人</td></tr>
+        <tr><td>游戏 AI</td><td>2D 网格</td><td>$\mathbb{Z}^2$</td><td>CNN + RL</td><td>AlphaGo</td></tr>
+        <tr><td>语音</td><td>1D 网格</td><td>$\mathbb{Z}$</td><td>WaveNet, RNN</td><td>Google TTS</td></tr>
+        <tr><td>NLP</td><td>集合/完全图</td><td>$\Sigma_n$</td><td>Transformer</td><td>GPT-3</td></tr>
+        <tr><td>医疗</td><td>图/网格/流形</td><td>多种</td><td>GNN, Mesh CNN</td><td>脑疾病诊断</td></tr>
+        <tr><td>粒子物理</td><td>粒子集合</td><td>Lorentz</td><td>DGCNN, DeepSets</td><td>Jet 分类</td></tr>
+        <tr><td>VR/AR</td><td>流形/网格</td><td>Iso($\mathcal{M}$)</td><td>Mesh CNN</td><td>Snap AR</td></tr>
+        <tr><td><strong>医疗机器人</strong></td><td><strong>粒子图</strong></td><td><strong>SE(3) × $\Sigma_n$</strong></td><td><strong>GNS, EGNN</strong></td><td><strong>PhysRobot</strong></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-key">
+      <h4>跨领域的统一模式</h4>
+      <p>尽管这些应用看起来截然不同，但它们都遵循<strong>同一个 GDL 蓝图</strong>：</p>
+      <ol>
+        <li><strong>识别域和对称性</strong>：数据的自然几何结构是什么？</li>
+        <li><strong>构建等变层</strong>：消息传递、卷积、注意力——都是等变的线性操作</li>
+        <li><strong>堆叠层级</strong>：等变层 + 非线性 + 可选的池化</li>
+        <li><strong>不变输出</strong>：全局池化将等变表示转化为不变预测</li>
+      </ol>
+      <p>这种统一性正是 Geometric Deep Learning 的核心价值。</p>
+    </div>
+
+    <!-- ========= 练习题 ========= -->
     <div class="exercises" id="exercises">
       <h3>练习题 Exercises</h3>
       <ol>
-        <li>对于分子性质预测任务，比较使用 (a) SMILES 字符串 + RNN，(b) 分子指纹 + MLP，(c) 分子图 + GNN 三种方法。各自的优缺点是什么？哪种方法更好地利用了分子的几何结构？</li>
-        <li>解释为什么药物-靶标相互作用预测可以形式化为<strong>二部图上的链接预测</strong>问题。GNN 如何帮助解决这个问题？</li>
-        <li>在粒子物理中，为什么 <strong>Lorentz 等变性</strong>比 SE(3) 等变性更合适？Lorentz 群与 SE(3) 有什么不同？</li>
-        <li><strong>PhysRobot 思考</strong>：
-          <ul>
-            <li>(a) 列出三种在我们的物理仿真中可以使用的 GNN 变体，说明各自的优势</li>
-            <li>(b) MeshGraphNets 如何处理不同类型的边（网格边 vs 物理约束边）？</li>
-            <li>(c) 如何在我们的系统中引入<strong>多尺度仿真</strong>？</li>
-          </ul>
+        <li><strong>分子属性预测</strong>：使用 PyTorch Geometric 在 MoleculeNet 的 ESOL 数据集上训练一个 GNN。
+          (a) 实现 3 层 GCN + 全局平均池化 + 线性回归
+          (b) 报告 RMSE，与随机基线和 Morgan 指纹 + 线性回归比较
+          (c) 可视化学到的分子嵌入（使用 t-SNE）
         </li>
-        <li>Vision Transformer 将图像分成 patch 后作为"集合"处理。这丢失了什么几何信息？位置编码如何补偿？与 CNN 相比，这种方法在什么场景下更好/更差？</li>
+        <li><strong>等变性验证</strong>：
+          (a) 实现上面的 EGNN 层
+          (b) 对一组 3D 分子坐标，验证：旋转输入 → 输出也相应旋转
+          (c) 尝试用普通 GCN（不使用距离特征）——等变性是否成立？
+        </li>
+        <li><strong>推荐系统</strong>：在 MovieLens 数据集上实现简单的 GNN 推荐系统。
+          (a) 构建用户-电影二部图
+          (b) 用 GraphSAGE 学习节点嵌入
+          (c) 用内积预测评分，计算 RMSE
+        </li>
+        <li><strong>交通预测</strong>：
+          (a) 描述为什么交通网络天然是图结构
+          (b) 解释为什么时空 GNN 比纯 CNN 或纯 RNN 更适合交通预测
+          (c) 设计一个同时捕获空间和时间依赖性的架构（画框图）
+        </li>
+        <li><strong>PhysRobot 应用设计</strong>：
+          假设你需要仿真一个腹腔镜手术场景（一个抓取器 + 一块软组织 + 一个固定平面）。
+          (a) 如何将场景建模为粒子图？（定义节点类型、边类型、特征）
+          (b) 这个系统有哪些对称性？
+          (c) 哪些对称性被打破了（如重力方向）？
+          (d) 设计 GNN 架构（画图 + 写伪代码）
+          (e) 训练数据来自哪里？如何生成？
+        </li>
+        <li><strong>跨领域迁移</strong>：本章描述的 GDL 应用有许多共同点。选择两个不同领域的应用（如药物发现和交通预测），详细比较：
+          (a) 问题定义
+          (b) 图结构
+          (c) 对称性
+          (d) GNN 架构的异同
+          (e) 是否可以将一个领域的创新迁移到另一个？
+        </li>
       </ol>
     </div>
 
+    <!-- ========= 章节导航 ========= -->
     <div class="chapter-nav">
       <a href="../chapter5/index.html">← Chapter 5: GDL 模型</a>
       <a href="../chapter7/index.html">Chapter 7: 历史视角 →</a>
