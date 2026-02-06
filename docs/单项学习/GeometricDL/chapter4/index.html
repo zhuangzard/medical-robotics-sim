@@ -3,424 +3,2211 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chapter 4: Geometric Domains — the 5 Gs | GDL 学习指南</title>
-  <link rel="stylesheet" href="../assets/style.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <title>Chapter 4: Geometric Domains — the 5 Gs | GDL 深度教程</title>
+  <style>
+    /* ===== CSS Variables ===== */
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --bg-code: #f4f4f5;
+      --text: #1a1a2e;
+      --text-secondary: #555;
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      --border: #e0e0e0;
+      --sidebar-bg: #f0f4f8;
+      --sidebar-width: 280px;
+      --header-height: 56px;
+      --callout-info-bg: #eff6ff;
+      --callout-info-border: #3b82f6;
+      --callout-warn-bg: #fffbeb;
+      --callout-warn-border: #f59e0b;
+      --callout-success-bg: #f0fdf4;
+      --callout-success-border: #22c55e;
+      --callout-robot-bg: #ecfdf5;
+      --callout-robot-border: #10b981;
+      --callout-math-bg: #faf5ff;
+      --callout-math-border: #8b5cf6;
+      --callout-exercise-bg: #fff7ed;
+      --callout-exercise-border: #f97316;
+      --code-keyword: #d73a49;
+      --code-string: #032f62;
+      --code-comment: #6a737d;
+      --code-function: #6f42c1;
+      --code-number: #005cc5;
+      --progress-color: #2563eb;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-code: #1e293b;
+      --text: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --accent: #60a5fa;
+      --accent-light: #1e3a5f;
+      --border: #334155;
+      --sidebar-bg: #1e293b;
+      --callout-info-bg: #172554;
+      --callout-info-border: #3b82f6;
+      --callout-warn-bg: #422006;
+      --callout-warn-border: #f59e0b;
+      --callout-success-bg: #052e16;
+      --callout-success-border: #22c55e;
+      --callout-robot-bg: #064e3b;
+      --callout-robot-border: #10b981;
+      --callout-math-bg: #2e1065;
+      --callout-math-border: #8b5cf6;
+      --callout-exercise-bg: #431407;
+      --callout-exercise-border: #f97316;
+      --code-keyword: #ff7b72;
+      --code-string: #a5d6ff;
+      --code-comment: #8b949e;
+      --code-function: #d2a8ff;
+      --code-number: #79c0ff;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-height) + 16px); }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ===== Progress Bar ===== */
+    .progress-bar {
+      position: fixed; top: 0; left: 0;
+      width: 0%; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #8b5cf6);
+      z-index: 1001;
+      transition: width 0.1s;
+    }
+
+    /* ===== Header ===== */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--header-height);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+    .header-title a {
+      font-weight: 700; font-size: 1.1em;
+      color: var(--text); text-decoration: none;
+    }
+    .header-nav { display: flex; gap: 12px; align-items: center; }
+    .header-nav a {
+      color: var(--accent); text-decoration: none; font-size: 0.9em;
+      padding: 4px 8px; border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .header-nav a:hover { background: var(--accent-light); }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 10px;
+      cursor: pointer; font-size: 1.1em;
+      color: var(--text);
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      position: fixed; top: var(--header-height); left: 0;
+      width: var(--sidebar-width);
+      height: calc(100vh - var(--header-height));
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px 12px;
+      z-index: 999;
+      transition: transform 0.3s;
+      font-size: 0.88em;
+    }
+    .sidebar h3 {
+      font-size: 0.8em; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-secondary);
+      margin: 16px 0 8px; padding-left: 8px;
+    }
+    .sidebar h3:first-child { margin-top: 0; }
+    .sidebar a {
+      display: block; padding: 5px 12px;
+      color: var(--text); text-decoration: none;
+      border-radius: 6px; margin: 1px 0;
+      transition: background 0.2s;
+      line-height: 1.5;
+    }
+    .sidebar a:hover { background: var(--accent-light); color: var(--accent); }
+    .sidebar a.sub { padding-left: 28px; font-size: 0.92em; color: var(--text-secondary); }
+    .sidebar a.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+    .sidebar-toggle {
+      display: none;
+      position: fixed; top: calc(var(--header-height) + 8px); left: 8px;
+      z-index: 1001;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px;
+      cursor: pointer; font-size: 1.2em;
+      color: var(--text);
+    }
+
+    /* ===== Main Content ===== */
+    .main {
+      margin-left: var(--sidebar-width);
+      margin-top: var(--header-height);
+      max-width: 900px;
+      padding: 32px 40px 80px;
+    }
+    .main h1 {
+      font-size: 2.2em; font-weight: 800;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.3;
+    }
+    .main h2 {
+      font-size: 1.6em; font-weight: 700;
+      margin: 48px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--accent);
+      color: var(--text);
+    }
+    .main h3 {
+      font-size: 1.25em; font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+    .main h4 {
+      font-size: 1.05em; font-weight: 600;
+      margin: 20px 0 8px;
+    }
+    .main p { margin-bottom: 12px; }
+    .main ul, .main ol { margin: 8px 0 16px 24px; }
+    .main li { margin-bottom: 6px; }
+    .main strong { color: var(--text); }
+    .term { color: var(--accent); font-weight: 600; }
+    .main a { color: var(--accent); text-decoration: underline; }
+
+    /* ===== Callout Boxes ===== */
+    .callout {
+      border-left: 4px solid;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .callout h4 { margin-top: 0; margin-bottom: 8px; }
+    .callout-info { background: var(--callout-info-bg); border-color: var(--callout-info-border); }
+    .callout-warn { background: var(--callout-warn-bg); border-color: var(--callout-warn-border); }
+    .callout-success { background: var(--callout-success-bg); border-color: var(--callout-success-border); }
+    .callout-robot { background: var(--callout-robot-bg); border-color: var(--callout-robot-border); }
+    .callout-math { background: var(--callout-math-bg); border-color: var(--callout-math-border); }
+    .callout-exercise { background: var(--callout-exercise-bg); border-color: var(--callout-exercise-border); }
+
+    /* ===== Blueprint Box ===== */
+    .blueprint {
+      background: var(--bg-secondary);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 20px 0;
+    }
+    .blueprint h4 { color: var(--accent); margin-bottom: 12px; }
+
+    /* ===== Math ===== */
+    .math-block {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      overflow-x: auto;
+    }
+    .math-explain {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+      font-size: 0.92em;
+      color: var(--text-secondary);
+    }
+
+    /* ===== Code Blocks ===== */
+    .code-container {
+      position: relative;
+      margin: 16px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .code-header {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--bg-secondary);
+      padding: 8px 16px;
+      font-size: 0.85em;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    .copy-btn {
+      background: none; border: 1px solid var(--border);
+      border-radius: 4px; padding: 2px 10px;
+      cursor: pointer; font-size: 0.85em;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { background: var(--accent-light); color: var(--accent); }
+    pre {
+      margin: 0; padding: 16px;
+      background: var(--bg-code);
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.88em;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.9em;
+    }
+    p code, li code {
+      background: var(--bg-code);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* ===== Figures ===== */
+    .figure {
+      margin: 24px 0;
+      text-align: center;
+    }
+    .figure img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    .figure figcaption {
+      margin-top: 8px;
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    /* ===== Bilingual ===== */
+    .bilingual {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .bilingual .en {
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      font-style: italic;
+      padding-left: 16px;
+      border-left: 2px solid var(--border);
+    }
+
+    /* ===== Table ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.92em;
+    }
+    th, td {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-toggle { display: block; }
+      .main { margin-left: 0; padding: 24px 16px 60px; }
+      .main h1 { font-size: 1.6em; }
+      .main h2 { font-size: 1.3em; }
+    }
+  </style>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
-    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
 </head>
 <body>
-  <div class="progress-bar"></div>
+  <div class="progress-bar" id="progressBar"></div>
 
   <header class="header">
-    <div class="header-title"><a href="../index.html">📐 GDL 学习指南</a></div>
+    <div class="header-title"><a href="../index.html">📐 GDL 深度教程</a></div>
     <div class="header-nav">
-      <a href="../chapter3/index.html">← 上一章</a>
+      <a href="../chapter3/index.html">← Ch.3</a>
       <a href="../index.html">目录</a>
-      <a href="../chapter5/index.html">下一章 →</a>
+      <a href="../chapter5/index.html">Ch.5 →</a>
       <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
     </div>
   </header>
 
   <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
-  <nav class="sidebar">
+  <nav class="sidebar" id="sidebar">
     <h3>Chapter 4</h3>
-    <a href="#overview">概述</a>
-    <a href="#sec4-1">4.1 图与集合 Graphs & Sets</a>
-    <a href="#permutation-inv" class="sub">置换不变性</a>
-    <a href="#adjacency" class="sub">邻接矩阵与邻域</a>
-    <a href="#message-passing" class="sub">消息传递框架</a>
-    <a href="#weisfeiler-leman" class="sub">WL 同构测试</a>
-    <a href="#sec4-2">4.2 网格与欧几里得空间</a>
+    <a href="#overview">📋 概述</a>
+    <a href="#five-gs">5G 总览</a>
+
+    <h3>4.1 图和集合</h3>
+    <a href="#sec4-1">Graphs & Sets</a>
+    <a href="#graph-def" class="sub">图的定义</a>
+    <a href="#adjacency" class="sub">邻接矩阵</a>
+    <a href="#laplacian-matrix" class="sub">拉普拉斯矩阵</a>
+    <a href="#graph-signals" class="sub">图上的信号</a>
+    <a href="#permutation-group" class="sub">置换群</a>
+    <a href="#equivariant-graph" class="sub">等变函数</a>
+    <a href="#code-graph" class="sub">💻 代码：构建图</a>
+    <a href="#robot-graph" class="sub">🤖 PhysRobot</a>
+
+    <h3>4.2 网格和欧几里得空间</h3>
+    <a href="#sec4-2">Grids & Euclidean</a>
     <a href="#translation-group" class="sub">平移群</a>
-    <a href="#convolution" class="sub">卷积定理</a>
-    <a href="#fourier" class="sub">Fourier 变换</a>
-    <a href="#sec4-3">4.3 群与齐次空间</a>
-    <a href="#group-convolution" class="sub">群卷积</a>
-    <a href="#homogeneous" class="sub">齐次空间</a>
-    <a href="#sec4-4">4.4 测地线与流形</a>
-    <a href="#manifold" class="sub">流形定义</a>
-    <a href="#laplacian" class="sub">拉普拉斯算子</a>
-    <a href="#sec4-5">4.5 标架与向量丛</a>
-    <a href="#gauge" class="sub">规范变换</a>
-    <a href="#sec4-6">4.6 几何图与网格</a>
-    <a href="#exercises">练习题</a>
+    <a href="#circulant" class="sub">循环矩阵</a>
+    <a href="#convolution-shift" class="sub">卷积与平移</a>
+    <a href="#fourier-discrete" class="sub">DFT 推导</a>
+    <a href="#fourier-continuous" class="sub">连续傅里叶</a>
+    <a href="#code-conv" class="sub">💻 代码：卷积</a>
+
+    <h3>4.3 群和齐性空间</h3>
+    <a href="#sec4-3">Groups & Homogeneous</a>
+    <a href="#group-conv" class="sub">群卷积</a>
+    <a href="#spherical-conv" class="sub">球面卷积</a>
+    <a href="#lie-groups" class="sub">李群基础</a>
+    <a href="#homogeneous-space" class="sub">齐性空间</a>
+    <a href="#code-so3" class="sub">💻 代码：SO(3)</a>
+
+    <h3>4.4 测地线和流形</h3>
+    <a href="#sec4-4">Geodesics & Manifolds</a>
+    <a href="#riemannian" class="sub">黎曼流形</a>
+    <a href="#tangent-space" class="sub">切空间</a>
+    <a href="#geodesics" class="sub">测地线</a>
+    <a href="#parallel-transport" class="sub">平行移动</a>
+    <a href="#exponential-map" class="sub">指数映射</a>
+    <a href="#isometries" class="sub">等距变换</a>
+    <a href="#manifold-fourier" class="sub">流形傅里叶</a>
+    <a href="#code-geodesic" class="sub">💻 代码：测地线</a>
+
+    <h3>4.5 规范和纤维丛</h3>
+    <a href="#sec4-5">Gauges & Bundles</a>
+    <a href="#bundle-intuition" class="sub">纤维丛直觉</a>
+    <a href="#gauge-transform" class="sub">规范变换</a>
+    <a href="#structure-group" class="sub">结构群</a>
+    <a href="#gauge-equivariance" class="sub">规范等变性</a>
+    <a href="#connection" class="sub">联络与平行移动</a>
+
+    <h3>4.6 几何图和网格</h3>
+    <a href="#sec4-6">Geometric Graphs</a>
+    <a href="#mesh-def" class="sub">网格定义</a>
+    <a href="#cotangent-laplacian" class="sub">余切拉普拉斯</a>
+    <a href="#spectral-mesh" class="sub">谱分析</a>
+    <a href="#functional-maps" class="sub">函数映射</a>
+    <a href="#code-mesh" class="sub">💻 代码：几何图</a>
+    <a href="#robot-mesh" class="sub">🤖 PhysRobot</a>
+
+    <h3>附录</h3>
+    <a href="#exercises-all">📝 综合练习</a>
+    <a href="#summary">📊 章节总结</a>
+    <a href="#references">📚 参考文献</a>
+
     <h3>导航</h3>
     <a href="../index.html">📚 总目录</a>
     <a href="../chapter3/index.html">← Ch.3 几何先验</a>
-    <a href="../chapter5/index.html">→ Ch.5 GDL 模型</a>
+    <a href="../chapter5/index.html">→ Ch.5 实现</a>
   </nav>
 
   <main class="main">
-    <h1>Chapter 4: Geometric Domains — the 5 Gs<br><span style="font-size:0.6em;color:var(--text-secondary)">几何域：五个 G</span></h1>
+    <!-- ============================================================ -->
+    <!-- TITLE & OVERVIEW -->
+    <!-- ============================================================ -->
+    <h1>Chapter 4: Geometric Domains<br><span style="font-size:0.5em;color:var(--text-secondary)">几何域：the 5 Gs — Graphs, Grids, Groups, Geodesics, Gauges</span></h1>
 
     <div class="callout callout-info" id="overview">
-      <h4>本章概述</h4>
-      <p>本章详细分析五种核心几何域，每种域对应不同的对称性和深度学习架构。这是全书最长的章节之一（38页），为 Chapter 5 的具体模型奠定基础。</p>
-      <ul>
-        <li><strong>Graphs（图）</strong>→ 置换对称 → GNN</li>
-        <li><strong>Grids（网格）</strong>→ 平移对称 → CNN</li>
-        <li><strong>Groups（群）</strong>→ 群对称 → Group-equivariant CNN</li>
-        <li><strong>Geodesics（测地线）</strong>→ 等距对称 → Mesh CNN</li>
-        <li><strong>Gauges（标架）</strong>→ 规范对称 → Gauge-equivariant CNN</li>
-      </ul>
-      <p><strong>预计阅读时间</strong>：4 小时</p>
-    </div>
-
-    <div class="figure">
-      <img src="../assets/ch4_p35_img0.png" alt="The 5 Gs of GDL">
-      <figcaption>图 9：几何深度学习的五个 G：Grids（网格）、Groups & 齐次空间（全局对称）、Graphs（图）、Geodesics & 度量（流形）、Gauges（标架/参考系）。</figcaption>
-    </div>
-
-    <!-- 4.1 Graphs and Sets -->
-    <h2 id="sec4-1">4.1 图与集合<br><span style="font-size:0.7em;color:var(--text-secondary)">Graphs and Sets</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>在科学的多个分支中，从社会学到粒子物理，<span class="term">图</span>（Graph）被用来建模关系和交互的系统。从我们的角度来看，图产生了一种由<strong>置换群</strong>建模的基本不变性。</p>
-      </div>
-      <div class="en">
-        In multiple branches of science, graphs are used as models of systems of relations and interactions. Graphs give rise to invariance modelled by the group of permutations.
-      </div>
-    </div>
-
-    <div class="blueprint">
-      <h4>图的定义 Graph Definition</h4>
-      <p>一个<span class="term">图</span> $G = (V, E)$ 由<strong>节点</strong>集合 $V$ 和<strong>边</strong>集合 $E \subseteq V \times V$ 构成。每个节点 $u \in V$ 配有 $s$ 维<strong>节点特征</strong> $x_u$。</p>
-    </div>
-
-    <h3 id="permutation-inv">置换不变性与等变性</h3>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>图的关键结构属性是节点通常<strong>没有规范排序</strong>（canonical ordering），因此图上的操作不应该依赖于节点的排列顺序。</p>
-        <p>将节点特征堆叠成矩阵 $X = (x_1, \ldots, x_n)^\top$，置换 $g \in \Sigma_n$ 的作用可以表示为 $n \times n$ 置换矩阵 $P$。</p>
-      </div>
-      <div class="en">
-        The key property of graphs is that nodes are not assumed to be provided in any particular order, hence operations should not depend on the ordering.
-      </div>
-    </div>
-
-    <p><strong>集合上的置换不变函数</strong>（最简单情况，无边）：</p>
-
-    <div class="math-block">
-      $$f(X) = \phi\left(\sum_{u \in V} \psi(x_u)\right)$$
-      <div class="math-explain">
-        $\psi$ 独立地应用于每个节点特征，$\phi$ 应用于所有节点输出的<strong>求和聚合</strong>。因为求和不依赖于顺序，这个函数对节点置换是不变的。这就是 <strong>Deep Sets</strong>（Zaheer et al., 2017）的核心思想。
-      </div>
-    </div>
-
-    <p><strong>图上的置换等变函数</strong>（考虑边/邻接信息）：</p>
-
-    <div class="math-block">
-      $$f(PX, PAP^\top) = f(X, A) \quad \text{(不变)}$$
-      $$F(PX, PAP^\top) = PF(X, A) \quad \text{(等变)}$$
-      <div class="math-explain">
-        注意置换 $P$ 不仅作用于特征矩阵 $X$（重排行），也作用于邻接矩阵 $A$（重排行和列：$PAP^\top$）。不变函数输出不受置换影响（如图分类），等变函数输出以相同方式被置换（如节点分类）。
-      </div>
-    </div>
-
-    <h3 id="adjacency">邻接矩阵与邻域</h3>
-
-    <div class="math-block">
-      $$a_{uv} = \begin{cases} 1 & (u, v) \in E \\ 0 & \text{otherwise} \end{cases}$$
-      <div class="math-explain">
-        <strong>邻接矩阵</strong> $A$ 编码图的连接关系。对于无向图，$A = A^\top$。
-      </div>
-    </div>
-
-    <div class="blueprint">
-      <h4>邻域 Neighbourhood</h4>
-      $$\mathcal{N}_u = \{v : (u, v) \in E \text{ or } (v, u) \in E\}$$
-      <p><strong>邻域特征</strong>是一个<span class="term">多重集</span>（multiset）$X_{\mathcal{N}_u} = \{\!\!\{x_v : v \in \mathcal{N}_u\}\!\!\}$。多重集允许相同元素出现多次——不同的邻居可能有相同的特征。</p>
-    </div>
-
-    <h3 id="message-passing">消息传递框架 Message Passing</h3>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>GDL 蓝图在图上的实现自然产生了<span class="term">消息传递</span>（Message Passing）框架——GNN 的核心计算范式：</p>
-      </div>
-      <div class="en">
-        The GDL blueprint on graphs naturally gives rise to the message passing framework — the core computational paradigm of GNNs.
-      </div>
-    </div>
-
-    <div class="math-block">
-      $$h_u = \phi\left(x_u, \bigoplus_{v \in \mathcal{N}_u} \psi(x_u, x_v)\right)$$
-      <div class="math-explain">
-        <strong>$\psi(x_u, x_v)$</strong>：<strong>消息函数</strong>（message function）— 计算从节点 $v$ 发送到节点 $u$ 的消息<br>
-        <strong>$\bigoplus$</strong>：<strong>聚合函数</strong>（aggregation）— 置换不变的操作（求和、均值、最大值等）<br>
-        <strong>$\phi$</strong>：<strong>更新函数</strong>（update function）— 结合节点自身特征和聚合消息来更新节点表示<br>
-        这个框架是<strong>置换等变</strong>的（因为聚合是置换不变的），且是<strong>局部</strong>的（只使用邻域信息）。
-      </div>
-    </div>
-
-    <div class="callout callout-project">
-      <h4>消息传递在 PhysRobot 中</h4>
-      <p>粒子系统仿真的核心就是消息传递！</p>
-      <ul>
-        <li><strong>节点 = 粒子</strong>，特征 = 位置、速度、质量等</li>
-        <li><strong>边 = 相互作用</strong>，通常基于距离阈值构建（$k$-近邻图或径向截断图）</li>
-        <li><strong>消息 $\psi$</strong> = 粒子间的力或能量贡献（依赖于相对位置/距离）</li>
-        <li><strong>聚合</strong> = 力的叠加原理（物理上对应于力的矢量求和）</li>
-        <li><strong>更新 $\phi$</strong> = 根据合力更新加速度/速度/位置</li>
-      </ul>
-    </div>
-
-    <h3 id="weisfeiler-leman">Weisfeiler-Leman 同构测试与 GNN 表达力</h3>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p><span class="term">Weisfeiler-Leman (WL) 测试</span>是一个经典的图同构测试算法。它迭代地给每个节点分配一个"颜色"（标签），基于节点及其邻域的多重集来更新颜色。</p>
-        <p>重要发现（Xu et al., 2019; Morris et al., 2019）：<strong>标准消息传递 GNN 的表达力等价于 1-WL 测试</strong>。即 GNN 能区分的图恰好是 1-WL 测试能区分的图。</p>
-      </div>
-      <div class="en">
-        The Weisfeiler-Leman (WL) test is a classical graph isomorphism test. Standard message passing GNNs are at most as powerful as the 1-WL test.
-      </div>
-    </div>
-
-    <div class="algorithm">
-      <div class="algorithm-title">Algorithm: 1-WL 颜色细化 (Color Refinement)</div>
-      <div class="algorithm-body">输入：图 G = (V, E)，初始颜色 c⁰(u) = x_u 对所有 u ∈ V
-重复 k = 0, 1, 2, ...：
-  对每个节点 u ∈ V：
-    c^(k+1)(u) = HASH(c^k(u), {{c^k(v) : v ∈ N_u}})
-  如果颜色划分不再变化，则停止
-输出：最终颜色划分</div>
-    </div>
-
-    <!-- 4.2 Grids -->
-    <h2 id="sec4-2">4.2 网格与欧几里得空间<br><span style="font-size:0.7em;color:var(--text-secondary)">Grids and Euclidean Spaces</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p><span class="term">网格</span>是一种特殊的图，其中节点排列在规则的格点上。$d$ 维网格上的信号就是我们熟悉的张量——1D 序列、2D 图像、3D 体积数据等。网格的自然对称群是<strong>平移群</strong>。</p>
-      </div>
-      <div class="en">
-        Grids are special cases of graphs where nodes are arranged in a regular lattice. The natural symmetry group of grids is the translation group.
-      </div>
-    </div>
-
-    <h3 id="translation-group">平移群与平移等变性</h3>
-
-    <div class="math-block">
-      $$(\rho(t)x)(u) = x(u - t) \quad \text{for } t \in \mathbb{Z}^d$$
-      <div class="math-explain">
-        平移群 $(\mathbb{Z}^d, +)$ 作用于信号：将信号 $x$ 沿方向 $t$ 平移。一个函数如果满足平移等变性 $f(\rho(t)x) = \rho(t)f(x)$，那么平移输入就等于平移输出。
-      </div>
-    </div>
-
-    <h3 id="convolution">卷积定理：等变 = 卷积</h3>
-
-    <div class="callout callout-key">
-      <h4>关键定理</h4>
-      <p>在网格上，<strong>线性 + 平移等变</strong>的操作恰好就是<strong>卷积</strong>：</p>
-    </div>
-
-    <div class="math-block">
-      $$(x \star \theta)(u) = \sum_{v} \theta(v) x(u - v)$$
-      <div class="math-explain">
-        这就是 CNN 中卷积操作的数学定义！滤波器 $\theta$ 在所有位置<strong>共享</strong>（weight sharing），这是平移等变性的直接结果。关键洞察：<strong>权重共享不是一个工程选择，而是平移对称性的数学必然</strong>。
-      </div>
-    </div>
-
-    <h3 id="fourier">Fourier 变换与谱域</h3>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p><span class="term">Fourier 变换</span>将信号从空间域转换到频率域。在平移群的语境下，Fourier 基函数是群的<strong>不可约表示</strong>（irreducible representations）。</p>
-      </div>
-      <div class="en">
-        The Fourier transform converts signals from spatial to frequency domain. Fourier basis functions are the irreducible representations of the translation group.
-      </div>
-    </div>
-
-    <div class="math-block">
-      $$\hat{x}(\omega) = \sum_u x(u) e^{-i\omega \cdot u}$$
-      $$x \star \theta \xleftrightarrow{\text{FFT}} \hat{x}(\omega) \cdot \hat{\theta}(\omega)$$
-      <div class="math-explain">
-        <strong>卷积定理</strong>：空间域的卷积等于频率域的逐点乘法。这就是为什么 Fourier 变换在信号处理（和 CNN 理论）中如此重要。<br>
-        更深层的理解：平移群的不可约表示是复指数函数 $e^{i\omega u}$，Fourier 变换本质上是将信号分解到这些不可约表示上。
-      </div>
-    </div>
-
-    <!-- 4.3 Groups and Homogeneous Spaces -->
-    <h2 id="sec4-3">4.3 群与齐次空间<br><span style="font-size:0.7em;color:var(--text-secondary)">Groups and Homogeneous Spaces</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>网格上的平移群是一个特例。更一般地，我们可以考虑任意群 $G$ 上的信号和卷积。这导致了<span class="term">群卷积</span>（Group Convolution）的概念。</p>
-      </div>
-      <div class="en">
-        The translation group on grids is a special case. More generally, we can consider signals and convolutions on arbitrary groups, leading to group convolution.
-      </div>
-    </div>
-
-    <h3 id="group-convolution">群卷积 Group Convolution</h3>
-
-    <div class="math-block">
-      $$(x \star_G \theta)(g) = \int_G \theta(g'^{-1}g) x(g')\, d\mu(g')$$
-      <div class="math-explain">
-        群卷积将标准卷积推广到任意群上。当 $G = (\mathbb{R}^d, +)$ 时，这退化为标准卷积。当 $G = \text{SO}(3)$ 时，这给出球谐卷积。<br>
-        关键性质：群卷积自动是 $G$-等变的！
-      </div>
-    </div>
-
-    <h3 id="homogeneous">齐次空间 Homogeneous Spaces</h3>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p><span class="term">齐次空间</span>是群的商空间 $G/H$，其中 $H$ 是 $G$ 的子群。直觉上，齐次空间的每一点都"看起来一样"——群 $G$ 可以将任意一点映射到任意另一点。</p>
-        <p>例子：球面 $S^2 = \text{SO}(3)/\text{SO}(2)$ 是旋转群 SO(3) 关于绕某轴旋转子群 SO(2) 的商空间。</p>
-      </div>
-      <div class="en">
-        A homogeneous space is a quotient space G/H where H is a subgroup. Every point "looks the same" — the group G can map any point to any other.
-      </div>
-    </div>
-
-    <div class="figure">
-      <img src="../assets/ch4_p53_img0.png" alt="Homogeneous spaces">
-      <figcaption>齐次空间的例子：球面 $S^2$ 作为 SO(3)/SO(2)，以及其他常见的齐次空间。</figcaption>
-    </div>
-
-    <!-- 4.4 Geodesics and Manifolds -->
-    <h2 id="sec4-4">4.4 测地线与流形<br><span style="font-size:0.7em;color:var(--text-secondary)">Geodesics and Manifolds</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p><span class="term">流形</span>（manifold）是一种局部看起来像欧几里得空间但全局可能有复杂拓扑的空间。流形上没有全局的平移概念，但有<strong>局部</strong>的距离和角度概念（通过度量张量 Riemannian metric）。</p>
-      </div>
-      <div class="en">
-        A manifold is a space that locally looks like Euclidean space but may have complex global topology. Manifolds have local notions of distance and angles but no global translation.
-      </div>
-    </div>
-
-    <h3 id="manifold">流形的关键概念</h3>
-
-    <div class="blueprint">
-      <h4>Riemannian 流形 (M, g)</h4>
-      <ul>
-        <li><strong>切空间</strong> $T_u M$ — 流形在点 $u$ 处的"线性近似"，类似于曲面的切平面</li>
-        <li><strong>度量张量</strong> $g_u$ — 切空间上的内积，定义了长度和角度</li>
-        <li><strong>测地线</strong> — 流形上两点间的"最短路径"（推广了直线的概念）</li>
-        <li><strong>测地距离</strong> $d(u, v)$ — 沿测地线测量的距离</li>
-        <li><strong>指数映射</strong> $\text{exp}_u : T_uM \to M$ — 将切向量映射到流形上的点</li>
-      </ul>
-    </div>
-
-    <h3 id="laplacian">Laplace-Beltrami 算子</h3>
-
-    <div class="math-block">
-      $$\Delta f = -\text{div}(\nabla f)$$
-      <div class="math-explain">
-        <strong>Laplace-Beltrami 算子</strong> $\Delta$ 是欧几里得拉普拉斯算子在流形上的推广。它的特征函数是流形上 Fourier 分析的基函数：$\Delta \phi_k = \lambda_k \phi_k$。特征值 $\lambda_k$ 对应"频率"，特征函数 $\phi_k$ 对应"振动模式"。<br>
-        这个算子对于在流形上定义卷积至关重要——它是 Spectral Graph CNN 和 Mesh CNN 的理论基础。
-      </div>
-    </div>
-
-    <div class="figure">
-      <img src="../assets/ch4_p60_img0.png" alt="Manifold and Laplacian">
-      <figcaption>流形上的 Laplace-Beltrami 特征函数——类似于鼓面的振动模式。</figcaption>
-    </div>
-
-    <!-- 4.5 Gauges and Bundles -->
-    <h2 id="sec4-5">4.5 标架与向量丛<br><span style="font-size:0.7em;color:var(--text-secondary)">Gauges and Bundles</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>在流形上处理<strong>向量值信号</strong>（如特征图）时，我们需要在每个点选择一个<span class="term">标架</span>（gauge / frame）——即切空间的基。问题是：这些标架的选择是<strong>任意的</strong>，好的操作不应该依赖于标架的选择。</p>
-      </div>
-      <div class="en">
-        When processing vector-valued signals on manifolds, we need a gauge (frame) at each point. The choice of gauge is arbitrary, and good operations should not depend on it.
-      </div>
-    </div>
-
-    <h3 id="gauge">规范变换 Gauge Transformation</h3>
-
-    <div class="math-block">
-      $$x'(u) = \rho(g_u) x(u) \quad \text{for each } u \in \Omega$$
-      <div class="math-explain">
-        <strong>规范变换</strong>在每个点<strong>独立地</strong>变换标架。$g_u \in G$ 是点 $u$ 处的局部变换。规范等变性要求网络输出不依赖于标架的选择——这是物理学中<strong>规范不变性</strong>的直接类比（如电磁学中的规范自由度）。
-      </div>
-    </div>
-
-    <div class="figure">
-      <img src="../assets/ch4_p65_img0.png" alt="Gauge on manifold">
-      <figcaption>流形上的标架（局部参考系）。不同点的标架选择是独立的，规范等变性保证结果不依赖于这些选择。</figcaption>
-    </div>
-
-    <!-- 4.6 Geometric Graphs and Meshes -->
-    <h2 id="sec4-6">4.6 几何图与网格<br><span style="font-size:0.7em;color:var(--text-secondary)">Geometric Graphs and Meshes</span></h2>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p><span class="term">几何图</span>（geometric graph）是嵌入在几何空间（如 $\mathbb{R}^3$）中的图，其中节点具有<strong>空间坐标</strong>。这结合了图的组合结构和连续空间的几何结构。</p>
-        <p>几何图在科学应用中极其重要——分子（原子作为节点）、点云（传感器测量）、有限元网格（用于物理仿真）都是几何图。</p>
-      </div>
-      <div class="en">
-        Geometric graphs are graphs embedded in a geometric space where nodes have spatial coordinates. They combine combinatorial graph structure with continuous geometric structure.
-      </div>
-    </div>
-
-    <div class="figure">
-      <img src="../assets/ch4_p69_img0.png" alt="Geometric graphs">
-      <figcaption>几何图的例子：分子（原子坐标+化学键）、点云、有限元网格。</figcaption>
-    </div>
-
-    <div class="bilingual">
-      <div class="zh">
-        <p>几何图的对称群更加丰富：除了节点<strong>置换对称</strong>外，还有空间<strong>欧几里得对称</strong>（旋转、平移、反射）。因此我们需要<strong>同时满足</strong>两种等变性的操作：</p>
-        <ul>
-          <li><strong>置换等变</strong>：重排节点顺序不影响结果</li>
-          <li><strong>SE(3)/E(3) 等变</strong>：旋转/平移/反射所有节点坐标，输出相应变换</li>
-        </ul>
-      </div>
-      <div class="en">
-        Geometric graphs have richer symmetry: permutation symmetry plus Euclidean symmetry. Operations need to be equivariant to both.
-      </div>
-    </div>
-
-    <div class="callout callout-project">
-      <h4>几何图在 PhysRobot 中的核心角色</h4>
-      <p><strong>这是与我们项目最直接相关的几何域！</strong></p>
-      <ul>
-        <li><strong>粒子系统</strong> = 几何图（粒子位置 = 节点坐标，相互作用 = 边）</li>
-        <li><strong>有限元网格</strong> = 几何图/三角网格</li>
-        <li><strong>需要的对称性</strong>：$\text{SE}(3) \times \Sigma_n$（旋转+平移+粒子置换）</li>
-        <li><strong>相关架构</strong>：EGNN, SchNet, DimeNet, PaiNN, TFN, NequIP 等</li>
-        <li>Chapter 5.5 将详细介绍这些等变消息传递网络</li>
-      </ul>
-    </div>
-
-    <div class="exercises" id="exercises">
-      <h3>练习题 Exercises</h3>
+      <h4>📋 本章概述</h4>
+      <p>本章是 Geometric Deep Learning 的<strong>核心地图</strong>——描述了五种关键的几何域（domain），以及在每种域上定义对称性和不变性的方式。这五种域被称为 <strong>"5G"</strong>：</p>
       <ol>
-        <li>对于 $n = 4$ 个节点的图，置换群 $\Sigma_4$ 有多少个元素？这告诉你 GNN 需要"忽略"多少种等价的节点排列？</li>
-        <li>证明：卷积运算 $(x \star \theta)(u) = \sum_v \theta(v) x(u-v)$ 是平移等变的。即证明 $\rho(t)(x \star \theta) = (\rho(t)x) \star \theta$。</li>
-        <li>在频率域，卷积变成逐点乘法。这意味着卷积滤波器实际上是什么？（提示：频率域中的乘法 = 什么样的滤波？）</li>
-        <li>球面 $S^2$ 为什么不能用标准的平面卷积？（提示：考虑球面上的平移群）</li>
-        <li>考虑一个三角网格。在每个顶点上定义一个切平面。解释为什么在不同切平面之间"比较"向量需要<strong>平行移动</strong>（parallel transport）。</li>
-        <li><strong>PhysRobot 思考</strong>：在我们的粒子仿真中：
-          <ul>
-            <li>(a) 为什么使用粒子间距离 $\|r_i - r_j\|$ 而不是相对位置向量 $r_i - r_j$ 作为消息？前者和后者分别具有什么对称性？</li>
-            <li>(b) 如果力函数只依赖于粒子间距离，它自动满足什么对称性？这足够吗？</li>
-          </ul>
-        </li>
-        <li>WL 测试无法区分某些非同构图。构造两个 WL 测试无法区分的非同构图的例子。这对 GNN 意味着什么？</li>
+        <li><strong>Graphs</strong>（图）& Sets（集合）— 置换对称性 $\Sigma_n$</li>
+        <li><strong>Grids</strong>（网格）& 欧几里得空间 — 平移对称性 $T(d)$</li>
+        <li><strong>Groups</strong>（群）& 齐性空间 — 全局对称群 $G$</li>
+        <li><strong>Geodesics</strong>（测地线）& 流形 — 等距变换 $\text{Iso}(\Omega)$</li>
+        <li><strong>Gauges</strong>（规范）& 纤维丛 — 规范对称群 $G$ (局部)</li>
+      </ol>
+      <p>理解这五种域，就理解了为什么 CNN、GNN、Transformer、球面 CNN、Mesh CNN 等架构各不相同——它们只是在不同几何域上实例化了同一个 GDL 蓝图。</p>
+      <p><strong>预计阅读时间</strong>：3-4 小时（含代码实验）</p>
+    </div>
+
+    <div class="callout callout-robot" id="five-gs">
+      <h4>🤖 PhysRobot 视角：为什么需要学这一章？</h4>
+      <p>在我们的物理仿真（PhysRobot / GNS）中：</p>
+      <ul>
+        <li>粒子系统用<strong>图</strong>（Graph）表示 → §4.1</li>
+        <li>图像观测在<strong>网格</strong>（Grid）上 → §4.2</li>
+        <li>刚体旋转涉及<strong>群</strong>（SO(3)、SE(3)）→ §4.3</li>
+        <li>柔体表面是<strong>流形</strong>（Manifold）→ §4.4</li>
+        <li>表面上的力需要<strong>规范</strong>（Gauge）处理方向 → §4.5</li>
+        <li>FEM 网格是<strong>几何图</strong>（Geometric Graph）→ §4.6</li>
+      </ul>
+      <p>这五种域不是孤立的——物理世界同时具备所有这些结构！</p>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p35_img0.png" alt="The 5Gs of Geometric Deep Learning">
+      <figcaption>图 9：Geometric Deep Learning 的 5G——网格、群与齐性空间（全局对称性）、图、测地线与流形上的度量、规范（切空间或特征空间的参考框架）。</figcaption>
+    </div>
+
+    <table>
+      <tr><th>Architecture 架构</th><th>Domain $\Omega$</th><th>Symmetry Group $\mathfrak{G}$</th><th>PhysRobot 场景</th></tr>
+      <tr><td>CNN</td><td>网格 Grid</td><td>平移群 Translation</td><td>图像输入</td></tr>
+      <tr><td>Spherical CNN</td><td>球面 $S^2$ / SO(3)</td><td>旋转群 SO(3)</td><td>球面数据</td></tr>
+      <tr><td>Intrinsic / Mesh CNN</td><td>流形 Manifold</td><td>等距群 Iso($\Omega$) / SO(2)</td><td>柔体表面</td></tr>
+      <tr><td>GNN</td><td>图 Graph</td><td>置换群 $\Sigma_n$</td><td><strong>粒子系统!</strong></td></tr>
+      <tr><td>Deep Sets</td><td>集合 Set</td><td>置换群 $\Sigma_n$</td><td>点云输入</td></tr>
+      <tr><td>Transformer</td><td>完全图</td><td>置换群 $\Sigma_n$</td><td>全局注意力</td></tr>
+    </table>
+
+
+    <!-- ============================================================ -->
+    <!-- SECTION 4.1: GRAPHS AND SETS -->
+    <!-- ============================================================ -->
+    <h2 id="sec4-1">4.1 图和集合 (Graphs and Sets)</h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>在多个科学分支中——从社会学到粒子物理——<span class="term">图</span>（graph）被用来建模关系和交互的系统。从我们的视角来看，图产生了一种非常基本的不变性，由<strong>置换群</strong>所建模。此外，我们感兴趣的其他对象（如网格和集合）可以作为图的特例获得。</p>
+      </div>
+      <div class="en">
+        In multiple branches of science, from sociology to particle physics, graphs are used as models of systems of relations and interactions. Graphs give rise to a very basic type of invariance modelled by the group of permutations.
+      </div>
+    </div>
+
+    <!-- 图的形式化定义 -->
+    <h3 id="graph-def">图的形式化定义</h3>
+
+    <div class="blueprint">
+      <h4>定义：图 (Graph)</h4>
+      <p>一个<span class="term">图</span> $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ 由以下部分组成：</p>
+      <ul>
+        <li><strong>节点集</strong> $\mathcal{V} = \{1, 2, \ldots, n\}$：$n$ 个节点（vertices / nodes）</li>
+        <li><strong>边集</strong> $\mathcal{E} \subseteq \mathcal{V} \times \mathcal{V}$：节点之间的连接（edges / links）</li>
+        <li><strong>节点特征</strong> $\mathbf{x}_u \in \mathbb{R}^s$：每个节点 $u \in \mathcal{V}$ 上的 $s$ 维特征向量</li>
+      </ul>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>💡 直觉：什么是图？</h4>
+      <p>想象社交网络：每个<strong>用户</strong>是一个节点，<strong>友谊关系</strong>是边，用户的<strong>年龄、头像</strong>等是节点特征。图的核心性质是：节点没有固定顺序——你可以随意给用户编号，社交网络本身不会改变。</p>
+      <p>更贴近我们 PhysRobot 的例子：每个<strong>粒子</strong>是节点，<strong>近邻关系</strong>是边，粒子的<strong>位置、速度</strong>是节点特征。编号粒子的方式不影响物理！</p>
+    </div>
+
+    <h3 id="adjacency">邻接矩阵、度矩阵</h3>
+
+    <p>图的连接结构可以用 $n \times n$ 的<span class="term">邻接矩阵</span>（adjacency matrix）$\mathbf{A}$ 表示：</p>
+
+    <div class="math-block">
+      $$a_{uv} = \begin{cases} 1 & \text{if } (u, v) \in \mathcal{E} \\ 0 & \text{otherwise} \end{cases}$$
+      <div class="math-explain">
+        <strong>符号说明</strong>：$a_{uv}$ 是 $\mathbf{A}$ 的第 $u$ 行第 $v$ 列元素。若 $(u,v)$ 之间有边则为 1，否则为 0。对于<strong>无向图</strong>，邻接矩阵对称：$\mathbf{A} = \mathbf{A}^\top$。
+      </div>
+    </div>
+
+    <p><span class="term">度矩阵</span>（degree matrix）$\mathbf{D}$ 是对角矩阵，记录每个节点的连接数：</p>
+
+    <div class="math-block">
+      $$\mathbf{D} = \text{diag}(d_1, d_2, \ldots, d_n), \quad d_u = \sum_{v} a_{uv} = |\mathcal{N}_u|$$
+      <div class="math-explain">
+        $d_u$ 是节点 $u$ 的度（degree），即与之相连的邻居数量。$\mathcal{N}_u = \{v : (u,v) \in \mathcal{E}\}$ 是 $u$ 的邻域。
+      </div>
+    </div>
+
+    <h3 id="laplacian-matrix">图拉普拉斯矩阵</h3>
+
+    <p><span class="term">图拉普拉斯矩阵</span>（Graph Laplacian）是图分析中最重要的矩阵之一：</p>
+
+    <div class="math-block">
+      $$\mathbf{L} = \mathbf{D} - \mathbf{A}$$
+      <div class="math-explain">
+        <strong>组合拉普拉斯</strong>（combinatorial Laplacian）。作用在信号 $\mathbf{x}$ 上时：$(\mathbf{L}\mathbf{x})_u = d_u x_u - \sum_{v \in \mathcal{N}_u} x_v = \sum_{v \in \mathcal{N}_u} (x_u - x_v)$。<br>
+        <strong>直觉</strong>：拉普拉斯衡量一个节点的信号值与邻居平均值的偏差——就像连续情况下的"二阶导数"。
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>🔮 拉普拉斯的性质</h4>
+      <ul>
+        <li><strong>半正定</strong>：$\mathbf{L} \succeq 0$，所有特征值 $\lambda_i \geq 0$</li>
+        <li><strong>对称</strong>（无向图）：$\mathbf{L} = \mathbf{L}^\top$，特征向量正交</li>
+        <li><strong>最小特征值为 0</strong>：对应常数向量 $\mathbf{1}$（所有节点值相同 → 无"梯度"）</li>
+        <li><strong>二次型是 Dirichlet 能量</strong>：$\mathbf{x}^\top \mathbf{L} \mathbf{x} = \sum_{(u,v) \in \mathcal{E}} (x_u - x_v)^2$，衡量信号的"光滑度"</li>
+      </ul>
+      <p><strong>归一化拉普拉斯</strong>：$\tilde{\mathbf{L}} = \mathbf{D}^{-1/2} \mathbf{L} \mathbf{D}^{-1/2} = \mathbf{I} - \mathbf{D}^{-1/2} \mathbf{A} \mathbf{D}^{-1/2}$，特征值在 $[0, 2]$ 之间。</p>
+    </div>
+
+    <h3 id="graph-signals">图上的信号和函数</h3>
+
+    <p>将所有节点特征堆叠成矩阵 $\mathbf{X} = (\mathbf{x}_1, \ldots, \mathbf{x}_n)^\top \in \mathbb{R}^{n \times d}$，每一行是一个节点的特征。注意这隐含地给节点指定了一个顺序。</p>
+
+    <p>图上的<span class="term">信号</span>就是定义在节点集 $\mathcal{V}$ 上的函数 $x : \mathcal{V} \to \mathbb{R}^d$。在 GDL 蓝图中，域 $\Omega = \mathcal{G}$，信号空间 $\mathcal{X}(\mathcal{G}, \mathbb{R}^d)$ 是 $d$ 维的逐节点信号。</p>
+
+    <h3 id="permutation-group">置换群作用在图上</h3>
+
+    <div class="blueprint">
+      <h4>置换群 $\Sigma_n$ 作用在图上</h4>
+      <p>对称群 $\Sigma_n$ 包含 $\{1, \ldots, n\}$ 的所有排列，共 $n!$ 个元素。每个置换 $g \in \Sigma_n$ 可以表示为 $n \times n$ <strong>置换矩阵</strong> $\mathbf{P}$：每行每列恰好一个 1，其余为 0。</p>
+      <p>置换 $g$ 作用在图上意味着：</p>
+      <ul>
+        <li><strong>对节点特征</strong>：重排行 → $\mathbf{X} \mapsto \mathbf{P}\mathbf{X}$</li>
+        <li><strong>对邻接矩阵</strong>：同时重排行和列 → $\mathbf{A} \mapsto \mathbf{P}\mathbf{A}\mathbf{P}^\top$</li>
+      </ul>
+    </div>
+
+    <p>两个图如果通过节点重编号就能变成一样（即存在置换矩阵 $\mathbf{P}$ 使 $\mathbf{A}' = \mathbf{P}\mathbf{A}\mathbf{P}^\top$），就称它们<span class="term">同构</span>（isomorphic）。</p>
+
+    <div class="figure">
+      <img src="../assets/ch4_p35_img1.png" alt="Isomorphic graphs">
+      <figcaption>同构的两个图——结构完全相同，只是节点编号不同。图同构是边保持的双射。</figcaption>
+    </div>
+
+    <h3 id="equivariant-graph">置换不变性与等变性</h3>
+
+    <p><strong>集合</strong>（set）是没有边的图（$\mathcal{E} = \emptyset$）。对集合上的函数：</p>
+
+    <div class="math-block">
+      $$\text{置换不变性 (invariance)：} \quad f(\mathbf{P}\mathbf{X}) = f(\mathbf{X})$$
+      $$\text{置换等变性 (equivariance)：} \quad \mathbf{F}(\mathbf{P}\mathbf{X}) = \mathbf{P}\mathbf{F}(\mathbf{X})$$
+      <div class="math-explain">
+        <strong>不变性</strong>：输出不随节点排列改变（如图分类）。<strong>等变性</strong>：输出随输入一致地排列（如逐节点预测）。
+      </div>
+    </div>
+
+    <p>一个简单的置换不变函数：</p>
+
+    <div class="math-block">
+      $$f(\mathbf{X}) = \phi\left(\sum_{u \in \mathcal{V}} \psi(\mathbf{x}_u)\right)$$
+      <div class="math-explain">
+        $\psi$ 独立作用在每个节点上，然后<strong>求和聚合</strong>（sum 不依赖顺序！），再通过 $\phi$ 处理。这就是 <strong>Deep Sets</strong> 架构的核心思想。
+      </div>
+    </div>
+
+    <p>一个简单的置换等变函数：共享的逐节点线性变换</p>
+
+    <div class="math-block">
+      $$\mathbf{F}_\Theta(\mathbf{X}) = \mathbf{X}\Theta, \quad \Theta \in \mathbb{R}^{d \times d'}$$
+      <div class="math-explain">
+        每个节点：$\mathbf{h}_u = \Theta^\top \mathbf{x}_u$。因为 $\Theta$ 在所有节点间<strong>共享</strong>，所以 $\mathbf{F}_\Theta(\mathbf{P}\mathbf{X}) = \mathbf{P}\mathbf{X}\Theta = \mathbf{P}\mathbf{F}_\Theta(\mathbf{X})$ ✓
+      </div>
+    </div>
+
+    <p>对于有边的图（$\mathcal{E} \neq \emptyset$），不变性和等变性需要同时考虑特征和邻接矩阵：</p>
+
+    <div class="math-block">
+      $$\text{图不变性：} \quad f(\mathbf{P}\mathbf{X}, \mathbf{P}\mathbf{A}\mathbf{P}^\top) = f(\mathbf{X}, \mathbf{A})$$
+      $$\text{图等变性：} \quad \mathbf{F}(\mathbf{P}\mathbf{X}, \mathbf{P}\mathbf{A}\mathbf{P}^\top) = \mathbf{P}\mathbf{F}(\mathbf{X}, \mathbf{A})$$
+    </div>
+
+    <h4>局部等变函数：GNN 的基本构造</h4>
+
+    <p>节点 $u$ 的<span class="term">1-hop 邻域</span>：</p>
+
+    <div class="math-block">
+      $$\mathcal{N}_u = \{v : (u, v) \in \mathcal{E} \text{ or } (v, u) \in \mathcal{E}\}$$
+      $$\mathbf{X}_{\mathcal{N}_u} = \{\!\!\{ \mathbf{x}_v : v \in \mathcal{N}_u \}\!\!\}$$
+      <div class="math-explain">
+        $\{\!\!\{\cdot\}\!\!\}$ 表示<strong>多重集</strong>（multiset），允许重复元素。邻域特征不是一个有序的列表，而是一个无序的多重集。
+      </div>
+    </div>
+
+    <p>GDL 蓝图给出了构造置换等变函数的通用方法：对每个节点应用一个<strong>局部的、置换不变的</strong>函数 $\phi$：</p>
+
+    <div class="math-block">
+      $$\mathbf{F}(\mathbf{X}, \mathbf{A}) = \begin{pmatrix} \phi(\mathbf{x}_1, \mathbf{X}_{\mathcal{N}_1}) \\ \phi(\mathbf{x}_2, \mathbf{X}_{\mathcal{N}_2}) \\ \vdots \\ \phi(\mathbf{x}_n, \mathbf{X}_{\mathcal{N}_n}) \end{pmatrix}$$
+      <div class="math-explain">
+        <strong>关键洞察</strong>：整体函数 $\mathbf{F}$ 的置换等变性来自局部函数 $\phi$ 的置换不变性（因为 $\phi$ 的输出不依赖 $\mathcal{N}_u$ 中节点的顺序）。当 $\phi$ 是单射时，这等价于一步 <strong>Weisfeiler-Lehman</strong> 图同构测试。
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p40_img0.png" alt="GNN message passing">
+      <figcaption>图 10：通过对每个邻域应用置换不变函数 $\phi$ 来构造图上的置换等变函数。$\phi$ 作用于节点 $b$ 的特征 $\mathbf{x}_b$ 和邻域特征多重集 $\mathbf{X}_{\mathcal{N}_b} = \{\!\!\{\mathbf{x}_a, \mathbf{x}_b, \mathbf{x}_c, \mathbf{x}_d, \mathbf{x}_e\}\!\!\}$。</figcaption>
+    </div>
+
+    <div class="callout callout-warn">
+      <h4>⚠️ 图 vs 集合 vs 网格的本质区别</h4>
+      <ul>
+        <li><strong>集合</strong>（Set）：无边，域固定，只需处理特征</li>
+        <li><strong>图</strong>（Graph）：有边，<strong>域本身是输入的一部分</strong>（邻接结构可变），需要几何稳定性</li>
+        <li><strong>网格</strong>（Grid）：有边且<strong>固定顺序</strong>，不需要置换不变性</li>
+      </ul>
+      <p>这个区别是 GDL 中反复出现的主题：图的域结构是变化的，而不是固定的。</p>
+    </div>
+
+    <!-- 代码：构建图 -->
+    <h3 id="code-graph">💻 代码：用 NetworkX + PyG 构建图</h3>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — 图的基本操作</span>
+        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      </div>
+      <pre><code>import numpy as np
+import networkx as nx
+
+# === 1. 创建一个简单的图 ===
+G = nx.karate_club_graph()  # 经典的空手道俱乐部图（34节点，78边）
+print(f"节点数: {G.number_of_nodes()}, 边数: {G.number_of_edges()}")
+
+# === 2. 邻接矩阵 ===
+A = nx.adjacency_matrix(G).toarray()
+print(f"邻接矩阵形状: {A.shape}")
+print(f"对称性检查: {np.allclose(A, A.T)}")  # True: 无向图
+
+# === 3. 度矩阵 ===
+degrees = np.array([G.degree(i) for i in range(G.number_of_nodes())])
+D = np.diag(degrees)
+print(f"节点0的度: {degrees[0]}, 节点33的度: {degrees[33]}")
+
+# === 4. 图拉普拉斯矩阵 ===
+L = D - A  # 组合拉普拉斯
+eigenvalues = np.linalg.eigvalsh(L)
+print(f"最小特征值: {eigenvalues[0]:.6f}")  # ≈ 0（常数向量）
+print(f"所有特征值非负: {np.all(eigenvalues >= -1e-10)}")  # True
+
+# === 5. Dirichlet 能量 ===
+x = np.random.randn(G.number_of_nodes())  # 随机信号
+dirichlet_energy = x @ L @ x
+edge_sum = sum((x[u] - x[v])**2 for u, v in G.edges())
+print(f"x^T L x = {dirichlet_energy:.4f}")
+print(f"Σ(xu-xv)² = {edge_sum:.4f}")  # 两者相等！
+
+# === 6. 验证置换等变性 ===
+# 随机置换
+perm = np.random.permutation(G.number_of_nodes())
+P = np.eye(G.number_of_nodes())[perm]  # 置换矩阵
+
+# 检验: P A P^T 是重编号后的邻接矩阵
+A_permuted = P @ A @ P.T
+# 构建重编号的图
+mapping = {old: new for new, old in enumerate(perm)}
+G_permuted = nx.relabel_nodes(G, mapping)
+A_relabeled = nx.adjacency_matrix(G_permuted).toarray()
+print(f"PAP^T = 重编号邻接矩阵: {np.allclose(A_permuted, A_relabeled)}")
+</code></pre>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — PyTorch Geometric (PyG) 构建图</span>
+        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      </div>
+      <pre><code>import torch
+from torch_geometric.data import Data
+from torch_geometric.utils import to_dense_adj, degree
+
+# === 用 PyG 构建粒子系统图 ===
+n_particles = 5
+# 节点特征: [位置x, 位置y, 速度x, 速度y]
+x = torch.tensor([
+    [0.0, 0.0, 1.0, 0.5],   # 粒子 0
+    [1.0, 0.0, -0.5, 0.3],  # 粒子 1
+    [0.5, 1.0, 0.0, -1.0],  # 粒子 2
+    [2.0, 1.5, -0.3, 0.1],  # 粒子 3
+    [1.5, 0.5, 0.2, -0.4],  # 粒子 4
+], dtype=torch.float)
+
+# 边索引: 基于距离阈值建立的连接
+edge_index = torch.tensor([
+    [0, 0, 1, 1, 2, 2, 3, 4],  # 源节点
+    [1, 2, 0, 4, 0, 4, 4, 1],  # 目标节点
+], dtype=torch.long)
+
+# 构建 PyG Data 对象
+data = Data(x=x, edge_index=edge_index)
+print(f"PyG Graph: {data}")
+print(f"节点数: {data.num_nodes}, 边数: {data.num_edges}")
+
+# 邻接矩阵
+A = to_dense_adj(edge_index, max_num_nodes=n_particles).squeeze()
+print(f"邻接矩阵:\n{A}")
+
+# 度
+deg = degree(edge_index[0], num_nodes=n_particles)
+print(f"各节点的度: {deg}")
+
+# === 验证置换等变性 ===
+# 随机排列节点
+perm = torch.randperm(n_particles)
+x_perm = x[perm]
+# 重映射边索引
+inv_perm = torch.argsort(perm)
+edge_index_perm = inv_perm[edge_index]
+data_perm = Data(x=x_perm, edge_index=edge_index_perm)
+print(f"\n排列后的图结构与原图同构 ✓")
+</code></pre>
+    </div>
+
+    <div class="callout callout-robot" id="robot-graph">
+      <h4>🤖 PhysRobot 关联：粒子系统就是图！</h4>
+      <p>在 GNS (Graph Network Simulator) 中，物理系统被编码为图：</p>
+      <ul>
+        <li><strong>节点</strong> = 粒子，特征包括位置 $\mathbf{p}_i$、速度 $\dot{\mathbf{p}}_i$、物理属性（质量、材料类型等）</li>
+        <li><strong>边</strong> = 基于距离阈值 $r$ 的近邻关系：$(i,j) \in \mathcal{E}$ 当 $\|\mathbf{p}_i - \mathbf{p}_j\| < r$</li>
+        <li><strong>GNN 消息传递</strong> = 应用局部函数 $\phi$ 到每个邻域</li>
+      </ul>
+      <p>关键约束：粒子编号是<strong>任意的</strong>——打乱编号不应该改变物理结果。这就是置换等变性的<strong>物理动机</strong>！</p>
+    </div>
+
+    <div class="callout callout-exercise">
+      <h4>📝 练习 4.1</h4>
+      <ol>
+        <li><strong>证明</strong>：对于对称邻接矩阵 $\mathbf{A}$，$\mathbf{L} = \mathbf{D} - \mathbf{A}$ 的最小特征值为 0，对应的特征向量是常数向量 $\mathbf{1}$。</li>
+        <li><strong>计算</strong>：对于路径图 $1-2-3-4$（4 个节点的链），写出 $\mathbf{A}$、$\mathbf{D}$、$\mathbf{L}$，并计算 $\mathbf{L}$ 的特征值。</li>
+        <li><strong>编程</strong>：用 NetworkX 生成一个随机图（Erdős–Rényi 模型，$n=100, p=0.1$），计算拉普拉斯的前 10 个特征值，绘制前 4 个特征向量。</li>
+        <li><strong>思考</strong>：为什么 GNN 中的消息传递函数 $\phi$ 必须是置换不变的？如果 $\phi$ 依赖邻居的顺序，会出什么问题？</li>
       </ol>
     </div>
 
-    <div class="chapter-nav">
-      <a href="../chapter3/index.html">← Chapter 3: 几何先验</a>
-      <a href="../chapter5/index.html">Chapter 5: GDL 模型 →</a>
+
+    <!-- ============================================================ -->
+    <!-- SECTION 4.2: GRIDS AND EUCLIDEAN SPACES -->
+    <!-- ============================================================ -->
+    <h2 id="sec4-2">4.2 网格和欧几里得空间 (Grids and Euclidean Spaces)</h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>深度学习在计算机视觉、自然语言处理和语音识别中的巨大影响，都有一个<strong>几何公分母</strong>：底层的<span class="term">网格结构</span>。网格是图的特例，但由于节点有固定顺序，不再需要置换不变性——取而代之的是更强的先验：<strong>平移不变性</strong>。</p>
+      </div>
+      <div class="en">
+        The impact of deep learning was particularly dramatic in computer vision, NLP, and speech recognition — all sharing a geometric common denominator: an underlying grid structure. Grids are a particular case of graphs, but with a stronger geometric prior: translation invariance.
+      </div>
     </div>
+
+    <h3 id="translation-group">平移群 $T(d)$</h3>
+
+    <p>一维网格可以看作<strong>环图</strong>（ring graph）：节点 $0, 1, \ldots, n-1$（模 $n$），邻接关系为 $a_{u, u+1 \bmod n} = 1$。</p>
+
+    <div class="callout callout-info">
+      <h4>💡 网格 vs 普通图的两个关键区别</h4>
+      <ol>
+        <li><strong>均匀连接</strong>：每个节点有<strong>相同</strong>的连接模式（都有左邻居和右邻居），结构上不可区分 → 齐性空间</li>
+        <li><strong>邻居有固定顺序</strong>：$u-1$ 是"左邻居"，$u+1$ 是"右邻居"——这在一般图上是不可能的！</li>
+      </ol>
+      <p>这意味着聚合函数 $\phi(x_{u-1}, x_u, x_{u+1})$ <strong>不需要</strong>对邻居置换不变。</p>
+    </div>
+
+    <h3 id="circulant">循环矩阵与离散卷积</h3>
+
+    <p>选择线性的 $\phi(x_{u-1}, x_u, x_{u+1}) = \theta_{-1} x_{u-1} + \theta_0 x_u + \theta_1 x_{u+1}$，整个变换可以写成矩阵乘法：</p>
+
+    <div class="math-block">
+      $$\mathbf{F}(\mathbf{X}) = \begin{pmatrix} \theta_0 & \theta_1 & & & \theta_{-1} \\ \theta_{-1} & \theta_0 & \theta_1 & & \\ & \ddots & \ddots & \ddots & \\ & & \theta_{-1} & \theta_0 & \theta_1 \\ \theta_1 & & & \theta_{-1} & \theta_0 \end{pmatrix} \begin{pmatrix} x_0 \\ x_1 \\ \vdots \\ x_{n-2} \\ x_{n-1} \end{pmatrix}$$
+      <div class="math-explain">
+        这种每条对角线上元素相同的矩阵叫<span class="term">循环矩阵</span>（circulant matrix）。在机器学习中，对角线元素相同的性质被称为"权重共享"（weight sharing）。
+      </div>
+    </div>
+
+    <p>更一般地，给定向量 $\boldsymbol{\theta} = (\theta_0, \ldots, \theta_{n-1})$，循环矩阵 $\mathbf{C}(\boldsymbol{\theta})$ 定义了<span class="term">离散卷积</span>：</p>
+
+    <div class="math-block">
+      $$(\mathbf{x} \star \boldsymbol{\theta})_u = \sum_{v=0}^{n-1} x_{v \bmod n} \, \theta_{u-v \bmod n} = \mathbf{C}(\boldsymbol{\theta})\mathbf{x}$$
+      <div class="math-explain">
+        卷积 = 循环矩阵与向量的乘积。$\boldsymbol{\theta}$ 在信号处理中称为"滤波器"（filter），在 CNN 中是<strong>可学习参数</strong>。
+      </div>
+    </div>
+
+    <h3 id="convolution-shift">卷积的本质：平移等变的线性操作</h3>
+
+    <p>选择 $\boldsymbol{\theta} = (0, 1, 0, \ldots, 0)^\top$ 得到<span class="term">位移算子</span>（shift operator）$\mathbf{S}$——将向量循环右移一位。</p>
+
+    <div class="math-block">
+      $$\mathbf{S}\mathbf{C}(\boldsymbol{\theta})\mathbf{x} = \mathbf{C}(\boldsymbol{\theta})\mathbf{S}\mathbf{x}$$
+      <div class="math-explain">
+        循环矩阵<strong>相互交换</strong>：$\mathbf{C}(\boldsymbol{\theta})\mathbf{C}(\boldsymbol{\eta}) = \mathbf{C}(\boldsymbol{\eta})\mathbf{C}(\boldsymbol{\theta})$。特别地，每个循环矩阵都与位移 $\mathbf{S}$ 交换。<br>
+        <strong>核心结论</strong>：卷积 $\Leftrightarrow$ 平移等变的线性操作。这是 <strong>"卷积从对称性第一性原理中涌现"</strong> 的精彩例证！
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>🔮 为什么平移群是 Abel 群很重要？</h4>
+      <p>循环矩阵的交换性（commutativity）直接来自平移群是<strong>交换群</strong>（Abelian group）：$S_u \circ S_v = S_{u+v} = S_v \circ S_u$。</p>
+      <p>反过来，一个矩阵是循环的，当且仅当它与位移 $\mathbf{S}$ 交换。这让我们可以<strong>定义</strong>卷积为平移等变的线性操作——不需要先"发明"卷积，它自然从对称性中涌现。</p>
+    </div>
+
+    <h3 id="fourier-discrete">从对称性推导离散傅里叶变换 (DFT)</h3>
+
+    <p>所有循环矩阵相互交换 → 可以<strong>联合对角化</strong>（jointly diagonalisable）→ 存在<strong>公共特征基</strong>。</p>
+
+    <p>选择位移算子 $\mathbf{S}$ 来计算特征向量（因为它最简单）。$\mathbf{S}$ 的特征向量恰好是<span class="term">离散傅里叶基</span>：</p>
+
+    <div class="math-block">
+      $$\boldsymbol{\phi}_k = \frac{1}{\sqrt{n}} \left(1, e^{\frac{2\pi i k}{n}}, e^{\frac{4\pi i k}{n}}, \ldots, e^{\frac{2\pi i (n-1) k}{n}}\right)^\top, \quad k = 0, 1, \ldots, n-1$$
+      <div class="math-explain">
+        排列成 $n \times n$ 傅里叶矩阵 $\boldsymbol{\Phi} = (\boldsymbol{\phi}_0, \ldots, \boldsymbol{\phi}_{n-1})$。乘以 $\boldsymbol{\Phi}^*$（共轭转置）= DFT，乘以 $\boldsymbol{\Phi}$ = 逆 DFT。
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\hat{x}_k = \frac{1}{\sqrt{n}} \sum_{u=0}^{n-1} x_u \, e^{-\frac{2\pi i k u}{n}} \quad \longleftrightarrow \quad x_u = \frac{1}{\sqrt{n}} \sum_{k=0}^{n-1} \hat{x}_k \, e^{+\frac{2\pi i k u}{n}}$$
+      <div class="math-explain">
+        左：正变换（时域→频域）。右：逆变换（频域→时域）。$\hat{x}_k$ 是信号 $\mathbf{x}$ 在频率 $k$ 上的分量。
+      </div>
+    </div>
+
+    <h4>卷积定理 (Convolution Theorem)</h4>
+
+    <p>所有循环矩阵被傅里叶变换对角化，且仅在特征值上不同：</p>
+
+    <div class="math-block">
+      $$\mathbf{C}(\boldsymbol{\theta})\mathbf{x} = \boldsymbol{\Phi} \begin{pmatrix} \hat{\theta}_0 & & \\ & \ddots & \\ & & \hat{\theta}_{n-1} \end{pmatrix} \boldsymbol{\Phi}^* \mathbf{x} = \boldsymbol{\Phi}(\hat{\boldsymbol{\theta}} \odot \hat{\mathbf{x}})$$
+      <div class="math-explain">
+        <strong>卷积定理</strong>：时域的卷积 = 频域的逐元素乘法。这就是 FFT 加速卷积的理论基础：用 $O(n \log n)$ 的 FFT 替代 $O(n^2)$ 的直接卷积。
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <h4>⚠️ 图傅里叶变换的局限</h4>
+      <p>同样的思路可以推广到图：用邻接矩阵（或拉普拉斯矩阵）的特征向量作为"图傅里叶基"。但有两个关键问题：</p>
+      <ol>
+        <li><strong>基依赖图结构</strong>：不同图有不同的傅里叶基，无法直接比较——导致泛化能力差</li>
+        <li><strong>频率结构是一维的</strong>：图的特征值只有大小（magnitude），没有方向——图滤波器天然是<strong>各向同性的</strong>（isotropic）</li>
+      </ol>
+    </div>
+
+    <h3 id="fourier-continuous">连续傅里叶变换</h3>
+
+    <p>在连续域 $\Omega = \mathbb{R}$ 上，平移算子 $(S_v f)(u) = f(u - v)$ 作用在傅里叶基函数 $\phi_\xi(u) = e^{i\xi u}$ 上：</p>
+
+    <div class="math-block">
+      $$S_v e^{i\xi u} = e^{i\xi(u-v)} = e^{-i\xi v} e^{i\xi u}$$
+      <div class="math-explain">
+        $\phi_\xi$ 是 $S_v$ 的特征函数，特征值为 $e^{-i\xi v}$（复数，模为 1）。由于谱是简单的（simple spectrum），$e^{i\xi u}$ 是唯一的特征函数（到常数倍数为止）。
+      </div>
+    </div>
+
+    <p>由此得到核心定理：<strong>每个线性平移等变算子都是卷积</strong>。</p>
+
+    <div class="math-block">
+      $$(Cx)(u) = \int_{-\infty}^{+\infty} p_C(v) \, x(u-v) \, dv = (x \star p_C)(u)$$
+      <div class="math-explain">
+        $C$ 在频域表示为乘以传递函数 $\hat{p}_C(\xi)$。这是 Stone 定理在平移群上的特例。
+      </div>
+    </div>
+
+    <!-- 代码：2D 卷积 -->
+    <h3 id="code-conv">💻 代码：卷积的群论视角</h3>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — 循环矩阵与卷积</span>
+        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      </div>
+      <pre><code>import numpy as np
+from scipy.linalg import circulant
+
+n = 8
+# 创建滤波器（只有3个非零值，模拟局部卷积核）
+theta = np.zeros(n)
+theta[0], theta[1], theta[-1] = 0.5, 0.25, 0.25  # [中心, 右邻, 左邻]
+
+# 循环矩阵
+C = circulant(theta)
+print("循环矩阵 C(θ):")
+print(np.round(C, 2))
+
+# 信号
+x = np.random.randn(n)
+
+# 方法 1: 直接矩阵乘法
+y1 = C @ x
+
+# 方法 2: FFT 加速（卷积定理）
+x_hat = np.fft.fft(x)
+theta_hat = np.fft.fft(theta)
+y2 = np.real(np.fft.ifft(theta_hat * x_hat))
+
+print(f"\n直接卷积与 FFT 卷积一致: {np.allclose(y1, y2)}")
+
+# 验证位移等变性
+S = circulant(np.roll(np.eye(n)[0], 1))  # 位移算子
+print(f"S·C(θ)·x == C(θ)·S·x: {np.allclose(S @ C @ x, C @ S @ x)}")
+</code></pre>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — 2D 卷积的几何视角</span>
+        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      </div>
+      <pre><code>import numpy as np
+import torch
+import torch.nn.functional as F
+
+# === 2D 网格上的卷积 ===
+# 创建 8x8 的"图像"
+H, W = 8, 8
+image = torch.randn(1, 1, H, W)  # [batch, channel, height, width]
+
+# 3x3 卷积核
+kernel = torch.tensor([[[[0.0, 1.0, 0.0],
+                          [1.0, -4.0, 1.0],
+                          [0.0, 1.0, 0.0]]]])  # 拉普拉斯算子！
+
+# 应用卷积
+output = F.conv2d(image, kernel, padding=1)  # padding=1 保持尺寸
+
+# === 验证平移等变性 ===
+# 平移图像（循环位移）
+shifted_image = torch.roll(image, shifts=(2, 3), dims=(2, 3))
+
+# 先卷积再平移
+conv_then_shift = torch.roll(F.conv2d(image, kernel, padding=1), 
+                              shifts=(2, 3), dims=(2, 3))
+# 先平移再卷积
+shift_then_conv = F.conv2d(shifted_image, kernel, padding=1)
+
+# 对于有 padding 的边界，近似等变（内部严格等变）
+interior = slice(3, -3)
+print(f"平移等变性（内部区域）: "
+      f"{torch.allclose(conv_then_shift[:,:,interior,interior], "
+      f"shift_then_conv[:,:,interior,interior], atol=1e-5)}")
+
+# === 可视化：卷积核就是拉普拉斯矩阵的局部 ===
+print("\n3x3 拉普拉斯核 (离散 Laplacian):")
+print(kernel.squeeze().numpy())
+print("注意：这正是连续拉普拉斯 ∇² 的有限差分近似！")
+print("中心值 -4 = 减去4个邻居的贡献 = D - A 在网格上的局部形式")
+</code></pre>
+    </div>
+
+    <div class="callout callout-exercise">
+      <h4>📝 练习 4.2</h4>
+      <ol>
+        <li><strong>证明</strong>：$n \times n$ 循环矩阵 $\mathbf{C}(\boldsymbol{\theta})$ 的特征值是 $\hat{\theta}_k = \sum_{j=0}^{n-1} \theta_j e^{-2\pi i jk/n}$，即 $\boldsymbol{\theta}$ 的 DFT。</li>
+        <li><strong>计算</strong>：写出 $4 \times 4$ 的傅里叶矩阵 $\boldsymbol{\Phi}$，验证 $\boldsymbol{\Phi}^*\boldsymbol{\Phi} = \mathbf{I}$。</li>
+        <li><strong>编程</strong>：生成一个 1D 信号，分别用直接卷积和 FFT 计算卷积，比较时间复杂度（试 $n = 10^4$ 和 $n = 10^6$）。</li>
+        <li><strong>思考</strong>：为什么 CNN 用的是"局部"卷积核（如 $3 \times 3$）而不是全局核？从 GDL 蓝图的尺度分离先验解释。</li>
+      </ol>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- SECTION 4.3: GROUPS AND HOMOGENEOUS SPACES -->
+    <!-- ============================================================ -->
+    <h2 id="sec4-3">4.3 群和齐性空间 (Groups and Homogeneous Spaces)</h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>上一节揭示了位移和卷积的紧密联系。这实际上是一个更宏大故事的一部分：卷积和傅里叶变换可以在<strong>任何可以求和/积分的对称群</strong>上定义。</p>
+      </div>
+      <div class="en">
+        Both convolution and the Fourier transform can be defined for any group of symmetries that we can sum or integrate over. This is part of a far larger story.
+      </div>
+    </div>
+
+    <h3 id="group-conv">群卷积 (Group Convolution)</h3>
+
+    <p>回忆欧几里得卷积可以理解为<strong>模式匹配</strong>：将滤波器的平移副本与输入信号做内积。</p>
+
+    <div class="math-block">
+      $$(x \star \theta)(u) = \langle x, S_u \theta \rangle = \int_{\mathbb{R}} x(v) \, \theta(u + v) \, dv$$
+      <div class="math-explain">
+        $u$ 既是域 $\Omega = \mathbb{R}$ 上的点，又是平移群 $G = \mathbb{R}$ 的元素。对于平移群，$G = \Omega$。
+      </div>
+    </div>
+
+    <p>将平移群替换为一般群 $G$ 作用在域 $\Omega$ 上，群的作用诱导表示 $\rho(g)x(u) = x(g^{-1}u)$，定义<span class="term">群卷积</span>：</p>
+
+    <div class="math-block">
+      $$(x \star \theta)(g) = \langle x, \rho(g)\theta \rangle = \int_\Omega x(u) \, \theta(g^{-1}u) \, du$$
+      <div class="math-explain">
+        <strong>关键点</strong>：$x \star \theta$ 的值定义在<strong>群元素</strong> $g \in G$ 上，而非域 $\Omega$ 上！这意味着下一层操作的输入是定义在 $G$ 上的信号。
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>🔮 群卷积的等变性证明</h4>
+      <p>关键等式：$\langle x, \rho(g)\theta \rangle = \langle \rho(g^{-1})x, \theta \rangle$（匹配信号与变换的滤波器 = 匹配逆变换的信号与原滤波器）。</p>
+      <p>由此：</p>
+      $$(\rho(h)x \star \theta)(g) = \langle \rho(h)x, \rho(g)\theta \rangle = \langle x, \rho(h^{-1}g)\theta \rangle = (x \star \theta)(h^{-1}g) = \rho(h)(x \star \theta)(g)$$
+      <p>群卷积是 $G$-等变的 ✓</p>
+    </div>
+
+    <h3 id="spherical-conv">球面卷积</h3>
+
+    <p>考虑二维球面 $\Omega = S^2$，旋转群 $G = \text{SO}(3)$。点用单位向量 $\mathbf{u}: \|\mathbf{u}\| = 1$ 表示，群作用是 $3 \times 3$ 正交矩阵 $\mathbf{R}$（$\det(\mathbf{R}) = 1$）。</p>
+
+    <div class="math-block">
+      $$(x \star \theta)(\mathbf{R}) = \int_{S^2} x(\mathbf{u}) \, \theta(\mathbf{R}^{-1}\mathbf{u}) \, d\mathbf{u}$$
+      <div class="math-explain">
+        球面卷积是信号与旋转滤波器的内积。结果是定义在 $\text{SO}(3)$ 上的函数——这很重要！
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p46_img0.png" alt="SO(3) action on S2">
+      <figcaption>SO(3) 群在 $S^2$ 上的作用。三种旋转是可能的（绕三个轴）；SO(3) 是一个<strong>三维流形</strong>，而 $S^2$ 是二维流形。</figcaption>
+    </div>
+
+    <div class="callout callout-warn">
+      <h4>⚠️ 群 ≠ 域：深层之间的变化</h4>
+      <p>$S^2$ 上的卷积输出是 $\text{SO}(3)$ 上的函数。因此第二层不能再对 $S^2$ 做卷积，而是对 $\text{SO}(3)$ 做卷积：</p>
+      $$((x \star \theta) \star \phi)(\mathbf{R}) = \int_{\text{SO}(3)} (x \star \theta)(\mathbf{Q}) \, \phi(\mathbf{R}^{-1}\mathbf{Q}) \, d\mathbf{Q}$$
+      <p>$G$ 作用在自身上的表示 $\rho(g)x(h) = x(g^{-1}h)$ 叫做<strong>正则表示</strong>（regular representation）。</p>
+    </div>
+
+    <h3 id="lie-groups">李群基础：SO(2), SO(3), SE(3)</h3>
+
+    <div class="blueprint">
+      <h4>关键李群</h4>
+      <table>
+        <tr><th>群</th><th>维度</th><th>元素</th><th>物理含义</th></tr>
+        <tr><td>$\text{SO}(2)$</td><td>1</td><td>$2\times 2$ 旋转矩阵 $\begin{pmatrix}\cos\alpha & -\sin\alpha \\ \sin\alpha & \cos\alpha\end{pmatrix}$</td><td>平面旋转</td></tr>
+        <tr><td>$\text{SO}(3)$</td><td>3</td><td>$3\times 3$ 正交矩阵 ($\det = 1$)</td><td>3D 旋转</td></tr>
+        <tr><td>$\text{SE}(3)$</td><td>6</td><td>$\begin{pmatrix}\mathbf{R} & \mathbf{t} \\ \mathbf{0} & 1\end{pmatrix}$, $\mathbf{R} \in \text{SO}(3), \mathbf{t} \in \mathbb{R}^3$</td><td>刚体运动</td></tr>
+        <tr><td>$\text{E}(3)$</td><td>6</td><td>$\text{O}(3) \ltimes \mathbb{R}^3$（包含反射）</td><td>全欧几里得变换</td></tr>
+      </table>
+    </div>
+
+    <h3 id="homogeneous-space">齐性空间</h3>
+
+    <div class="blueprint">
+      <h4>定义：齐性空间 (Homogeneous Space)</h4>
+      <p>域 $\Omega$ 是关于群 $G$ 的<span class="term">齐性空间</span>，如果对任意两点 $u, v \in \Omega$，都存在 $g \in G$ 使得 $g \cdot u = v$。</p>
+      <p>直觉：域上的所有点"看起来一样"——可以通过对称变换从一个点到达另一个点。</p>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>💡 齐性空间的例子</h4>
+      <ul>
+        <li>$\mathbb{R}^d$ 关于平移群 $T(d)$：任意两点可以通过平移连接</li>
+        <li>$S^2$ 关于 $\text{SO}(3)$：球面上任意两点可以通过旋转连接</li>
+        <li>$\text{SO}(3)$ 关于自身：群上的左乘连接任意两元素</li>
+        <li><strong>非</strong>齐性空间：一般的弯曲表面（流形）——没有全局对称性让所有点等价</li>
+      </ul>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p46_img1.png" alt="Cosmic microwave background">
+      <figcaption>宇宙微波背景辐射（由 Planck 太空观测站捕获）是 $S^2$ 上的信号——球面 CNN 的实际应用场景。</figcaption>
+    </div>
+
+    <!-- 代码：SO(3) -->
+    <h3 id="code-so3">💻 代码：SO(3) 旋转矩阵与群卷积</h3>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — SO(2) 和 SO(3) 旋转矩阵</span>
+        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      </div>
+      <pre><code>import numpy as np
+from scipy.spatial.transform import Rotation
+
+# === SO(2): 2D 旋转 ===
+def so2_matrix(alpha):
+    """SO(2) 旋转矩阵，角度 alpha（弧度）"""
+    c, s = np.cos(alpha), np.sin(alpha)
+    return np.array([[c, -s], [s, c]])
+
+R1 = so2_matrix(np.pi / 4)   # 45°
+R2 = so2_matrix(np.pi / 3)   # 60°
+R12 = so2_matrix(np.pi / 4 + np.pi / 3)  # 105°
+
+# 验证群性质
+print("=== SO(2) ===")
+print(f"R1 @ R2 == R(α1+α2): {np.allclose(R1 @ R2, R12)}")
+print(f"R @ R^T = I: {np.allclose(R1 @ R1.T, np.eye(2))}")
+print(f"det(R) = 1: {np.isclose(np.linalg.det(R1), 1.0)}")
+
+# === SO(3): 3D 旋转 ===
+print("\n=== SO(3) ===")
+# 绕 z 轴旋转 90°
+Rz = Rotation.from_euler('z', 90, degrees=True).as_matrix()
+# 绕 x 轴旋转 45°
+Rx = Rotation.from_euler('x', 45, degrees=True).as_matrix()
+
+print(f"Rz:\n{np.round(Rz, 3)}")
+print(f"det(Rz) = {np.linalg.det(Rz):.4f}")
+print(f"Rz @ Rz.T = I: {np.allclose(Rz @ Rz.T, np.eye(3))}")
+
+# 非交换性！（SO(3) 不是 Abel 群）
+print(f"\nRz @ Rx == Rx @ Rz: {np.allclose(Rz @ Rx, Rx @ Rz)}")
+print("→ SO(3) 是非交换群！旋转顺序很重要。")
+
+# === SE(3): 刚体运动 ===
+def se3_matrix(R, t):
+    """SE(3) 齐次变换矩阵"""
+    T = np.eye(4)
+    T[:3, :3] = R
+    T[:3, 3] = t
+    return T
+
+T1 = se3_matrix(Rz, np.array([1.0, 0.0, 0.0]))
+T2 = se3_matrix(Rx, np.array([0.0, 2.0, 0.0]))
+
+# 复合变换
+T12 = T1 @ T2
+print(f"\n=== SE(3) ===")
+print(f"T1 @ T2:\n{np.round(T12, 3)}")
+print(f"T1 @ T2 == T2 @ T1: {np.allclose(T1 @ T2, T2 @ T1)}")
+
+# 逆变换
+T1_inv = np.linalg.inv(T1)
+print(f"T @ T^(-1) = I: {np.allclose(T1 @ T1_inv, np.eye(4))}")
+</code></pre>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — 球面上的信号与卷积概念</span>
+        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      </div>
+      <pre><code>import numpy as np
+from scipy.spatial.transform import Rotation
+
+# === 球面采样 (Fibonacci lattice) ===
+def fibonacci_sphere(n=1000):
+    """在 S^2 上均匀采样 n 个点"""
+    indices = np.arange(0, n, dtype=float) + 0.5
+    phi = np.arccos(1 - 2 * indices / n)   # 极角
+    theta = np.pi * (1 + 5**0.5) * indices  # 方位角（黄金角）
+    x = np.cos(theta) * np.sin(phi)
+    y = np.sin(theta) * np.sin(phi)
+    z = np.cos(phi)
+    return np.stack([x, y, z], axis=-1)  # (n, 3)
+
+points = fibonacci_sphere(500)
+print(f"球面点集形状: {points.shape}")
+print(f"所有点在单位球上: {np.allclose(np.linalg.norm(points, axis=1), 1.0)}")
+
+# === 球面上的信号 ===
+# 简单信号：到北极的距离
+north_pole = np.array([0, 0, 1.0])
+signal = np.arccos(np.clip(points @ north_pole, -1, 1))  # 测地距离
+print(f"信号范围: [{signal.min():.2f}, {signal.max():.2f}]")
+
+# === 旋转信号（SO(3) 作用）===
+R = Rotation.from_euler('y', 90, degrees=True).as_matrix()
+points_rotated = (R @ points.T).T  # 旋转所有点
+
+# 旋转后的信号：ρ(g)x(u) = x(g^{-1}u)
+R_inv = R.T  # SO(3) 的逆就是转置
+signal_rotated = np.arccos(np.clip((R_inv @ points.T).T @ north_pole, -1, 1))
+
+# 验证：旋转信号 = 在旋转后的点上求值原信号
+signal_check = np.arccos(np.clip(points_rotated @ north_pole, -1, 1))
+# 注意：这两个不相等！因为 ρ(g)x 是"旋转输入的信号"
+# 但 x(g·u) 是"在旋转后的点上求值"
+print(f"\n球面卷积的本质：匹配信号与旋转后的滤波器")
+print(f"输出是 SO(3) 上的函数（3维），而非 S^2 上的函数（2维）")
+</code></pre>
+    </div>
+
+    <div class="callout callout-robot">
+      <h4>🤖 PhysRobot 关联：为什么需要 SE(3) 等变性？</h4>
+      <p>在物理仿真中，定律不依赖于坐标系的选择：</p>
+      <ul>
+        <li><strong>旋转等变</strong>：旋转整个系统，加速度也旋转 → $\text{SO}(3)$ 或 $\text{O}(3)$ 等变</li>
+        <li><strong>平移等变</strong>：平移整个系统，位移也平移 → $T(3)$ 等变</li>
+        <li><strong>SE(3) 等变</strong>：刚体运动不改变物理 → 完整的欧几里得等变性</li>
+      </ul>
+      <p>GNS 中的消息传递使用<strong>相对位置</strong> $\mathbf{p}_j - \mathbf{p}_i$ 和<strong>距离</strong> $\|\mathbf{p}_j - \mathbf{p}_i\|$ 作为边特征——这自动保证了 SE(3) 不变性！</p>
+    </div>
+
+    <div class="callout callout-exercise">
+      <h4>📝 练习 4.3</h4>
+      <ol>
+        <li><strong>验证</strong>：$\text{SO}(2)$ 是 Abel 群，$\text{SO}(3)$ 不是。找两个 $3 \times 3$ 旋转矩阵使得 $R_1 R_2 \neq R_2 R_1$。</li>
+        <li><strong>证明</strong>：$S^2$ 是 $\text{SO}(3)$ 的齐性空间：对球面上任意两点，存在旋转将一个点映到另一个。</li>
+        <li><strong>编程</strong>：实现 SE(3) 群的复合、逆运算。验证 $(T_1 T_2)^{-1} = T_2^{-1} T_1^{-1}$。</li>
+        <li><strong>思考</strong>：为什么球面卷积的第二层必须在 SO(3) 上操作而不是在 $S^2$ 上？</li>
+      </ol>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- SECTION 4.4: GEODESICS AND MANIFOLDS -->
+    <!-- ============================================================ -->
+    <h2 id="sec4-4">4.4 测地线和流形 (Geodesics and Manifolds)</h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>球面 $S^2$ 是一个特殊的流形——它有全局对称群。但大多数流形<strong>没有</strong>全局对称性，不能直接定义群作用来"滑动"滤波器。不过，流形有两种重要的不变性：<strong>保度量变换</strong>（等距变换）和<strong>局部参考框架变换</strong>（规范变换）。</p>
+      </div>
+      <div class="en">
+        Manifolds typically do not have global symmetries, so we cannot straightforwardly define convolution. Nevertheless, manifolds have two types of invariance: metric-preserving transformations and local reference frame changes.
+      </div>
+    </div>
+
+    <h3 id="riemannian">黎曼流形 (Riemannian Manifolds)</h3>
+
+    <div class="blueprint">
+      <h4>直觉定义：微分流形</h4>
+      <p>一个 $s$ 维<span class="term">（微分/光滑）流形</span>是一个弯曲的"表面"，在每个点的小邻域内"看起来像" $\mathbb{R}^s$。</p>
+      <ul>
+        <li><strong>局部欧几里得</strong>：足够放大，曲面看起来是平的</li>
+        <li><strong>全局可以弯曲</strong>：整体结构可以有复杂的拓扑</li>
+        <li>严格定义需要坐标卡（chart）和坐标卡集（atlas），但直觉足够</li>
+      </ul>
+    </div>
+
+    <h3 id="tangent-space">切空间、黎曼度量</h3>
+
+    <p>在流形的每个点 $u$，都可以定义一个<span class="term">切空间</span> $T_u\Omega$——想象在球面上某点放一个平面：</p>
+
+    <div class="figure">
+      <img src="../assets/ch4_p50_img0.png" alt="Tangent space and Riemannian geometry">
+      <figcaption>图 11：黎曼几何的基本概念，以二维球面 $S^2 = \{\mathbf{u} \in \mathbb{R}^3 : \|\mathbf{u}\| = 1\}$ 为例。切空间 $T_uS^2$ 是与球面在 $u$ 点相切的平面。指数映射将切空间映射到流形上。测地线是球面上的大圆弧。</figcaption>
+    </div>
+
+    <div class="math-block">
+      $$g_u : T_u\Omega \times T_u\Omega \to \mathbb{R}$$
+      <div class="math-explain">
+        <span class="term">黎曼度量</span>（Riemannian metric）$g_u$ 是切空间上的正定双线性函数，提供内积结构：<br>
+        • 内积：$\langle X, Y \rangle_u = g_u(X, Y)$<br>
+        • 范数（向量长度）：$\|X\|_u = g_u^{1/2}(X, X)$<br>
+        • 角度：通过内积定义<br>
+        黎曼度量随点 $u$ 光滑变化，是"在弯曲空间中测量距离"的核心工具。
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>💡 直觉：切空间与坐标</h4>
+      <p>切向量 $X \in T_u\Omega$ 是<strong>抽象的几何实体</strong>，不依赖坐标。但要做计算，需要选择<strong>局部基</strong> $\{X_1, \ldots, X_s\} \subset T_u\Omega$，将 $X$ 表示为坐标 $\mathbf{x} = (x^1, \ldots, x^s)$。</p>
+      <p>类比：向量 $\vec{v}$ 本身不变，但在不同基下有不同坐标。这正是 §4.5 规范理论的核心思想！</p>
+    </div>
+
+    <h4>球面上的例子</h4>
+
+    <div class="math-block">
+      $$S^2 = \{\mathbf{u} \in \mathbb{R}^3 : \|\mathbf{u}\| = 1\}$$
+      $$T_u S^2 = \{\mathbf{x} \in \mathbb{R}^3 : \mathbf{x}^\top \mathbf{u} = 0\}$$
+      <div class="math-explain">
+        球面的切空间 = 垂直于法向量 $\mathbf{u}$ 的平面。黎曼度量 = 限制在切平面上的欧几里得内积 $\langle \mathbf{x}, \mathbf{y} \rangle_u = \mathbf{x}^\top \mathbf{y}$。
+      </div>
+    </div>
+
+    <h4>标量场和向量场</h4>
+
+    <p><span class="term">标量场</span>：$x : \Omega \to \mathbb{R}$（每点一个数值），内积为：</p>
+    <div class="math-block">
+      $$\langle x, y \rangle = \int_\Omega x(u) y(u) \, du$$
+    </div>
+
+    <p><span class="term">切向量场</span>：$X : \Omega \to T\Omega$（每点一个切向量），内积为：</p>
+    <div class="math-block">
+      $$\langle X, Y \rangle = \int_\Omega g_u(X(u), Y(u)) \, du$$
+    </div>
+
+    <p><span class="term">内蕴梯度</span> $\nabla x(u) \in T_u\Omega$：标量场 $x$ 的"最陡上升方向"，通过 Riesz 表示定理定义：</p>
+    <div class="math-block">
+      $$d_u x(Y) = g_u(\nabla x(u), Y), \quad \forall Y \in T_u\Omega$$
+      <div class="math-explain">
+        微分 $d_u x$ 是余向量（covector），梯度 $\nabla x(u)$ 是它通过度量的向量表示。梯度算子 $\nabla : \mathcal{X}(\Omega, \mathbb{R}) \to \mathcal{X}(\Omega, T\Omega)$ 将标量场映为向量场。
+      </div>
+    </div>
+
+    <h3 id="geodesics">测地线 (Geodesics)</h3>
+
+    <div class="blueprint">
+      <h4>定义：测地线</h4>
+      <p>流形上连接两点 $u, v$ 的<strong>最短曲线</strong>叫做<span class="term">测地线</span>（geodesic）。定义为最小化长度泛函：</p>
+      $$\ell(\gamma) = \int_0^T \|\gamma'(t)\|_{\gamma(t)} \, dt = \int_0^T g_{\gamma(t)}^{1/2}(\gamma'(t), \gamma'(t)) \, dt$$
+      <p>其中 $\gamma : [0, T] \to \Omega$ 是曲线，$\gamma'(t) \in T_{\gamma(t)}\Omega$ 是速度向量。</p>
+      <p><strong>关键</strong>：测地线的定义完全是<strong>内蕴的</strong>——只依赖黎曼度量，不依赖嵌入空间。</p>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>💡 测地线的直觉</h4>
+      <ul>
+        <li><strong>平面上</strong>：测地线 = 直线</li>
+        <li><strong>球面上</strong>：测地线 = 大圆弧（如飞机航线）</li>
+        <li><strong>一般曲面上</strong>：测地线 = "尽可能直"的路径</li>
+      </ul>
+    </div>
+
+    <h3 id="parallel-transport">平行移动 (Parallel Transport)</h3>
+
+    <p>不同点的切空间是不同的向量空间，不能直接比较切向量。<span class="term">平行移动</span>提供了沿曲线运输向量的机制：</p>
+
+    <div class="figure">
+      <img src="../assets/ch4_p51_img0.png" alt="Parallel transport">
+      <figcaption>平行移动示意。左：在球面上将向量从 A 沿大圆弧移到 C。"欧几里得搬运"（红色）不在切平面内！平行移动（蓝色）沿路径旋转向量，保持与曲线的夹角和长度不变。右：平行移动是<strong>路径依赖的</strong>——沿 BC 和 ABC 移动到同一点会得到不同结果。</figcaption>
+    </div>
+
+    <div class="math-block">
+      $$g_{\gamma(t)}(X(t), \gamma'(t)) = g_u(X, \gamma'(0)) = \text{const}$$
+      $$\|X(t)\|_{\gamma(t)} = \|X\|_u = \text{const}$$
+      <div class="math-explain">
+        平行移动保持<strong>夹角</strong>（与曲线切向量）和<strong>长度</strong>不变。映射 $\Gamma_{u \to v} : T_u\Omega \to T_v\Omega$ 是一个旋转，属于 $\text{SO}(s)$（结构群）。
+      </div>
+    </div>
+
+    <h3 id="exponential-map">指数映射 (Exponential Map)</h3>
+
+    <div class="math-block">
+      $$\exp_u : B_r(\mathbf{0}) \subset T_u\Omega \to \Omega, \quad \exp_u(X) = \gamma_X(1)$$
+      <div class="math-explain">
+        从点 $u$ 出发，沿方向 $X$ 走单位步长到达 $\exp_u(X)$。指数映射是<strong>切空间到流形的局部微分同胚</strong>——可以理解为在切空间做计算，然后"映射回"流形。逆映射叫<span class="term">对数映射</span>（logarithmic map）。
+      </div>
+    </div>
+
+    <p>球面上的指数映射有解析表达式：</p>
+    <div class="math-block">
+      $$\exp_\mathbf{u}(\mathbf{x}) = \cos(\|\mathbf{x}\|)\,\mathbf{u} + \frac{\sin(\|\mathbf{x}\|)}{\|\mathbf{x}\|}\,\mathbf{x}, \quad \mathbf{x} \in T_\mathbf{u} S^2$$
+    </div>
+
+    <h4>测地距离</h4>
+    <div class="math-block">
+      $$d_g(u, v) = \min_\gamma \ell(\gamma) \quad \text{s.t.} \quad \gamma(0) = u, \, \gamma(T) = v$$
+      <div class="math-explain">
+        <strong>Hopf-Rinow 定理</strong>：紧致流形上，任意两点之间的最短测地线存在。球面上 $d_g(\mathbf{u}, \mathbf{v}) = \arccos(\mathbf{u}^\top \mathbf{v})$。
+      </div>
+    </div>
+
+    <h3 id="isometries">等距变换 (Isometries)</h3>
+
+    <div class="blueprint">
+      <h4>定义：等距变换</h4>
+      <p>微分同胚 $\eta : (\Omega, g) \to (\tilde{\Omega}, h)$ 是<span class="term">（黎曼）等距</span>的，如果拉回度量（pullback metric）等于原度量：$g = \eta^* h$。</p>
+      <p>等价条件（度量等距）：$d_g(u, v) = d_h(\eta(u), \eta(v))$ 对所有 $u, v \in \Omega$。</p>
+      <p><strong>直觉</strong>：等距变换 = "不拉伸不撕裂"的变形（如折纸）。</p>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p51_img1.png" alt="Isometric embeddings">
+      <figcaption>Nash 嵌入定理：任何光滑黎曼流形都可以嵌入到足够高维的欧几里得空间中。折纸艺术是平面的不同等距嵌入。</figcaption>
+    </div>
+
+    <p>等距变换保持所有<strong>内蕴量</strong>不变。自等距变换形成<span class="term">等距群</span> $\text{Iso}(\Omega)$，在 GDL 蓝图中扮演对称群的角色。</p>
+
+    <div class="callout callout-math">
+      <h4>🔮 几何稳定性</h4>
+      <p>对于近似等距变换，定义<span class="term">度量畸变</span>（metric distortion）：</p>
+      $$\text{dis}(\eta) = \sup_{u,v \in \Omega} |d_h(\eta(u), \eta(v)) - d_g(u, v)|$$
+      <p>GDL 蓝图要求函数 $f$ 对域变形稳定：</p>
+      $$\|f(x, \Omega) - f(x \circ \eta^{-1}, \tilde{\Omega})\| \leq C \|x\| \cdot \text{dis}(\eta)$$
+    </div>
+
+    <h3 id="manifold-fourier">流形上的傅里叶分析与谱卷积</h3>
+
+    <p><span class="term">散度</span>（divergence）$\nabla^* : \mathcal{X}(\Omega, T\Omega) \to \mathcal{X}(\Omega, \mathbb{R})$ 是梯度的伴随算子。<span class="term">拉普拉斯-贝尔特拉米算子</span>（Laplace-Beltrami）是它们的复合：</p>
+
+    <div class="math-block">
+      $$\Delta = \nabla^* \nabla$$
+      <div class="math-explain">
+        拉普拉斯算子衡量"函数在某点的值与周围无穷小球平均值的差异"——是热扩散、波动方程等的核心。<br>
+        <strong>关键性质</strong>：$\Delta$ 是<strong>内蕴的</strong>（等距不变）、<strong>自伴随的</strong>（$\langle \Delta x, y \rangle = \langle x, \Delta y \rangle$）、<strong>各向同性的</strong>（无方向偏好）。
+      </div>
+    </div>
+
+    <p>在紧致流形上，$\Delta$ 有可数的特征分解：</p>
+    <div class="math-block">
+      $$\Delta \phi_k = \lambda_k \phi_k, \quad 0 = \lambda_0 \leq \lambda_1 \leq \cdots$$
+      <div class="math-explain">
+        特征函数 $\{\phi_k\}$ 构成正交基，$\lambda_k$ 对应"频率"。这就是流形上的<strong>广义傅里叶基</strong>！<br>
+        Dirichlet 能量最小化视角：$\phi_{k+1}$ 是在与前 $k$ 个特征函数正交的约束下，最光滑的函数。
+      </div>
+    </div>
+
+    <p><span class="term">谱卷积</span>（spectral convolution）定义为傅里叶域的逐元素乘积：</p>
+    <div class="math-block">
+      $$(x \star \theta)(u) = \sum_{k \geq 0} (\hat{x}_k \cdot \hat{\theta}_k) \, \phi_k(u)$$
+      <div class="math-explain">
+        这是将欧几里得卷积定理"反过来"用：以频域乘积<strong>定义</strong>卷积。构造是内蕴的 → 等距不变 ✓。但因为拉普拉斯是各向同性的 → 卷积也是各向同性的（没有方向性）。
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p58_img0.png" alt="Spectral filter instability">
+      <figcaption>图 12：谱滤波器对域扰动的不稳定性。左：网格 $\Omega$ 上的信号 $x$。中：在 $\Omega$ 的拉普拉斯特征基上做谱滤波。右：在近等距扰动域 $\tilde{\Omega}$ 上做同样的谱滤波——结果大不相同！高频特征函数对微小扰动极其敏感。</figcaption>
+    </div>
+
+    <p><strong>空间卷积</strong>作为替代方案，在切空间中用指数映射局部定义：</p>
+    <div class="math-block">
+      $$(x \star \theta)(u) = \int_{T_u\Omega} x(\exp_u Y) \, \theta_u(Y) \, dY$$
+      <div class="math-explain">
+        滤波器 $\theta_u$ 定义在切空间上，通过指数映射"贴到"流形上。但由于流形不是齐性空间，<strong>没有</strong>全局共享的滤波器——必须引入<strong>规范</strong>（gauge，见 §4.5）。
+      </div>
+    </div>
+
+    <!-- 代码：球面测地线 -->
+    <h3 id="code-geodesic">💻 代码：球面上的测地线计算</h3>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — 球面测地线、指数映射、拉普拉斯特征基</span>
+        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      </div>
+      <pre><code>import numpy as np
+
+# === 球面 S^2 上的测地线 ===
+def geodesic_distance_sphere(u, v):
+    """球面上两点的测地距离 = arccos(u · v)"""
+    dot = np.clip(u @ v, -1.0, 1.0)
+    return np.arccos(dot)
+
+# 两个单位向量
+u = np.array([0, 0, 1.0])   # 北极
+v = np.array([1, 0, 0.0])   # "赤道上的点"
+d = geodesic_distance_sphere(u, v)
+print(f"北极到赤道点的测地距离: {d:.4f} = π/2 = {np.pi/2:.4f}")
+
+# === 指数映射 ===
+def exp_map_sphere(u, x):
+    """
+    球面上的指数映射
+    u: 基点（单位向量）
+    x: 切向量（垂直于 u）
+    返回: 沿 x 方向走 ||x|| 距离后到达的点
+    """
+    norm_x = np.linalg.norm(x)
+    if norm_x < 1e-10:
+        return u.copy()
+    return np.cos(norm_x) * u + np.sin(norm_x) / norm_x * x
+
+# 从北极出发，沿 x 方向走 π/2
+tangent_vec = np.array([np.pi/2, 0, 0.0])  # 切向量（垂直于 z 轴）
+# 注意：切向量需要在切空间内（垂直于 u）
+assert abs(tangent_vec @ u) < 1e-10, "切向量必须垂直于基点！"
+
+arrival = exp_map_sphere(u, tangent_vec)
+print(f"\n指数映射: exp_u(x) = {np.round(arrival, 4)}")
+print(f"到达的点范数: {np.linalg.norm(arrival):.6f}")  # 应该 ≈ 1
+
+# === 对数映射（指数映射的逆）===
+def log_map_sphere(u, v):
+    """球面上的对数映射：从 u 到 v 的切向量"""
+    dot = np.clip(u @ v, -1.0, 1.0)
+    d = np.arccos(dot)
+    if d < 1e-10:
+        return np.zeros_like(u)
+    proj = v - dot * u  # 投影到切空间
+    proj = proj / np.linalg.norm(proj) * d
+    return proj
+
+x_recovered = log_map_sphere(u, arrival)
+print(f"对数映射恢复切向量: {np.round(x_recovered, 4)}")
+print(f"与原切向量一致: {np.allclose(tangent_vec, x_recovered, atol=1e-6)}")
+
+# === 平行移动 ===
+def parallel_transport_sphere(u, v, X):
+    """
+    沿大圆弧将切向量 X ∈ T_u S^2 平行移动到 T_v S^2
+    """
+    # 测地线方向
+    log_uv = log_map_sphere(u, v)
+    d = np.linalg.norm(log_uv)
+    if d < 1e-10:
+        return X.copy()
+    
+    n = log_uv / d  # 单位方向
+    # Rodrigues 公式的变体
+    # 平行移动 = 保持与测地线方向的夹角和长度不变
+    X_transported = X - (np.dot(X, n + v) / (1 + np.dot(u, v))) * (u + v)
+    return X_transported
+
+# 将北极的切向量平行移动到赤道
+X_at_north = np.array([1.0, 0, 0])  # 北极切平面内的向量
+v_equator = np.array([1, 0, 0.0])
+X_at_equator = parallel_transport_sphere(u, v_equator, X_at_north)
+print(f"\n平行移动: {X_at_north} → {np.round(X_at_equator, 4)}")
+print(f"长度保持: {np.linalg.norm(X_at_north):.4f} → {np.linalg.norm(X_at_equator):.4f}")
+
+# === 验证路径依赖性 ===
+# 沿不同路径移动到同一点：这是曲率的体现！
+print("\n=== 路径依赖性（曲率效应） ===")
+# 路径 1: 北极 → (1,0,0) 直接
+X1 = parallel_transport_sphere(u, v_equator, np.array([0, 1.0, 0]))
+# 路径 2: 北极 → (0,1,0) → (1,0,0) 
+mid = np.array([0, 1.0, 0])
+X_mid = parallel_transport_sphere(u, mid, np.array([0, 1.0, 0]))
+X2 = parallel_transport_sphere(mid, v_equator, X_mid)
+print(f"路径1结果: {np.round(X1, 4)}")
+print(f"路径2结果: {np.round(X2, 4)}")
+print(f"结果不同 → 平行移动是路径依赖的！")
+</code></pre>
+    </div>
+
+    <div class="callout callout-exercise">
+      <h4>📝 练习 4.4</h4>
+      <ol>
+        <li><strong>计算</strong>：在球面 $S^2$ 上，北极 $(0,0,1)$ 到南极 $(0,0,-1)$ 的测地距离是多少？有多少条不同的测地线？</li>
+        <li><strong>证明</strong>：在 $S^2$ 上沿纬线（非大圆弧）从 A 到 B 的路径不是测地线。</li>
+        <li><strong>编程</strong>：用上面的代码，在球面上做一个"平行移动三角形"实验：将向量沿三角形 $A \to B \to C \to A$ 移动一圈，验证起始向量与终止向量之间的角度等于三角形的面积（高斯-博内定理的特例）。</li>
+        <li><strong>思考</strong>：为什么谱卷积在不同流形上不能泛化？提示：考虑特征基的依赖性。</li>
+      </ol>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- SECTION 4.5: GAUGES AND BUNDLES -->
+    <!-- ============================================================ -->
+    <h2 id="sec4-5">4.5 规范和纤维丛 (Gauges and Bundles)</h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>在流形上定义卷积时，我们遇到了一个根本性问题：必须选择局部坐标框架（basis）来表示切向量，但这个选择是<strong>任意的</strong>。<span class="term">规范理论</span>（gauge theory）正是处理这种任意性的数学框架——它来自物理学（杨-Mills 理论），但在几何深度学习中同样关键。</p>
+      </div>
+      <div class="en">
+        Gauge theory deals with the arbitrariness in the choice of local reference frames. It originates from physics (Yang-Mills theory) but is equally crucial in Geometric Deep Learning.
+      </div>
+    </div>
+
+    <h3 id="bundle-intuition">纤维丛的直觉</h3>
+
+    <div class="callout callout-info">
+      <h4>💡 纤维丛 = 在每个点附着一个向量空间</h4>
+      <p>想象一根毛毛虫（base space $\Omega$），在身体的每一节（每个点 $u$）都长着一圈毛（fiber $V_u$）。</p>
+      <ul>
+        <li><strong>切丛</strong> $T\Omega$：每个点附着切空间 $T_u\Omega$（毛的方向 = 流形上的方向）</li>
+        <li><strong>一般向量丛</strong>：可以附着任意向量空间（如 RGB 颜色空间、特征通道空间）</li>
+      </ul>
+      <p>局部看，丛 ≈ $\Omega \times V$（直积）。全局可能"扭曲"——就像莫比乌斯环不是 $S^1 \times \mathbb{R}$ 的直积。</p>
+    </div>
+
+    <div class="blueprint">
+      <h4>纤维丛的非正式定义</h4>
+      <p>向量丛由以下组成：</p>
+      <ul>
+        <li><strong>底空间</strong>（base space）$\Omega$：流形</li>
+        <li><strong>纤维</strong>（fiber）$V$：附着在每个点的向量空间（维度 $d$）</li>
+        <li>在每个点 $u \in \Omega$，纤维为 $V_u$（对切丛，$V_u = T_u\Omega$）</li>
+        <li>局部看像 $\Omega \times V$，全局可能有"扭曲"</li>
+      </ul>
+      <p><strong>截面</strong>（section）= 向量场 $X : \Omega \to T\Omega$，在每个点选取一个纤维中的向量。</p>
+    </div>
+
+    <h3 id="gauge-transform">规范变换 (Gauge Transformation)</h3>
+
+    <p><span class="term">规范</span>（gauge）= 每个点上纤维的基（frame）$\omega_u : \mathbb{R}^s \to T_u\Omega$。向量场 $X$ 在规范 $\omega$ 下表示为函数 $\mathbf{x} : \Omega \to \mathbb{R}^s$。</p>
+
+    <div class="math-block">
+      $$X(u) = \omega_u(\mathbf{x}(u))$$
+      <div class="math-explain">
+        抽象向量 $X(u)$ 通过规范 $\omega_u$ 被表示为坐标 $\mathbf{x}(u)$。<strong>改变规范</strong>需要同时改变坐标表示。
+      </div>
+    </div>
+
+    <p><span class="term">规范变换</span>：$g : \Omega \to G$，在每个点独立改变基底。新规范 $\omega'_u = \omega_u \circ g_u$，新坐标 $\mathbf{x}'(u) = g_u^{-1} \mathbf{x}(u)$。</p>
+
+    <div class="math-block">
+      $$X(u) = \omega'_u(\mathbf{x}'(u)) = \omega_u(g_u \, g_u^{-1} \, \mathbf{x}(u)) = \omega_u(\mathbf{x}(u)) = X(u) \quad \checkmark$$
+      <div class="math-explain">
+        底层的几何对象（向量场 $X$）不变——变的只是它的坐标表示！这就是规范变换的本质。
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>💡 RGB 颜色的规范类比</h4>
+      <p>RGB 图像：位置 $u \in \mathbb{Z}^2$（2D 网格），颜色 $\mathbf{x}(u) \in \mathbb{R}^3$。标准规范 = (R, G, B) 顺序。</p>
+      <p>如果在每个像素<strong>独立</strong>打乱颜色通道顺序（规范变换 $g(u) \in \Sigma_3$），图片的"含义"不变——只是数字表示变了。</p>
+      <p>一个好的图像分类网络应该在这种变换下给出相同的分类结果——这就是<strong>规范等变性</strong>！</p>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p60_img0.png" alt="Gauge equivariance">
+      <figcaption>规范变换改变了向量场的坐标表示，但不改变底层的几何对象。左：原始规范下的向量场。右：规范变换后的向量场坐标表示变了，但几何向量相同。</figcaption>
+    </div>
+
+    <h3 id="structure-group">结构群 (Structure Group)</h3>
+
+    <div class="blueprint">
+      <h4>结构群</h4>
+      <p>限制规范变换必须保持某种性质（如正交性、取向），对应不同的<span class="term">结构群</span>：</p>
+      <table>
+        <tr><th>结构群</th><th>保持性质</th><th>含义</th></tr>
+        <tr><td>$\text{GL}(s)$</td><td>可逆性</td><td>任意基变换</td></tr>
+        <tr><td>$\text{O}(s)$</td><td>正交性</td><td>保持角度和长度（含反射）</td></tr>
+        <tr><td>$\text{SO}(s)$</td><td>正交 + 取向</td><td>纯旋转</td></tr>
+        <tr><td>$\Sigma_d$</td><td>通道排列</td><td>颜色通道交换</td></tr>
+      </table>
+      <p><strong>关键观察</strong>：对于切丛，如果考虑正交框架，结构群是 $\text{SO}(s)$。给定任意两个正交框架，恰好存在<strong>唯一的</strong>旋转将一个映到另一个。</p>
+    </div>
+
+    <h3 id="gauge-equivariance">规范等变性 (Gauge Equivariance)</h3>
+
+    <p>将规范变换视为对称性意味着：任何两个通过规范变换相联系的规范被视为<strong>等价</strong>。</p>
+
+    <div class="math-block">
+      $$f \circ \rho_{\text{in}}(g) = \rho_{\text{out}}(g) \circ f$$
+      <div class="math-explain">
+        <span class="term">规范等变</span>的映射 $f$：改变输入规范 → 输出以对应的表示变换。<br>
+        <strong>关键结果</strong>：规范等变映射的坐标表达式<strong>与规范选择无关</strong>——就像图上的等变函数与节点排列无关。
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>🔮 规范等变 vs 全局等变</h4>
+      <p>对比两种对称性：</p>
+      <table>
+        <tr><th>类型</th><th>作用方式</th><th>例子</th></tr>
+        <tr><td>全局对称（如置换、旋转）</td><td>对<strong>整个域</strong>统一变换</td><td>平移所有像素、旋转整个分子</td></tr>
+        <tr><td>规范对称</td><td>在<strong>每个点独立</strong>变换参考框架</td><td>在每个点独立旋转切空间的基</td></tr>
+      </table>
+      <p>规范等变性约束更强：不仅要处理全局变换，还要处理逐点独立的局部变换。</p>
+    </div>
+
+    <h3 id="connection">联络与平行移动在规范中的角色</h3>
+
+    <h4>标量场 → 标量场的映射</h4>
+    <p>标量在规范变换下不变（$\rho(g) = 1$），所以<strong>任何</strong>线性映射 $f : \mathcal{X}(\Omega, \mathbb{R}) \to \mathcal{X}(\Omega, \mathbb{R})$ 都自动是规范等变的：</p>
+    <div class="math-block">
+      $$(x \star \theta)(u) = \int_\Omega \theta(u, v) \, x(v) \, dv$$
+      <div class="math-explain">
+        滤波器 $\theta(u, v)$ 是位置依赖的——<strong>没有空间权重共享</strong>。规范对称性本身不提供权重共享！需要额外的结构（如等距不变性）。
+      </div>
+    </div>
+
+    <h4>向量场 → 向量场的映射（需要联络！）</h4>
+    <p>矩阵值核 $\Theta(u, v) \in \mathbb{R}^{s \times s}$ 必须连接不同点的切空间。直接要求在每对 $(u, v)$ 的规范变换下等变太强了（核会被迫为零！）。</p>
+
+    <p>解决方案：先用<span class="term">联络</span>（connection = 平行移动）将向量运到同一切空间，再施加等变约束：</p>
+
+    <div class="math-block">
+      $$(\mathbf{x} \star \Theta)(u) = \int_\Omega \Theta(u, v) \, \rho(g_{v \to u}) \, \mathbf{x}(v) \, dv$$
+      <div class="math-explain">
+        $g_{v \to u} \in G$ 是沿测地线从 $v$ 到 $u$ 的平行移动（$\text{SO}(s)$ 元素）。$\rho(g_{v \to u})$ 是旋转矩阵。<br>
+        如果滤波器与结构群表示交换：$\Theta(u,v)\rho(g_u) = \rho(g_u)\Theta(u,v)$，则整体是规范等变的。
+      </div>
+    </div>
+
+    <div class="callout callout-robot">
+      <h4>🤖 PhysRobot 关联：规范等变性在物理中</h4>
+      <p>在物理仿真中，表面上的力和法向量是<strong>切向量场</strong>——它们的数值表示依赖于坐标系的选择。</p>
+      <ul>
+        <li>FEM（有限元方法）中，每个三角形有自己的局部坐标系——这就是"规范"</li>
+        <li>计算应力时需要在不同三角形间"搬运"张量——这就是"联络"</li>
+        <li>规范等变的网络可以保证结果不依赖于 mesh 的参数化方式</li>
+      </ul>
+    </div>
+
+    <div class="callout callout-warn">
+      <h4>⚠️ 为什么光滑全局规范可能不存在？</h4>
+      <p><strong>Poincaré-Hopf 定理</strong>（"毛球定理"）：$S^2$ 上不存在处处非零的光滑切向量场。也就是说，你<strong>不能</strong>给球面梳一个没有"旋"的发型！</p>
+      <p>数学上：$S^2$ 是<strong>不可平行化</strong>（non-parallelisable）的流形。这意味着在 $S^2$ 上无法定义全局光滑的规范——必须接受局部规范和规范变换。</p>
+      <p>这就是为什么规范理论不仅是"好的数学"，而是<strong>必须的</strong>——在某些流形上，没有捷径可以绕过它。</p>
+    </div>
+
+    <div class="callout callout-exercise">
+      <h4>📝 练习 4.5</h4>
+      <ol>
+        <li><strong>直觉</strong>：解释为什么 RGB 图像的 $1 \times 1$ 卷积（逐像素线性变换 $\mathbb{R}^3 \to \mathbb{R}^C$）在通道置换下是规范等变的。</li>
+        <li><strong>证明</strong>：如果 $f$ 是规范等变的（$f \circ \rho_{\text{in}}(g) = \rho_{\text{out}}(g) \circ f$），那么 $f' = \rho_{\text{out}}^{-1}(g) \circ f \circ \rho_{\text{in}}(g) = f$——即规范变换不改变等变映射本身。</li>
+        <li><strong>思考</strong>：在网格（mesh）上，节点的 1-hop 邻居可以按顺时针排序。这种"循环排序"的歧义性对应什么规范群？（提示：$\text{SO}(2)$ 的离散版本）</li>
+        <li><strong>比较</strong>：全局对称性（§4.3）和规范对称性（§4.5）的约束哪个更强？对网络设计有什么不同影响？</li>
+      </ol>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- SECTION 4.6: GEOMETRIC GRAPHS AND MESHES -->
+    <!-- ============================================================ -->
+    <h2 id="sec4-6">4.6 几何图和网格 (Geometric Graphs and Meshes)</h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>网格（mesh）是图和流形的交汇点：它像图一样是离散的，但有来自流形的额外结构。在我们的"5G"中，网格不是独立的一类，而是<strong>桥梁</strong>——连接离散的图方法和连续的流形理论。</p>
+      </div>
+      <div class="en">
+        Meshes fall somewhere between graphs and manifolds: they are similar to graphs but have additional structure that allows treating them as continuous objects. They bridge discrete graph methods and continuous manifold theory.
+      </div>
+    </div>
+
+    <h3 id="mesh-def">三角网格</h3>
+
+    <div class="blueprint">
+      <h4>定义：三角网格 (Triangular Mesh)</h4>
+      <p>三角网格 $\mathcal{T} = (\mathcal{V}, \mathcal{E}, \mathcal{F})$ 由以下组成：</p>
+      <ul>
+        <li><strong>节点</strong> $\mathcal{V}$：嵌入在 $\mathbb{R}^3$ 中，坐标为 $\mathbf{x}_1, \ldots, \mathbf{x}_n$</li>
+        <li><strong>边</strong> $\mathcal{E}$：节点间的连接</li>
+        <li><strong>面</strong> $\mathcal{F} = \{(u, v, q)\}$：三角面片（节点的有序三元组，定义面的朝向）</li>
+      </ul>
+      <p><strong>流形网格</strong>（manifold mesh）的条件：每条边恰好被两个三角形共享，每个节点的邻接三角形形成单环。</p>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>💡 网格的度量</h4>
+      <p>边长 $\ell_{uv} = \|\mathbf{x}_u - \mathbf{x}_v\|$ 从嵌入空间继承，自动满足三角不等式。只依赖 $\ell$ 的性质是<strong>内蕴的</strong>，保持 $\ell$ 不变的变形是<strong>等距变换</strong>。</p>
+    </div>
+
+    <h3 id="cotangent-laplacian">余切拉普拉斯 (Cotangent Laplacian)</h3>
+
+    <p>网格上的拉普拉斯是连续拉普拉斯-贝尔特拉米算子的离散化：</p>
+
+    <div class="math-block">
+      $$(\Delta \mathbf{X})_u = \sum_{v \in \mathcal{N}_u} w_{uv} (\mathbf{x}_u - \mathbf{x}_v)$$
+      <div class="math-explain">
+        矩阵形式：$\Delta = \mathbf{D} - \mathbf{W}$，其中 $\mathbf{W}$ 是加权邻接矩阵。注意这和 §4.1 的组合拉普拉斯形式相同——区别在于<strong>权重的选取</strong>！
+      </div>
+    </div>
+
+    <p><span class="term">余切权重</span>（cotangent weights）利用三角形的角度信息：</p>
+
+    <div class="math-block">
+      $$w_{uv} = \frac{\cot \angle uqv + \cot \angle upv}{2 a_u}$$
+      <div class="math-explain">
+        $\angle uqv$ 和 $\angle upv$ 是共享边 $(u,v)$ 对面的两个角；$a_u$ 是节点 $u$ 周围的局部面积元素。<br>
+        <strong>关键性质</strong>：余切拉普拉斯是<strong>内蕴的</strong>——可以完全用边长 $\ell$ 表示（通过 Heron 公式）→ 等距不变！
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p65_img0.png" alt="Cotangent Laplacian and mesh neighborhoods">
+      <figcaption>左：余切权重的几何含义——两个对角的余切值。右：不同分辨率网格上的 2-hop 邻域——多项式滤波器的支撑依赖分辨率！</figcaption>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>🔮 余切权重的边长表达式</h4>
+      $$w_{uv} = \frac{-\ell_{uv}^2 + \ell_{vq}^2 + \ell_{uq}^2}{8 a_{uvq}} + \frac{-\ell_{uv}^2 + \ell_{vp}^2 + \ell_{up}^2}{8 a_{uvp}}$$
+      <p>三角形面积由 Heron 公式计算：$a_{uvq} = \sqrt{s(s-\ell_{uv})(s-\ell_{vq})(s-\ell_{uq})}$，$s = \frac{1}{2}(\ell_{uv} + \ell_{uq} + \ell_{vq})$。</p>
+      <p>全部用边长 $\ell$ 表达 → <strong>等距不变</strong> ✓</p>
+    </div>
+
+    <h4>多项式滤波器 vs 有理滤波器</h4>
+
+    <p><strong>多项式滤波器</strong>：$\hat{p}(\Delta)\mathbf{X} = \sum_{k=0}^r \alpha_k \Delta^k \mathbf{X}$</p>
+    <ul>
+      <li>只需反复乘以稀疏矩阵 $\Delta$，复杂度 $O(|\mathcal{E}|dr)$</li>
+      <li>$r$ 阶多项式 = $r$-hop 局部滤波器</li>
+      <li><strong>问题</strong>：支撑依赖网格分辨率（细网格需要更大的 $r$）</li>
+    </ul>
+
+    <p><strong>有理滤波器</strong>（如 Cayley 多项式）：分辨率无关</p>
+    <div class="math-block">
+      $$\hat{p}(\lambda) = \text{Re}\left(\sum_{l=0}^r \alpha_l \left(\frac{\lambda - i}{\lambda + i}\right)^l\right)$$
+      <div class="math-explain">
+        Cayley 变换 $\frac{\lambda - i}{\lambda + i}$ 将实轴映射到复平面的单位圆。优点：支撑不局限于固定的 hop 数，指数衰减；缺点：需要矩阵求逆。
+      </div>
+    </div>
+
+    <h3 id="spectral-mesh">谱分析与网格上的卷积</h3>
+
+    <p>拉普拉斯的特征分解 $\Delta = \boldsymbol{\Phi} \boldsymbol{\Lambda} \boldsymbol{\Phi}^\top$ 提供了非欧几里得傅里叶基：</p>
+
+    <div class="math-block">
+      $$\mathbf{X} \star \boldsymbol{\theta} = \boldsymbol{\Phi} \, \text{diag}(\hat{\boldsymbol{\theta}}) \, \boldsymbol{\Phi}^\top \mathbf{X}$$
+      <div class="math-explain">
+        谱卷积 = 傅里叶变换 → 频域乘法 → 逆傅里叶变换。这对图和网格都适用。
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <h4>⚠️ 谱方法的局限</h4>
+      <ul>
+        <li><strong>特征基不稳定</strong>：高频特征函数对微小扰动极其敏感（见图 12）</li>
+        <li><strong>无法跨域泛化</strong>：不同图/网格有不同的特征基，傅里叶系数不可比较</li>
+        <li><strong>各向同性</strong>：拉普拉斯是各向同性的 → 滤波器无方向偏好</li>
+      </ul>
+      <p><strong>解决方案</strong>：使用多项式/有理传递函数 $\hat{p}(\Delta)$ 而非直接的特征分解 → 更稳定，且避免 $O(n^3)$ 的特征分解。</p>
+    </div>
+
+    <h3 id="functional-maps">函数映射 (Functional Maps)</h3>
+
+    <p>两个网格可能表示同一物体但有<strong>不同的连接结构和节点数</strong>。传统的"点到点"对应不适用——<span class="term">函数映射</span>将对应从点推广到函数：</p>
+
+    <div class="math-block">
+      $$\mathbf{x}' = \mathbf{C} \mathbf{x}, \quad \mathbf{C} \in \mathbb{R}^{n' \times n}$$
+      <div class="math-explain">
+        函数映射 $\mathbf{C}$ 建立两个网格上的信号之间的对应。<br>
+        算子表示的关系：$\mathbf{Q}' = \mathbf{C}\mathbf{Q}\mathbf{C}^\top$，即"映射到第一个网格 → 应用算子 → 映射回第二个网格"。<br>
+        对于面积保持的映射：$\mathbf{C} \in O(n)$（正交矩阵）。
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p67_img0.png" alt="Functional maps">
+      <figcaption>图 13：点映射（左）vs 函数映射（右）。函数映射用函数之间的对应代替点之间的对应，更加灵活和稳定。</figcaption>
+    </div>
+
+    <p><strong>重网格不变性</strong>（remeshing invariance）：</p>
+    <div class="math-block">
+      $$f(\mathbf{Q}) = f(\mathbf{C}\mathbf{Q}\mathbf{C}^\top), \quad \forall \mathbf{C} \in O(n)$$
+      <div class="math-explain">
+        比置换不变性更一般：置换矩阵 $\mathbf{P}$ 是正交矩阵的特例（$\mathbf{P}^\top\mathbf{P} = \mathbf{I}$）。<br>
+        <strong>Wang et al. (2019)</strong> 的关键结果：重网格不变的函数只依赖算子的<strong>谱</strong>（特征值），即 $f(\mathbf{Q}) = f(\boldsymbol{\Lambda})$。
+      </div>
+    </div>
+
+    <!-- 代码：几何图 -->
+    <h3 id="code-mesh">💻 代码：几何图与网格拉普拉斯</h3>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — 构建几何图与余切拉普拉斯</span>
+        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      </div>
+      <pre><code>import numpy as np
+from scipy.sparse import csr_matrix, diags
+from scipy.sparse.linalg import eigsh
+
+# === 构建简单的三角网格（正二十面体）===
+# 用 φ = (1+√5)/2 黄金比例构造
+phi = (1 + np.sqrt(5)) / 2
+vertices = np.array([
+    [-1, phi, 0], [1, phi, 0], [-1, -phi, 0], [1, -phi, 0],
+    [0, -1, phi], [0, 1, phi], [0, -1, -phi], [0, 1, -phi],
+    [phi, 0, -1], [phi, 0, 1], [-phi, 0, -1], [-phi, 0, 1],
+], dtype=float)
+# 归一化到单位球面
+vertices /= np.linalg.norm(vertices, axis=1, keepdims=True)
+
+# 面（三角形索引）
+faces = np.array([
+    [0,11,5], [0,5,1], [0,1,7], [0,7,10], [0,10,11],
+    [1,5,9], [5,11,4], [11,10,2], [10,7,6], [7,1,8],
+    [3,9,4], [3,4,2], [3,2,6], [3,6,8], [3,8,9],
+    [4,9,5], [2,4,11], [6,2,10], [8,6,7], [9,8,1],
+])
+n = len(vertices)
+print(f"正二十面体: {n} 个顶点, {len(faces)} 个面")
+
+# === 组合拉普拉斯（简单版：权重 = 1）===
+# 提取边
+edges = set()
+for f in faces:
+    for i in range(3):
+        u, v = f[i], f[(i+1) % 3]
+        edges.add((min(u,v), max(u,v)))
+
+# 邻接矩阵
+rows, cols, vals = [], [], []
+for u, v in edges:
+    rows.extend([u, v]); cols.extend([v, u]); vals.extend([1.0, 1.0])
+A = csr_matrix((vals, (rows, cols)), shape=(n, n))
+D = diags(np.array(A.sum(axis=1)).flatten())
+L_comb = D - A
+
+# === 余切拉普拉斯 ===
+def cotangent_laplacian(vertices, faces):
+    """计算余切拉普拉斯矩阵"""
+    n = len(vertices)
+    rows, cols, vals = [], [], []
+    areas = np.zeros(n)
+    
+    for f in faces:
+        # 三角形的三个顶点
+        v0, v1, v2 = vertices[f[0]], vertices[f[1]], vertices[f[2]]
+        
+        # 边向量
+        e01 = v1 - v0; e12 = v2 - v1; e20 = v0 - v2
+        
+        # 三角形面积（叉积的一半）
+        area = 0.5 * np.linalg.norm(np.cross(e01, -e20))
+        
+        # 余切值
+        cot0 = np.dot(-e20, e01) / (2 * area + 1e-10)  # ∠v0
+        cot1 = np.dot(-e01, e12) / (2 * area + 1e-10)  # ∠v1
+        cot2 = np.dot(-e12, e20) / (2 * area + 1e-10)  # ∠v2
+        
+        # 贡献
+        for (i, j, cot) in [(f[1], f[2], cot0), 
+                             (f[0], f[2], cot1), 
+                             (f[0], f[1], cot2)]:
+            rows.extend([i, j]); cols.extend([j, i])
+            vals.extend([cot/2, cot/2])
+        
+        # 面积分配（1/3 给每个顶点）
+        for idx in f:
+            areas[idx] += area / 3
+    
+    W = csr_matrix((vals, (rows, cols)), shape=(n, n))
+    D_w = diags(np.array(W.sum(axis=1)).flatten())
+    L_cot = D_w - W
+    
+    # 归一化（除以局部面积）
+    A_inv = diags(1.0 / (areas + 1e-10))
+    L_normalized = A_inv @ L_cot
+    
+    return L_cot, areas
+
+L_cot, areas = cotangent_laplacian(vertices, faces)
+
+# === 谱分析 ===
+# 计算前 6 个特征值和特征向量
+eigenvalues, eigenvectors = eigsh(L_cot.toarray(), k=6, which='SM')
+print(f"\n前 6 个特征值: {np.round(eigenvalues, 4)}")
+print(f"第一个特征值 ≈ 0: {eigenvalues[0]:.6f}")
+print(f"第一个特征向量 ≈ 常数: std = {eigenvectors[:,0].std():.6f}")
+
+# === 谱滤波 ===
+# 低通滤波：保留前 k 个特征分量
+k = 4
+signal = np.random.randn(n)
+signal_hat = eigenvectors.T @ signal   # 傅里叶变换
+signal_filtered = eigenvectors[:, :k] @ signal_hat[:k]  # 截断逆变换
+print(f"\n原始信号能量: {np.linalg.norm(signal):.4f}")
+print(f"滤波后能量: {np.linalg.norm(signal_filtered):.4f}")
+print(f"（低通滤波保留了光滑分量）")
+
+# === 多项式滤波器（不需要特征分解！）===
+# p(Δ) = α0 I + α1 Δ + α2 Δ²
+alpha = [1.0, -0.5, 0.1]
+L_dense = L_cot.toarray()
+result = alpha[0] * signal + alpha[1] * L_dense @ signal + alpha[2] * L_dense @ L_dense @ signal
+print(f"\n多项式滤波（度=2）完成，无需特征分解")
+print(f"2阶多项式 = 2-hop 局部滤波器")
+</code></pre>
+    </div>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — 几何图（粒子系统）的拉普拉斯</span>
+        <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+      </div>
+      <pre><code>import numpy as np
+from scipy.spatial import cKDTree
+from scipy.sparse import csr_matrix, diags
+
+# === 粒子系统作为几何图 ===
+np.random.seed(42)
+n_particles = 200
+positions = np.random.randn(n_particles, 3) * 2.0
+
+# 基于距离阈值建图（这就是 GNS 的做法！）
+radius = 1.5
+tree = cKDTree(positions)
+pairs = tree.query_pairs(r=radius)
+print(f"粒子数: {n_particles}")
+print(f"半径 {radius} 内的边数: {len(pairs)}")
+print(f"平均度: {2*len(pairs)/n_particles:.1f}")
+
+# === 构建加权邻接矩阵 ===
+# 权重与距离成反比（常用于几何图）
+rows, cols, vals = [], [], []
+for i, j in pairs:
+    dist = np.linalg.norm(positions[i] - positions[j])
+    w = np.exp(-dist)  # 高斯核权重
+    rows.extend([i, j]); cols.extend([j, i]); vals.extend([w, w])
+
+W = csr_matrix((vals, (rows, cols)), shape=(n_particles, n_particles))
+D = diags(np.array(W.sum(axis=1)).flatten())
+L = D - W  # 几何图拉普拉斯
+
+# === 等距不变性测试 ===
+# 旋转所有粒子（刚体变换）
+from scipy.spatial.transform import Rotation
+R = Rotation.from_euler('xyz', [30, 45, 60], degrees=True).as_matrix()
+positions_rotated = (R @ positions.T).T
+
+# 重新建图
+tree_rot = cKDTree(positions_rotated)
+pairs_rot = tree_rot.query_pairs(r=radius)
+
+# 相同的连接！
+print(f"\n旋转后的边数: {len(pairs_rot)}")
+print(f"边集相同: {pairs == pairs_rot}")  # True！
+
+# 权重也相同（因为距离不变）
+rows_r, cols_r, vals_r = [], [], []
+for i, j in pairs_rot:
+    dist = np.linalg.norm(positions_rotated[i] - positions_rotated[j])
+    w = np.exp(-dist)
+    rows_r.extend([i, j]); cols_r.extend([j, i]); vals_r.extend([w, w])
+
+W_rot = csr_matrix((vals_r, (rows_r, cols_r)), shape=(n_particles, n_particles))
+L_rot = diags(np.array(W_rot.sum(axis=1)).flatten()) - W_rot
+
+print(f"拉普拉斯矩阵在旋转下不变: {np.allclose(L.toarray(), L_rot.toarray())}")
+print("→ 这就是为什么基于距离的几何图天然具有 SE(3) 不变性！")
+</code></pre>
+    </div>
+
+    <div class="callout callout-robot" id="robot-mesh">
+      <h4>🤖 PhysRobot 关联：物理系统就是几何图！</h4>
+      <p>GNS 的核心洞察：物理系统可以统一表示为<strong>几何图</strong>：</p>
+      <table>
+        <tr><th>物理系统</th><th>节点</th><th>边</th><th>特殊结构</th></tr>
+        <tr><td>流体（SPH）</td><td>粒子</td><td>$r$-近邻</td><td>动态图（每步重建）</td></tr>
+        <tr><td>柔体（FEM）</td><td>网格顶点</td><td>网格边</td><td>三角/四面体面</td></tr>
+        <tr><td>刚体</td><td>碰撞点</td><td>接触关系</td><td>SE(3) 约束</td></tr>
+        <tr><td>布料</td><td>网格节点</td><td>拉伸/弯曲边</td><td>流形结构</td></tr>
+      </table>
+      <p>在 GNS 的 Encode-Process-Decode 框架中：</p>
+      <ul>
+        <li><strong>Encode</strong>：将粒子位置/速度编码为节点特征，相对位置/距离编码为边特征</li>
+        <li><strong>Process</strong>：多轮消息传递（§4.1 的局部等变函数 $\phi$）</li>
+        <li><strong>Decode</strong>：预测加速度（=下一步更新）</li>
+      </ul>
+      <p>使用<strong>相对位置</strong>和<strong>距离</strong>作为边特征，自动保证了 $\text{SE}(3)$ 不变性——这就是 §4.3 群对称性在实践中的体现！</p>
+    </div>
+
+    <div class="callout callout-exercise">
+      <h4>📝 练习 4.6</h4>
+      <ol>
+        <li><strong>计算</strong>：对一个正三角形网格（3 个顶点），写出组合拉普拉斯和余切拉普拉斯，比较它们的特征值。</li>
+        <li><strong>编程</strong>：加载一个 3D 网格（如 Stanford Bunny），计算余切拉普拉斯的前 20 个特征函数，可视化在网格上。</li>
+        <li><strong>实验</strong>：对上面的粒子系统代码，改变距离阈值 $r$，观察图的连通性和拉普拉斯谱的变化。</li>
+        <li><strong>思考</strong>：为什么 GNS 的图每个时间步都要重建？如果用固定的图会有什么问题？</li>
+      </ol>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- COMPREHENSIVE EXERCISES -->
+    <!-- ============================================================ -->
+    <h2 id="exercises-all">📝 综合练习</h2>
+
+    <div class="callout callout-exercise">
+      <h4>Exercise A：5G 对照分析</h4>
+      <p>填写下表，比较五种几何域的关键属性：</p>
+      <table>
+        <tr><th>属性</th><th>Graph</th><th>Grid</th><th>Group/齐性空间</th><th>Manifold</th><th>Gauge/Bundle</th></tr>
+        <tr><td>对称群</td><td>$\Sigma_n$</td><td>?</td><td>?</td><td>?</td><td>?</td></tr>
+        <tr><td>权重共享</td><td>?</td><td>?</td><td>?</td><td>?</td><td>?</td></tr>
+        <tr><td>卷积类型</td><td>?</td><td>?</td><td>?</td><td>?</td><td>?</td></tr>
+        <tr><td>傅里叶基</td><td>?</td><td>?</td><td>?</td><td>?</td><td>?</td></tr>
+        <tr><td>滤波器方向性</td><td>?</td><td>?</td><td>?</td><td>?</td><td>?</td></tr>
+      </table>
+    </div>
+
+    <div class="callout callout-exercise">
+      <h4>Exercise B：从集合到网格的连续体</h4>
+      <p>集合 → 图 → 网格 → 流形 是一条从简单到复杂的路径。对于每一步的"升级"，说明：</p>
+      <ol>
+        <li>增加了什么结构？</li>
+        <li>获得了什么新的计算能力？</li>
+        <li>引入了什么新的对称性约束？</li>
+      </ol>
+    </div>
+
+    <div class="callout callout-exercise">
+      <h4>Exercise C：PhysRobot 设计挑战</h4>
+      <p>你需要设计一个 GNN 来仿真以下物理场景。对每个场景，指出应该使用哪种几何域表示，哪种对称性约束，以及如何编码输入：</p>
+      <ol>
+        <li>水杯中的水（SPH 流体）</li>
+        <li>弹性球落在地面上（FEM 柔体）</li>
+        <li>一群星星的引力交互（N-body 问题）</li>
+        <li>蛋白质分子的表面（分子表面）</li>
+      </ol>
+    </div>
+
+
+    <!-- ============================================================ -->
+    <!-- SUMMARY -->
+    <!-- ============================================================ -->
+    <h2 id="summary">📊 章节总结</h2>
+
+    <div class="callout callout-success">
+      <h4>✅ 核心要点</h4>
+      <ol>
+        <li><strong>5G 是一张地图</strong>：Graphs, Grids, Groups, Geodesics, Gauges 是五种关键的几何域，每种域有不同的对称群和不变性结构</li>
+        <li><strong>对称性决定架构</strong>：CNN = 平移对称，GNN = 置换对称，Spherical CNN = 旋转对称——架构从对称性中涌现</li>
+        <li><strong>卷积的统一视角</strong>：所有卷积都是"模式匹配"——在域上滑动滤波器并计算内积。不同之处在于滤波器如何"滑动"（群作用）</li>
+        <li><strong>谱与空间对偶</strong>：傅里叶变换对角化对称算子，卷积 = 频域乘法。这对所有域都成立，但对称群不同时，傅里叶基也不同</li>
+        <li><strong>局部 vs 全局</strong>：齐性空间有全局对称性（可以共享滤波器），一般流形只有局部结构（需要规范理论）</li>
+        <li><strong>规范是必须的</strong>：在不可平行化的流形上（如球面），无法避免规范理论——它不是奢侈品，而是必需品</li>
+        <li><strong>物理系统是几何图</strong>：GNS 将粒子系统编码为几何图，利用相对位置和距离保证 SE(3) 不变性</li>
+      </ol>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>📖 从域到架构的路线图</h4>
+      <p>本章描述了"在哪里"（几何域）和"什么对称性"（对称群）。下一章（Chapter 5）将讨论"怎么做"——在每种域上如何具体实现 GDL 蓝图的构建块（线性等变层、非线性、池化）。</p>
+      <table>
+        <tr><th>本章（Ch.4）</th><th>→</th><th>下一章（Ch.5）</th></tr>
+        <tr><td>图 + 置换对称</td><td>→</td><td>GNN 消息传递层</td></tr>
+        <tr><td>网格 + 平移对称</td><td>→</td><td>CNN 卷积层</td></tr>
+        <tr><td>群 + 群对称</td><td>→</td><td>球面 CNN、群等变 CNN</td></tr>
+        <tr><td>流形 + 等距对称</td><td>→</td><td>内蕴 CNN、Mesh CNN</td></tr>
+        <tr><td>纤维丛 + 规范对称</td><td>→</td><td>规范等变 CNN</td></tr>
+      </table>
+    </div>
+
+    <h2 id="references">📚 关键参考文献</h2>
+    <ul>
+      <li><strong>Bronstein et al., 2021</strong> — "Geometric Deep Learning: Grids, Groups, Graphs, Geodesics, and Gauges" (原文)</li>
+      <li><strong>Bruna et al., 2013</strong> — 首个基于图谱的 GNN（谱域卷积）</li>
+      <li><strong>Defferrard et al., 2016</strong> — ChebNet（多项式谱滤波器）</li>
+      <li><strong>Kipf & Welling, 2017</strong> — GCN（简化谱方法）</li>
+      <li><strong>Cohen & Welling, 2016</strong> — 群等变 CNN（$p4$, $p4m$ 群）</li>
+      <li><strong>Cohen et al., 2018</strong> — 球面 CNN（SO(3) 等变）</li>
+      <li><strong>Boscaini et al., 2016</strong> — 流形上的各向异性 CNN</li>
+      <li><strong>de Haan et al., 2021</strong> — 规范等变网格 CNN</li>
+      <li><strong>Ovsjanikov et al., 2012</strong> — 函数映射</li>
+      <li><strong>Levie et al., 2018</strong> — CayleyNet（有理谱滤波器）</li>
+      <li><strong>Sanchez-Gonzalez et al., 2020</strong> — GNS（图网络仿真器）</li>
+    </ul>
+
   </main>
 
-  <script src="../assets/script.js"></script>
+  <!-- ============================================================ -->
+  <!-- JavaScript -->
+  <!-- ============================================================ -->
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false})"></script>
+  <script>
+    // === Theme Toggle ===
+    function toggleTheme() {
+      const html = document.documentElement;
+      const current = html.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      html.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      document.querySelector('.theme-toggle').textContent = next === 'dark' ? '☀️' : '🌙';
+    }
+    // Restore theme
+    (function() {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+
+    // === Sidebar Toggle ===
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // === Progress Bar ===
+    window.addEventListener('scroll', function() {
+      const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      document.getElementById('progressBar').style.width = scrolled + '%';
+    });
+
+    // === Copy Code ===
+    function copyCode(btn) {
+      const pre = btn.closest('.code-container').querySelector('pre');
+      const code = pre.textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = '✅ 已复制';
+        setTimeout(() => btn.textContent = '📋 复制', 2000);
+      });
+    }
+
+    // === Active Sidebar Link ===
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+          const id = entry.target.id;
+          const link = document.querySelector(`.sidebar a[href="#${id}"]`);
+          if (link) link.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    document.querySelectorAll('h2[id], h3[id]').forEach(el => observer.observe(el));
+
+    // === Close sidebar on link click (mobile) ===
+    document.querySelectorAll('.sidebar a').forEach(a => {
+      a.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          document.getElementById('sidebar').classList.remove('open');
+        }
+      });
+    });
+  </script>
 </body>
 </html>
