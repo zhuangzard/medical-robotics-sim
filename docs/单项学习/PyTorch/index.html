@@ -1,0 +1,2818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PyTorch 核心学习教程 — 从张量到物理感知神经网络</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+<style>
+/* ========== CSS Variables ========== */
+:root {
+  --bg: #ffffff;
+  --bg-secondary: #f7f8fa;
+  --text: #1a1a2e;
+  --text-secondary: #555;
+  --accent: #4361ee;
+  --accent-light: #e8edff;
+  --border: #e0e0e0;
+  --sidebar-bg: #f0f2f5;
+  --sidebar-active: #4361ee;
+  --code-bg: #f6f8fa;
+  --code-text: #24292e;
+  --def-bg: #e8f4fd;
+  --def-border: #2196F3;
+  --thm-bg: #e8f5e9;
+  --thm-border: #4CAF50;
+  --ex-bg: #fff8e1;
+  --ex-border: #FF9800;
+  --warn-bg: #ffebee;
+  --warn-border: #f44336;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --radius: 8px;
+  --sidebar-w: 280px;
+  --font-cn: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  --font-mono: "SF Mono", "Fira Code", "JetBrains Mono", Consolas, monospace;
+}
+
+[data-theme="dark"] {
+  --bg: #0d1117;
+  --bg-secondary: #161b22;
+  --text: #c9d1d9;
+  --text-secondary: #8b949e;
+  --accent: #58a6ff;
+  --accent-light: #1c2d41;
+  --border: #30363d;
+  --sidebar-bg: #161b22;
+  --sidebar-active: #58a6ff;
+  --code-bg: #161b22;
+  --code-text: #c9d1d9;
+  --def-bg: #0d2137;
+  --def-border: #58a6ff;
+  --thm-bg: #0d2818;
+  --thm-border: #3fb950;
+  --ex-bg: #2a1f00;
+  --ex-border: #d29922;
+  --warn-bg: #2d0f0f;
+  --warn-border: #f85149;
+  --shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+/* ========== Reset & Base ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body {
+  font-family: var(--font-cn);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.8;
+  font-size: 16px;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ========== Sidebar Navigation ========== */
+.sidebar {
+  position: fixed; top: 0; left: 0;
+  width: var(--sidebar-w); height: 100vh;
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto; z-index: 100;
+  padding: 20px 0;
+  transition: transform 0.3s ease, background 0.3s;
+}
+.sidebar-header { padding: 10px 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+.sidebar-header h2 { font-size: 18px; color: var(--accent); margin-bottom: 4px; }
+.sidebar-header p { font-size: 12px; color: var(--text-secondary); }
+.sidebar nav a {
+  display: block; padding: 6px 20px;
+  color: var(--text-secondary); text-decoration: none;
+  font-size: 13px; border-left: 3px solid transparent;
+  transition: all 0.2s;
+}
+.sidebar nav a:hover { color: var(--accent); background: var(--accent-light); }
+.sidebar nav a.active { color: var(--sidebar-active); border-left-color: var(--sidebar-active); background: var(--accent-light); font-weight: 600; }
+.sidebar nav .chapter-title {
+  display: block; padding: 12px 20px 4px;
+  font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+/* ========== Main Content ========== */
+.main { margin-left: var(--sidebar-w); max-width: 900px; padding: 40px 60px 100px; }
+
+/* ========== Top Bar ========== */
+.top-bar {
+  position: fixed; top: 0; left: var(--sidebar-w); right: 0;
+  height: 50px; background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 0 30px; z-index: 99; gap: 12px;
+  transition: background 0.3s;
+}
+.top-bar .progress-bar { flex: 1; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.top-bar .progress-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s; }
+.theme-toggle {
+  cursor: pointer; background: none; border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px; font-size: 14px;
+  color: var(--text); transition: all 0.2s;
+}
+.theme-toggle:hover { border-color: var(--accent); }
+.menu-toggle {
+  display: none; cursor: pointer; background: none;
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 4px 10px; font-size: 18px; color: var(--text);
+}
+
+/* ========== Typography ========== */
+h1 { font-size: 2.2em; margin: 60px 0 20px; padding-bottom: 12px; border-bottom: 3px solid var(--accent); color: var(--accent); line-height: 1.3; }
+h1:first-of-type { margin-top: 70px; }
+h2 { font-size: 1.6em; margin: 50px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--border); color: var(--text); }
+h3 { font-size: 1.25em; margin: 30px 0 12px; color: var(--text); }
+h4 { font-size: 1.05em; margin: 20px 0 8px; color: var(--text-secondary); }
+p { margin: 12px 0; }
+a { color: var(--accent); }
+strong { color: var(--text); }
+ul, ol { padding-left: 24px; margin: 8px 0; }
+li { margin: 4px 0; }
+hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+/* ========== Callout Boxes ========== */
+.box { padding: 16px 20px; border-radius: var(--radius); margin: 20px 0; border-left: 4px solid; position: relative; }
+.box-title { font-weight: 700; margin-bottom: 8px; font-size: 0.95em; }
+.def { background: var(--def-bg); border-color: var(--def-border); }
+.def .box-title { color: var(--def-border); }
+.def .box-title::before { content: "📘 "; }
+.thm { background: var(--thm-bg); border-color: var(--thm-border); }
+.thm .box-title { color: var(--thm-border); }
+.thm .box-title::before { content: "📗 "; }
+.example { background: var(--ex-bg); border-color: var(--ex-border); }
+.example .box-title { color: var(--ex-border); }
+.example .box-title::before { content: "📙 "; }
+.warn { background: var(--warn-bg); border-color: var(--warn-border); }
+.warn .box-title { color: var(--warn-border); }
+.warn .box-title::before { content: "🔴 "; }
+
+/* ========== Code Blocks ========== */
+pre {
+  background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 16px 20px;
+  overflow-x: auto; margin: 16px 0; font-size: 13.5px;
+  line-height: 1.6; position: relative;
+}
+pre code { font-family: var(--font-mono); color: var(--code-text); background: none; padding: 0; font-size: inherit; }
+code { font-family: var(--font-mono); background: var(--code-bg); padding: 2px 6px; border-radius: 4px; font-size: 0.9em; color: var(--accent); }
+.copy-btn {
+  position: absolute; top: 8px; right: 8px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 8px; font-size: 12px;
+  cursor: pointer; color: var(--text-secondary);
+  opacity: 0; transition: opacity 0.2s;
+}
+pre:hover .copy-btn { opacity: 1; }
+.copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ========== Math Display ========== */
+.katex-display { margin: 16px 0; overflow-x: auto; padding: 8px 0; }
+.math-explain { background: var(--bg-secondary); border-radius: var(--radius); padding: 12px 16px; margin: 8px 0; font-size: 0.9em; color: var(--text-secondary); }
+.math-explain strong { color: var(--accent); }
+
+/* ========== Tables ========== */
+table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.95em; }
+th, td { padding: 10px 14px; border: 1px solid var(--border); text-align: left; }
+th { background: var(--bg-secondary); font-weight: 700; }
+
+/* ========== SVG Diagrams ========== */
+.diagram { text-align: center; margin: 24px 0; padding: 20px; background: var(--bg-secondary); border-radius: var(--radius); border: 1px solid var(--border); }
+.diagram svg { max-width: 100%; height: auto; }
+
+/* ========== Responsive ========== */
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; padding: 20px 24px 60px; }
+  .top-bar { left: 0; }
+  .menu-toggle { display: block; }
+  h1 { font-size: 1.6em; } h2 { font-size: 1.3em; }
+}
+@media (max-width: 600px) {
+  body { font-size: 15px; }
+  .main { padding: 16px 16px 60px; }
+  pre { font-size: 12px; padding: 12px; }
+}
+
+/* ========== Syntax Highlighting ========== */
+.kw { color: #d73a49; }
+.fn { color: #6f42c1; }
+.st { color: #032f62; }
+.cm { color: #6a737d; font-style: italic; }
+.nu { color: #005cc5; }
+.op { color: #d73a49; }
+.cl { color: #e36209; }
+.dc { color: #22863a; }
+.bi { color: #005cc5; }
+[data-theme="dark"] .kw { color: #ff7b72; }
+[data-theme="dark"] .fn { color: #d2a8ff; }
+[data-theme="dark"] .st { color: #a5d6ff; }
+[data-theme="dark"] .cm { color: #8b949e; }
+[data-theme="dark"] .nu { color: #79c0ff; }
+[data-theme="dark"] .op { color: #ff7b72; }
+[data-theme="dark"] .cl { color: #ffa657; }
+[data-theme="dark"] .dc { color: #7ee787; }
+[data-theme="dark"] .bi { color: #79c0ff; }
+
+/* ========== Shape Annotation ========== */
+.shape { display: inline-block; background: var(--accent-light); color: var(--accent); padding: 1px 6px; border-radius: 4px; font-size: 0.85em; font-family: var(--font-mono); margin: 0 2px; }
+
+/* ========== Flow Diagram ========== */
+.flow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 16px 0; padding: 16px; background: var(--bg-secondary); border-radius: var(--radius); border: 1px solid var(--border); }
+.flow-box { background: var(--accent-light); border: 2px solid var(--accent); border-radius: 8px; padding: 8px 14px; font-size: 0.85em; font-weight: 600; text-align: center; color: var(--accent); }
+.flow-arrow { font-size: 1.2em; color: var(--text-secondary); }
+.flow-box.highlight { background: var(--accent); color: #fff; }
+
+/* ========== Tabs ========== */
+.tab-group { margin: 16px 0; }
+.tab-buttons { display: flex; gap: 0; border-bottom: 2px solid var(--border); }
+.tab-btn { padding: 8px 16px; background: none; border: none; cursor: pointer; font-size: 14px; color: var(--text-secondary); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; font-family: var(--font-cn); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.tab-content { display: none; padding: 16px 0; }
+.tab-content.active { display: block; }
+
+/* ========== Print ========== */
+@media print {
+  .sidebar, .top-bar { display: none; }
+  .main { margin: 0; max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ========== Sidebar ========== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>🔥 PyTorch 教程</h2>
+    <p>从张量到物理感知神经网络</p>
+  </div>
+  <nav id="nav">
+    <span class="chapter-title">第一章 · PyTorch 基础</span>
+    <a href="#ch1">1.0 引言</a>
+    <a href="#s1-1">1.1 Tensor 张量</a>
+    <a href="#s1-2">1.2 张量运算</a>
+    <a href="#s1-3">1.3 索引和切片</a>
+    <a href="#s1-4">1.4 形状变换</a>
+    <a href="#s1-5">1.5 GPU 加速</a>
+
+    <span class="chapter-title">第二章 · 自动微分</span>
+    <a href="#s2-1">2.1 计算图</a>
+    <a href="#s2-2">2.2 requires_grad</a>
+    <a href="#s2-3">2.3 backward()</a>
+    <a href="#s2-4">2.4 链式法则</a>
+    <a href="#s2-5">2.5 梯度累积和清零</a>
+    <a href="#s2-6">2.6 detach() 和 no_grad()</a>
+    <a href="#s2-7">2.7 手动 vs autograd</a>
+
+    <span class="chapter-title">第三章 · 神经网络</span>
+    <a href="#s3-1">3.1 nn.Module 基类</a>
+    <a href="#s3-2">3.2 常用层详解</a>
+    <a href="#s3-3">3.3 参数管理</a>
+    <a href="#s3-4">3.4 模型保存与加载</a>
+
+    <span class="chapter-title">第四章 · 核心数学公式</span>
+    <a href="#s4-1">4.1 线性变换</a>
+    <a href="#s4-2">4.2 激活函数</a>
+    <a href="#s4-3">4.3 损失函数</a>
+    <a href="#s4-4">4.4 优化器</a>
+    <a href="#s4-5">4.5 反向传播</a>
+    <a href="#s4-6">4.6 概率分布</a>
+
+    <span class="chapter-title">第五章 · 项目实战</span>
+    <a href="#s5-1">5.1 策略网络 Actor</a>
+    <a href="#s5-2">5.2 价值网络 Critic</a>
+    <a href="#s5-3">5.3 特征提取器</a>
+    <a href="#s5-4">5.4 图网络 GNN</a>
+    <a href="#s5-5">5.5 手写训练循环</a>
+
+    <span class="chapter-title">第六章 · 调试与实践</span>
+    <a href="#s6-1">6.1 常见错误</a>
+    <a href="#s6-2">6.2 梯度检查</a>
+    <a href="#s6-3">6.3 TensorBoard</a>
+    <a href="#s6-4">6.4 GPU 内存管理</a>
+    <a href="#s6-5">6.5 性能优化</a>
+    <a href="#s6-6">6.6 可复现性</a>
+
+    <span class="chapter-title">第七章 · 高级主题</span>
+    <a href="#s7-1">7.1 自定义 autograd</a>
+    <a href="#s7-2">7.2 模型并行</a>
+    <a href="#s7-3">7.3 torch.compile</a>
+    <a href="#s7-4">7.4 ONNX 导出</a>
+    <a href="#s7-5">7.5 NumPy 互操作</a>
+
+    <span class="chapter-title">附录</span>
+    <a href="#app-api">A. API 速查表</a>
+    <a href="#app-numpy">B. NumPy 对照表</a>
+    <a href="#app-formulas">C. 公式总结</a>
+    <a href="#app-activations">D. 激活函数图形</a>
+    <a href="#app-optimizers">E. 优化器对比</a>
+  </nav>
+</aside>
+
+<!-- ========== Top Bar ========== -->
+<div class="top-bar">
+  <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+  <div class="progress-bar"><div class="progress-bar-fill" id="progressFill"></div></div>
+  <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+</div>
+
+<!-- ========== Main Content ========== -->
+<div class="main">
+
+<!-- ================================================== -->
+<!--                   第一章：基础                       -->
+<!-- ================================================== -->
+<h1 id="ch1">第一章 &nbsp; PyTorch 基础</h1>
+
+<p>PyTorch 是 Meta AI 开源的深度学习框架，以<strong>动态计算图</strong>和<strong>Pythonic API</strong>著称。它是当前学术界和工业界最流行的深度学习框架之一，也是我们 PushBox 物理感知强化学习项目的核心基础设施。</p>
+
+<div class="box def">
+  <div class="box-title">为什么选择 PyTorch</div>
+  <ul>
+    <li><strong>动态计算图</strong> — 每次前向传播构建新图，方便调试（与 TensorFlow 1.x 的静态图不同）</li>
+    <li><strong>Pythonic</strong> — 像写普通 Python 一样写深度学习代码</li>
+    <li><strong>强大的生态</strong> — Stable-Baselines3 (RL)、PyTorch Geometric (GNN)、TorchVision 等</li>
+    <li><strong>GPU 加速</strong> — 透明的 CUDA 支持，一行代码切换设备</li>
+  </ul>
+</div>
+
+<p>本教程面向想用 PyTorch 做<strong>强化学习 (RL)</strong> 和<strong>物理仿真</strong>的读者。我们将用 PushBox 项目中的实际网络结构作为贯穿全文的例子。</p>
+
+<!-- ==================== 1.1 Tensor ==================== -->
+<h2 id="s1-1">1.1 Tensor 张量 — PyTorch 的基本数据结构</h2>
+
+<div class="box def">
+  <div class="box-title">定义：Tensor（张量）</div>
+  <p>Tensor 是 PyTorch 中的多维数组，类似 NumPy 的 <code>ndarray</code>，但增加了两个关键能力：</p>
+  <ol>
+    <li><strong>GPU 加速</strong> — 可以在 NVIDIA GPU 上运算</li>
+    <li><strong>自动微分</strong> — 可以自动计算梯度（用于训练神经网络）</li>
+  </ol>
+</div>
+
+<h3>1.1.1 创建 Tensor</h3>
+
+<pre><code><span class="kw">import</span> torch
+
+<span class="cm"># ===== 从 Python 数据创建 =====</span>
+a = torch.<span class="fn">tensor</span>([<span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>])                    <span class="cm"># 1D tensor (向量)</span>
+b = torch.<span class="fn">tensor</span>([[<span class="nu">1</span>, <span class="nu">2</span>], [<span class="nu">3</span>, <span class="nu">4</span>]])           <span class="cm"># 2D tensor (矩阵)</span>
+c = torch.<span class="fn">tensor</span>([[[<span class="nu">1</span>, <span class="nu">2</span>], [<span class="nu">3</span>, <span class="nu">4</span>]]])        <span class="cm"># 3D tensor</span>
+
+<span class="cm"># ===== 常用构造函数 =====</span>
+zeros  = torch.<span class="fn">zeros</span>(<span class="nu">3</span>, <span class="nu">4</span>)                     <span class="cm"># 全零 (3×4)</span>
+ones   = torch.<span class="fn">ones</span>(<span class="nu">2</span>, <span class="nu">3</span>)                      <span class="cm"># 全一 (2×3)</span>
+rand   = torch.<span class="fn">rand</span>(<span class="nu">5</span>, <span class="nu">5</span>)                      <span class="cm"># 均匀分布 [0, 1)</span>
+randn  = torch.<span class="fn">randn</span>(<span class="nu">3</span>, <span class="nu">4</span>)                     <span class="cm"># 标准正态分布 N(0,1)</span>
+eye    = torch.<span class="fn">eye</span>(<span class="nu">4</span>)                            <span class="cm"># 单位矩阵 (4×4)</span>
+arange = torch.<span class="fn">arange</span>(<span class="nu">0</span>, <span class="nu">10</span>, <span class="nu">2</span>)                <span class="cm"># [0, 2, 4, 6, 8]</span>
+linsp  = torch.<span class="fn">linspace</span>(<span class="nu">0</span>, <span class="nu">1</span>, <span class="nu">5</span>)               <span class="cm"># [0, 0.25, 0.5, 0.75, 1]</span>
+
+<span class="cm"># ===== 从 NumPy 创建（共享内存！）=====</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+np_arr = np.<span class="fn">array</span>([<span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">3.0</span>])
+t = torch.<span class="fn">from_numpy</span>(np_arr)                    <span class="cm"># 共享内存，修改一个另一个也变</span>
+t2 = torch.<span class="fn">tensor</span>(np_arr)                       <span class="cm"># 拷贝数据，不共享</span></code></pre>
+
+<h3>1.1.2 Tensor 的三大属性</h3>
+
+<p>每个 Tensor 都有三个核心属性：<strong>shape</strong>（形状）、<strong>dtype</strong>（数据类型）、<strong>device</strong>（设备）。</p>
+
+<pre><code>x = torch.<span class="fn">randn</span>(<span class="nu">2</span>, <span class="nu">3</span>, <span class="nu">4</span>)
+
+<span class="fn">print</span>(x.shape)     <span class="cm"># torch.Size([2, 3, 4])</span>
+<span class="fn">print</span>(x.dtype)     <span class="cm"># torch.float32（默认）</span>
+<span class="fn">print</span>(x.device)    <span class="cm"># cpu（默认）</span>
+
+<span class="cm"># 指定 dtype 和 device</span>
+x = torch.<span class="fn">zeros</span>(<span class="nu">3</span>, <span class="nu">4</span>, dtype=torch.float64)    <span class="cm"># 64位浮点</span>
+x = torch.<span class="fn">zeros</span>(<span class="nu">3</span>, <span class="nu">4</span>, dtype=torch.int32)      <span class="cm"># 32位整数</span>
+x = torch.<span class="fn">zeros</span>(<span class="nu">3</span>, <span class="nu">4</span>, dtype=torch.bool)       <span class="cm"># 布尔类型</span></code></pre>
+
+<div class="box example">
+  <div class="box-title">我们项目中的 Tensor shape 实例</div>
+  <table>
+    <tr><th>名称</th><th>Shape</th><th>含义</th></tr>
+    <tr><td>观察 obs</td><td><code>(batch, 16)</code></td><td>16维观察向量</td></tr>
+    <tr><td>动作 action</td><td><code>(batch, 2)</code></td><td>2维连续动作 (fx, fy)</td></tr>
+    <tr><td>价值 value</td><td><code>(batch, 1)</code></td><td>状态价值标量</td></tr>
+    <tr><td>粒子位置 positions</td><td><code>(N, 3)</code></td><td>N个粒子的3D坐标</td></tr>
+    <tr><td>边索引 edge_index</td><td><code>(2, E)</code></td><td>E条边的源/目标节点</td></tr>
+  </table>
+</div>
+
+<h3>1.1.3 常见 dtype 参考</h3>
+
+<table>
+  <tr><th>PyTorch dtype</th><th>Python 等价</th><th>大小</th><th>用途</th></tr>
+  <tr><td><code>torch.float32</code></td><td><code>float</code></td><td>4 bytes</td><td>默认，神经网络参数/计算</td></tr>
+  <tr><td><code>torch.float64</code></td><td><code>double</code></td><td>8 bytes</td><td>高精度物理仿真</td></tr>
+  <tr><td><code>torch.float16</code></td><td>—</td><td>2 bytes</td><td>混合精度训练</td></tr>
+  <tr><td><code>torch.int64</code></td><td><code>long</code></td><td>8 bytes</td><td>索引、标签</td></tr>
+  <tr><td><code>torch.int32</code></td><td><code>int</code></td><td>4 bytes</td><td>一般整数</td></tr>
+  <tr><td><code>torch.bool</code></td><td><code>bool</code></td><td>1 byte</td><td>掩码、条件</td></tr>
+</table>
+
+<!-- ==================== 1.2 张量运算 ==================== -->
+<h2 id="s1-2">1.2 张量运算</h2>
+
+<h3>1.2.1 基本算术运算</h3>
+
+<pre><code>a = torch.<span class="fn">tensor</span>([<span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">3.0</span>])
+b = torch.<span class="fn">tensor</span>([<span class="nu">4.0</span>, <span class="nu">5.0</span>, <span class="nu">6.0</span>])
+
+<span class="cm"># 逐元素运算（element-wise）</span>
+c = a + b          <span class="cm"># tensor([5., 7., 9.])</span>
+c = a - b          <span class="cm"># tensor([-3., -3., -3.])</span>
+c = a * b          <span class="cm"># tensor([4., 10., 18.])  逐元素乘</span>
+c = a / b          <span class="cm"># tensor([0.25, 0.40, 0.50])</span>
+c = a ** <span class="nu">2</span>         <span class="cm"># tensor([1., 4., 9.])</span>
+
+<span class="cm"># 也可以用函数形式</span>
+c = torch.<span class="fn">add</span>(a, b)
+c = torch.<span class="fn">mul</span>(a, b)
+c = torch.<span class="fn">div</span>(a, b)
+
+<span class="cm"># 原地操作（加下划线后缀 _）</span>
+a.<span class="fn">add_</span>(b)          <span class="cm"># a = a + b，直接修改 a</span></code></pre>
+
+<div class="box warn">
+  <div class="box-title">注意：原地操作与 autograd</div>
+  <p>原地操作（<code>add_</code>、<code>mul_</code> 等）可能会破坏计算图，导致梯度计算错误。在需要梯度的张量上，<strong>避免使用原地操作</strong>。</p>
+</div>
+
+<h3>1.2.2 矩阵乘法 — 最重要的运算</h3>
+
+<p>神经网络的核心操作就是矩阵乘法。PyTorch 提供多种方式：</p>
+
+<pre><code><span class="cm"># 2D 矩阵乘法</span>
+A = torch.<span class="fn">randn</span>(<span class="nu">3</span>, <span class="nu">4</span>)    <span class="cm"># (3, 4)</span>
+B = torch.<span class="fn">randn</span>(<span class="nu">4</span>, <span class="nu">5</span>)    <span class="cm"># (4, 5)</span>
+
+C = A <span class="op">@</span> B                <span class="cm"># (3, 5) — 推荐写法！</span>
+C = torch.<span class="fn">matmul</span>(A, B)   <span class="cm"># (3, 5) — 等价</span>
+C = torch.<span class="fn">mm</span>(A, B)      <span class="cm"># (3, 5) — 仅2D</span>
+
+<span class="cm"># Batch 矩阵乘法（RL 中常见）</span>
+<span class="cm"># 例如：同时计算多个 obs 的线性变换</span>
+W = torch.<span class="fn">randn</span>(<span class="nu">64</span>, <span class="nu">16</span>)     <span class="cm"># 权重 (out_features, in_features)</span>
+obs = torch.<span class="fn">randn</span>(<span class="nu">256</span>, <span class="nu">16</span>)  <span class="cm"># 一批 256 个观察向量</span>
+
+<span class="cm"># 全连接层本质上就是这个操作！</span>
+output = obs <span class="op">@</span> W.T          <span class="cm"># (256, 64)  ← y = xW^T</span></code></pre>
+
+<div class="box thm">
+  <div class="box-title">矩阵乘法维度规则</div>
+  <p>$$\mathbf{A}_{(m \times k)} \times \mathbf{B}_{(k \times n)} = \mathbf{C}_{(m \times n)}$$</p>
+  <p>中间维度 \(k\) 必须匹配。结果取 \(A\) 的行数 \(m\) 和 \(B\) 的列数 \(n\)。</p>
+  <p>在我们的网络中：<code>Linear(16, 64)</code> 内部就是 <span class="shape">(batch, 16)</span> @ <span class="shape">(16, 64)</span> = <span class="shape">(batch, 64)</span></p>
+</div>
+
+<h3>1.2.3 广播机制 (Broadcasting)</h3>
+
+<p>当两个 Tensor 形状不完全一致时，PyTorch 会自动扩展较小的 Tensor：</p>
+
+<pre><code><span class="cm"># 标量 + 向量</span>
+a = torch.<span class="fn">tensor</span>([<span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">3.0</span>])    <span class="cm"># shape: (3,)</span>
+b = <span class="nu">10.0</span>                                <span class="cm"># 标量</span>
+c = a + b                               <span class="cm"># tensor([11., 12., 13.])  自动广播</span>
+
+<span class="cm"># 向量 + 矩阵</span>
+A = torch.<span class="fn">randn</span>(<span class="nu">4</span>, <span class="nu">3</span>)                   <span class="cm"># (4, 3)</span>
+bias = torch.<span class="fn">randn</span>(<span class="nu">3</span>)                   <span class="cm"># (3,)  → 自动广播为 (4, 3)</span>
+C = A + bias                             <span class="cm"># (4, 3)  每行都加 bias</span>
+
+<span class="cm"># 这就是 y = Wx + b 中 b 的广播原理！</span>
+<span class="cm"># W@x 的结果是 (batch, out)，b 是 (out,)，自动广播到每个 batch</span>
+
+<span class="cm"># 广播规则：从右往左对齐，维度要么相同，要么其中一个是1</span>
+x = torch.<span class="fn">randn</span>(<span class="nu">4</span>, <span class="nu">1</span>)    <span class="cm"># (4, 1)</span>
+y = torch.<span class="fn">randn</span>(<span class="nu">1</span>, <span class="nu">3</span>)    <span class="cm"># (1, 3)</span>
+z = x + y                 <span class="cm"># (4, 3) ← 两个维度都被广播</span></code></pre>
+
+<h3>1.2.4 归约运算</h3>
+
+<pre><code>x = torch.<span class="fn">tensor</span>([[<span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">3.0</span>],
+                  [<span class="nu">4.0</span>, <span class="nu">5.0</span>, <span class="nu">6.0</span>]])    <span class="cm"># (2, 3)</span>
+
+x.<span class="fn">sum</span>()           <span class="cm"># tensor(21.)  — 所有元素求和</span>
+x.<span class="fn">sum</span>(dim=<span class="nu">0</span>)     <span class="cm"># tensor([5., 7., 9.])  — 沿行求和 → (3,)</span>
+x.<span class="fn">sum</span>(dim=<span class="nu">1</span>)     <span class="cm"># tensor([6., 15.])     — 沿列求和 → (2,)</span>
+x.<span class="fn">mean</span>()          <span class="cm"># tensor(3.5)</span>
+x.<span class="fn">mean</span>(dim=<span class="nu">1</span>)    <span class="cm"># tensor([2., 5.])</span>
+x.<span class="fn">max</span>()           <span class="cm"># tensor(6.)</span>
+x.<span class="fn">min</span>()           <span class="cm"># tensor(1.)</span>
+x.<span class="fn">argmax</span>(dim=<span class="nu">1</span>)  <span class="cm"># tensor([2, 2])  — 每行最大值的索引</span>
+x.<span class="fn">std</span>()           <span class="cm"># 标准差</span>
+
+<span class="cm"># 在 RL 中常用：计算 batch 的平均 loss</span>
+<span class="cm"># loss = losses.mean()  ← 将 (batch,) 的 loss 向量变成标量</span></code></pre>
+
+<!-- ==================== 1.3 索引和切片 ==================== -->
+<h2 id="s1-3">1.3 索引和切片</h2>
+
+<h3>1.3.1 基本索引</h3>
+
+<pre><code>x = torch.<span class="fn">randn</span>(<span class="nu">4</span>, <span class="nu">5</span>)
+
+<span class="cm"># 基本索引（与 NumPy 一致）</span>
+x[<span class="nu">0</span>]         <span class="cm"># 第0行 → (5,)</span>
+x[<span class="nu">0</span>, <span class="nu">2</span>]      <span class="cm"># 第0行第2列 → 标量</span>
+x[<span class="nu">1</span>:<span class="nu">3</span>]       <span class="cm"># 第1~2行 → (2, 5)</span>
+x[:, <span class="nu">2</span>]      <span class="cm"># 所有行的第2列 → (4,)</span>
+x[:, <span class="nu">1</span>:<span class="nu">4</span>]    <span class="cm"># 所有行的第1~3列 → (4, 3)</span>
+
+<span class="cm"># 布尔索引（掩码）</span>
+mask = x > <span class="nu">0</span>             <span class="cm"># 布尔矩阵 (4, 5)</span>
+positive = x[mask]         <span class="cm"># 所有正值 → 1D tensor</span>
+
+<span class="cm"># 实际应用：筛选 done 的 episode</span>
+dones = torch.<span class="fn">tensor</span>([<span class="kw">False</span>, <span class="kw">True</span>, <span class="kw">False</span>, <span class="kw">True</span>])
+rewards = torch.<span class="fn">tensor</span>([<span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">3.0</span>, <span class="nu">4.0</span>])
+done_rewards = rewards[dones]  <span class="cm"># tensor([2., 4.])</span></code></pre>
+
+<h3>1.3.2 高级索引：gather 和 scatter</h3>
+
+<pre><code><span class="cm"># gather — 按索引从张量中"收集"值</span>
+<span class="cm"># 常用于：根据动作索引取Q值</span>
+q_values = torch.<span class="fn">tensor</span>([[<span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">3.0</span>],    <span class="cm"># batch 0 的 Q(s,a) for 3 actions</span>
+                         [<span class="nu">4.0</span>, <span class="nu">5.0</span>, <span class="nu">6.0</span>]])   <span class="cm"># batch 1 的 Q(s,a)</span>
+actions = torch.<span class="fn">tensor</span>([[<span class="nu">2</span>], [<span class="nu">0</span>]])            <span class="cm"># batch 0 选动作2, batch 1 选动作0</span>
+
+<span class="cm"># 取出对应动作的 Q 值</span>
+selected_q = q_values.<span class="fn">gather</span>(<span class="nu">1</span>, actions)       <span class="cm"># tensor([[3.], [4.]])</span>
+<span class="cm"># dim=1 表示沿列方向收集</span>
+
+<span class="cm"># scatter — gather 的反操作，按索引"分散"值</span>
+<span class="cm"># 常用于：构造 one-hot 编码</span>
+labels = torch.<span class="fn">tensor</span>([<span class="nu">0</span>, <span class="nu">2</span>, <span class="nu">1</span>])
+one_hot = torch.<span class="fn">zeros</span>(<span class="nu">3</span>, <span class="nu">3</span>)
+one_hot.<span class="fn">scatter_</span>(<span class="nu">1</span>, labels.<span class="fn">unsqueeze</span>(<span class="nu">1</span>), <span class="nu">1.0</span>)
+<span class="cm"># tensor([[1, 0, 0],</span>
+<span class="cm">#         [0, 0, 1],</span>
+<span class="cm">#         [0, 1, 0]])</span></code></pre>
+
+<!-- ==================== 1.4 形状变换 ==================== -->
+<h2 id="s1-4">1.4 形状变换</h2>
+
+<h3>1.4.1 reshape 和 view</h3>
+
+<pre><code>x = torch.<span class="fn">arange</span>(<span class="nu">12</span>)       <span class="cm"># tensor([0, 1, ..., 11])  shape: (12,)</span>
+
+<span class="cm"># reshape: 改变形状（可能复制数据）</span>
+y = x.<span class="fn">reshape</span>(<span class="nu">3</span>, <span class="nu">4</span>)       <span class="cm"># (3, 4)</span>
+y = x.<span class="fn">reshape</span>(<span class="nu">2</span>, <span class="nu">-1</span>)      <span class="cm"># (2, 6) — -1 自动推断</span>
+
+<span class="cm"># view: 改变形状（要求内存连续，不复制数据）</span>
+y = x.<span class="fn">view</span>(<span class="nu">3</span>, <span class="nu">4</span>)          <span class="cm"># (3, 4) — 更快，共享内存</span>
+y = x.<span class="fn">view</span>(<span class="nu">4</span>, <span class="nu">-1</span>)         <span class="cm"># (4, 3)</span>
+
+<span class="cm"># 展平为1D</span>
+y = x.<span class="fn">flatten</span>()            <span class="cm"># (12,)</span>
+y = x.<span class="fn">view</span>(<span class="nu">-1</span>)             <span class="cm"># (12,)</span></code></pre>
+
+<div class="box warn">
+  <div class="box-title">view vs reshape</div>
+  <p><code>view()</code> 要求张量内存连续（<code>x.is_contiguous() == True</code>），如果不连续会报错。<code>reshape()</code> 更安全，内存不连续时会自动复制。建议：如果不确定，用 <code>reshape</code>；追求性能且确定内存连续，用 <code>view</code>。</p>
+</div>
+
+<h3>1.4.2 permute — 调换维度顺序</h3>
+
+<pre><code><span class="cm"># 常用于图像数据：(batch, H, W, C) → (batch, C, H, W)</span>
+img = torch.<span class="fn">randn</span>(<span class="nu">8</span>, <span class="nu">224</span>, <span class="nu">224</span>, <span class="nu">3</span>)   <span class="cm"># (B, H, W, C)</span>
+img = img.<span class="fn">permute</span>(<span class="nu">0</span>, <span class="nu">3</span>, <span class="nu">1</span>, <span class="nu">2</span>)        <span class="cm"># (B, C, H, W) — PyTorch 的格式</span>
+
+<span class="cm"># transpose: 交换两个维度</span>
+A = torch.<span class="fn">randn</span>(<span class="nu">3</span>, <span class="nu">5</span>)
+A_T = A.<span class="fn">T</span>              <span class="cm"># (5, 3) — 转置快捷方式</span>
+A_T = A.<span class="fn">transpose</span>(<span class="nu">0</span>, <span class="nu">1</span>) <span class="cm"># 等价</span></code></pre>
+
+<h3>1.4.3 squeeze 和 unsqueeze — 增减维度</h3>
+
+<pre><code><span class="cm"># unsqueeze: 添加一个大小为1的维度</span>
+x = torch.<span class="fn">tensor</span>([<span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">3.0</span>])  <span class="cm"># shape: (3,)</span>
+x = x.<span class="fn">unsqueeze</span>(<span class="nu">0</span>)                   <span class="cm"># shape: (1, 3) — 添加 batch 维度</span>
+x = x.<span class="fn">unsqueeze</span>(<span class="nu">-1</span>)                  <span class="cm"># shape: (1, 3, 1)</span>
+
+<span class="cm"># squeeze: 去除大小为1的维度</span>
+x = torch.<span class="fn">randn</span>(<span class="nu">1</span>, <span class="nu">3</span>, <span class="nu">1</span>)             <span class="cm"># (1, 3, 1)</span>
+x = x.<span class="fn">squeeze</span>()                       <span class="cm"># (3,) — 去除所有大小为1的维度</span>
+x = x.<span class="fn">squeeze</span>(<span class="nu">0</span>)                     <span class="cm"># 只去除第0维</span>
+
+<span class="cm"># 在 RL 中常用：</span>
+<span class="cm"># 单个 obs 传入网络需要加 batch 维度</span>
+obs = torch.<span class="fn">randn</span>(<span class="nu">16</span>)              <span class="cm"># (16,) 单个观察</span>
+obs_batch = obs.<span class="fn">unsqueeze</span>(<span class="nu">0</span>)       <span class="cm"># (1, 16) 加 batch 维度</span>
+value = model(obs_batch)             <span class="cm"># (1, 1)</span>
+value = value.<span class="fn">squeeze</span>()             <span class="cm"># () 标量</span></code></pre>
+
+<h3>1.4.4 cat 和 stack — 拼接张量</h3>
+
+<pre><code><span class="cm"># cat: 沿已有维度拼接</span>
+a = torch.<span class="fn">randn</span>(<span class="nu">3</span>, <span class="nu">4</span>)
+b = torch.<span class="fn">randn</span>(<span class="nu">2</span>, <span class="nu">4</span>)
+c = torch.<span class="fn">cat</span>([a, b], dim=<span class="nu">0</span>)    <span class="cm"># (5, 4) — 沿行拼接</span>
+
+<span class="cm"># stack: 沿新维度堆叠</span>
+a = torch.<span class="fn">randn</span>(<span class="nu">3</span>)
+b = torch.<span class="fn">randn</span>(<span class="nu">3</span>)
+c = torch.<span class="fn">stack</span>([a, b], dim=<span class="nu">0</span>)  <span class="cm"># (2, 3) — 新建一个 batch 维度</span>
+
+<span class="cm"># 在 EdgeFrame 中的实际应用：</span>
+<span class="cm"># 拼接位移和速度特征</span>
+r_ij = positions[tgt_idx] - positions[src_idx]  <span class="cm"># (E, 3)</span>
+r_norm = torch.<span class="fn">norm</span>(r_ij, dim=<span class="nu">1</span>, keepdim=<span class="kw">True</span>)  <span class="cm"># (E, 1)</span>
+v_rel = velocities[tgt_idx] - velocities[src_idx]  <span class="cm"># (E, 3)</span>
+v_norm = torch.<span class="fn">norm</span>(v_rel, dim=<span class="nu">1</span>, keepdim=<span class="kw">True</span>)  <span class="cm"># (E, 1)</span>
+<span class="cm"># 拼接为边特征 (E, 8)</span>
+edge_features = torch.<span class="fn">cat</span>([r_ij, r_norm, v_rel, v_norm], dim=<span class="nu">1</span>)</code></pre>
+
+<!-- ==================== 1.5 GPU 加速 ==================== -->
+<h2 id="s1-5">1.5 GPU 加速</h2>
+
+<pre><code><span class="cm"># 检测 GPU 是否可用</span>
+<span class="fn">print</span>(torch.cuda.<span class="fn">is_available</span>())    <span class="cm"># True / False</span>
+<span class="fn">print</span>(torch.cuda.<span class="fn">device_count</span>())    <span class="cm"># GPU 数量</span>
+<span class="fn">print</span>(torch.cuda.<span class="fn">get_device_name</span>(<span class="nu">0</span>)) <span class="cm"># GPU 名称</span>
+
+<span class="cm"># 设备选择的常见模式</span>
+device = torch.<span class="fn">device</span>(<span class="st">'cuda'</span> <span class="kw">if</span> torch.cuda.<span class="fn">is_available</span>() <span class="kw">else</span> <span class="st">'cpu'</span>)
+
+<span class="cm"># 将 Tensor 移动到 GPU</span>
+x = torch.<span class="fn">randn</span>(<span class="nu">3</span>, <span class="nu">4</span>)
+x_gpu = x.<span class="fn">to</span>(device)           <span class="cm"># 移到 GPU（如果可用）</span>
+x_gpu = x.<span class="fn">to</span>(<span class="st">'cuda'</span>)           <span class="cm"># 明确移到 GPU</span>
+x_cpu = x_gpu.<span class="fn">cpu</span>()            <span class="cm"># 移回 CPU</span>
+
+<span class="cm"># 直接在 GPU 上创建</span>
+x = torch.<span class="fn">randn</span>(<span class="nu">3</span>, <span class="nu">4</span>, device=<span class="st">'cuda'</span>)
+
+<span class="cm"># 将模型移到 GPU</span>
+model = MyNetwork()
+model = model.<span class="fn">to</span>(device)
+
+<span class="cm"># ⚠️ 数据和模型必须在同一设备上！</span>
+<span class="cm"># output = model(x_cpu)  ← 如果模型在 GPU，这会报错！</span></code></pre>
+
+<div class="box def">
+  <div class="box-title">混合精度训练 (AMP)</div>
+  <p>混合精度用 <code>float16</code> 加速计算，用 <code>float32</code> 保持梯度精度：</p>
+<pre><code><span class="kw">from</span> torch.cuda.amp <span class="kw">import</span> autocast, GradScaler
+
+scaler = <span class="fn">GradScaler</span>()
+
+<span class="kw">for</span> batch <span class="kw">in</span> dataloader:
+    optimizer.<span class="fn">zero_grad</span>()
+    
+    <span class="kw">with</span> <span class="fn">autocast</span>():          <span class="cm"># 自动选择 float16/32</span>
+        output = model(batch)
+        loss = criterion(output, target)
+    
+    scaler.<span class="fn">scale</span>(loss).<span class="fn">backward</span>()  <span class="cm"># 缩放后反向传播</span>
+    scaler.<span class="fn">step</span>(optimizer)         <span class="cm"># 更新参数</span>
+    scaler.<span class="fn">update</span>()               <span class="cm"># 更新缩放因子</span></code></pre>
+</div>
+
+<!-- ================================================== -->
+<!--                第二章：自动微分                       -->
+<!-- ================================================== -->
+<h1 id="ch2">第二章 &nbsp; 自动微分 (Autograd)</h1>
+
+<p>自动微分是 PyTorch 的灵魂。它让我们只需写<strong>前向传播</strong>（计算 loss），PyTorch 就能自动计算所有参数的梯度——这就是训练神经网络的基础。</p>
+
+<!-- ==================== 2.1 计算图 ==================== -->
+<h2 id="s2-1">2.1 计算图 — 前向传播时自动构建</h2>
+
+<div class="box def">
+  <div class="box-title">定义：计算图 (Computational Graph)</div>
+  <p>PyTorch 在每次前向传播时，会自动记录所有参与计算的操作，构建一个<strong>有向无环图 (DAG)</strong>。图的节点是张量，边是运算操作。反向传播时，PyTorch 沿着这个图从 loss 回溯，计算每个参数的梯度。</p>
+</div>
+
+<div class="diagram">
+<svg width="600" height="200" viewBox="0 0 600 200">
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="currentColor"/>
+    </marker>
+  </defs>
+  <!-- Nodes -->
+  <rect x="10" y="75" width="60" height="40" rx="8" fill="#e8edff" stroke="#4361ee" stroke-width="2"/>
+  <text x="40" y="100" text-anchor="middle" font-size="14" fill="#4361ee" font-weight="bold">x</text>
+  
+  <rect x="120" y="75" width="60" height="40" rx="8" fill="#e8edff" stroke="#4361ee" stroke-width="2"/>
+  <text x="150" y="100" text-anchor="middle" font-size="14" fill="#4361ee" font-weight="bold">W</text>
+  
+  <circle cx="250" cy="95" r="20" fill="#e8f5e9" stroke="#4CAF50" stroke-width="2"/>
+  <text x="250" y="100" text-anchor="middle" font-size="14" fill="#4CAF50" font-weight="bold">@</text>
+  
+  <rect x="300" y="75" width="60" height="40" rx="8" fill="#e8edff" stroke="#4361ee" stroke-width="2"/>
+  <text x="330" y="100" text-anchor="middle" font-size="14" fill="#4361ee" font-weight="bold">b</text>
+  
+  <circle cx="410" cy="95" r="20" fill="#e8f5e9" stroke="#4CAF50" stroke-width="2"/>
+  <text x="410" y="100" text-anchor="middle" font-size="14" fill="#4CAF50" font-weight="bold">+</text>
+  
+  <circle cx="490" cy="95" r="20" fill="#fff8e1" stroke="#FF9800" stroke-width="2"/>
+  <text x="490" y="100" text-anchor="middle" font-size="12" fill="#FF9800" font-weight="bold">ReLU</text>
+  
+  <rect x="530" y="75" width="60" height="40" rx="8" fill="#ffebee" stroke="#f44336" stroke-width="2"/>
+  <text x="560" y="100" text-anchor="middle" font-size="14" fill="#f44336" font-weight="bold">y</text>
+  
+  <!-- Arrows -->
+  <line x1="70" y1="95" x2="228" y2="95" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="180" y1="95" x2="228" y2="95" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="270" y1="95" x2="388" y2="95" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="360" y1="95" x2="388" y2="95" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="430" y1="95" x2="468" y2="95" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  <line x1="510" y1="95" x2="528" y2="95" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+  
+  <!-- Labels -->
+  <text x="250" y="55" text-anchor="middle" font-size="12" fill="currentColor">matmul</text>
+  <text x="410" y="55" text-anchor="middle" font-size="12" fill="currentColor">add</text>
+  <text x="40" y="65" text-anchor="middle" font-size="11" fill="currentColor">输入</text>
+  <text x="150" y="65" text-anchor="middle" font-size="11" fill="currentColor">权重</text>
+  <text x="330" y="65" text-anchor="middle" font-size="11" fill="currentColor">偏置</text>
+  <text x="560" y="65" text-anchor="middle" font-size="11" fill="currentColor">输出</text>
+  
+  <text x="300" y="175" text-anchor="middle" font-size="13" fill="currentColor">y = ReLU(W @ x + b) 的计算图</text>
+</svg>
+</div>
+
+<!-- ==================== 2.2 requires_grad ==================== -->
+<h2 id="s2-2">2.2 requires_grad — 指定哪些需要梯度</h2>
+
+<pre><code><span class="cm"># requires_grad=True 表示这个张量需要计算梯度</span>
+x = torch.<span class="fn">tensor</span>([<span class="nu">2.0</span>, <span class="nu">3.0</span>], requires_grad=<span class="kw">True</span>)
+<span class="fn">print</span>(x.requires_grad)  <span class="cm"># True</span>
+
+<span class="cm"># nn.Module 的参数默认 requires_grad=True</span>
+linear = nn.<span class="fn">Linear</span>(<span class="nu">16</span>, <span class="nu">64</span>)
+<span class="fn">print</span>(linear.weight.requires_grad)  <span class="cm"># True</span>
+<span class="fn">print</span>(linear.bias.requires_grad)    <span class="cm"># True</span>
+
+<span class="cm"># 普通 tensor 默认 False</span>
+data = torch.<span class="fn">randn</span>(<span class="nu">10</span>, <span class="nu">16</span>)
+<span class="fn">print</span>(data.requires_grad)  <span class="cm"># False — 输入数据不需要梯度</span>
+
+<span class="cm"># 冻结参数（fine-tuning 时常用）</span>
+<span class="kw">for</span> param <span class="kw">in</span> model.<span class="fn">parameters</span>():
+    param.requires_grad = <span class="kw">False</span>  <span class="cm"># 冻结所有参数</span></code></pre>
+
+<!-- ==================== 2.3 backward() ==================== -->
+<h2 id="s2-3">2.3 backward() — 反向传播</h2>
+
+<pre><code><span class="cm"># 完整的前向 + 反向传播流程</span>
+x = torch.<span class="fn">tensor</span>([<span class="nu">2.0</span>], requires_grad=<span class="kw">True</span>)
+W = torch.<span class="fn">tensor</span>([<span class="nu">3.0</span>], requires_grad=<span class="kw">True</span>)
+b = torch.<span class="fn">tensor</span>([<span class="nu">1.0</span>], requires_grad=<span class="kw">True</span>)
+
+<span class="cm"># 前向传播：y = Wx + b = 3*2 + 1 = 7</span>
+y = W * x + b
+<span class="fn">print</span>(y)  <span class="cm"># tensor([7.], grad_fn=&lt;AddBackward0&gt;)</span>
+
+<span class="cm"># 定义 loss（简单用 y 本身）</span>
+loss = y.<span class="fn">sum</span>()
+
+<span class="cm"># 反向传播：计算 ∂loss/∂W, ∂loss/∂b, ∂loss/∂x</span>
+loss.<span class="fn">backward</span>()
+
+<span class="cm"># 查看梯度</span>
+<span class="fn">print</span>(W.grad)  <span class="cm"># tensor([2.]) ← ∂loss/∂W = x = 2</span>
+<span class="fn">print</span>(b.grad)  <span class="cm"># tensor([1.]) ← ∂loss/∂b = 1</span>
+<span class="fn">print</span>(x.grad)  <span class="cm"># tensor([3.]) ← ∂loss/∂x = W = 3</span></code></pre>
+
+<div class="box thm">
+  <div class="box-title">backward() 的数学含义</div>
+  <p>对于 \(y = Wx + b\)，loss = \(y\)：</p>
+  <p>$$\frac{\partial \text{loss}}{\partial W} = x, \quad \frac{\partial \text{loss}}{\partial b} = 1, \quad \frac{\partial \text{loss}}{\partial x} = W$$</p>
+  <p><code>backward()</code> 就是自动完成了这些偏导数的计算。</p>
+</div>
+
+<!-- ==================== 2.4 链式法则 ==================== -->
+<h2 id="s2-4">2.4 链式法则 — 自动微分的数学核心</h2>
+
+<div class="box thm">
+  <div class="box-title">链式法则 (Chain Rule)</div>
+  <p>如果 \(z = f(g(x))\)，则：</p>
+  <p>$$\frac{dz}{dx} = \frac{dz}{dg} \cdot \frac{dg}{dx}$$</p>
+  <p>推广到多层：</p>
+  <p>$$\frac{\partial L}{\partial W_1} = \frac{\partial L}{\partial y_3} \cdot \frac{\partial y_3}{\partial y_2} \cdot \frac{\partial y_2}{\partial y_1} \cdot \frac{\partial y_1}{\partial W_1}$$</p>
+  <p>PyTorch 的 autograd 就是自动地用链式法则从 loss 一路乘回去。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title">多层链式法则实例</div>
+<pre><code><span class="cm"># y = σ(W₂ · ReLU(W₁ · x + b₁) + b₂)</span>
+x = torch.<span class="fn">tensor</span>([<span class="nu">1.0</span>, <span class="nu">2.0</span>], requires_grad=<span class="kw">True</span>)
+
+<span class="cm"># 第一层</span>
+W1 = torch.<span class="fn">randn</span>(<span class="nu">3</span>, <span class="nu">2</span>, requires_grad=<span class="kw">True</span>)
+b1 = torch.<span class="fn">randn</span>(<span class="nu">3</span>, requires_grad=<span class="kw">True</span>)
+h1 = W1 <span class="op">@</span> x + b1              <span class="cm"># (3,)</span>
+a1 = torch.<span class="fn">relu</span>(h1)            <span class="cm"># (3,)</span>
+
+<span class="cm"># 第二层</span>
+W2 = torch.<span class="fn">randn</span>(<span class="nu">1</span>, <span class="nu">3</span>, requires_grad=<span class="kw">True</span>)
+b2 = torch.<span class="fn">randn</span>(<span class="nu">1</span>, requires_grad=<span class="kw">True</span>)
+h2 = W2 <span class="op">@</span> a1 + b2              <span class="cm"># (1,)</span>
+y = torch.<span class="fn">sigmoid</span>(h2)           <span class="cm"># (1,)</span>
+
+<span class="cm"># loss = -log(y)  （二元交叉熵的一半）</span>
+loss = -torch.<span class="fn">log</span>(y)
+loss.<span class="fn">backward</span>()
+
+<span class="cm"># 现在 W1.grad, W2.grad, b1.grad, b2.grad 都有值了</span>
+<span class="cm"># PyTorch 自动应用了链式法则！</span>
+<span class="fn">print</span>(W1.grad.shape)  <span class="cm"># (3, 2) — 与 W1 相同</span>
+<span class="fn">print</span>(W2.grad.shape)  <span class="cm"># (1, 3) — 与 W2 相同</span></code></pre>
+</div>
+
+<!-- ==================== 2.5 梯度累积和清零 ==================== -->
+<h2 id="s2-5">2.5 梯度累积和清零</h2>
+
+<div class="box warn">
+  <div class="box-title">核心注意：PyTorch 梯度会累积！</div>
+  <p>每次调用 <code>backward()</code>，梯度会<strong>累加</strong>到 <code>.grad</code> 属性上，而不是覆盖。如果不手动清零，梯度会越来越大。这是 PyTorch 初学者最常犯的错误之一！</p>
+</div>
+
+<pre><code>x = torch.<span class="fn">tensor</span>([<span class="nu">2.0</span>], requires_grad=<span class="kw">True</span>)
+
+<span class="cm"># 第一次 backward</span>
+y = x ** <span class="nu">2</span>
+y.<span class="fn">backward</span>()
+<span class="fn">print</span>(x.grad)  <span class="cm"># tensor([4.])  ← ∂(x²)/∂x = 2x = 4 ✓</span>
+
+<span class="cm"># 第二次 backward（不清零！）</span>
+y = x ** <span class="nu">2</span>
+y.<span class="fn">backward</span>()
+<span class="fn">print</span>(x.grad)  <span class="cm"># tensor([8.])  ← 4 + 4 = 8 ✗ 错误累积！</span>
+
+<span class="cm"># 正确做法：每次 backward 前清零梯度</span>
+x.grad.<span class="fn">zero_</span>()    <span class="cm"># 手动清零</span>
+y = x ** <span class="nu">2</span>
+y.<span class="fn">backward</span>()
+<span class="fn">print</span>(x.grad)  <span class="cm"># tensor([4.])  ← 正确 ✓</span>
+
+<span class="cm"># 在训练循环中，用 optimizer.zero_grad()</span>
+<span class="kw">for</span> batch <span class="kw">in</span> dataloader:
+    optimizer.<span class="fn">zero_grad</span>()      <span class="cm"># ① 清零梯度</span>
+    output = model(batch)       <span class="cm"># ② 前向传播</span>
+    loss = criterion(output)    <span class="cm"># ③ 计算 loss</span>
+    loss.<span class="fn">backward</span>()             <span class="cm"># ④ 反向传播（计算梯度）</span>
+    optimizer.<span class="fn">step</span>()            <span class="cm"># ⑤ 更新参数</span></code></pre>
+
+<div class="box example">
+  <div class="box-title">梯度累积的正面用途</div>
+  <p>梯度累积也有用！当 GPU 内存不够一次处理大 batch 时，可以分成小 batch，累积梯度后再更新：</p>
+<pre><code>accumulation_steps = <span class="nu">4</span>
+optimizer.<span class="fn">zero_grad</span>()
+<span class="kw">for</span> i, batch <span class="kw">in</span> <span class="fn">enumerate</span>(dataloader):
+    loss = model(batch) / accumulation_steps  <span class="cm"># 缩放 loss</span>
+    loss.<span class="fn">backward</span>()                            <span class="cm"># 累积梯度</span>
+    <span class="kw">if</span> (i + <span class="nu">1</span>) % accumulation_steps == <span class="nu">0</span>:
+        optimizer.<span class="fn">step</span>()       <span class="cm"># 每 4 步更新一次</span>
+        optimizer.<span class="fn">zero_grad</span>() <span class="cm"># 清零重来</span></code></pre>
+</div>
+
+<!-- ==================== 2.6 detach 和 no_grad ==================== -->
+<h2 id="s2-6">2.6 detach() 和 no_grad() — 何时停止梯度跟踪</h2>
+
+<pre><code><span class="cm"># ===== torch.no_grad() — 推理时用 =====</span>
+<span class="cm"># 在不需要梯度的操作中，关闭 autograd 可以节省内存和加速</span>
+model.<span class="fn">eval</span>()  <span class="cm"># 切换到评估模式</span>
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+    output = model(test_data)
+    <span class="cm"># 这里不会构建计算图，节省大量内存</span>
+
+<span class="cm"># 在 PPO 的数据收集阶段（rollout），不需要梯度：</span>
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+    action_mean = actor(obs)
+    value = critic(obs)
+    <span class="cm"># 只需要值，不需要计算图</span>
+
+<span class="cm"># ===== .detach() — 从计算图中分离 =====</span>
+x = torch.<span class="fn">tensor</span>([<span class="nu">2.0</span>], requires_grad=<span class="kw">True</span>)
+y = x ** <span class="nu">2</span>
+z = y.<span class="fn">detach</span>()  <span class="cm"># z 与 y 数据相同，但不在计算图中</span>
+
+<span class="fn">print</span>(z.requires_grad)  <span class="cm"># False</span>
+
+<span class="cm"># 实际应用：PPO 中旧策略的 log_prob 需要 detach</span>
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+    old_log_prob = policy.<span class="fn">get_log_prob</span>(obs, action)
+<span class="cm"># 或者</span>
+old_log_prob = policy.<span class="fn">get_log_prob</span>(obs, action).<span class="fn">detach</span>()</code></pre>
+
+<div class="box def">
+  <div class="box-title">no_grad vs detach 对比</div>
+  <table>
+    <tr><th>特性</th><th><code>torch.no_grad()</code></th><th><code>.detach()</code></th></tr>
+    <tr><td>作用范围</td><td>上下文管理器内所有操作</td><td>单个张量</td></tr>
+    <tr><td>用途</td><td>推理、评估</td><td>从计算图中分离某个值</td></tr>
+    <tr><td>典型场景</td><td>rollout、evaluate</td><td>旧策略 log_prob、target value</td></tr>
+  </table>
+</div>
+
+<!-- ==================== 2.7 手动 vs autograd ==================== -->
+<h2 id="s2-7">2.7 实例：手动计算 vs autograd</h2>
+
+<div class="box example">
+  <div class="box-title">对比：手动推导 vs autograd 自动计算</div>
+  <p>考虑函数 \(f(x) = 3x^2 + 2x + 1\)，我们对 \(x = 2\) 求导：</p>
+  <p>$$f'(x) = 6x + 2 \implies f'(2) = 14$$</p>
+</div>
+
+<div class="tab-group">
+  <div class="tab-buttons">
+    <button class="tab-btn active" onclick="switchTab(this, 'manual-calc')">手动计算</button>
+    <button class="tab-btn" onclick="switchTab(this, 'autograd-calc')">autograd 计算</button>
+  </div>
+  <div class="tab-content active" id="manual-calc">
+<pre><code><span class="cm"># 手动推导 f'(x) = 6x + 2</span>
+x_val = <span class="nu">2.0</span>
+grad_manual = <span class="nu">6</span> * x_val + <span class="nu">2</span>
+<span class="fn">print</span>(<span class="st">f"手动梯度: {grad_manual}"</span>)  <span class="cm"># 14.0</span></code></pre>
+  </div>
+  <div class="tab-content" id="autograd-calc">
+<pre><code><span class="cm"># autograd 自动计算</span>
+x = torch.<span class="fn">tensor</span>(<span class="nu">2.0</span>, requires_grad=<span class="kw">True</span>)
+f = <span class="nu">3</span> * x**<span class="nu">2</span> + <span class="nu">2</span> * x + <span class="nu">1</span>
+f.<span class="fn">backward</span>()
+<span class="fn">print</span>(<span class="st">f"autograd 梯度: {x.grad}"</span>)  <span class="cm"># tensor(14.)</span></code></pre>
+  </div>
+</div>
+
+<p>对于简单函数，手动推导很容易。但当网络有几百万参数、几十层时，手动推导完全不可行——这就是 autograd 的价值。</p>
+
+<div class="box example">
+  <div class="box-title">更复杂的例子：向量函数的雅可比</div>
+<pre><code><span class="cm"># f(x) = Σ(Wx)²，W 是 2×3 矩阵</span>
+W = torch.<span class="fn">randn</span>(<span class="nu">2</span>, <span class="nu">3</span>, requires_grad=<span class="kw">True</span>)
+x = torch.<span class="fn">randn</span>(<span class="nu">3</span>)
+
+y = (W <span class="op">@</span> x) ** <span class="nu">2</span>          <span class="cm"># (2,)</span>
+loss = y.<span class="fn">sum</span>()              <span class="cm"># 标量</span>
+loss.<span class="fn">backward</span>()
+
+<span class="cm"># W.grad 的每个元素是 ∂loss/∂W_ij</span>
+<span class="fn">print</span>(W.grad)               <span class="cm"># (2, 3) — 与 W 形状一致</span>
+<span class="fn">print</span>(W.grad.shape)         <span class="cm"># torch.Size([2, 3])</span>
+
+<span class="cm"># 验证：∂loss/∂W = 2 * diag(Wx) @ x^T</span>
+Wx = W <span class="op">@</span> x
+grad_manual = <span class="nu">2</span> * Wx.<span class="fn">unsqueeze</span>(<span class="nu">1</span>) * x.<span class="fn">unsqueeze</span>(<span class="nu">0</span>)
+<span class="fn">print</span>(torch.<span class="fn">allclose</span>(W.grad, grad_manual))  <span class="cm"># True ✓</span></code></pre>
+</div>
+
+<!-- ================================================== -->
+<!--               第三章：神经网络                        -->
+<!-- ================================================== -->
+<h1 id="ch3">第三章 &nbsp; 神经网络 (nn.Module)</h1>
+
+<!-- ==================== 3.1 nn.Module ==================== -->
+<h2 id="s3-1">3.1 nn.Module 基类 — __init__ + forward</h2>
+
+<div class="box def">
+  <div class="box-title">定义：nn.Module</div>
+  <p><code>nn.Module</code> 是 PyTorch 中所有神经网络的基类。所有自定义网络都继承它。你只需定义两个方法：</p>
+  <ol>
+    <li><code>__init__</code> — 定义网络层（参数在这里创建）</li>
+    <li><code>forward</code> — 定义前向传播逻辑（数据如何流过网络）</li>
+  </ol>
+  <p>调用模型时用 <code>model(x)</code> 而不是 <code>model.forward(x)</code>，因为 <code>__call__</code> 会额外调用 hooks。</p>
+</div>
+
+<pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+
+<span class="kw">class</span> <span class="cl">SimpleNet</span>(nn.Module):
+    <span class="st">"""最简单的两层全连接网络"""</span>
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, input_dim, hidden_dim, output_dim):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()  <span class="cm"># 必须调用！</span>
+        
+        <span class="cm"># 定义层（在这里创建参数）</span>
+        self.fc1 = nn.<span class="fn">Linear</span>(input_dim, hidden_dim)   <span class="cm"># 第一层</span>
+        self.fc2 = nn.<span class="fn">Linear</span>(hidden_dim, output_dim)  <span class="cm"># 第二层</span>
+        self.relu = nn.<span class="fn">ReLU</span>()                         <span class="cm"># 激活函数</span>
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="cm"># 定义数据流向（前向传播）</span>
+        x = self.fc1(x)      <span class="cm"># 线性变换: (batch, input) → (batch, hidden)</span>
+        x = self.relu(x)     <span class="cm"># 激活: (batch, hidden) → (batch, hidden)</span>
+        x = self.fc2(x)      <span class="cm"># 线性变换: (batch, hidden) → (batch, output)</span>
+        <span class="kw">return</span> x
+
+<span class="cm"># 使用</span>
+model = <span class="fn">SimpleNet</span>(<span class="nu">16</span>, <span class="nu">64</span>, <span class="nu">2</span>)
+obs = torch.<span class="fn">randn</span>(<span class="nu">32</span>, <span class="nu">16</span>)    <span class="cm"># batch=32, obs_dim=16</span>
+action = model(obs)             <span class="cm"># (32, 2)</span>
+<span class="fn">print</span>(action.shape)             <span class="cm"># torch.Size([32, 2])</span></code></pre>
+
+<!-- ==================== 3.2 常用层 ==================== -->
+<h2 id="s3-2">3.2 常用层详解</h2>
+
+<h3>3.2.1 nn.Linear — 全连接层</h3>
+
+<div class="box thm">
+  <div class="box-title">nn.Linear 的数学</div>
+  <p>$$y = xW^T + b$$</p>
+  <p>其中 \(W \in \mathbb{R}^{out \times in}\)，\(b \in \mathbb{R}^{out}\)。</p>
+  <p>参数量 = \(\text{in} \times \text{out} + \text{out}\)（权重 + 偏置）</p>
+</div>
+
+<pre><code>layer = nn.<span class="fn">Linear</span>(<span class="nu">16</span>, <span class="nu">64</span>)
+
+<span class="cm"># 参数详情</span>
+<span class="fn">print</span>(layer.weight.shape)   <span class="cm"># (64, 16) — 注意是 (out, in) 而不是 (in, out)！</span>
+<span class="fn">print</span>(layer.bias.shape)     <span class="cm"># (64,)</span>
+<span class="fn">print</span>(<span class="st">f"参数量: {16*64 + 64} = {16*64 + 64}"</span>)  <span class="cm"># 1088</span>
+
+<span class="cm"># 前向传播</span>
+x = torch.<span class="fn">randn</span>(<span class="nu">32</span>, <span class="nu">16</span>)    <span class="cm"># (batch=32, in=16)</span>
+y = layer(x)                 <span class="cm"># (32, 64)</span>
+
+<span class="cm"># 内部做的就是：</span>
+y_manual = x <span class="op">@</span> layer.weight.T + layer.bias  <span class="cm"># 完全等价</span></code></pre>
+
+<div class="box example">
+  <div class="box-title">我们项目中各层的参数量</div>
+  <table>
+    <tr><th>层</th><th>Input → Output</th><th>参数量</th></tr>
+    <tr><td>Actor.fc1</td><td>16 → 64</td><td>16×64 + 64 = 1,088</td></tr>
+    <tr><td>Actor.fc2</td><td>64 → 64</td><td>64×64 + 64 = 4,160</td></tr>
+    <tr><td>Actor.fc3</td><td>64 → 2</td><td>64×2 + 2 = 130</td></tr>
+    <tr><td><strong>Actor 总计</strong></td><td></td><td><strong>5,378</strong></td></tr>
+    <tr><td>Critic.fc1</td><td>16 → 64</td><td>1,088</td></tr>
+    <tr><td>Critic.fc2</td><td>64 → 64</td><td>4,160</td></tr>
+    <tr><td>Critic.fc3</td><td>64 → 1</td><td>65</td></tr>
+    <tr><td><strong>Critic 总计</strong></td><td></td><td><strong>5,313</strong></td></tr>
+  </table>
+</div>
+
+<h3>3.2.2 nn.Conv1d / Conv2d — 卷积层（简介）</h3>
+
+<pre><code><span class="cm"># Conv2d: 图像处理常用</span>
+conv = nn.<span class="fn">Conv2d</span>(
+    in_channels=<span class="nu">3</span>,       <span class="cm"># 输入通道（如 RGB=3）</span>
+    out_channels=<span class="nu">16</span>,     <span class="cm"># 输出通道（卷积核数量）</span>
+    kernel_size=<span class="nu">3</span>,       <span class="cm"># 卷积核大小 3×3</span>
+    padding=<span class="nu">1</span>,            <span class="cm"># 填充</span>
+)
+img = torch.<span class="fn">randn</span>(<span class="nu">8</span>, <span class="nu">3</span>, <span class="nu">32</span>, <span class="nu">32</span>)   <span class="cm"># (batch, C, H, W)</span>
+out = conv(img)                       <span class="cm"># (8, 16, 32, 32)</span>
+
+<span class="cm"># Conv1d: 时序数据</span>
+conv1d = nn.<span class="fn">Conv1d</span>(in_channels=<span class="nu">4</span>, out_channels=<span class="nu">16</span>, kernel_size=<span class="nu">3</span>, padding=<span class="nu">1</span>)
+seq = torch.<span class="fn">randn</span>(<span class="nu">8</span>, <span class="nu">4</span>, <span class="nu">100</span>)       <span class="cm"># (batch, channels, length)</span>
+out = conv1d(seq)                      <span class="cm"># (8, 16, 100)</span>
+
+<span class="cm"># 在我们项目中，主要用全连接网络（MLP），卷积层了解即可</span></code></pre>
+
+<h3>3.2.3 激活函数 — ReLU, Tanh, Sigmoid</h3>
+
+<pre><code>x = torch.<span class="fn">linspace</span>(-<span class="nu">3</span>, <span class="nu">3</span>, <span class="nu">7</span>)  <span class="cm"># [-3, -2, -1, 0, 1, 2, 3]</span>
+
+<span class="cm"># ReLU: max(0, x) — 最常用，隐藏层默认选择</span>
+relu = nn.<span class="fn">ReLU</span>()
+<span class="fn">print</span>(relu(x))  <span class="cm"># [0, 0, 0, 0, 1, 2, 3]</span>
+
+<span class="cm"># Tanh: 输出 [-1, 1] — Actor 输出层常用</span>
+tanh = nn.<span class="fn">Tanh</span>()
+<span class="fn">print</span>(tanh(x))  <span class="cm"># [-0.995, -0.964, -0.762, 0, 0.762, 0.964, 0.995]</span>
+
+<span class="cm"># Sigmoid: 输出 [0, 1] — 概率输出</span>
+sigmoid = nn.<span class="fn">Sigmoid</span>()
+<span class="fn">print</span>(sigmoid(x))  <span class="cm"># [0.047, 0.119, 0.269, 0.5, 0.731, 0.881, 0.953]</span>
+
+<span class="cm"># 也可以用函数形式（不需要实例化）</span>
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+y = F.<span class="fn">relu</span>(x)
+y = torch.<span class="fn">tanh</span>(x)
+y = torch.<span class="fn">sigmoid</span>(x)</code></pre>
+
+<div class="box def">
+  <div class="box-title">激活函数选择指南</div>
+  <table>
+    <tr><th>层</th><th>推荐激活</th><th>原因</th></tr>
+    <tr><td>隐藏层</td><td>ReLU</td><td>计算快、梯度不易消失</td></tr>
+    <tr><td>Actor 输出</td><td>Tanh</td><td>限制动作范围到 [-1, 1]</td></tr>
+    <tr><td>概率输出</td><td>Sigmoid</td><td>输出 [0, 1] 范围</td></tr>
+    <tr><td>分类输出</td><td>Softmax</td><td>输出概率分布（和为1）</td></tr>
+    <tr><td>Critic 输出</td><td>无</td><td>价值可以是任意实数</td></tr>
+  </table>
+</div>
+
+<h3>3.2.4 归一化层 — LayerNorm, BatchNorm</h3>
+
+<pre><code><span class="cm"># LayerNorm — 对每个样本独立归一化（RL 中更常用）</span>
+ln = nn.<span class="fn">LayerNorm</span>(<span class="nu">64</span>)
+x = torch.<span class="fn">randn</span>(<span class="nu">32</span>, <span class="nu">64</span>)
+y = ln(x)  <span class="cm"># 每个样本的 64 维特征归一化为均值0、方差1</span>
+
+<span class="cm"># BatchNorm — 对整个 batch 归一化（CV 中常用）</span>
+bn = nn.<span class="fn">BatchNorm1d</span>(<span class="nu">64</span>)
+y = bn(x)  <span class="cm"># 对 batch 维度归一化</span>
+
+<span class="cm"># 在我们的 EdgeFrame 中使用了 LayerNorm：</span>
+<span class="cm"># self.edge_encoder = nn.Sequential(</span>
+<span class="cm">#     nn.Linear(8, hidden_dim),</span>
+<span class="cm">#     nn.LayerNorm(hidden_dim),  ← 这里</span>
+<span class="cm">#     nn.ReLU(),</span>
+<span class="cm">#     nn.Linear(hidden_dim, hidden_dim),</span>
+<span class="cm">#     nn.LayerNorm(hidden_dim),  ← 和这里</span>
+<span class="cm">#     nn.ReLU(),</span>
+<span class="cm"># )</span></code></pre>
+
+<h3>3.2.5 nn.Sequential — 快速搭建</h3>
+
+<pre><code><span class="cm"># Sequential 按顺序执行所有层，不需要写 forward</span>
+model = nn.<span class="fn">Sequential</span>(
+    nn.<span class="fn">Linear</span>(<span class="nu">16</span>, <span class="nu">64</span>),
+    nn.<span class="fn">ReLU</span>(),
+    nn.<span class="fn">Linear</span>(<span class="nu">64</span>, <span class="nu">64</span>),
+    nn.<span class="fn">ReLU</span>(),
+    nn.<span class="fn">Linear</span>(<span class="nu">64</span>, <span class="nu">2</span>),
+)
+
+x = torch.<span class="fn">randn</span>(<span class="nu">32</span>, <span class="nu">16</span>)
+output = model(x)  <span class="cm"># (32, 2)</span>
+
+<span class="cm"># 这就是我们 Actor 网络的核心结构！</span>
+<span class="cm"># 等价于手动写 forward：</span>
+<span class="cm"># x → Linear(16,64) → ReLU → Linear(64,64) → ReLU → Linear(64,2)</span></code></pre>
+
+<h3>3.2.6 nn.ModuleList — 动态层列表</h3>
+
+<pre><code><span class="cm"># ModuleList 让 PyTorch 知道这些层属于模型</span>
+<span class="cm"># 必须用 ModuleList 而不是普通 list！</span>
+
+<span class="kw">class</span> <span class="cl">DynamicNet</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, n_layers, hidden_dim):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.layers = nn.<span class="fn">ModuleList</span>([
+            nn.<span class="fn">Linear</span>(hidden_dim, hidden_dim)
+            <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_layers)
+        ])
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        <span class="kw">for</span> layer <span class="kw">in</span> self.layers:
+            x = F.<span class="fn">relu</span>(layer(x))
+        <span class="kw">return</span> x
+
+<span class="cm"># 在 DynamicalGNN 中的实际使用：</span>
+<span class="cm"># self.mp_layers = nn.ModuleList([</span>
+<span class="cm">#     PhysicsMessagePassing(hidden_dim, edge_hidden_dim)</span>
+<span class="cm">#     for _ in range(n_message_passing)  # 3 层消息传递</span>
+<span class="cm"># ])</span></code></pre>
+
+<div class="box warn">
+  <div class="box-title">ModuleList vs 普通 list</div>
+  <p>如果用普通 Python list 存储层，<code>model.parameters()</code> 不会包含这些层的参数！模型无法被正确优化。<strong>必须用 <code>nn.ModuleList</code>。</strong></p>
+</div>
+
+<!-- ==================== 3.3 参数管理 ==================== -->
+<h2 id="s3-3">3.3 参数管理</h2>
+
+<pre><code>model = nn.<span class="fn">Sequential</span>(
+    nn.<span class="fn">Linear</span>(<span class="nu">16</span>, <span class="nu">64</span>),
+    nn.<span class="fn">ReLU</span>(),
+    nn.<span class="fn">Linear</span>(<span class="nu">64</span>, <span class="nu">2</span>),
+)
+
+<span class="cm"># parameters() — 所有参数的迭代器</span>
+total = <span class="fn">sum</span>(p.<span class="fn">numel</span>() <span class="kw">for</span> p <span class="kw">in</span> model.<span class="fn">parameters</span>())
+<span class="fn">print</span>(<span class="st">f"总参数量: {total}"</span>)  <span class="cm"># 1088 + 130 = 1218</span>
+
+<span class="cm"># named_parameters() — 带名字的参数迭代器</span>
+<span class="kw">for</span> name, param <span class="kw">in</span> model.<span class="fn">named_parameters</span>():
+    <span class="fn">print</span>(<span class="st">f"{name:20s} shape={str(param.shape):15s} numel={param.numel()}"</span>)
+<span class="cm"># 0.weight              shape=torch.Size([64, 16]) numel=1024</span>
+<span class="cm"># 0.bias                shape=torch.Size([64])     numel=64</span>
+<span class="cm"># 2.weight              shape=torch.Size([2, 64])  numel=128</span>
+<span class="cm"># 2.bias                shape=torch.Size([2])      numel=2</span>
+
+<span class="cm"># state_dict() — 模型状态字典（参数名 → tensor）</span>
+state = model.<span class="fn">state_dict</span>()
+<span class="fn">print</span>(state.keys())
+<span class="cm"># odict_keys(['0.weight', '0.bias', '2.weight', '2.bias'])</span></code></pre>
+
+<!-- ==================== 3.4 模型保存和加载 ==================== -->
+<h2 id="s3-4">3.4 模型保存与加载</h2>
+
+<pre><code><span class="cm"># ===== 方法 1：保存整个模型（不推荐）=====</span>
+torch.<span class="fn">save</span>(model, <span class="st">'model.pth'</span>)
+model = torch.<span class="fn">load</span>(<span class="st">'model.pth'</span>)
+
+<span class="cm"># ===== 方法 2：只保存参数（推荐！）=====</span>
+<span class="cm"># 保存</span>
+torch.<span class="fn">save</span>(model.<span class="fn">state_dict</span>(), <span class="st">'model_weights.pth'</span>)
+
+<span class="cm"># 加载</span>
+model = <span class="fn">SimpleNet</span>(<span class="nu">16</span>, <span class="nu">64</span>, <span class="nu">2</span>)  <span class="cm"># 先创建相同结构的模型</span>
+model.<span class="fn">load_state_dict</span>(torch.<span class="fn">load</span>(<span class="st">'model_weights.pth'</span>))
+
+<span class="cm"># ===== 方法 3：保存完整训练状态（恢复训练）=====</span>
+checkpoint = {
+    <span class="st">'epoch'</span>: epoch,
+    <span class="st">'model_state'</span>: model.<span class="fn">state_dict</span>(),
+    <span class="st">'optimizer_state'</span>: optimizer.<span class="fn">state_dict</span>(),
+    <span class="st">'loss'</span>: loss,
+}
+torch.<span class="fn">save</span>(checkpoint, <span class="st">'checkpoint.pth'</span>)
+
+<span class="cm"># 恢复</span>
+ckpt = torch.<span class="fn">load</span>(<span class="st">'checkpoint.pth'</span>)
+model.<span class="fn">load_state_dict</span>(ckpt[<span class="st">'model_state'</span>])
+optimizer.<span class="fn">load_state_dict</span>(ckpt[<span class="st">'optimizer_state'</span>])
+
+<span class="cm"># SB3 的模型保存（我们项目中用的方式）：</span>
+<span class="cm"># model.save('./models/ppo/ppo_model')  ← 保存</span>
+<span class="cm"># model = PPO.load('./models/ppo/ppo_model')  ← 加载</span></code></pre>
+
+<!-- ================================================== -->
+<!--             第四章：核心数学公式                       -->
+<!-- ================================================== -->
+<h1 id="ch4">第四章 &nbsp; 核心数学公式（必须掌握）</h1>
+
+<p>这一章是整个教程的<strong>数学核心</strong>。掌握这些公式，你就能理解 PyTorch 内部在做什么。</p>
+
+<!-- ==================== 4.1 线性变换 ==================== -->
+<h2 id="s4-1">4.1 线性变换</h2>
+
+<div class="box thm">
+  <div class="box-title">线性变换公式</div>
+  <p>$$\mathbf{y} = \mathbf{W}\mathbf{x} + \mathbf{b}$$</p>
+  <p>其中：</p>
+  <ul>
+    <li>\(\mathbf{x} \in \mathbb{R}^n\) — 输入向量</li>
+    <li>\(\mathbf{W} \in \mathbb{R}^{m \times n}\) — 权重矩阵</li>
+    <li>\(\mathbf{b} \in \mathbb{R}^m\) — 偏置向量</li>
+    <li>\(\mathbf{y} \in \mathbb{R}^m\) — 输出向量</li>
+  </ul>
+</div>
+
+<div class="box thm">
+  <div class="box-title">线性层的梯度</div>
+  <p>设损失函数为 \(L\)，上游梯度为 \(\boldsymbol{\delta} = \frac{\partial L}{\partial \mathbf{y}}\)，则：</p>
+  <p>$$\frac{\partial L}{\partial \mathbf{W}} = \boldsymbol{\delta} \cdot \mathbf{x}^T \qquad \text{(权重梯度)}$$</p>
+  <p>$$\frac{\partial L}{\partial \mathbf{b}} = \boldsymbol{\delta} \qquad \text{(偏置梯度)}$$</p>
+  <p>$$\frac{\partial L}{\partial \mathbf{x}} = \mathbf{W}^T \cdot \boldsymbol{\delta} \qquad \text{(传到下一层的梯度)}$$</p>
+</div>
+
+<div class="box example">
+  <div class="box-title">具体数值验证</div>
+<pre><code><span class="cm"># 验证线性层梯度公式</span>
+x = torch.<span class="fn">tensor</span>([<span class="nu">1.0</span>, <span class="nu">2.0</span>], requires_grad=<span class="kw">True</span>)
+W = torch.<span class="fn">tensor</span>([[<span class="nu">3.0</span>, <span class="nu">4.0</span>], [<span class="nu">5.0</span>, <span class="nu">6.0</span>]], requires_grad=<span class="kw">True</span>)
+b = torch.<span class="fn">tensor</span>([<span class="nu">0.1</span>, <span class="nu">0.2</span>], requires_grad=<span class="kw">True</span>)
+
+y = W <span class="op">@</span> x + b       <span class="cm"># y = [3+8+0.1, 5+12+0.2] = [11.1, 17.2]</span>
+loss = y.<span class="fn">sum</span>()        <span class="cm"># δ = [1, 1]（因为 sum 的导数是全1）</span>
+loss.<span class="fn">backward</span>()
+
+<span class="cm"># 验证 ∂L/∂W = δ · x^T</span>
+delta = torch.<span class="fn">ones</span>(<span class="nu">2</span>)
+expected_W_grad = delta.<span class="fn">unsqueeze</span>(<span class="nu">1</span>) <span class="op">@</span> x.<span class="fn">unsqueeze</span>(<span class="nu">0</span>)
+<span class="fn">print</span>(torch.<span class="fn">allclose</span>(W.grad, expected_W_grad))  <span class="cm"># True ✓</span>
+
+<span class="cm"># 验证 ∂L/∂b = δ</span>
+<span class="fn">print</span>(torch.<span class="fn">allclose</span>(b.grad, delta))  <span class="cm"># True ✓</span>
+
+<span class="cm"># 验证 ∂L/∂x = W^T · δ</span>
+expected_x_grad = W.T <span class="op">@</span> delta
+<span class="fn">print</span>(torch.<span class="fn">allclose</span>(x.grad, expected_x_grad))  <span class="cm"># True ✓</span></code></pre>
+</div>
+
+<!-- ==================== 4.2 激活函数 ==================== -->
+<h2 id="s4-2">4.2 激活函数</h2>
+
+<h3>4.2.1 ReLU</h3>
+
+<div class="box thm">
+  <div class="box-title">ReLU (Rectified Linear Unit)</div>
+  <p>$$f(x) = \max(0, x) = \begin{cases} x & x > 0 \\ 0 & x \leq 0 \end{cases}$$</p>
+  <p>导数：</p>
+  <p>$$f'(x) = \begin{cases} 1 & x > 0 \\ 0 & x < 0 \end{cases}$$</p>
+  <p>优点：计算快、不会梯度消失（x>0时）。缺点："死神经元"问题（x<0时梯度永远为0）。</p>
+</div>
+
+<h3>4.2.2 Tanh</h3>
+
+<div class="box thm">
+  <div class="box-title">Tanh（双曲正切）</div>
+  <p>$$f(x) = \tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}$$</p>
+  <p>导数：</p>
+  <p>$$f'(x) = 1 - \tanh^2(x) = 1 - f(x)^2$$</p>
+  <p>输出范围 \((-1, 1)\)。在 Actor 网络的输出层用于将动作限制在归一化范围内。</p>
+</div>
+
+<h3>4.2.3 Sigmoid</h3>
+
+<div class="box thm">
+  <div class="box-title">Sigmoid</div>
+  <p>$$\sigma(x) = \frac{1}{1 + e^{-x}}$$</p>
+  <p>导数：</p>
+  <p>$$\sigma'(x) = \sigma(x)(1 - \sigma(x))$$</p>
+  <p>输出范围 \((0, 1)\)。常用于二分类概率输出。</p>
+</div>
+
+<h3>4.2.4 Softmax</h3>
+
+<div class="box thm">
+  <div class="box-title">Softmax — 概率分布输出</div>
+  <p>$$\text{softmax}(x_i) = \frac{e^{x_i}}{\sum_{j=1}^{K} e^{x_j}}$$</p>
+  <p>将 K 个任意实数转换为概率分布（所有输出非负且和为1）。用于离散动作空间的策略网络。</p>
+</div>
+
+<pre><code><span class="cm"># Softmax 示例</span>
+logits = torch.<span class="fn">tensor</span>([<span class="nu">2.0</span>, <span class="nu">1.0</span>, <span class="nu">0.1</span>])
+probs = F.<span class="fn">softmax</span>(logits, dim=<span class="nu">0</span>)
+<span class="fn">print</span>(probs)       <span class="cm"># tensor([0.659, 0.242, 0.099])</span>
+<span class="fn">print</span>(probs.<span class="fn">sum</span>()) <span class="cm"># tensor(1.) ← 和为1</span></code></pre>
+
+<!-- ==================== 4.3 损失函数 ==================== -->
+<h2 id="s4-3">4.3 损失函数</h2>
+
+<h3>4.3.1 MSE Loss — 均方误差</h3>
+
+<div class="box thm">
+  <div class="box-title">MSE Loss (Mean Squared Error)</div>
+  <p>$$L = \frac{1}{n}\sum_{i=1}^{n}(y_i - \hat{y}_i)^2$$</p>
+  <p>梯度：\(\frac{\partial L}{\partial \hat{y}_i} = \frac{2}{n}(\hat{y}_i - y_i)\)</p>
+  <p>用途：Critic 网络的价值预测损失。</p>
+</div>
+
+<pre><code><span class="cm"># MSE Loss</span>
+criterion = nn.<span class="fn">MSELoss</span>()
+predicted = torch.<span class="fn">tensor</span>([<span class="nu">2.5</span>, <span class="nu">0.0</span>, <span class="nu">2.1</span>])
+target = torch.<span class="fn">tensor</span>([<span class="nu">3.0</span>, <span class="nu">-0.5</span>, <span class="nu">2.0</span>])
+
+loss = criterion(predicted, target)
+<span class="fn">print</span>(loss)  <span class="cm"># tensor(0.0867) = ((0.5)² + (0.5)² + (0.1)²) / 3</span>
+
+<span class="cm"># 在 PPO 中用于价值函数损失：</span>
+<span class="cm"># value_loss = F.mse_loss(predicted_values, returns)</span></code></pre>
+
+<h3>4.3.2 Cross-Entropy Loss — 交叉熵</h3>
+
+<div class="box thm">
+  <div class="box-title">Cross-Entropy Loss</div>
+  <p>$$L = -\sum_{c=1}^{C} y_c \log(\hat{y}_c)$$</p>
+  <p>对于单标签分类（one-hot y），简化为：</p>
+  <p>$$L = -\log(\hat{y}_{c^*})$$</p>
+  <p>其中 \(c^*\) 是真实类别。用于离散动作空间的分类。</p>
+</div>
+
+<pre><code><span class="cm"># Cross-Entropy（输入是 logits，不是 probabilities！）</span>
+criterion = nn.<span class="fn">CrossEntropyLoss</span>()
+logits = torch.<span class="fn">tensor</span>([[<span class="nu">2.0</span>, <span class="nu">1.0</span>, <span class="nu">0.1</span>]])  <span class="cm"># (1, 3) 三个类别的 logit</span>
+target = torch.<span class="fn">tensor</span>([<span class="nu">0</span>])                    <span class="cm"># 真实类别是 0</span>
+
+loss = criterion(logits, target)
+<span class="cm"># = -log(softmax(2.0)) = -log(0.659) ≈ 0.417</span></code></pre>
+
+<h3>4.3.3 Huber Loss</h3>
+
+<div class="box thm">
+  <div class="box-title">Huber Loss — 平滑版 L1</div>
+  <p>$$L_\delta(a) = \begin{cases} \frac{1}{2}a^2 & |a| \leq \delta \\ \delta(|a| - \frac{1}{2}\delta) & |a| > \delta \end{cases}$$</p>
+  <p>当误差小时像 MSE（平滑），误差大时像 L1（对异常值鲁棒）。</p>
+</div>
+
+<pre><code>criterion = nn.<span class="fn">HuberLoss</span>(delta=<span class="nu">1.0</span>)
+loss = criterion(predicted, target)</code></pre>
+
+<h3>4.3.4 PPO Clip Loss</h3>
+
+<div class="box thm">
+  <div class="box-title">PPO-Clip 损失函数</div>
+  <p>$$L^{CLIP}(\theta) = -\mathbb{E}_t\left[\min\left(r_t(\theta) \hat{A}_t,\ \text{clip}(r_t(\theta), 1-\varepsilon, 1+\varepsilon) \hat{A}_t\right)\right]$$</p>
+  <p>其中：</p>
+  <ul>
+    <li>\(r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}\) — 新旧策略的概率比</li>
+    <li>\(\hat{A}_t\) — 优势函数估计（GAE）</li>
+    <li>\(\varepsilon = 0.2\) — 裁剪范围</li>
+  </ul>
+  <p>详细推导见 <a href="../PPO/index.html">PPO 教程</a>。</p>
+</div>
+
+<pre><code><span class="cm"># PPO Clip Loss 实现</span>
+<span class="kw">def</span> <span class="fn">ppo_clip_loss</span>(new_log_probs, old_log_probs, advantages, clip_eps=<span class="nu">0.2</span>):
+    <span class="st">"""
+    Args:
+        new_log_probs: (batch,) 新策略的 log π(a|s)
+        old_log_probs: (batch,) 旧策略的 log π(a|s)  [detached]
+        advantages:    (batch,) 优势函数 A(s,a)
+        clip_eps:      裁剪范围 ε
+    """</span>
+    <span class="cm"># 概率比 r = π_new / π_old = exp(log_new - log_old)</span>
+    ratio = torch.<span class="fn">exp</span>(new_log_probs - old_log_probs)  <span class="cm"># (batch,)</span>
+    
+    <span class="cm"># 裁剪后的比率</span>
+    clipped_ratio = torch.<span class="fn">clamp</span>(ratio, <span class="nu">1</span> - clip_eps, <span class="nu">1</span> + clip_eps)
+    
+    <span class="cm"># 取两者的较小值（悲观估计）</span>
+    loss = -torch.<span class="fn">min</span>(
+        ratio * advantages,
+        clipped_ratio * advantages
+    ).<span class="fn">mean</span>()
+    
+    <span class="kw">return</span> loss</code></pre>
+
+<!-- ==================== 4.4 优化器 ==================== -->
+<h2 id="s4-4">4.4 优化器</h2>
+
+<h3>4.4.1 SGD — 随机梯度下降</h3>
+
+<div class="box thm">
+  <div class="box-title">SGD 更新规则</div>
+  <p>$$\theta_{t+1} = \theta_t - \eta \cdot \nabla_\theta L(\theta_t)$$</p>
+  <p>其中 \(\eta\) 是学习率，\(\nabla_\theta L\) 是损失对参数的梯度。</p>
+</div>
+
+<pre><code>optimizer = torch.optim.<span class="fn">SGD</span>(model.<span class="fn">parameters</span>(), lr=<span class="nu">0.01</span>, momentum=<span class="nu">0.9</span>)</code></pre>
+
+<h3>4.4.2 Adam — 自适应学习率（我们用的）</h3>
+
+<div class="box thm">
+  <div class="box-title">Adam 优化器</div>
+  <p>Adam 维护一阶矩 (均值) 和二阶矩 (方差) 的指数移动平均：</p>
+  <p>$$m_t = \beta_1 m_{t-1} + (1 - \beta_1) g_t \qquad \text{(一阶矩估计)}$$</p>
+  <p>$$v_t = \beta_2 v_{t-1} + (1 - \beta_2) g_t^2 \qquad \text{(二阶矩估计)}$$</p>
+  <p>偏差修正：</p>
+  <p>$$\hat{m}_t = \frac{m_t}{1 - \beta_1^t}, \quad \hat{v}_t = \frac{v_t}{1 - \beta_2^t}$$</p>
+  <p>参数更新：</p>
+  <p>$$\theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t$$</p>
+  <p>默认：\(\beta_1 = 0.9\), \(\beta_2 = 0.999\), \(\epsilon = 10^{-8}\)</p>
+</div>
+
+<pre><code><span class="cm"># Adam — 我们 PPO 训练使用的优化器</span>
+optimizer = torch.optim.<span class="fn">Adam</span>(
+    model.<span class="fn">parameters</span>(),
+    lr=<span class="nu">3e-4</span>,           <span class="cm"># PPO 标准学习率</span>
+    betas=(<span class="nu">0.9</span>, <span class="nu">0.999</span>),  <span class="cm"># 矩估计的衰减率</span>
+    eps=<span class="nu">1e-8</span>,           <span class="cm"># 数值稳定性</span>
+    weight_decay=<span class="nu">0</span>,     <span class="cm"># L2 正则化（PPO 通常不用）</span>
+)
+
+<span class="cm"># 为什么 Adam 比 SGD 好？</span>
+<span class="cm"># 1. 自适应学习率：每个参数有自己的学习率</span>
+<span class="cm"># 2. 动量：利用历史梯度平滑更新</span>
+<span class="cm"># 3. 不需要仔细调 learning rate</span></code></pre>
+
+<h3>4.4.3 学习率调度</h3>
+
+<pre><code><span class="kw">from</span> torch.optim.lr_scheduler <span class="kw">import</span> StepLR, CosineAnnealingLR, LambdaLR
+
+<span class="cm"># StepLR: 每 step_size 个 epoch，lr *= gamma</span>
+scheduler = <span class="fn">StepLR</span>(optimizer, step_size=<span class="nu">30</span>, gamma=<span class="nu">0.1</span>)
+
+<span class="cm"># CosineAnnealing: 余弦退火（平滑衰减）</span>
+scheduler = <span class="fn">CosineAnnealingLR</span>(optimizer, T_max=<span class="nu">100</span>, eta_min=<span class="nu">1e-6</span>)
+
+<span class="cm"># Linear warmup + decay（PPO 常用模式）</span>
+<span class="kw">def</span> <span class="fn">lr_lambda</span>(step):
+    warmup_steps = <span class="nu">1000</span>
+    total_steps = <span class="nu">200000</span>
+    <span class="kw">if</span> step &lt; warmup_steps:
+        <span class="kw">return</span> step / warmup_steps  <span class="cm"># 线性升温</span>
+    <span class="kw">return</span> max(<span class="nu">0.0</span>, <span class="nu">1.0</span> - (step - warmup_steps) / (total_steps - warmup_steps))
+
+scheduler = <span class="fn">LambdaLR</span>(optimizer, lr_lambda=lr_lambda)
+
+<span class="cm"># 训练循环中使用</span>
+<span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(num_epochs):
+    train_one_epoch()
+    scheduler.<span class="fn">step</span>()  <span class="cm"># 每个 epoch 更新学习率</span></code></pre>
+
+<div class="box def">
+  <div class="box-title">SGD vs Adam vs AdamW 对比</div>
+  <table>
+    <tr><th>优化器</th><th>学习率</th><th>动量</th><th>自适应</th><th>适用场景</th></tr>
+    <tr><td>SGD</td><td>固定</td><td>可选</td><td>否</td><td>CV大模型微调</td></tr>
+    <tr><td>Adam</td><td>3e-4</td><td>内置</td><td>是</td><td>RL、NLP</td></tr>
+    <tr><td>AdamW</td><td>3e-4</td><td>内置</td><td>是</td><td>Transformer</td></tr>
+  </table>
+</div>
+
+<!-- ==================== 4.5 反向传播 ==================== -->
+<h2 id="s4-5">4.5 反向传播</h2>
+
+<h3>4.5.1 完整推导：从损失到每一层的梯度</h3>
+
+<p>考虑一个两层网络：</p>
+
+<p>$$\mathbf{z}_1 = \mathbf{W}_1\mathbf{x} + \mathbf{b}_1 \quad \rightarrow \quad \mathbf{a}_1 = \text{ReLU}(\mathbf{z}_1) \quad \rightarrow \quad \mathbf{z}_2 = \mathbf{W}_2\mathbf{a}_1 + \mathbf{b}_2 \quad \rightarrow \quad L = \frac{1}{2}\|\mathbf{z}_2 - \mathbf{y}\|^2$$</p>
+
+<div class="box thm">
+  <div class="box-title">反向传播推导</div>
+  <p><strong>第一步：</strong>输出层梯度</p>
+  <p>$$\boldsymbol{\delta}_2 = \frac{\partial L}{\partial \mathbf{z}_2} = \mathbf{z}_2 - \mathbf{y}$$</p>
+  <p><strong>第二步：</strong>第二层参数梯度</p>
+  <p>$$\frac{\partial L}{\partial \mathbf{W}_2} = \boldsymbol{\delta}_2 \cdot \mathbf{a}_1^T, \quad \frac{\partial L}{\partial \mathbf{b}_2} = \boldsymbol{\delta}_2$$</p>
+  <p><strong>第三步：</strong>传播到隐藏层（链式法则）</p>
+  <p>$$\boldsymbol{\delta}_1 = (\mathbf{W}_2^T \boldsymbol{\delta}_2) \odot \text{ReLU}'(\mathbf{z}_1)$$</p>
+  <p>其中 \(\odot\) 是逐元素乘法。</p>
+  <p><strong>第四步：</strong>第一层参数梯度</p>
+  <p>$$\frac{\partial L}{\partial \mathbf{W}_1} = \boldsymbol{\delta}_1 \cdot \mathbf{x}^T, \quad \frac{\partial L}{\partial \mathbf{b}_1} = \boldsymbol{\delta}_1$$</p>
+</div>
+
+<pre><code><span class="cm"># 手动实现反向传播（验证 autograd 的正确性）</span>
+torch.<span class="fn">manual_seed</span>(<span class="nu">42</span>)
+x = torch.<span class="fn">randn</span>(<span class="nu">2</span>)
+y_true = torch.<span class="fn">randn</span>(<span class="nu">1</span>)
+
+W1 = torch.<span class="fn">randn</span>(<span class="nu">3</span>, <span class="nu">2</span>, requires_grad=<span class="kw">True</span>)
+b1 = torch.<span class="fn">randn</span>(<span class="nu">3</span>, requires_grad=<span class="kw">True</span>)
+W2 = torch.<span class="fn">randn</span>(<span class="nu">1</span>, <span class="nu">3</span>, requires_grad=<span class="kw">True</span>)
+b2 = torch.<span class="fn">randn</span>(<span class="nu">1</span>, requires_grad=<span class="kw">True</span>)
+
+<span class="cm"># 前向传播</span>
+z1 = W1 <span class="op">@</span> x + b1
+a1 = torch.<span class="fn">relu</span>(z1)
+z2 = W2 <span class="op">@</span> a1 + b2
+loss = <span class="nu">0.5</span> * (z2 - y_true).<span class="fn">pow</span>(<span class="nu">2</span>).<span class="fn">sum</span>()
+
+<span class="cm"># autograd 反向传播</span>
+loss.<span class="fn">backward</span>()
+
+<span class="cm"># 手动反向传播</span>
+<span class="kw">with</span> torch.<span class="fn">no_grad</span>():
+    delta2 = z2.<span class="fn">detach</span>() - y_true
+    dW2_manual = delta2.<span class="fn">unsqueeze</span>(<span class="nu">1</span>) <span class="op">@</span> a1.<span class="fn">detach</span>().<span class="fn">unsqueeze</span>(<span class="nu">0</span>)
+    db2_manual = delta2
+    
+    delta1 = (W2.<span class="fn">detach</span>().T <span class="op">@</span> delta2) * (z1.<span class="fn">detach</span>() > <span class="nu">0</span>).<span class="fn">float</span>()
+    dW1_manual = delta1.<span class="fn">unsqueeze</span>(<span class="nu">1</span>) <span class="op">@</span> x.<span class="fn">unsqueeze</span>(<span class="nu">0</span>)
+    db1_manual = delta1
+
+<span class="cm"># 对比</span>
+<span class="fn">print</span>(<span class="st">"W2 梯度一致:"</span>, torch.<span class="fn">allclose</span>(W2.grad, dW2_manual, atol=<span class="nu">1e-6</span>))
+<span class="fn">print</span>(<span class="st">"W1 梯度一致:"</span>, torch.<span class="fn">allclose</span>(W1.grad, dW1_manual, atol=<span class="nu">1e-6</span>))</code></pre>
+
+<h3>4.5.2 梯度消失和爆炸</h3>
+
+<div class="box warn">
+  <div class="box-title">梯度消失 (Vanishing Gradient)</div>
+  <p><strong>原因</strong>：当使用 Sigmoid/Tanh 激活时，导数最大值分别为 0.25 和 1。经过多层连乘后，梯度指数衰减。</p>
+  <p>例如 10 层 Sigmoid 网络：\(0.25^{10} = 9.5 \times 10^{-7}\) — 梯度几乎为零。</p>
+  <p><strong>解决方案</strong>：</p>
+  <ul>
+    <li>使用 ReLU 激活（x > 0 时梯度 = 1）</li>
+    <li>使用 LayerNorm / BatchNorm</li>
+    <li>使用残差连接 (ResNet)</li>
+    <li>合理的权重初始化 (Xavier, Kaiming)</li>
+  </ul>
+</div>
+
+<div class="box warn">
+  <div class="box-title">梯度爆炸 (Exploding Gradient)</div>
+  <p><strong>原因</strong>：权重矩阵的最大奇异值 > 1 时，多层连乘导致梯度指数增长。</p>
+  <p><strong>解决方案</strong>：梯度裁剪 (Gradient Clipping)</p>
+</div>
+
+<h3>4.5.3 梯度裁剪</h3>
+
+<pre><code><span class="cm"># 梯度裁剪 — 防止梯度爆炸</span>
+<span class="cm"># 在 backward() 之后、step() 之前</span>
+
+<span class="cm"># 方法 1: 范数裁剪（更常用）</span>
+torch.nn.utils.<span class="fn">clip_grad_norm_</span>(
+    model.<span class="fn">parameters</span>(),
+    max_norm=<span class="nu">0.5</span>,     <span class="cm"># 我们 PPO 项目用的值</span>
+)
+<span class="cm"># 如果所有参数梯度的 L2 范数 > 0.5，等比例缩小</span>
+
+<span class="cm"># 方法 2: 值裁剪</span>
+torch.nn.utils.<span class="fn">clip_grad_value_</span>(
+    model.<span class="fn">parameters</span>(),
+    clip_value=<span class="nu">1.0</span>,   <span class="cm"># 每个梯度元素限制在 [-1, 1]</span>
+)
+
+<span class="cm"># 完整训练步骤</span>
+optimizer.<span class="fn">zero_grad</span>()
+loss.<span class="fn">backward</span>()
+torch.nn.utils.<span class="fn">clip_grad_norm_</span>(model.<span class="fn">parameters</span>(), <span class="nu">0.5</span>)  <span class="cm"># ← 在这里</span>
+optimizer.<span class="fn">step</span>()</code></pre>
+
+<!-- ==================== 4.6 概率分布 ==================== -->
+<h2 id="s4-6">4.6 概率分布</h2>
+
+<h3>4.6.1 Normal 分布 — 连续动作空间</h3>
+
+<div class="box thm">
+  <div class="box-title">正态分布 (Gaussian)</div>
+  <p>$$\pi(a|s) = \mathcal{N}(\mu_\theta(s),\ \sigma_\theta^2(s))$$</p>
+  <p>概率密度函数：</p>
+  <p>$$p(a) = \frac{1}{\sigma\sqrt{2\pi}} \exp\left(-\frac{(a - \mu)^2}{2\sigma^2}\right)$$</p>
+  <p>对数概率：</p>
+  <p>$$\log p(a) = -\frac{(a-\mu)^2}{2\sigma^2} - \log \sigma - \frac{1}{2}\log(2\pi)$$</p>
+  <p>熵：</p>
+  <p>$$H = \frac{1}{2}\log(2\pi e \sigma^2) = \frac{1}{2}(1 + \log(2\pi) + 2\log\sigma)$$</p>
+</div>
+
+<pre><code><span class="kw">from</span> torch.distributions <span class="kw">import</span> Normal
+
+<span class="cm"># 策略网络输出均值和标准差</span>
+mu = torch.<span class="fn">tensor</span>([<span class="nu">0.5</span>, <span class="nu">-0.3</span>])    <span class="cm"># Actor 的输出（2维动作）</span>
+sigma = torch.<span class="fn">tensor</span>([<span class="nu">0.1</span>, <span class="nu">0.2</span>])  <span class="cm"># 可学习的标准差</span>
+
+<span class="cm"># 创建分布</span>
+dist = <span class="fn">Normal</span>(mu, sigma)
+
+<span class="cm"># 采样动作</span>
+action = dist.<span class="fn">sample</span>()              <span class="cm"># 普通采样（不可微）</span>
+action = dist.<span class="fn">rsample</span>()             <span class="cm"># 重参数化采样（可微！用于梯度计算）</span>
+
+<span class="cm"># 计算 log 概率</span>
+log_prob = dist.<span class="fn">log_prob</span>(action)    <span class="cm"># (2,) — 每个维度的 log_prob</span>
+total_log_prob = log_prob.<span class="fn">sum</span>()      <span class="cm"># 标量 — 联合概率</span>
+
+<span class="cm"># 计算熵（用于熵正则化）</span>
+entropy = dist.<span class="fn">entropy</span>()            <span class="cm"># (2,)</span>
+total_entropy = entropy.<span class="fn">sum</span>()        <span class="cm"># 标量</span></code></pre>
+
+<h3>4.6.2 Categorical 分布 — 离散动作空间</h3>
+
+<pre><code><span class="kw">from</span> torch.distributions <span class="kw">import</span> Categorical
+
+<span class="cm"># 离散动作的概率（如上下左右4个方向）</span>
+logits = torch.<span class="fn">tensor</span>([<span class="nu">2.0</span>, <span class="nu">1.0</span>, <span class="nu">0.5</span>, <span class="nu">0.1</span>])
+
+dist = <span class="fn">Categorical</span>(logits=logits)   <span class="cm"># 自动 softmax</span>
+action = dist.<span class="fn">sample</span>()               <span class="cm"># 返回动作索引 (0/1/2/3)</span>
+log_prob = dist.<span class="fn">log_prob</span>(action)     <span class="cm"># 该动作的 log 概率</span>
+entropy = dist.<span class="fn">entropy</span>()             <span class="cm"># 熵</span></code></pre>
+
+<h3>4.6.3 重参数化技巧 (Reparameterization Trick)</h3>
+
+<div class="box def">
+  <div class="box-title">为什么需要重参数化？</div>
+  <p>从 \(\mathcal{N}(\mu, \sigma^2)\) 采样的操作本身<strong>不可微</strong>（因为随机性）。但我们需要计算 \(\frac{\partial}{\partial \mu}\) 和 \(\frac{\partial}{\partial \sigma}\)。</p>
+  <p>重参数化技巧把采样写成确定性函数 + 外部噪声：</p>
+  <p>$$a = \mu + \sigma \cdot \epsilon, \quad \epsilon \sim \mathcal{N}(0, 1)$$</p>
+  <p>这样梯度可以通过 \(\mu\) 和 \(\sigma\) 反向传播，\(\epsilon\) 是常数。</p>
+  <p><code>dist.rsample()</code> 就是用这个技巧实现的。</p>
+</div>
+
+<pre><code><span class="cm"># rsample vs sample</span>
+mu = torch.<span class="fn">tensor</span>([<span class="nu">0.0</span>], requires_grad=<span class="kw">True</span>)
+sigma = torch.<span class="fn">tensor</span>([<span class="nu">1.0</span>], requires_grad=<span class="kw">True</span>)
+dist = <span class="fn">Normal</span>(mu, sigma)
+
+<span class="cm"># sample() — 不能反向传播到 mu/sigma</span>
+a1 = dist.<span class="fn">sample</span>()
+<span class="cm"># a1.backward()  ← 会报错！</span>
+
+<span class="cm"># rsample() — 可以反向传播</span>
+a2 = dist.<span class="fn">rsample</span>()     <span class="cm"># a2 = mu + sigma * ε</span>
+a2.<span class="fn">backward</span>()
+<span class="fn">print</span>(mu.grad)          <span class="cm"># tensor([1.]) ← ∂a/∂μ = 1 ✓</span></code></pre>
+
+<!-- ================================================== -->
+<!--              第五章：项目实战                         -->
+<!-- ================================================== -->
+<h1 id="ch5">第五章 &nbsp; 在我们项目中的应用</h1>
+
+<p>本章将 PyTorch 知识应用到我们的 PushBox 物理感知强化学习项目中。所有代码都来自项目的实际文件。</p>
+
+<!-- ==================== 5.1 Actor ==================== -->
+<h2 id="s5-1">5.1 策略网络 (Actor)</h2>
+
+<div class="flow">
+  <div class="flow-box">obs<br><span class="shape">(batch, 16)</span></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Linear(16, 64)</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box highlight">ReLU</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Linear(64, 64)</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box highlight">ReLU</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Linear(64, 2)</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box highlight">Tanh</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">action<br><span class="shape">(batch, 2)</span></div>
+</div>
+
+<pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">from</span> torch.distributions <span class="kw">import</span> Normal
+
+<span class="kw">class</span> <span class="cl">ActorNetwork</span>(nn.Module):
+    <span class="st">"""
+    策略网络 (Actor)
+    
+    输入: obs (batch, 16) — 观察向量
+        [box_pos(3), box_quat(4), box_vel(3), gripper_pos(3), goal_pos(3)]
+    
+    输出: action (batch, 2) — 连续动作 (force_x, force_y)
+          范围 [-10, 10] N
+    """</span>
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, obs_dim=<span class="nu">16</span>, action_dim=<span class="nu">2</span>, hidden_dim=<span class="nu">64</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        
+        <span class="cm"># ========== 网络结构 ==========</span>
+        <span class="cm"># 共享特征提取器</span>
+        self.feature_net = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">Linear</span>(obs_dim, hidden_dim),   <span class="cm"># 16 → 64, 参数: 16*64+64 = 1088</span>
+            nn.<span class="fn">ReLU</span>(),                         <span class="cm"># max(0, x)</span>
+            nn.<span class="fn">Linear</span>(hidden_dim, hidden_dim), <span class="cm"># 64 → 64, 参数: 64*64+64 = 4160</span>
+            nn.<span class="fn">ReLU</span>(),                         <span class="cm"># max(0, x)</span>
+        )
+        
+        <span class="cm"># 均值输出头</span>
+        self.mean_head = nn.<span class="fn">Linear</span>(hidden_dim, action_dim)  <span class="cm"># 64 → 2, 参数: 64*2+2 = 130</span>
+        
+        <span class="cm"># 可学习的 log 标准差</span>
+        self.log_std = nn.<span class="fn">Parameter</span>(torch.<span class="fn">zeros</span>(action_dim))  <span class="cm"># 2 个参数</span>
+        
+        <span class="cm"># 动作范围缩放</span>
+        self.action_scale = <span class="nu">10.0</span>  <span class="cm"># Tanh 输出 [-1,1] × 10 = [-10, 10]</span>
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(self, obs):
+        <span class="st">"""
+        前向传播
+        
+        Args:
+            obs: (batch, 16) 观察向量
+            
+        Returns:
+            action_mean: (batch, 2) 动作均值
+            action_std:  (batch, 2) 动作标准差
+        """</span>
+        <span class="cm"># 特征提取</span>
+        features = self.feature_net(obs)    <span class="cm"># (batch, 16) → (batch, 64)</span>
+        
+        <span class="cm"># 输出均值（Tanh 限制到 [-1, 1]，再乘以缩放因子）</span>
+        action_mean = torch.<span class="fn">tanh</span>(self.mean_head(features)) * self.action_scale
+        <span class="cm"># (batch, 64) → Linear → (batch, 2) → Tanh → [-1,1] → × 10 → [-10, 10]</span>
+        
+        <span class="cm"># 标准差（从 log_std 参数中获取，保证为正）</span>
+        action_std = self.log_std.<span class="fn">exp</span>().<span class="fn">expand_as</span>(action_mean)
+        <span class="cm"># exp(log_std) 保证 std > 0</span>
+        
+        <span class="kw">return</span> action_mean, action_std
+    
+    <span class="kw">def</span> <span class="fn">get_action</span>(self, obs):
+        <span class="st">"""采样动作并返回 log_prob"""</span>
+        mean, std = self.<span class="fn">forward</span>(obs)
+        dist = <span class="fn">Normal</span>(mean, std)
+        
+        action = dist.<span class="fn">rsample</span>()                <span class="cm"># 重参数化采样</span>
+        log_prob = dist.<span class="fn">log_prob</span>(action).<span class="fn">sum</span>(-<span class="nu">1</span>)  <span class="cm"># (batch,)</span>
+        entropy = dist.<span class="fn">entropy</span>().<span class="fn">sum</span>(-<span class="nu">1</span>)          <span class="cm"># (batch,)</span>
+        
+        <span class="kw">return</span> action, log_prob, entropy
+
+<span class="cm"># 使用示例</span>
+actor = <span class="fn">ActorNetwork</span>()
+obs = torch.<span class="fn">randn</span>(<span class="nu">32</span>, <span class="nu">16</span>)   <span class="cm"># batch=32</span>
+action, log_prob, entropy = actor.<span class="fn">get_action</span>(obs)
+
+<span class="fn">print</span>(<span class="st">f"action shape: {action.shape}"</span>)     <span class="cm"># (32, 2)</span>
+<span class="fn">print</span>(<span class="st">f"log_prob shape: {log_prob.shape}"</span>) <span class="cm"># (32,)</span>
+<span class="fn">print</span>(<span class="st">f"action range: [{action.min():.1f}, {action.max():.1f}]"</span>)
+<span class="fn">print</span>(<span class="st">f"总参数量: {sum(p.numel() for p in actor.parameters())}"</span>)  <span class="cm"># 5380</span></code></pre>
+
+<!-- ==================== 5.2 Critic ==================== -->
+<h2 id="s5-2">5.2 价值网络 (Critic)</h2>
+
+<div class="flow">
+  <div class="flow-box">obs<br><span class="shape">(batch, 16)</span></div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Linear(16, 64)</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box highlight">ReLU</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Linear(64, 64)</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box highlight">ReLU</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Linear(64, 1)</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">value<br><span class="shape">(batch, 1)</span></div>
+</div>
+
+<pre><code><span class="kw">class</span> <span class="cl">CriticNetwork</span>(nn.Module):
+    <span class="st">"""
+    价值网络 (Critic)
+    
+    输入: obs (batch, 16)
+    输出: value (batch, 1) — 状态价值 V(s) 的估计
+    
+    注意：输出层没有激活函数！价值可以是任意实数。
+    """</span>
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, obs_dim=<span class="nu">16</span>, hidden_dim=<span class="nu">64</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        
+        self.value_net = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">Linear</span>(obs_dim, hidden_dim),     <span class="cm"># 16 → 64</span>
+            nn.<span class="fn">ReLU</span>(),
+            nn.<span class="fn">Linear</span>(hidden_dim, hidden_dim),   <span class="cm"># 64 → 64</span>
+            nn.<span class="fn">ReLU</span>(),
+            nn.<span class="fn">Linear</span>(hidden_dim, <span class="nu">1</span>),            <span class="cm"># 64 → 1（无激活！）</span>
+        )
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(self, obs):
+        <span class="st">"""
+        Args:
+            obs: (batch, 16)
+        Returns:
+            value: (batch, 1) — V(s) 估计
+        """</span>
+        <span class="kw">return</span> self.value_net(obs)
+
+<span class="cm"># 使用</span>
+critic = <span class="fn">CriticNetwork</span>()
+value = critic(obs)    <span class="cm"># (32, 1)</span>
+<span class="fn">print</span>(value.shape)     <span class="cm"># torch.Size([32, 1])</span>
+<span class="fn">print</span>(<span class="st">f"参数量: {sum(p.numel() for p in critic.parameters())}"</span>)  <span class="cm"># 5313</span></code></pre>
+
+<!-- ==================== 5.3 特征提取器 ==================== -->
+<h2 id="s5-3">5.3 自定义特征提取器 (BaseFeaturesExtractor)</h2>
+
+<div class="box def">
+  <div class="box-title">SB3 为什么需要特征提取器？</div>
+  <p>Stable-Baselines3 的 MLP 策略默认用自己的全连接网络处理观察。但如果你想自定义网络结构（比如加入物理先验），需要写一个 <code>BaseFeaturesExtractor</code>。它接收原始观察，输出固定维度的特征向量，然后 SB3 的策略/价值头接在后面。</p>
+</div>
+
+<pre><code><span class="kw">from</span> stable_baselines3.common.torch_layers <span class="kw">import</span> BaseFeaturesExtractor
+<span class="kw">import</span> gymnasium <span class="kw">as</span> gym
+
+<span class="kw">class</span> <span class="cl">PhysRobotFeaturesExtractor</span>(BaseFeaturesExtractor):
+    <span class="st">"""
+    物理感知特征提取器
+    
+    将原始 obs 分解为物理量，分别编码后拼接：
+    - 位置特征: box_pos, gripper_pos, goal_pos
+    - 动力学特征: box_vel, box_quat
+    """</span>
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, observation_space: gym.spaces.Box, features_dim: <span class="bi">int</span> = <span class="nu">64</span>):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(observation_space, features_dim)
+        
+        obs_dim = observation_space.shape[<span class="nu">0</span>]  <span class="cm"># 16</span>
+        
+        <span class="cm"># 位置编码器：处理空间位置信息</span>
+        self.pos_encoder = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">Linear</span>(<span class="nu">9</span>, <span class="nu">32</span>),   <span class="cm"># 3 positions × 3 = 9</span>
+            nn.<span class="fn">ReLU</span>(),
+            nn.<span class="fn">Linear</span>(<span class="nu">32</span>, <span class="nu">32</span>),
+            nn.<span class="fn">ReLU</span>(),
+        )
+        
+        <span class="cm"># 动力学编码器：处理速度和姿态</span>
+        self.dyn_encoder = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">Linear</span>(<span class="nu">7</span>, <span class="nu">32</span>),   <span class="cm"># quat(4) + vel(3) = 7</span>
+            nn.<span class="fn">ReLU</span>(),
+            nn.<span class="fn">Linear</span>(<span class="nu">32</span>, <span class="nu">32</span>),
+            nn.<span class="fn">ReLU</span>(),
+        )
+        
+        <span class="cm"># 融合层</span>
+        self.fusion = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">Linear</span>(<span class="nu">64</span>, features_dim),  <span class="cm"># 32 + 32 = 64 → features_dim</span>
+            nn.<span class="fn">ReLU</span>(),
+        )
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(self, observations: torch.Tensor) -> torch.Tensor:
+        <span class="st">"""
+        Args:
+            observations: (batch, 16) 原始观察
+                [box_pos(3) | box_quat(4) | box_vel(3) | gripper_pos(3) | goal_pos(3)]
+        
+        Returns:
+            features: (batch, features_dim) 提取的特征
+        """</span>
+        <span class="cm"># 分解观察向量</span>
+        box_pos = observations[:, <span class="nu">0</span>:<span class="nu">3</span>]      <span class="cm"># (batch, 3)</span>
+        box_quat = observations[:, <span class="nu">3</span>:<span class="nu">7</span>]     <span class="cm"># (batch, 4)</span>
+        box_vel = observations[:, <span class="nu">7</span>:<span class="nu">10</span>]     <span class="cm"># (batch, 3)</span>
+        gripper_pos = observations[:, <span class="nu">10</span>:<span class="nu">13</span>] <span class="cm"># (batch, 3)</span>
+        goal_pos = observations[:, <span class="nu">13</span>:<span class="nu">16</span>]   <span class="cm"># (batch, 3)</span>
+        
+        <span class="cm"># 编码位置特征</span>
+        pos_features = torch.<span class="fn">cat</span>([box_pos, gripper_pos, goal_pos], dim=-<span class="nu">1</span>)  <span class="cm"># (batch, 9)</span>
+        pos_encoded = self.pos_encoder(pos_features)  <span class="cm"># (batch, 32)</span>
+        
+        <span class="cm"># 编码动力学特征</span>
+        dyn_features = torch.<span class="fn">cat</span>([box_quat, box_vel], dim=-<span class="nu">1</span>)  <span class="cm"># (batch, 7)</span>
+        dyn_encoded = self.dyn_encoder(dyn_features)  <span class="cm"># (batch, 32)</span>
+        
+        <span class="cm"># 融合</span>
+        combined = torch.<span class="fn">cat</span>([pos_encoded, dyn_encoded], dim=-<span class="nu">1</span>)  <span class="cm"># (batch, 64)</span>
+        features = self.fusion(combined)  <span class="cm"># (batch, features_dim)</span>
+        
+        <span class="kw">return</span> features
+
+<span class="cm"># 在 SB3 中使用自定义特征提取器</span>
+<span class="cm"># policy_kwargs = dict(</span>
+<span class="cm">#     features_extractor_class=PhysRobotFeaturesExtractor,</span>
+<span class="cm">#     features_extractor_kwargs=dict(features_dim=64),</span>
+<span class="cm"># )</span>
+<span class="cm"># model = PPO("MlpPolicy", env, policy_kwargs=policy_kwargs)</span></code></pre>
+
+<!-- ==================== 5.4 图网络 ==================== -->
+<h2 id="s5-4">5.4 图网络中的 PyTorch</h2>
+
+<div class="box def">
+  <div class="box-title">图神经网络 (GNN) 在我们项目中的角色</div>
+  <p>我们的 DynamicalGNN 将物理系统建模为图：节点是物理实体（box、gripper），边表示它们之间的相互作用。GNN 通过消息传递学习物理动力学。</p>
+</div>
+
+<h3>5.4.1 torch_geometric 的 Data 和 Batch</h3>
+
+<pre><code><span class="kw">from</span> torch_geometric.data <span class="kw">import</span> Data, Batch
+
+<span class="cm"># 单个图的数据结构</span>
+graph = <span class="fn">Data</span>(
+    x=torch.<span class="fn">randn</span>(<span class="nu">4</span>, <span class="nu">6</span>),          <span class="cm"># 节点特征 (4 nodes, 6 features)</span>
+    edge_index=torch.<span class="fn">tensor</span>([      <span class="cm"># 边连接 (2, E)</span>
+        [<span class="nu">0</span>, <span class="nu">1</span>, <span class="nu">2</span>, <span class="nu">3</span>, <span class="nu">0</span>, <span class="nu">1</span>],        <span class="cm"># 源节点</span>
+        [<span class="nu">1</span>, <span class="nu">0</span>, <span class="nu">3</span>, <span class="nu">2</span>, <span class="nu">2</span>, <span class="nu">3</span>],        <span class="cm"># 目标节点</span>
+    ]),
+    edge_attr=torch.<span class="fn">randn</span>(<span class="nu">6</span>, <span class="nu">8</span>),   <span class="cm"># 边特征 (6 edges, 8 features)</span>
+)
+
+<span class="fn">print</span>(graph.num_nodes)    <span class="cm"># 4</span>
+<span class="fn">print</span>(graph.num_edges)    <span class="cm"># 6</span>
+
+<span class="cm"># 批处理多个图</span>
+graphs = [<span class="fn">Data</span>(x=torch.<span class="fn">randn</span>(n, <span class="nu">6</span>), 
+               edge_index=torch.<span class="fn">randint</span>(<span class="nu">0</span>, n, (<span class="nu">2</span>, n*<span class="nu">2</span>)))
+          <span class="kw">for</span> n <span class="kw">in</span> [<span class="nu">3</span>, <span class="nu">4</span>, <span class="nu">5</span>]]
+
+batch = Batch.<span class="fn">from_data_list</span>(graphs)
+<span class="fn">print</span>(batch.x.shape)        <span class="cm"># (12, 6) — 3+4+5=12 个节点</span>
+<span class="fn">print</span>(batch.batch)          <span class="cm"># tensor([0,0,0, 1,1,1,1, 2,2,2,2,2]) — 图归属</span></code></pre>
+
+<h3>5.4.2 MessagePassing 基类</h3>
+
+<pre><code><span class="kw">from</span> torch_geometric.nn <span class="kw">import</span> MessagePassing
+
+<span class="kw">class</span> <span class="cl">PhysicsMessagePassing</span>(MessagePassing):
+    <span class="st">"""
+    物理约束的消息传递
+    
+    来自我们的 dynamical_gnn.py：
+    Message: m_ij = φ(e_ij, h_i, h_j)
+    Update:  h_i' = ψ(h_i, Σ_j m_ij)
+    """</span>
+    
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, hidden_dim, edge_dim):
+        <span class="fn">super</span>().<span class="fn">__init__</span>(aggr=<span class="st">'add'</span>)  <span class="cm"># 求和聚合（保持可加性物理量）</span>
+        
+        <span class="cm"># 消息网络 φ</span>
+        self.message_net = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">Linear</span>(edge_dim + <span class="nu">2</span> * hidden_dim, hidden_dim),
+            nn.<span class="fn">LayerNorm</span>(hidden_dim),
+            nn.<span class="fn">ReLU</span>(),
+            nn.<span class="fn">Linear</span>(hidden_dim, hidden_dim),
+        )
+        
+        <span class="cm"># 更新网络 ψ（带残差连接）</span>
+        self.update_net = nn.<span class="fn">Sequential</span>(
+            nn.<span class="fn">Linear</span>(<span class="nu">2</span> * hidden_dim, hidden_dim),
+            nn.<span class="fn">LayerNorm</span>(hidden_dim),
+            nn.<span class="fn">ReLU</span>(),
+            nn.<span class="fn">Linear</span>(hidden_dim, hidden_dim),
+        )
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x, edge_index, edge_attr):
+        <span class="cm"># propagate 会自动调用 message → aggregate → update</span>
+        <span class="kw">return</span> self.<span class="fn">propagate</span>(edge_index, x=x, edge_attr=edge_attr)
+    
+    <span class="kw">def</span> <span class="fn">message</span>(self, x_i, x_j, edge_attr):
+        <span class="st">"""
+        构造消息 m_ij
+        
+        x_i: 目标节点特征 (E, hidden)  — 自动索引
+        x_j: 源节点特征   (E, hidden)  — 自动索引
+        edge_attr: 边特征  (E, edge_dim)
+        """</span>
+        msg_input = torch.<span class="fn">cat</span>([edge_attr, x_i, x_j], dim=-<span class="nu">1</span>)
+        <span class="kw">return</span> self.message_net(msg_input)  <span class="cm"># (E, hidden)</span>
+    
+    <span class="kw">def</span> <span class="fn">update</span>(self, aggr_out, x):
+        <span class="st">"""
+        更新节点特征
+        
+        aggr_out: 聚合后的消息 Σ_j m_ij  (N, hidden)
+        x: 原始节点特征 (N, hidden)
+        """</span>
+        update_input = torch.<span class="fn">cat</span>([x, aggr_out], dim=-<span class="nu">1</span>)
+        <span class="kw">return</span> self.update_net(update_input) + x  <span class="cm"># 残差连接！</span></code></pre>
+
+<h3>5.4.3 scatter_add 聚合操作</h3>
+
+<pre><code><span class="kw">from</span> torch_geometric.utils <span class="kw">import</span> scatter
+
+<span class="cm"># scatter_add: 将消息按目标节点索引聚合</span>
+messages = torch.<span class="fn">randn</span>(<span class="nu">12</span>, <span class="nu">64</span>)    <span class="cm"># 12 条消息</span>
+target_idx = torch.<span class="fn">tensor</span>([<span class="nu">0</span>,<span class="nu">0</span>,<span class="nu">0</span>, <span class="nu">1</span>,<span class="nu">1</span>, <span class="nu">2</span>,<span class="nu">2</span>,<span class="nu">2</span>,<span class="nu">2</span>, <span class="nu">3</span>,<span class="nu">3</span>,<span class="nu">3</span>])  <span class="cm"># 4 个目标节点</span>
+
+<span class="cm"># 将消息按目标节点求和</span>
+aggregated = <span class="fn">scatter</span>(messages, target_idx, dim=<span class="nu">0</span>, reduce=<span class="st">'sum'</span>)
+<span class="fn">print</span>(aggregated.shape)  <span class="cm"># (4, 64) — 4 个节点的聚合消息</span>
+
+<span class="cm"># 等价于：</span>
+<span class="cm"># aggregated[i] = sum(messages[j] for j where target_idx[j] == i)</span></code></pre>
+
+<!-- ==================== 5.5 训练循环 ==================== -->
+<h2 id="s5-5">5.5 手写训练循环（完整 PPO）</h2>
+
+<div class="box example">
+  <div class="box-title">完整的 PPO 训练循环（不用 SB3）</div>
+  <p>下面展示完整的手写 PPO 训练循环，每一步都标注了 tensor shape 变化。</p>
+</div>
+
+<pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.nn.functional <span class="kw">as</span> F
+<span class="kw">from</span> torch.distributions <span class="kw">import</span> Normal
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># ========== 超参数 ==========</span>
+GAMMA = <span class="nu">0.99</span>          <span class="cm"># 折扣因子</span>
+GAE_LAMBDA = <span class="nu">0.95</span>     <span class="cm"># GAE λ</span>
+CLIP_EPS = <span class="nu">0.2</span>        <span class="cm"># PPO 裁剪范围</span>
+LR = <span class="nu">3e-4</span>             <span class="cm"># 学习率</span>
+N_STEPS = <span class="nu">2048</span>        <span class="cm"># 每次收集的步数</span>
+BATCH_SIZE = <span class="nu">64</span>       <span class="cm"># mini-batch 大小</span>
+N_EPOCHS = <span class="nu">10</span>         <span class="cm"># 每次更新的 epoch 数</span>
+VF_COEF = <span class="nu">0.5</span>        <span class="cm"># 价值函数损失系数</span>
+ENT_COEF = <span class="nu">0.0</span>       <span class="cm"># 熵正则化系数</span>
+MAX_GRAD_NORM = <span class="nu">0.5</span>  <span class="cm"># 梯度裁剪</span>
+
+<span class="cm"># ========== 创建网络和优化器 ==========</span>
+actor = <span class="fn">ActorNetwork</span>(obs_dim=<span class="nu">16</span>, action_dim=<span class="nu">2</span>)
+critic = <span class="fn">CriticNetwork</span>(obs_dim=<span class="nu">16</span>)
+optimizer = torch.optim.<span class="fn">Adam</span>(
+    <span class="fn">list</span>(actor.<span class="fn">parameters</span>()) + <span class="fn">list</span>(critic.<span class="fn">parameters</span>()),
+    lr=LR
+)
+
+<span class="cm"># ========== 第一步：数据收集 (Rollout) ==========</span>
+<span class="kw">def</span> <span class="fn">collect_rollout</span>(env, actor, critic, n_steps):
+    <span class="st">"""收集 n_steps 步的经验数据"""</span>
+    
+    <span class="cm"># 存储缓冲区</span>
+    obs_buf      = torch.<span class="fn">zeros</span>(n_steps, <span class="nu">16</span>)    <span class="cm"># (T, 16)</span>
+    actions_buf  = torch.<span class="fn">zeros</span>(n_steps, <span class="nu">2</span>)     <span class="cm"># (T, 2)</span>
+    rewards_buf  = torch.<span class="fn">zeros</span>(n_steps)        <span class="cm"># (T,)</span>
+    dones_buf    = torch.<span class="fn">zeros</span>(n_steps)        <span class="cm"># (T,)</span>
+    values_buf   = torch.<span class="fn">zeros</span>(n_steps)        <span class="cm"># (T,)</span>
+    log_probs_buf = torch.<span class="fn">zeros</span>(n_steps)       <span class="cm"># (T,)</span>
+    
+    obs = torch.<span class="fn">tensor</span>(env.<span class="fn">reset</span>()[<span class="nu">0</span>], dtype=torch.float32)  <span class="cm"># (16,)</span>
+    
+    <span class="kw">with</span> torch.<span class="fn">no_grad</span>():  <span class="cm"># 数据收集不需要梯度！</span>
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">range</span>(n_steps):
+            <span class="cm"># Actor 选择动作</span>
+            mean, std = actor(obs.<span class="fn">unsqueeze</span>(<span class="nu">0</span>))  <span class="cm"># (1, 16) → mean: (1, 2), std: (1, 2)</span>
+            dist = <span class="fn">Normal</span>(mean, std)
+            action = dist.<span class="fn">sample</span>()              <span class="cm"># (1, 2)</span>
+            log_prob = dist.<span class="fn">log_prob</span>(action).<span class="fn">sum</span>(-<span class="nu">1</span>)  <span class="cm"># (1,)</span>
+            
+            <span class="cm"># Critic 估计价值</span>
+            value = critic(obs.<span class="fn">unsqueeze</span>(<span class="nu">0</span>))    <span class="cm"># (1, 1)</span>
+            
+            <span class="cm"># 与环境交互</span>
+            action_np = action.<span class="fn">squeeze</span>(<span class="nu">0</span>).<span class="fn">numpy</span>()  <span class="cm"># (2,) numpy</span>
+            next_obs, reward, done, truncated, info = env.<span class="fn">step</span>(action_np)
+            
+            <span class="cm"># 存储</span>
+            obs_buf[t] = obs
+            actions_buf[t] = action.<span class="fn">squeeze</span>(<span class="nu">0</span>)   <span class="cm"># (2,)</span>
+            rewards_buf[t] = reward
+            dones_buf[t] = <span class="fn">float</span>(done)
+            values_buf[t] = value.<span class="fn">squeeze</span>()       <span class="cm"># 标量</span>
+            log_probs_buf[t] = log_prob.<span class="fn">squeeze</span>()  <span class="cm"># 标量</span>
+            
+            obs = torch.<span class="fn">tensor</span>(next_obs, dtype=torch.float32)
+            <span class="kw">if</span> done:
+                obs = torch.<span class="fn">tensor</span>(env.<span class="fn">reset</span>()[<span class="nu">0</span>], dtype=torch.float32)
+    
+    <span class="kw">return</span> obs_buf, actions_buf, rewards_buf, dones_buf, values_buf, log_probs_buf
+
+<span class="cm"># ========== 第二步：计算优势 (GAE) ==========</span>
+<span class="kw">def</span> <span class="fn">compute_gae</span>(rewards, values, dones, gamma=GAMMA, lam=GAE_LAMBDA):
+    <span class="st">"""
+    广义优势估计 (Generalized Advantage Estimation)
+    
+    Args:
+        rewards: (T,) 每步奖励
+        values:  (T,) 每步价值估计
+        dones:   (T,) 是否结束
+        
+    Returns:
+        advantages: (T,) 优势估计
+        returns:    (T,) 回报（用于价值函数训练）
+    """</span>
+    T = <span class="fn">len</span>(rewards)
+    advantages = torch.<span class="fn">zeros</span>(T)    <span class="cm"># (T,)</span>
+    last_gae = <span class="nu">0.0</span>
+    
+    <span class="cm"># 从后往前计算（动态规划）</span>
+    <span class="kw">for</span> t <span class="kw">in</span> <span class="fn">reversed</span>(<span class="fn">range</span>(T)):
+        <span class="kw">if</span> t == T - <span class="nu">1</span>:
+            next_value = <span class="nu">0.0</span>
+        <span class="kw">else</span>:
+            next_value = values[t + <span class="nu">1</span>]
+        
+        <span class="cm"># TD 误差: δ = r + γV(s') - V(s)</span>
+        delta = rewards[t] + gamma * next_value * (<span class="nu">1</span> - dones[t]) - values[t]
+        
+        <span class="cm"># GAE: A_t = Σ (γλ)^l δ_{t+l}</span>
+        last_gae = delta + gamma * lam * (<span class="nu">1</span> - dones[t]) * last_gae
+        advantages[t] = last_gae
+    
+    returns = advantages + values  <span class="cm"># (T,) 回报 = 优势 + 价值</span>
+    <span class="kw">return</span> advantages, returns
+
+<span class="cm"># ========== 第三步：PPO 更新 ==========</span>
+<span class="kw">def</span> <span class="fn">ppo_update</span>(actor, critic, optimizer, obs, actions, old_log_probs, advantages, returns):
+    <span class="st">"""
+    PPO mini-batch 更新
+    
+    Shape 变化：
+        obs:           (T, 16)
+        actions:       (T, 2)
+        old_log_probs: (T,)
+        advantages:    (T,)
+        returns:       (T,)
+    """</span>
+    T = obs.shape[<span class="nu">0</span>]
+    
+    <span class="cm"># 归一化优势</span>
+    advantages = (advantages - advantages.<span class="fn">mean</span>()) / (advantages.<span class="fn">std</span>() + <span class="nu">1e-8</span>)
+    
+    <span class="kw">for</span> epoch <span class="kw">in</span> <span class="fn">range</span>(N_EPOCHS):
+        <span class="cm"># 随机打乱索引，分成 mini-batch</span>
+        indices = torch.<span class="fn">randperm</span>(T)
+        
+        <span class="kw">for</span> start <span class="kw">in</span> <span class="fn">range</span>(<span class="nu">0</span>, T, BATCH_SIZE):
+            end = start + BATCH_SIZE
+            batch_idx = indices[start:end]  <span class="cm"># (batch_size,)</span>
+            
+            <span class="cm"># 取出 mini-batch 数据</span>
+            mb_obs = obs[batch_idx]                   <span class="cm"># (64, 16)</span>
+            mb_actions = actions[batch_idx]            <span class="cm"># (64, 2)</span>
+            mb_old_log_probs = old_log_probs[batch_idx]  <span class="cm"># (64,)</span>
+            mb_advantages = advantages[batch_idx]     <span class="cm"># (64,)</span>
+            mb_returns = returns[batch_idx]            <span class="cm"># (64,)</span>
+            
+            <span class="cm"># ① 新策略的 log_prob</span>
+            mean, std = actor(mb_obs)                 <span class="cm"># mean: (64, 2), std: (64, 2)</span>
+            dist = <span class="fn">Normal</span>(mean, std)
+            new_log_probs = dist.<span class="fn">log_prob</span>(mb_actions).<span class="fn">sum</span>(-<span class="nu">1</span>)  <span class="cm"># (64,)</span>
+            entropy = dist.<span class="fn">entropy</span>().<span class="fn">sum</span>(-<span class="nu">1</span>).<span class="fn">mean</span>()             <span class="cm"># 标量</span>
+            
+            <span class="cm"># ② 概率比</span>
+            ratio = torch.<span class="fn">exp</span>(new_log_probs - mb_old_log_probs)  <span class="cm"># (64,)</span>
+            
+            <span class="cm"># ③ PPO-Clip 策略损失</span>
+            surr1 = ratio * mb_advantages                                <span class="cm"># (64,)</span>
+            surr2 = torch.<span class="fn">clamp</span>(ratio, <span class="nu">1</span>-CLIP_EPS, <span class="nu">1</span>+CLIP_EPS) * mb_advantages  <span class="cm"># (64,)</span>
+            policy_loss = -torch.<span class="fn">min</span>(surr1, surr2).<span class="fn">mean</span>()          <span class="cm"># 标量</span>
+            
+            <span class="cm"># ④ 价值函数损失</span>
+            values = critic(mb_obs).<span class="fn">squeeze</span>(-<span class="nu">1</span>)  <span class="cm"># (64, 1) → (64,)</span>
+            value_loss = F.<span class="fn">mse_loss</span>(values, mb_returns)  <span class="cm"># 标量</span>
+            
+            <span class="cm"># ⑤ 总损失</span>
+            loss = policy_loss + VF_COEF * value_loss - ENT_COEF * entropy
+            
+            <span class="cm"># ⑥ 梯度更新</span>
+            optimizer.<span class="fn">zero_grad</span>()      <span class="cm"># 清零梯度</span>
+            loss.<span class="fn">backward</span>()             <span class="cm"># 反向传播</span>
+            torch.nn.utils.<span class="fn">clip_grad_norm_</span>(  <span class="cm"># 梯度裁剪</span>
+                <span class="fn">list</span>(actor.<span class="fn">parameters</span>()) + <span class="fn">list</span>(critic.<span class="fn">parameters</span>()),
+                MAX_GRAD_NORM
+            )
+            optimizer.<span class="fn">step</span>()            <span class="cm"># 更新参数</span>
+
+<span class="cm"># ========== 完整训练循环 ==========</span>
+<span class="cm"># for iteration in range(1000):</span>
+<span class="cm">#     # 1. 收集数据</span>
+<span class="cm">#     obs, actions, rewards, dones, values, log_probs = collect_rollout(</span>
+<span class="cm">#         env, actor, critic, N_STEPS)</span>
+<span class="cm">#     </span>
+<span class="cm">#     # 2. 计算优势</span>
+<span class="cm">#     advantages, returns = compute_gae(rewards, values, dones)</span>
+<span class="cm">#     </span>
+<span class="cm">#     # 3. PPO 更新</span>
+<span class="cm">#     ppo_update(actor, critic, optimizer, obs, actions, log_probs, advantages, returns)</span></code></pre>
+
+<!-- ================================================== -->
+<!--            第六章：调试和最佳实践                      -->
+<!-- ================================================== -->
+<h1 id="ch6">第六章 &nbsp; 调试和最佳实践</h1>
+
+<!-- ==================== 6.1 常见错误 ==================== -->
+<h2 id="s6-1">6.1 常见错误</h2>
+
+<h3>6.1.1 Shape Mismatch</h3>
+
+<div class="box warn">
+  <div class="box-title">RuntimeError: mat1 and mat2 shapes cannot be multiplied</div>
+<pre><code><span class="cm"># 错误示例</span>
+linear = nn.<span class="fn">Linear</span>(<span class="nu">16</span>, <span class="nu">64</span>)
+x = torch.<span class="fn">randn</span>(<span class="nu">32</span>)    <span class="cm"># (32,) ← 错！应该是 (batch, 16)</span>
+<span class="cm"># linear(x)  → 报错！</span>
+
+<span class="cm"># 修正</span>
+x = torch.<span class="fn">randn</span>(<span class="nu">1</span>, <span class="nu">16</span>)  <span class="cm"># (1, 16) ✓</span>
+y = linear(x)            <span class="cm"># (1, 64) ✓</span>
+
+<span class="cm"># 调试技巧：在每一步打印 shape</span>
+<span class="fn">print</span>(<span class="st">f"x: {x.shape}"</span>)  <span class="cm"># 养成习惯！</span></code></pre>
+</div>
+
+<h3>6.1.2 Device Mismatch</h3>
+
+<div class="box warn">
+  <div class="box-title">RuntimeError: Expected all tensors to be on the same device</div>
+<pre><code><span class="cm"># 错误示例</span>
+model = model.<span class="fn">to</span>(<span class="st">'cuda'</span>)
+x = torch.<span class="fn">randn</span>(<span class="nu">32</span>, <span class="nu">16</span>)  <span class="cm"># 在 CPU 上</span>
+<span class="cm"># model(x)  → 报错！模型在 GPU，数据在 CPU</span>
+
+<span class="cm"># 修正：确保数据和模型在同一设备</span>
+x = x.<span class="fn">to</span>(<span class="st">'cuda'</span>)
+y = model(x)  <span class="cm"># ✓</span>
+
+<span class="cm"># 最佳实践：定义全局 device</span>
+device = torch.<span class="fn">device</span>(<span class="st">'cuda'</span> <span class="kw">if</span> torch.cuda.<span class="fn">is_available</span>() <span class="kw">else</span> <span class="st">'cpu'</span>)
+model = model.<span class="fn">to</span>(device)
+x = x.<span class="fn">to</span>(device)</code></pre>
+</div>
+
+<h3>6.1.3 NaN 值</h3>
+
+<div class="box warn">
+  <div class="box-title">NaN 调试</div>
+<pre><code><span class="cm"># 检测 NaN</span>
+<span class="kw">if</span> torch.<span class="fn">isnan</span>(loss):
+    <span class="fn">print</span>(<span class="st">"⚠️ NaN detected!"</span>)
+    <span class="cm"># 检查每一层的输出</span>
+    <span class="kw">for</span> name, param <span class="kw">in</span> model.<span class="fn">named_parameters</span>():
+        <span class="kw">if</span> torch.<span class="fn">isnan</span>(param).<span class="fn">any</span>():
+            <span class="fn">print</span>(<span class="st">f"NaN in {name}"</span>)
+        <span class="kw">if</span> param.grad <span class="kw">is not</span> <span class="kw">None</span> <span class="kw">and</span> torch.<span class="fn">isnan</span>(param.grad).<span class="fn">any</span>():
+            <span class="fn">print</span>(<span class="st">f"NaN grad in {name}"</span>)
+
+<span class="cm"># 常见原因</span>
+<span class="cm"># 1. log(0) — 加 epsilon: log(x + 1e-8)</span>
+<span class="cm"># 2. 除以 0 — 加 epsilon: x / (y + 1e-8)</span>
+<span class="cm"># 3. 学习率太大 — 减小 lr</span>
+<span class="cm"># 4. 梯度爆炸 — 加梯度裁剪</span>
+
+<span class="cm"># 启用异常检测模式</span>
+torch.<span class="fn">autograd</span>.<span class="fn">set_detect_anomaly</span>(<span class="kw">True</span>)
+<span class="cm"># 现在 backward() 会指出哪个操作产生了 NaN</span></code></pre>
+</div>
+
+<!-- ==================== 6.2 梯度检查 ==================== -->
+<h2 id="s6-2">6.2 梯度检查</h2>
+
+<pre><code><span class="cm"># 打印梯度统计</span>
+<span class="kw">def</span> <span class="fn">print_grad_stats</span>(model):
+    <span class="kw">for</span> name, param <span class="kw">in</span> model.<span class="fn">named_parameters</span>():
+        <span class="kw">if</span> param.grad <span class="kw">is not</span> <span class="kw">None</span>:
+            grad = param.grad
+            <span class="fn">print</span>(<span class="st">f"{name:30s} "
+                  f"grad_mean={grad.mean():.2e}  "
+                  f"grad_std={grad.std():.2e}  "
+                  f"grad_max={grad.abs().max():.2e}"</span>)
+        <span class="kw">else</span>:
+            <span class="fn">print</span>(<span class="st">f"{name:30s} grad=None"</span>)
+
+<span class="cm"># 在训练循环中使用</span>
+loss.<span class="fn">backward</span>()
+<span class="fn">print_grad_stats</span>(model)
+
+<span class="cm"># 检测梯度消失：如果梯度 ≈ 0（如 1e-10），说明梯度消失了</span>
+<span class="cm"># 检测梯度爆炸：如果梯度很大（如 1e+6），说明梯度爆炸了</span>
+
+<span class="cm"># 梯度直方图（配合 TensorBoard）</span>
+<span class="kw">from</span> torch.utils.tensorboard <span class="kw">import</span> SummaryWriter
+writer = <span class="fn">SummaryWriter</span>()
+<span class="kw">for</span> name, param <span class="kw">in</span> model.<span class="fn">named_parameters</span>():
+    <span class="kw">if</span> param.grad <span class="kw">is not</span> <span class="kw">None</span>:
+        writer.<span class="fn">add_histogram</span>(<span class="st">f'grad/{name}'</span>, param.grad, step)</code></pre>
+
+<!-- ==================== 6.3 TensorBoard ==================== -->
+<h2 id="s6-3">6.3 TensorBoard 可视化</h2>
+
+<pre><code><span class="kw">from</span> torch.utils.tensorboard <span class="kw">import</span> SummaryWriter
+
+<span class="cm"># 创建 writer</span>
+writer = <span class="fn">SummaryWriter</span>(log_dir=<span class="st">'./logs/ppo'</span>)
+
+<span class="cm"># 记录标量</span>
+writer.<span class="fn">add_scalar</span>(<span class="st">'loss/policy'</span>, policy_loss, step)
+writer.<span class="fn">add_scalar</span>(<span class="st">'loss/value'</span>, value_loss, step)
+writer.<span class="fn">add_scalar</span>(<span class="st">'reward/mean'</span>, mean_reward, step)
+
+<span class="cm"># 记录多个标量</span>
+writer.<span class="fn">add_scalars</span>(<span class="st">'losses'</span>, {
+    <span class="st">'policy'</span>: policy_loss,
+    <span class="st">'value'</span>: value_loss,
+}, step)
+
+<span class="cm"># 记录模型图</span>
+writer.<span class="fn">add_graph</span>(model, torch.<span class="fn">randn</span>(<span class="nu">1</span>, <span class="nu">16</span>))
+
+writer.<span class="fn">close</span>()
+
+<span class="cm"># 查看：tensorboard --logdir=./logs/ppo</span>
+<span class="cm"># 然后浏览器打开 http://localhost:6006</span>
+
+<span class="cm"># SB3 自带 TensorBoard 支持：</span>
+<span class="cm"># model = PPO("MlpPolicy", env, tensorboard_log="./logs/ppo")</span></code></pre>
+
+<!-- ==================== 6.4 GPU 内存管理 ==================== -->
+<h2 id="s6-4">6.4 GPU 内存管理</h2>
+
+<pre><code><span class="cm"># 查看 GPU 内存使用</span>
+<span class="fn">print</span>(torch.cuda.<span class="fn">memory_allocated</span>() / <span class="nu">1e9</span>, <span class="st">"GB"</span>)  <span class="cm"># 已分配</span>
+<span class="fn">print</span>(torch.cuda.<span class="fn">memory_reserved</span>() / <span class="nu">1e9</span>, <span class="st">"GB"</span>)   <span class="cm"># 已预留</span>
+<span class="fn">print</span>(torch.cuda.<span class="fn">max_memory_allocated</span>() / <span class="nu">1e9</span>, <span class="st">"GB"</span>)  <span class="cm"># 峰值</span>
+
+<span class="cm"># 手动释放内存</span>
+torch.cuda.<span class="fn">empty_cache</span>()
+
+<span class="cm"># 减少内存的技巧</span>
+<span class="cm"># 1. 减小 batch_size</span>
+<span class="cm"># 2. 用混合精度训练 (AMP)</span>
+<span class="cm"># 3. 梯度累积代替大 batch</span>
+<span class="cm"># 4. 及时 del 不需要的 tensor</span>
+<span class="cm"># 5. 用 torch.no_grad() 做推理</span>
+
+<span class="cm"># 检查哪个操作最占内存</span>
+torch.cuda.<span class="fn">reset_peak_memory_stats</span>()
+<span class="cm"># ... 你的操作 ...</span>
+<span class="fn">print</span>(<span class="st">f"峰值: {torch.cuda.max_memory_allocated() / 1e9:.2f} GB"</span>)</code></pre>
+
+<!-- ==================== 6.5 性能优化 ==================== -->
+<h2 id="s6-5">6.5 性能优化</h2>
+
+<pre><code><span class="cm"># ① DataLoader 优化</span>
+<span class="kw">from</span> torch.utils.data <span class="kw">import</span> DataLoader
+
+loader = <span class="fn">DataLoader</span>(
+    dataset,
+    batch_size=<span class="nu">64</span>,
+    shuffle=<span class="kw">True</span>,
+    num_workers=<span class="nu">4</span>,     <span class="cm"># 多进程数据加载</span>
+    pin_memory=<span class="kw">True</span>,   <span class="cm"># 固定内存，加速 CPU→GPU 传输</span>
+    drop_last=<span class="kw">True</span>,    <span class="cm"># 丢弃不完整的最后一批</span>
+)
+
+<span class="cm"># ② torch.compile（PyTorch 2.0+）</span>
+model = torch.<span class="fn">compile</span>(model)  <span class="cm"># JIT 编译，加速 10-30%</span>
+
+<span class="cm"># ③ 混合精度</span>
+<span class="cm"># 见 1.5 节</span>
+
+<span class="cm"># ④ 避免 CPU-GPU 频繁数据传输</span>
+<span class="cm"># 尽量在同一设备上完成所有计算</span>
+<span class="cm"># 不要在循环中反复 .cpu() 和 .cuda()</span></code></pre>
+
+<!-- ==================== 6.6 可复现性 ==================== -->
+<h2 id="s6-6">6.6 可复现性</h2>
+
+<pre><code><span class="kw">import</span> random
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> torch
+
+<span class="kw">def</span> <span class="fn">set_seed</span>(seed=<span class="nu">42</span>):
+    <span class="st">"""设置所有随机种子以确保可复现"""</span>
+    random.<span class="fn">seed</span>(seed)
+    np.random.<span class="fn">seed</span>(seed)
+    torch.<span class="fn">manual_seed</span>(seed)
+    torch.cuda.<span class="fn">manual_seed_all</span>(seed)
+    
+    <span class="cm"># 确保 CUDA 算法的确定性</span>
+    torch.backends.cudnn.deterministic = <span class="kw">True</span>
+    torch.backends.cudnn.benchmark = <span class="kw">False</span>
+
+<span class="fn">set_seed</span>(<span class="nu">42</span>)
+<span class="cm"># 现在你的实验结果应该是可复现的</span></code></pre>
+
+<!-- ================================================== -->
+<!--              第七章：高级主题                         -->
+<!-- ================================================== -->
+<h1 id="ch7">第七章 &nbsp; 高级主题</h1>
+
+<!-- ==================== 7.1 自定义 autograd ==================== -->
+<h2 id="s7-1">7.1 自定义 autograd Function</h2>
+
+<pre><code><span class="kw">class</span> <span class="cl">MySigmoid</span>(torch.autograd.Function):
+    <span class="st">"""手写 Sigmoid 的前向和反向传播"""</span>
+    
+    <span class="dc">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">forward</span>(ctx, x):
+        <span class="st">"""前向传播：σ(x) = 1 / (1 + exp(-x))"""</span>
+        result = <span class="nu">1</span> / (<span class="nu">1</span> + torch.<span class="fn">exp</span>(-x))
+        ctx.<span class="fn">save_for_backward</span>(result)  <span class="cm"># 保存结果用于反向传播</span>
+        <span class="kw">return</span> result
+    
+    <span class="dc">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">backward</span>(ctx, grad_output):
+        <span class="st">"""反向传播：σ'(x) = σ(x)(1 - σ(x))"""</span>
+        result, = ctx.saved_tensors
+        grad_input = grad_output * result * (<span class="nu">1</span> - result)
+        <span class="kw">return</span> grad_input
+
+<span class="cm"># 使用</span>
+my_sigmoid = MySigmoid.<span class="fn">apply</span>
+x = torch.<span class="fn">randn</span>(<span class="nu">5</span>, requires_grad=<span class="kw">True</span>)
+y = <span class="fn">my_sigmoid</span>(x)
+y.<span class="fn">sum</span>().<span class="fn">backward</span>()
+
+<span class="cm"># 验证与 torch.sigmoid 一致</span>
+<span class="fn">print</span>(torch.<span class="fn">allclose</span>(y, torch.<span class="fn">sigmoid</span>(x)))  <span class="cm"># True</span></code></pre>
+
+<div class="box example">
+  <div class="box-title">实际用例：物理约束的自定义梯度</div>
+  <p>在物理仿真中，有时需要自定义梯度来强制满足约束（如能量守恒）。自定义 autograd Function 允许你完全控制前向和反向传播的行为。</p>
+</div>
+
+<!-- ==================== 7.2 模型并行 ==================== -->
+<h2 id="s7-2">7.2 模型并行</h2>
+
+<pre><code><span class="cm"># 数据并行（DataParallel）— 最简单</span>
+model = nn.<span class="fn">DataParallel</span>(model)  <span class="cm"># 自动分配到多 GPU</span>
+
+<span class="cm"># 分布式数据并行（DistributedDataParallel）— 更高效</span>
+<span class="kw">from</span> torch.nn.parallel <span class="kw">import</span> DistributedDataParallel <span class="kw">as</span> DDP
+model = <span class="fn">DDP</span>(model, device_ids=[local_rank])
+
+<span class="cm"># 手动模型并行（大模型分割到不同 GPU）</span>
+<span class="kw">class</span> <span class="cl">SplitModel</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        <span class="fn">super</span>().<span class="fn">__init__</span>()
+        self.part1 = nn.<span class="fn">Linear</span>(<span class="nu">1000</span>, <span class="nu">1000</span>).<span class="fn">to</span>(<span class="st">'cuda:0'</span>)
+        self.part2 = nn.<span class="fn">Linear</span>(<span class="nu">1000</span>, <span class="nu">1000</span>).<span class="fn">to</span>(<span class="st">'cuda:1'</span>)
+    
+    <span class="kw">def</span> <span class="fn">forward</span>(self, x):
+        x = self.part1(x.<span class="fn">to</span>(<span class="st">'cuda:0'</span>))
+        x = self.part2(x.<span class="fn">to</span>(<span class="st">'cuda:1'</span>))
+        <span class="kw">return</span> x</code></pre>
+
+<!-- ==================== 7.3 torch.compile ==================== -->
+<h2 id="s7-3">7.3 torch.compile — 2.0+ 编译加速</h2>
+
+<pre><code><span class="cm"># torch.compile 将 Python 模型编译为优化的内核</span>
+<span class="cm"># 通常加速 10-30%，无需修改模型代码</span>
+
+model = <span class="fn">ActorNetwork</span>()
+compiled_model = torch.<span class="fn">compile</span>(model)  <span class="cm"># 就这一行！</span>
+
+<span class="cm"># 第一次调用会慢（编译），之后会快</span>
+output = compiled_model(torch.<span class="fn">randn</span>(<span class="nu">32</span>, <span class="nu">16</span>))
+
+<span class="cm"># 编译模式选择</span>
+compiled = torch.<span class="fn">compile</span>(model, mode=<span class="st">'default'</span>)     <span class="cm"># 平衡</span>
+compiled = torch.<span class="fn">compile</span>(model, mode=<span class="st">'reduce-overhead'</span>)  <span class="cm"># 减少开销</span>
+compiled = torch.<span class="fn">compile</span>(model, mode=<span class="st">'max-autotune'</span>)    <span class="cm"># 最大优化（编译更慢）</span></code></pre>
+
+<!-- ==================== 7.4 ONNX ==================== -->
+<h2 id="s7-4">7.4 ONNX 导出</h2>
+
+<pre><code><span class="cm"># 将 PyTorch 模型导出为 ONNX 格式</span>
+<span class="cm"># 可以在其他框架（TensorRT, TensorFlow）中运行</span>
+
+model = <span class="fn">ActorNetwork</span>()
+model.<span class="fn">eval</span>()
+
+dummy_input = torch.<span class="fn">randn</span>(<span class="nu">1</span>, <span class="nu">16</span>)
+
+torch.onnx.<span class="fn">export</span>(
+    model,
+    dummy_input,
+    <span class="st">"actor.onnx"</span>,
+    input_names=[<span class="st">'observation'</span>],
+    output_names=[<span class="st">'action_mean'</span>, <span class="st">'action_std'</span>],
+    dynamic_axes={<span class="st">'observation'</span>: {<span class="nu">0</span>: <span class="st">'batch_size'</span>}},
+)
+
+<span class="cm"># 验证 ONNX 模型</span>
+<span class="kw">import</span> onnx
+model_onnx = onnx.<span class="fn">load</span>(<span class="st">"actor.onnx"</span>)
+onnx.checker.<span class="fn">check_model</span>(model_onnx)</code></pre>
+
+<!-- ==================== 7.5 NumPy 互操作 ==================== -->
+<h2 id="s7-5">7.5 与 NumPy 的互操作</h2>
+
+<pre><code><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># ===== Tensor → NumPy =====</span>
+t = torch.<span class="fn">tensor</span>([<span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">3.0</span>])
+n = t.<span class="fn">numpy</span>()            <span class="cm"># 共享内存！</span>
+n = t.<span class="fn">detach</span>().<span class="fn">numpy</span>()   <span class="cm"># 如果有 requires_grad，先 detach</span>
+n = t.<span class="fn">cpu</span>().<span class="fn">numpy</span>()       <span class="cm"># 如果在 GPU 上，先移到 CPU</span>
+n = t.<span class="fn">detach</span>().<span class="fn">cpu</span>().<span class="fn">numpy</span>()  <span class="cm"># 最安全的写法</span>
+
+<span class="cm"># ===== NumPy → Tensor =====</span>
+n = np.<span class="fn">array</span>([<span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">3.0</span>])
+t = torch.<span class="fn">from_numpy</span>(n)          <span class="cm"># 共享内存</span>
+t = torch.<span class="fn">tensor</span>(n)              <span class="cm"># 复制数据</span>
+t = torch.<span class="fn">as_tensor</span>(n)           <span class="cm"># 尽量共享</span>
+
+<span class="cm"># 在 RL 中常见的模式：</span>
+<span class="cm"># env 返回 numpy → 转为 tensor → 送入模型 → 输出转 numpy → 送回 env</span>
+obs_np = env.<span class="fn">reset</span>()[<span class="nu">0</span>]                            <span class="cm"># numpy (16,)</span>
+obs_t = torch.<span class="fn">tensor</span>(obs_np, dtype=torch.float32)  <span class="cm"># tensor (16,)</span>
+obs_t = obs_t.<span class="fn">unsqueeze</span>(<span class="nu">0</span>)                          <span class="cm"># tensor (1, 16)</span>
+action_t = actor(obs_t)                              <span class="cm"># tensor (1, 2)</span>
+action_np = action_t.<span class="fn">squeeze</span>(<span class="nu">0</span>).<span class="fn">detach</span>().<span class="fn">numpy</span>()     <span class="cm"># numpy (2,)</span>
+obs_np, reward, done, _, info = env.<span class="fn">step</span>(action_np)</code></pre>
+
+<!-- ================================================== -->
+<!--                     附录                            -->
+<!-- ================================================== -->
+<h1 id="appendix">附录</h1>
+
+<!-- ==================== 附录 A: API 速查表 ==================== -->
+<h2 id="app-api">附录 A：PyTorch 常用 API 速查表</h2>
+
+<table>
+  <tr><th>类别</th><th>API</th><th>说明</th></tr>
+  <tr><td rowspan="7">创建 Tensor</td><td><code>torch.tensor(data)</code></td><td>从数据创建</td></tr>
+  <tr><td><code>torch.zeros(shape)</code></td><td>全零</td></tr>
+  <tr><td><code>torch.ones(shape)</code></td><td>全一</td></tr>
+  <tr><td><code>torch.randn(shape)</code></td><td>标准正态</td></tr>
+  <tr><td><code>torch.rand(shape)</code></td><td>均匀 [0,1)</td></tr>
+  <tr><td><code>torch.eye(n)</code></td><td>单位矩阵</td></tr>
+  <tr><td><code>torch.arange(start, end, step)</code></td><td>等差序列</td></tr>
+  <tr><td rowspan="5">形状操作</td><td><code>x.reshape(shape)</code></td><td>改变形状（安全）</td></tr>
+  <tr><td><code>x.view(shape)</code></td><td>改变形状（要求连续）</td></tr>
+  <tr><td><code>x.permute(dims)</code></td><td>调换维度顺序</td></tr>
+  <tr><td><code>x.squeeze(dim)</code></td><td>去除大小为1的维度</td></tr>
+  <tr><td><code>x.unsqueeze(dim)</code></td><td>添加大小为1的维度</td></tr>
+  <tr><td rowspan="4">拼接</td><td><code>torch.cat(tensors, dim)</code></td><td>沿已有维度拼接</td></tr>
+  <tr><td><code>torch.stack(tensors, dim)</code></td><td>沿新维度堆叠</td></tr>
+  <tr><td><code>torch.split(x, size, dim)</code></td><td>分割</td></tr>
+  <tr><td><code>torch.chunk(x, n, dim)</code></td><td>等分</td></tr>
+  <tr><td rowspan="4">数学运算</td><td><code>x @ y</code> / <code>torch.matmul</code></td><td>矩阵乘法</td></tr>
+  <tr><td><code>x * y</code></td><td>逐元素乘</td></tr>
+  <tr><td><code>x.sum(dim)</code></td><td>求和</td></tr>
+  <tr><td><code>x.mean(dim)</code></td><td>求均值</td></tr>
+  <tr><td rowspan="4">设备</td><td><code>x.to(device)</code></td><td>移动到设备</td></tr>
+  <tr><td><code>x.cuda()</code></td><td>移动到 GPU</td></tr>
+  <tr><td><code>x.cpu()</code></td><td>移动到 CPU</td></tr>
+  <tr><td><code>x.device</code></td><td>查看设备</td></tr>
+  <tr><td rowspan="4">梯度</td><td><code>x.requires_grad_()</code></td><td>启用梯度跟踪</td></tr>
+  <tr><td><code>x.backward()</code></td><td>反向传播</td></tr>
+  <tr><td><code>x.grad</code></td><td>查看梯度</td></tr>
+  <tr><td><code>x.detach()</code></td><td>从计算图分离</td></tr>
+</table>
+
+<!-- ==================== 附录 B: NumPy 对照 ==================== -->
+<h2 id="app-numpy">附录 B：Tensor 操作对照表 (NumPy vs PyTorch)</h2>
+
+<table>
+  <tr><th>操作</th><th>NumPy</th><th>PyTorch</th></tr>
+  <tr><td>创建数组</td><td><code>np.array([1,2,3])</code></td><td><code>torch.tensor([1,2,3])</code></td></tr>
+  <tr><td>全零</td><td><code>np.zeros((3,4))</code></td><td><code>torch.zeros(3,4)</code></td></tr>
+  <tr><td>随机</td><td><code>np.random.randn(3,4)</code></td><td><code>torch.randn(3,4)</code></td></tr>
+  <tr><td>形状</td><td><code>x.shape</code></td><td><code>x.shape</code></td></tr>
+  <tr><td>类型</td><td><code>x.dtype</code></td><td><code>x.dtype</code></td></tr>
+  <tr><td>转置</td><td><code>x.T</code></td><td><code>x.T</code></td></tr>
+  <tr><td>改形</td><td><code>x.reshape(3,4)</code></td><td><code>x.reshape(3,4)</code></td></tr>
+  <tr><td>拼接</td><td><code>np.concatenate</code></td><td><code>torch.cat</code></td></tr>
+  <tr><td>堆叠</td><td><code>np.stack</code></td><td><code>torch.stack</code></td></tr>
+  <tr><td>矩阵乘</td><td><code>np.dot / @</code></td><td><code>torch.matmul / @</code></td></tr>
+  <tr><td>元素乘</td><td><code>x * y</code></td><td><code>x * y</code></td></tr>
+  <tr><td>求和</td><td><code>x.sum(axis=0)</code></td><td><code>x.sum(dim=0)</code></td></tr>
+  <tr><td>最大值</td><td><code>x.max(axis=0)</code></td><td><code>x.max(dim=0)</code></td></tr>
+  <tr><td>切片</td><td><code>x[1:3, :]</code></td><td><code>x[1:3, :]</code></td></tr>
+  <tr><td>布尔索引</td><td><code>x[x > 0]</code></td><td><code>x[x > 0]</code></td></tr>
+  <tr><td>互转</td><td><code>torch.from_numpy(x)</code></td><td><code>x.numpy()</code></td></tr>
+</table>
+
+<!-- ==================== 附录 C: 公式总结 ==================== -->
+<h2 id="app-formulas">附录 C：核心公式总结</h2>
+
+<div class="box thm">
+  <div class="box-title">一页纸公式速查</div>
+
+  <h4>线性变换</h4>
+  <p>$$y = Wx + b, \quad \frac{\partial L}{\partial W} = \delta \cdot x^T, \quad \frac{\partial L}{\partial x} = W^T \delta$$</p>
+
+  <h4>激活函数</h4>
+  <p>$$\text{ReLU}(x) = \max(0, x), \quad \text{ReLU}'(x) = \mathbb{1}_{x>0}$$</p>
+  <p>$$\sigma(x) = \frac{1}{1+e^{-x}}, \quad \sigma'(x) = \sigma(1-\sigma)$$</p>
+  <p>$$\tanh(x) = \frac{e^x - e^{-x}}{e^x + e^{-x}}, \quad \tanh'(x) = 1 - \tanh^2(x)$$</p>
+
+  <h4>损失函数</h4>
+  <p>$$\text{MSE} = \frac{1}{n}\sum(y - \hat{y})^2, \quad \text{CE} = -\sum y \log \hat{y}$$</p>
+  <p>$$L^{CLIP} = -\mathbb{E}\left[\min(r\hat{A},\ \text{clip}(r, 1\pm\varepsilon)\hat{A})\right]$$</p>
+
+  <h4>Adam 优化器</h4>
+  <p>$$m_t = \beta_1 m_{t-1} + (1-\beta_1)g_t, \quad v_t = \beta_2 v_{t-1} + (1-\beta_2)g_t^2$$</p>
+  <p>$$\theta_{t+1} = \theta_t - \frac{\eta}{\sqrt{\hat{v}_t}+\epsilon}\hat{m}_t$$</p>
+
+  <h4>概率分布</h4>
+  <p>$$\log \mathcal{N}(a|\mu,\sigma^2) = -\frac{(a-\mu)^2}{2\sigma^2} - \log\sigma - \frac{1}{2}\log(2\pi)$$</p>
+  <p>$$H[\mathcal{N}] = \frac{1}{2}\log(2\pi e\sigma^2)$$</p>
+
+  <h4>GAE</h4>
+  <p>$$\hat{A}_t = \sum_{l=0}^{\infty}(\gamma\lambda)^l \delta_{t+l}, \quad \delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$$</p>
+</div>
+
+<!-- ==================== 附录 D: 激活函数图形 ==================== -->
+<h2 id="app-activations">附录 D：激活函数图形对比</h2>
+
+<div class="diagram">
+<svg width="700" height="300" viewBox="0 0 700 300">
+  <!-- Axes -->
+  <line x1="50" y1="150" x2="650" y2="150" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+  <line x1="350" y1="20" x2="350" y2="280" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+  
+  <!-- Grid lines -->
+  <line x1="50" y1="50" x2="650" y2="50" stroke="currentColor" stroke-width="0.5" opacity="0.1" stroke-dasharray="4"/>
+  <line x1="50" y1="100" x2="650" y2="100" stroke="currentColor" stroke-width="0.5" opacity="0.1" stroke-dasharray="4"/>
+  <line x1="50" y1="200" x2="650" y2="200" stroke="currentColor" stroke-width="0.5" opacity="0.1" stroke-dasharray="4"/>
+  <line x1="50" y1="250" x2="650" y2="250" stroke="currentColor" stroke-width="0.5" opacity="0.1" stroke-dasharray="4"/>
+  
+  <!-- ReLU (blue) -->
+  <polyline points="50,150 150,150 200,150 250,150 300,150 350,150 400,120 450,90 500,60 550,30 600,0" fill="none" stroke="#4361ee" stroke-width="2.5"/>
+  
+  <!-- Sigmoid (red) -->
+  <polyline points="50,245 100,240 150,230 200,215 250,195 300,170 350,150 400,130 450,105 500,85 550,70 600,60 650,55" fill="none" stroke="#f44336" stroke-width="2.5"/>
+  
+  <!-- Tanh (green) -->
+  <polyline points="50,245 100,242 150,235 200,220 250,200 300,175 350,150 400,125 450,100 500,80 550,65 600,58 650,55" fill="none" stroke="#4CAF50" stroke-width="2.5"/>
+  
+  <!-- Labels -->
+  <text x="610" y="25" fill="#4361ee" font-size="14" font-weight="bold">ReLU</text>
+  <text x="610" y="50" fill="#f44336" font-size="14" font-weight="bold">Sigmoid</text>
+  <text x="610" y="75" fill="#4CAF50" font-size="14" font-weight="bold">Tanh</text>
+  
+  <!-- Axis labels -->
+  <text x="640" y="165" fill="currentColor" font-size="12">x</text>
+  <text x="355" y="18" fill="currentColor" font-size="12">f(x)</text>
+  <text x="345" y="165" fill="currentColor" font-size="11">0</text>
+  <text x="355" y="55" fill="currentColor" font-size="11">1</text>
+  <text x="355" y="255" fill="currentColor" font-size="11">-1</text>
+</svg>
+</div>
+
+<table>
+  <tr><th>激活函数</th><th>公式</th><th>输出范围</th><th>梯度范围</th><th>主要用途</th></tr>
+  <tr><td>ReLU</td><td>\(\max(0, x)\)</td><td>\([0, +\infty)\)</td><td>\(\{0, 1\}\)</td><td>隐藏层（默认）</td></tr>
+  <tr><td>LeakyReLU</td><td>\(\max(\alpha x, x)\)</td><td>\((-\infty, +\infty)\)</td><td>\(\{\alpha, 1\}\)</td><td>避免死神经元</td></tr>
+  <tr><td>Sigmoid</td><td>\(\frac{1}{1+e^{-x}}\)</td><td>\((0, 1)\)</td><td>\((0, 0.25]\)</td><td>概率输出</td></tr>
+  <tr><td>Tanh</td><td>\(\frac{e^x-e^{-x}}{e^x+e^{-x}}\)</td><td>\((-1, 1)\)</td><td>\((0, 1]\)</td><td>Actor 输出</td></tr>
+  <tr><td>Softmax</td><td>\(\frac{e^{x_i}}{\sum e^{x_j}}\)</td><td>\((0, 1), \sum=1\)</td><td>—</td><td>分类</td></tr>
+  <tr><td>GELU</td><td>\(x \cdot \Phi(x)\)</td><td>\(\approx(-0.17, +\infty)\)</td><td>平滑</td><td>Transformer</td></tr>
+</table>
+
+<!-- ==================== 附录 E: 优化器对比 ==================== -->
+<h2 id="app-optimizers">附录 E：优化器对比表</h2>
+
+<table>
+  <tr><th>优化器</th><th>学习率</th><th>关键特性</th><th>适用场景</th><th>代码</th></tr>
+  <tr>
+    <td><strong>SGD</strong></td>
+    <td>0.01-0.1</td>
+    <td>简单，可+动量</td>
+    <td>CV (ResNet等)</td>
+    <td><code>SGD(params, lr=0.01, momentum=0.9)</code></td>
+  </tr>
+  <tr>
+    <td><strong>Adam</strong></td>
+    <td>1e-4 ~ 3e-4</td>
+    <td>自适应学习率</td>
+    <td>RL, NLP, 通用</td>
+    <td><code>Adam(params, lr=3e-4)</code></td>
+  </tr>
+  <tr>
+    <td><strong>AdamW</strong></td>
+    <td>1e-4 ~ 3e-4</td>
+    <td>修正权重衰减</td>
+    <td>Transformer</td>
+    <td><code>AdamW(params, lr=3e-4, weight_decay=0.01)</code></td>
+  </tr>
+  <tr>
+    <td><strong>RMSprop</strong></td>
+    <td>1e-3</td>
+    <td>自适应，无动量修正</td>
+    <td>RNN</td>
+    <td><code>RMSprop(params, lr=1e-3)</code></td>
+  </tr>
+  <tr>
+    <td><strong>LBFGS</strong></td>
+    <td>1.0</td>
+    <td>二阶方法，全 batch</td>
+    <td>小规模优化</td>
+    <td><code>LBFGS(params)</code></td>
+  </tr>
+</table>
+
+<hr>
+
+<p style="text-align: center; color: var(--text-secondary); font-size: 0.9em; padding: 40px 0;">
+  🔥 PyTorch 核心学习教程 — PushBox 物理感知强化学习项目<br>
+  最后更新：2026-02-06 &nbsp;|&nbsp; 相关教程：<a href="../PPO/index.html">PPO 教程</a> &nbsp;|&nbsp; <a href="../GNS/index.html">GNS 教程</a>
+</p>
+
+</div><!-- .main -->
+
+<!-- ========== JavaScript ========== -->
+<script>
+// Theme toggle
+function toggleTheme() {
+  const body = document.body;
+  const isDark = body.getAttribute('data-theme') === 'dark';
+  body.setAttribute('data-theme', isDark ? '' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+}
+
+// Load saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') document.body.setAttribute('data-theme', 'dark');
+})();
+
+// Tab switching
+function switchTab(btn, tabId) {
+  const group = btn.closest('.tab-group');
+  group.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  group.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+// Active sidebar link
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      document.querySelectorAll('#nav a').forEach(a => {
+        a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-80px 0px -70% 0px' });
+
+document.querySelectorAll('h1[id], h2[id]').forEach(el => observer.observe(el));
+
+// Reading progress
+window.addEventListener('scroll', () => {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / docHeight) * 100;
+  const fill = document.getElementById('progressFill');
+  if (fill) fill.style.width = progress + '%';
+});
+
+// Copy button for code blocks
+document.querySelectorAll('pre').forEach(pre => {
+  const btn = document.createElement('button');
+  btn.className = 'copy-btn';
+  btn.textContent = '📋';
+  btn.onclick = () => {
+    const code = pre.querySelector('code') || pre;
+    navigator.clipboard.writeText(code.textContent).then(() => {
+      btn.textContent = '✓';
+      setTimeout(() => btn.textContent = '📋', 2000);
+    });
+  };
+  pre.appendChild(btn);
+});
+
+// KaTeX auto-render
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof renderMathInElement !== 'undefined') {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '$', right: '$', display: false },
+      ],
+      throwOnError: false,
+    });
+  }
+});
+</script>
+</body>
+</html>
