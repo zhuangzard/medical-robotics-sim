@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 4: Geometric Domains — the 5 Gs | GDL 学习指南</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+</head>
+<body>
+  <div class="progress-bar"></div>
+
+  <header class="header">
+    <div class="header-title"><a href="../index.html">📐 GDL 学习指南</a></div>
+    <div class="header-nav">
+      <a href="../chapter3/index.html">← 上一章</a>
+      <a href="../index.html">目录</a>
+      <a href="../chapter5/index.html">下一章 →</a>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+  </header>
+
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+  <nav class="sidebar">
+    <h3>Chapter 4</h3>
+    <a href="#overview">概述</a>
+    <a href="#sec4-1">4.1 图与集合 Graphs & Sets</a>
+    <a href="#permutation-inv" class="sub">置换不变性</a>
+    <a href="#adjacency" class="sub">邻接矩阵与邻域</a>
+    <a href="#message-passing" class="sub">消息传递框架</a>
+    <a href="#weisfeiler-leman" class="sub">WL 同构测试</a>
+    <a href="#sec4-2">4.2 网格与欧几里得空间</a>
+    <a href="#translation-group" class="sub">平移群</a>
+    <a href="#convolution" class="sub">卷积定理</a>
+    <a href="#fourier" class="sub">Fourier 变换</a>
+    <a href="#sec4-3">4.3 群与齐次空间</a>
+    <a href="#group-convolution" class="sub">群卷积</a>
+    <a href="#homogeneous" class="sub">齐次空间</a>
+    <a href="#sec4-4">4.4 测地线与流形</a>
+    <a href="#manifold" class="sub">流形定义</a>
+    <a href="#laplacian" class="sub">拉普拉斯算子</a>
+    <a href="#sec4-5">4.5 标架与向量丛</a>
+    <a href="#gauge" class="sub">规范变换</a>
+    <a href="#sec4-6">4.6 几何图与网格</a>
+    <a href="#exercises">练习题</a>
+    <h3>导航</h3>
+    <a href="../index.html">📚 总目录</a>
+    <a href="../chapter3/index.html">← Ch.3 几何先验</a>
+    <a href="../chapter5/index.html">→ Ch.5 GDL 模型</a>
+  </nav>
+
+  <main class="main">
+    <h1>Chapter 4: Geometric Domains — the 5 Gs<br><span style="font-size:0.6em;color:var(--text-secondary)">几何域：五个 G</span></h1>
+
+    <div class="callout callout-info" id="overview">
+      <h4>本章概述</h4>
+      <p>本章详细分析五种核心几何域，每种域对应不同的对称性和深度学习架构。这是全书最长的章节之一（38页），为 Chapter 5 的具体模型奠定基础。</p>
+      <ul>
+        <li><strong>Graphs（图）</strong>→ 置换对称 → GNN</li>
+        <li><strong>Grids（网格）</strong>→ 平移对称 → CNN</li>
+        <li><strong>Groups（群）</strong>→ 群对称 → Group-equivariant CNN</li>
+        <li><strong>Geodesics（测地线）</strong>→ 等距对称 → Mesh CNN</li>
+        <li><strong>Gauges（标架）</strong>→ 规范对称 → Gauge-equivariant CNN</li>
+      </ul>
+      <p><strong>预计阅读时间</strong>：4 小时</p>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p35_img0.png" alt="The 5 Gs of GDL">
+      <figcaption>图 9：几何深度学习的五个 G：Grids（网格）、Groups & 齐次空间（全局对称）、Graphs（图）、Geodesics & 度量（流形）、Gauges（标架/参考系）。</figcaption>
+    </div>
+
+    <!-- 4.1 Graphs and Sets -->
+    <h2 id="sec4-1">4.1 图与集合<br><span style="font-size:0.7em;color:var(--text-secondary)">Graphs and Sets</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>在科学的多个分支中，从社会学到粒子物理，<span class="term">图</span>（Graph）被用来建模关系和交互的系统。从我们的角度来看，图产生了一种由<strong>置换群</strong>建模的基本不变性。</p>
+      </div>
+      <div class="en">
+        In multiple branches of science, graphs are used as models of systems of relations and interactions. Graphs give rise to invariance modelled by the group of permutations.
+      </div>
+    </div>
+
+    <div class="blueprint">
+      <h4>图的定义 Graph Definition</h4>
+      <p>一个<span class="term">图</span> $G = (V, E)$ 由<strong>节点</strong>集合 $V$ 和<strong>边</strong>集合 $E \subseteq V \times V$ 构成。每个节点 $u \in V$ 配有 $s$ 维<strong>节点特征</strong> $x_u$。</p>
+    </div>
+
+    <h3 id="permutation-inv">置换不变性与等变性</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>图的关键结构属性是节点通常<strong>没有规范排序</strong>（canonical ordering），因此图上的操作不应该依赖于节点的排列顺序。</p>
+        <p>将节点特征堆叠成矩阵 $X = (x_1, \ldots, x_n)^\top$，置换 $g \in \Sigma_n$ 的作用可以表示为 $n \times n$ 置换矩阵 $P$。</p>
+      </div>
+      <div class="en">
+        The key property of graphs is that nodes are not assumed to be provided in any particular order, hence operations should not depend on the ordering.
+      </div>
+    </div>
+
+    <p><strong>集合上的置换不变函数</strong>（最简单情况，无边）：</p>
+
+    <div class="math-block">
+      $$f(X) = \phi\left(\sum_{u \in V} \psi(x_u)\right)$$
+      <div class="math-explain">
+        $\psi$ 独立地应用于每个节点特征，$\phi$ 应用于所有节点输出的<strong>求和聚合</strong>。因为求和不依赖于顺序，这个函数对节点置换是不变的。这就是 <strong>Deep Sets</strong>（Zaheer et al., 2017）的核心思想。
+      </div>
+    </div>
+
+    <p><strong>图上的置换等变函数</strong>（考虑边/邻接信息）：</p>
+
+    <div class="math-block">
+      $$f(PX, PAP^\top) = f(X, A) \quad \text{(不变)}$$
+      $$F(PX, PAP^\top) = PF(X, A) \quad \text{(等变)}$$
+      <div class="math-explain">
+        注意置换 $P$ 不仅作用于特征矩阵 $X$（重排行），也作用于邻接矩阵 $A$（重排行和列：$PAP^\top$）。不变函数输出不受置换影响（如图分类），等变函数输出以相同方式被置换（如节点分类）。
+      </div>
+    </div>
+
+    <h3 id="adjacency">邻接矩阵与邻域</h3>
+
+    <div class="math-block">
+      $$a_{uv} = \begin{cases} 1 & (u, v) \in E \\ 0 & \text{otherwise} \end{cases}$$
+      <div class="math-explain">
+        <strong>邻接矩阵</strong> $A$ 编码图的连接关系。对于无向图，$A = A^\top$。
+      </div>
+    </div>
+
+    <div class="blueprint">
+      <h4>邻域 Neighbourhood</h4>
+      $$\mathcal{N}_u = \{v : (u, v) \in E \text{ or } (v, u) \in E\}$$
+      <p><strong>邻域特征</strong>是一个<span class="term">多重集</span>（multiset）$X_{\mathcal{N}_u} = \{\!\!\{x_v : v \in \mathcal{N}_u\}\!\!\}$。多重集允许相同元素出现多次——不同的邻居可能有相同的特征。</p>
+    </div>
+
+    <h3 id="message-passing">消息传递框架 Message Passing</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>GDL 蓝图在图上的实现自然产生了<span class="term">消息传递</span>（Message Passing）框架——GNN 的核心计算范式：</p>
+      </div>
+      <div class="en">
+        The GDL blueprint on graphs naturally gives rise to the message passing framework — the core computational paradigm of GNNs.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$h_u = \phi\left(x_u, \bigoplus_{v \in \mathcal{N}_u} \psi(x_u, x_v)\right)$$
+      <div class="math-explain">
+        <strong>$\psi(x_u, x_v)$</strong>：<strong>消息函数</strong>（message function）— 计算从节点 $v$ 发送到节点 $u$ 的消息<br>
+        <strong>$\bigoplus$</strong>：<strong>聚合函数</strong>（aggregation）— 置换不变的操作（求和、均值、最大值等）<br>
+        <strong>$\phi$</strong>：<strong>更新函数</strong>（update function）— 结合节点自身特征和聚合消息来更新节点表示<br>
+        这个框架是<strong>置换等变</strong>的（因为聚合是置换不变的），且是<strong>局部</strong>的（只使用邻域信息）。
+      </div>
+    </div>
+
+    <div class="callout callout-project">
+      <h4>消息传递在 PhysRobot 中</h4>
+      <p>粒子系统仿真的核心就是消息传递！</p>
+      <ul>
+        <li><strong>节点 = 粒子</strong>，特征 = 位置、速度、质量等</li>
+        <li><strong>边 = 相互作用</strong>，通常基于距离阈值构建（$k$-近邻图或径向截断图）</li>
+        <li><strong>消息 $\psi$</strong> = 粒子间的力或能量贡献（依赖于相对位置/距离）</li>
+        <li><strong>聚合</strong> = 力的叠加原理（物理上对应于力的矢量求和）</li>
+        <li><strong>更新 $\phi$</strong> = 根据合力更新加速度/速度/位置</li>
+      </ul>
+    </div>
+
+    <h3 id="weisfeiler-leman">Weisfeiler-Leman 同构测试与 GNN 表达力</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">Weisfeiler-Leman (WL) 测试</span>是一个经典的图同构测试算法。它迭代地给每个节点分配一个"颜色"（标签），基于节点及其邻域的多重集来更新颜色。</p>
+        <p>重要发现（Xu et al., 2019; Morris et al., 2019）：<strong>标准消息传递 GNN 的表达力等价于 1-WL 测试</strong>。即 GNN 能区分的图恰好是 1-WL 测试能区分的图。</p>
+      </div>
+      <div class="en">
+        The Weisfeiler-Leman (WL) test is a classical graph isomorphism test. Standard message passing GNNs are at most as powerful as the 1-WL test.
+      </div>
+    </div>
+
+    <div class="algorithm">
+      <div class="algorithm-title">Algorithm: 1-WL 颜色细化 (Color Refinement)</div>
+      <div class="algorithm-body">输入：图 G = (V, E)，初始颜色 c⁰(u) = x_u 对所有 u ∈ V
+重复 k = 0, 1, 2, ...：
+  对每个节点 u ∈ V：
+    c^(k+1)(u) = HASH(c^k(u), {{c^k(v) : v ∈ N_u}})
+  如果颜色划分不再变化，则停止
+输出：最终颜色划分</div>
+    </div>
+
+    <!-- 4.2 Grids -->
+    <h2 id="sec4-2">4.2 网格与欧几里得空间<br><span style="font-size:0.7em;color:var(--text-secondary)">Grids and Euclidean Spaces</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">网格</span>是一种特殊的图，其中节点排列在规则的格点上。$d$ 维网格上的信号就是我们熟悉的张量——1D 序列、2D 图像、3D 体积数据等。网格的自然对称群是<strong>平移群</strong>。</p>
+      </div>
+      <div class="en">
+        Grids are special cases of graphs where nodes are arranged in a regular lattice. The natural symmetry group of grids is the translation group.
+      </div>
+    </div>
+
+    <h3 id="translation-group">平移群与平移等变性</h3>
+
+    <div class="math-block">
+      $$(\rho(t)x)(u) = x(u - t) \quad \text{for } t \in \mathbb{Z}^d$$
+      <div class="math-explain">
+        平移群 $(\mathbb{Z}^d, +)$ 作用于信号：将信号 $x$ 沿方向 $t$ 平移。一个函数如果满足平移等变性 $f(\rho(t)x) = \rho(t)f(x)$，那么平移输入就等于平移输出。
+      </div>
+    </div>
+
+    <h3 id="convolution">卷积定理：等变 = 卷积</h3>
+
+    <div class="callout callout-key">
+      <h4>关键定理</h4>
+      <p>在网格上，<strong>线性 + 平移等变</strong>的操作恰好就是<strong>卷积</strong>：</p>
+    </div>
+
+    <div class="math-block">
+      $$(x \star \theta)(u) = \sum_{v} \theta(v) x(u - v)$$
+      <div class="math-explain">
+        这就是 CNN 中卷积操作的数学定义！滤波器 $\theta$ 在所有位置<strong>共享</strong>（weight sharing），这是平移等变性的直接结果。关键洞察：<strong>权重共享不是一个工程选择，而是平移对称性的数学必然</strong>。
+      </div>
+    </div>
+
+    <h3 id="fourier">Fourier 变换与谱域</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">Fourier 变换</span>将信号从空间域转换到频率域。在平移群的语境下，Fourier 基函数是群的<strong>不可约表示</strong>（irreducible representations）。</p>
+      </div>
+      <div class="en">
+        The Fourier transform converts signals from spatial to frequency domain. Fourier basis functions are the irreducible representations of the translation group.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\hat{x}(\omega) = \sum_u x(u) e^{-i\omega \cdot u}$$
+      $$x \star \theta \xleftrightarrow{\text{FFT}} \hat{x}(\omega) \cdot \hat{\theta}(\omega)$$
+      <div class="math-explain">
+        <strong>卷积定理</strong>：空间域的卷积等于频率域的逐点乘法。这就是为什么 Fourier 变换在信号处理（和 CNN 理论）中如此重要。<br>
+        更深层的理解：平移群的不可约表示是复指数函数 $e^{i\omega u}$，Fourier 变换本质上是将信号分解到这些不可约表示上。
+      </div>
+    </div>
+
+    <!-- 4.3 Groups and Homogeneous Spaces -->
+    <h2 id="sec4-3">4.3 群与齐次空间<br><span style="font-size:0.7em;color:var(--text-secondary)">Groups and Homogeneous Spaces</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>网格上的平移群是一个特例。更一般地，我们可以考虑任意群 $G$ 上的信号和卷积。这导致了<span class="term">群卷积</span>（Group Convolution）的概念。</p>
+      </div>
+      <div class="en">
+        The translation group on grids is a special case. More generally, we can consider signals and convolutions on arbitrary groups, leading to group convolution.
+      </div>
+    </div>
+
+    <h3 id="group-convolution">群卷积 Group Convolution</h3>
+
+    <div class="math-block">
+      $$(x \star_G \theta)(g) = \int_G \theta(g'^{-1}g) x(g')\, d\mu(g')$$
+      <div class="math-explain">
+        群卷积将标准卷积推广到任意群上。当 $G = (\mathbb{R}^d, +)$ 时，这退化为标准卷积。当 $G = \text{SO}(3)$ 时，这给出球谐卷积。<br>
+        关键性质：群卷积自动是 $G$-等变的！
+      </div>
+    </div>
+
+    <h3 id="homogeneous">齐次空间 Homogeneous Spaces</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">齐次空间</span>是群的商空间 $G/H$，其中 $H$ 是 $G$ 的子群。直觉上，齐次空间的每一点都"看起来一样"——群 $G$ 可以将任意一点映射到任意另一点。</p>
+        <p>例子：球面 $S^2 = \text{SO}(3)/\text{SO}(2)$ 是旋转群 SO(3) 关于绕某轴旋转子群 SO(2) 的商空间。</p>
+      </div>
+      <div class="en">
+        A homogeneous space is a quotient space G/H where H is a subgroup. Every point "looks the same" — the group G can map any point to any other.
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p53_img0.png" alt="Homogeneous spaces">
+      <figcaption>齐次空间的例子：球面 $S^2$ 作为 SO(3)/SO(2)，以及其他常见的齐次空间。</figcaption>
+    </div>
+
+    <!-- 4.4 Geodesics and Manifolds -->
+    <h2 id="sec4-4">4.4 测地线与流形<br><span style="font-size:0.7em;color:var(--text-secondary)">Geodesics and Manifolds</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">流形</span>（manifold）是一种局部看起来像欧几里得空间但全局可能有复杂拓扑的空间。流形上没有全局的平移概念，但有<strong>局部</strong>的距离和角度概念（通过度量张量 Riemannian metric）。</p>
+      </div>
+      <div class="en">
+        A manifold is a space that locally looks like Euclidean space but may have complex global topology. Manifolds have local notions of distance and angles but no global translation.
+      </div>
+    </div>
+
+    <h3 id="manifold">流形的关键概念</h3>
+
+    <div class="blueprint">
+      <h4>Riemannian 流形 (M, g)</h4>
+      <ul>
+        <li><strong>切空间</strong> $T_u M$ — 流形在点 $u$ 处的"线性近似"，类似于曲面的切平面</li>
+        <li><strong>度量张量</strong> $g_u$ — 切空间上的内积，定义了长度和角度</li>
+        <li><strong>测地线</strong> — 流形上两点间的"最短路径"（推广了直线的概念）</li>
+        <li><strong>测地距离</strong> $d(u, v)$ — 沿测地线测量的距离</li>
+        <li><strong>指数映射</strong> $\text{exp}_u : T_uM \to M$ — 将切向量映射到流形上的点</li>
+      </ul>
+    </div>
+
+    <h3 id="laplacian">Laplace-Beltrami 算子</h3>
+
+    <div class="math-block">
+      $$\Delta f = -\text{div}(\nabla f)$$
+      <div class="math-explain">
+        <strong>Laplace-Beltrami 算子</strong> $\Delta$ 是欧几里得拉普拉斯算子在流形上的推广。它的特征函数是流形上 Fourier 分析的基函数：$\Delta \phi_k = \lambda_k \phi_k$。特征值 $\lambda_k$ 对应"频率"，特征函数 $\phi_k$ 对应"振动模式"。<br>
+        这个算子对于在流形上定义卷积至关重要——它是 Spectral Graph CNN 和 Mesh CNN 的理论基础。
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p60_img0.png" alt="Manifold and Laplacian">
+      <figcaption>流形上的 Laplace-Beltrami 特征函数——类似于鼓面的振动模式。</figcaption>
+    </div>
+
+    <!-- 4.5 Gauges and Bundles -->
+    <h2 id="sec4-5">4.5 标架与向量丛<br><span style="font-size:0.7em;color:var(--text-secondary)">Gauges and Bundles</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>在流形上处理<strong>向量值信号</strong>（如特征图）时，我们需要在每个点选择一个<span class="term">标架</span>（gauge / frame）——即切空间的基。问题是：这些标架的选择是<strong>任意的</strong>，好的操作不应该依赖于标架的选择。</p>
+      </div>
+      <div class="en">
+        When processing vector-valued signals on manifolds, we need a gauge (frame) at each point. The choice of gauge is arbitrary, and good operations should not depend on it.
+      </div>
+    </div>
+
+    <h3 id="gauge">规范变换 Gauge Transformation</h3>
+
+    <div class="math-block">
+      $$x'(u) = \rho(g_u) x(u) \quad \text{for each } u \in \Omega$$
+      <div class="math-explain">
+        <strong>规范变换</strong>在每个点<strong>独立地</strong>变换标架。$g_u \in G$ 是点 $u$ 处的局部变换。规范等变性要求网络输出不依赖于标架的选择——这是物理学中<strong>规范不变性</strong>的直接类比（如电磁学中的规范自由度）。
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p65_img0.png" alt="Gauge on manifold">
+      <figcaption>流形上的标架（局部参考系）。不同点的标架选择是独立的，规范等变性保证结果不依赖于这些选择。</figcaption>
+    </div>
+
+    <!-- 4.6 Geometric Graphs and Meshes -->
+    <h2 id="sec4-6">4.6 几何图与网格<br><span style="font-size:0.7em;color:var(--text-secondary)">Geometric Graphs and Meshes</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">几何图</span>（geometric graph）是嵌入在几何空间（如 $\mathbb{R}^3$）中的图，其中节点具有<strong>空间坐标</strong>。这结合了图的组合结构和连续空间的几何结构。</p>
+        <p>几何图在科学应用中极其重要——分子（原子作为节点）、点云（传感器测量）、有限元网格（用于物理仿真）都是几何图。</p>
+      </div>
+      <div class="en">
+        Geometric graphs are graphs embedded in a geometric space where nodes have spatial coordinates. They combine combinatorial graph structure with continuous geometric structure.
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch4_p69_img0.png" alt="Geometric graphs">
+      <figcaption>几何图的例子：分子（原子坐标+化学键）、点云、有限元网格。</figcaption>
+    </div>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>几何图的对称群更加丰富：除了节点<strong>置换对称</strong>外，还有空间<strong>欧几里得对称</strong>（旋转、平移、反射）。因此我们需要<strong>同时满足</strong>两种等变性的操作：</p>
+        <ul>
+          <li><strong>置换等变</strong>：重排节点顺序不影响结果</li>
+          <li><strong>SE(3)/E(3) 等变</strong>：旋转/平移/反射所有节点坐标，输出相应变换</li>
+        </ul>
+      </div>
+      <div class="en">
+        Geometric graphs have richer symmetry: permutation symmetry plus Euclidean symmetry. Operations need to be equivariant to both.
+      </div>
+    </div>
+
+    <div class="callout callout-project">
+      <h4>几何图在 PhysRobot 中的核心角色</h4>
+      <p><strong>这是与我们项目最直接相关的几何域！</strong></p>
+      <ul>
+        <li><strong>粒子系统</strong> = 几何图（粒子位置 = 节点坐标，相互作用 = 边）</li>
+        <li><strong>有限元网格</strong> = 几何图/三角网格</li>
+        <li><strong>需要的对称性</strong>：$\text{SE}(3) \times \Sigma_n$（旋转+平移+粒子置换）</li>
+        <li><strong>相关架构</strong>：EGNN, SchNet, DimeNet, PaiNN, TFN, NequIP 等</li>
+        <li>Chapter 5.5 将详细介绍这些等变消息传递网络</li>
+      </ul>
+    </div>
+
+    <div class="exercises" id="exercises">
+      <h3>练习题 Exercises</h3>
+      <ol>
+        <li>对于 $n = 4$ 个节点的图，置换群 $\Sigma_4$ 有多少个元素？这告诉你 GNN 需要"忽略"多少种等价的节点排列？</li>
+        <li>证明：卷积运算 $(x \star \theta)(u) = \sum_v \theta(v) x(u-v)$ 是平移等变的。即证明 $\rho(t)(x \star \theta) = (\rho(t)x) \star \theta$。</li>
+        <li>在频率域，卷积变成逐点乘法。这意味着卷积滤波器实际上是什么？（提示：频率域中的乘法 = 什么样的滤波？）</li>
+        <li>球面 $S^2$ 为什么不能用标准的平面卷积？（提示：考虑球面上的平移群）</li>
+        <li>考虑一个三角网格。在每个顶点上定义一个切平面。解释为什么在不同切平面之间"比较"向量需要<strong>平行移动</strong>（parallel transport）。</li>
+        <li><strong>PhysRobot 思考</strong>：在我们的粒子仿真中：
+          <ul>
+            <li>(a) 为什么使用粒子间距离 $\|r_i - r_j\|$ 而不是相对位置向量 $r_i - r_j$ 作为消息？前者和后者分别具有什么对称性？</li>
+            <li>(b) 如果力函数只依赖于粒子间距离，它自动满足什么对称性？这足够吗？</li>
+          </ul>
+        </li>
+        <li>WL 测试无法区分某些非同构图。构造两个 WL 测试无法区分的非同构图的例子。这对 GNN 意味着什么？</li>
+      </ol>
+    </div>
+
+    <div class="chapter-nav">
+      <a href="../chapter3/index.html">← Chapter 3: 几何先验</a>
+      <a href="../chapter5/index.html">Chapter 5: GDL 模型 →</a>
+    </div>
+  </main>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

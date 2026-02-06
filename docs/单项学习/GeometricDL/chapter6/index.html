@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 6: Problems and Applications | GDL 学习指南</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+</head>
+<body>
+  <div class="progress-bar"></div>
+
+  <header class="header">
+    <div class="header-title"><a href="../index.html">📐 GDL 学习指南</a></div>
+    <div class="header-nav">
+      <a href="../chapter5/index.html">← 上一章</a>
+      <a href="../index.html">目录</a>
+      <a href="../chapter7/index.html">下一章 →</a>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+  </header>
+
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+  <nav class="sidebar">
+    <h3>Chapter 6</h3>
+    <a href="#overview">概述</a>
+    <a href="#chemistry">化学与药物设计</a>
+    <a href="#drug-repo" class="sub">药物重定位</a>
+    <a href="#protein" class="sub">蛋白质结构</a>
+    <a href="#physics">物理仿真 🤖</a>
+    <a href="#particle-physics" class="sub">粒子物理</a>
+    <a href="#dynamics" class="sub">动力学仿真</a>
+    <a href="#social">社交网络</a>
+    <a href="#recommender">推荐系统</a>
+    <a href="#combinatorial">组合优化</a>
+    <a href="#cv">计算机视觉</a>
+    <a href="#nlp">自然语言处理</a>
+    <a href="#exercises">练习题</a>
+    <h3>导航</h3>
+    <a href="../index.html">📚 总目录</a>
+    <a href="../chapter5/index.html">← Ch.5 GDL 模型</a>
+    <a href="../chapter7/index.html">→ Ch.7 历史</a>
+  </nav>
+
+  <main class="main">
+    <h1>Chapter 6: Problems and Applications<br><span style="font-size:0.6em;color:var(--text-secondary)">问题与应用</span></h1>
+
+    <div class="callout callout-info" id="overview">
+      <h4>本章概述</h4>
+      <p>不变性和对称性在真实世界数据中无处不在。本章展示 GDL 在多个领域的成功应用，包括化学、物理、社交网络、推荐系统、组合优化等。</p>
+      <p><strong>预计阅读时间</strong>：1 小时</p>
+    </div>
+
+    <!-- Chemistry -->
+    <h2 id="chemistry">化学与药物设计<br><span style="font-size:0.7em;color:var(--text-secondary)">Chemistry and Drug Design</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>图表示学习在<span class="term">计算化学</span>和<strong>药物开发</strong>中是最有前途的应用之一。传统药物是设计来与目标蛋白质结合的小分子。药物开发极其漫长和昂贵：通常需要超过十年，花费超过十亿美元。</p>
+        <p>可化学合成的分子空间巨大（估计约 $10^{60}$），无法通过实验穷举搜索——因此需要<strong>虚拟筛选</strong>（virtual screening / in silico screening）。</p>
+      </div>
+      <div class="en">
+        One of the most promising applications of representation learning on graphs is in computational chemistry and drug development. The space of chemically synthesisable molecules is estimated around 10⁶⁰.
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>里程碑案例：Halicin 抗生素发现 (Stokes et al., 2020)</h4>
+      <p>使用 GNN 训练预测候选分子是否抑制大肠杆菌生长，发现 <strong>Halicin</strong>（一种原本用于治疗糖尿病的分子）是一种高效抗生素，甚至对已知抗药性的细菌株有效。该发现被科学界和大众媒体广泛报道。</p>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch6_p107_img0.png" alt="Chemistry applications">
+      <figcaption>分子图上的 GNN 应用：将分子表示为图（原子 = 节点，化学键 = 边），使用 GNN 预测分子性质。</figcaption>
+    </div>
+
+    <p>相关的等变 GNN 架构：TFN (Thomas et al., 2018)、EGNN (Satorras et al., 2021) 等在分子建模中引入旋转/平移等变性。</p>
+
+    <h3 id="drug-repo">药物重定位 Drug Repositioning</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>比设计全新药物更快更便宜的方式是<span class="term">药物重定位</span>——评估已批准药物的新用途。药物在人体中的作用及其相互作用可以建模为图，引出了 Barabási 提出的"<strong>网络医学</strong>"（Network Medicine）概念。</p>
+        <p>代表工作：Zitnik et al. (2018) 使用 GNN 预测<strong>多药联合治疗的副作用</strong>，将其形式化为图中的边预测任务。</p>
+      </div>
+      <div class="en">
+        Drug repositioning seeks to evaluate already-approved drugs for novel purposes. The action of drugs can be modeled as a graph, giving rise to 'network medicine'.
+      </div>
+    </div>
+
+    <h3 id="protein">蛋白质结构与设计 Protein Structure</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><strong>蛋白质折叠</strong>问题是生物学中最重要的问题之一——从氨基酸序列预测蛋白质的 3D 结构。<strong>AlphaFold 2</strong> (Jumper et al., 2021) 结合了 Transformer 和等变 GNN 技术，在 CASP14 竞赛中取得突破性成功。</p>
+        <p>蛋白质可以在多个层面建模为图：</p>
+        <ul>
+          <li><strong>残基接触图</strong>：氨基酸残基作为节点，空间接触作为边</li>
+          <li><strong>原子级图</strong>：每个原子作为节点</li>
+          <li><strong>多序列比对</strong>（MSA）：进化信息作为输入特征</li>
+        </ul>
+      </div>
+      <div class="en">
+        Protein folding — predicting 3D structure from amino acid sequence — is one of the most important problems in biology. AlphaFold 2 combined Transformers and equivariant GNNs for breakthrough results.
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch6_p108_img0.png" alt="Protein structure">
+      <figcaption>蛋白质的图表示：氨基酸残基作为节点，空间邻近关系和化学键作为边。</figcaption>
+    </div>
+
+    <!-- Physics -->
+    <h2 id="physics">物理仿真<br><span style="font-size:0.7em;color:var(--text-secondary)">Physics Simulations 🤖</span></h2>
+
+    <div class="callout callout-project">
+      <h4>与 PhysRobot 项目最直接相关的应用领域！</h4>
+    </div>
+
+    <h3 id="particle-physics">粒子物理 Particle Physics</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>高能物理实验（如 LHC）产生海量粒子碰撞数据。粒子碰撞事件可以自然地表示为<strong>点云</strong>或<strong>图</strong>。GNN 被用于：</p>
+        <ul>
+          <li><strong>粒子喷注分类</strong>（Jet classification）</li>
+          <li><strong>事件重建</strong>（Event reconstruction）</li>
+          <li><strong>异常检测</strong>（Anomaly detection）</li>
+        </ul>
+        <p>Lorentz 群等变性在这里至关重要——物理结果不应依赖于参考系的选择。</p>
+      </div>
+      <div class="en">
+        High-energy physics experiments generate massive particle collision data. GNNs are used for jet classification, event reconstruction, and anomaly detection with Lorentz equivariance.
+      </div>
+    </div>
+
+    <h3 id="dynamics">动力学仿真 Dynamics Simulation</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>GNN 在物理动力学仿真中的应用是近年最激动人心的方向之一：</p>
+      </div>
+      <div class="en">
+        GNN applications in physical dynamics simulation is one of the most exciting directions.
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>关键论文</h4>
+      <ul>
+        <li><strong>Interaction Networks</strong> (Battaglia et al., 2016) — 最早用 GNN 学习物理交互的工作</li>
+        <li><strong>Graph Networks for Physics</strong> (Sanchez-Gonzalez et al., 2020) — 学习复杂的粒子和网格物理</li>
+        <li><strong>Learning to Simulate</strong> (Pfaff et al., 2021) — MeshGraphNets，在三角网格上学习流体/布料仿真</li>
+        <li><strong>Glass dynamics</strong> (Bapst et al., 2020) — GNN 预测玻璃动力学，优于传统物理模型</li>
+        <li><strong>Hamiltonian/Lagrangian NNs</strong> — 将守恒律硬编码进网络结构</li>
+      </ul>
+    </div>
+
+    <div class="callout callout-project">
+      <h4>动力学仿真与 PhysRobot 的直接联系</h4>
+      <p>我们的 PhysRobot 项目正是基于这些思想：</p>
+      <ul>
+        <li><strong>MeshGraphNets</strong>（Pfaff et al., 2021）的方法直接适用于我们的软组织仿真——在三角网格上用 GNN 学习物理</li>
+        <li><strong>粒子系统仿真</strong>（Sanchez-Gonzalez et al., 2020）启发了我们的粒子级物理模型</li>
+        <li><strong>SE(3)-等变性</strong>保证了物理一致性——旋转/平移仿真场景不会改变物理行为</li>
+        <li><strong>多尺度策略</strong>——结合粗粒度粒子系统和细粒度网格进行多分辨率仿真</li>
+      </ul>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch6_p110_img0.png" alt="Physics simulation with GNNs">
+      <figcaption>GNN 在物理仿真中的应用：粒子系统、流体仿真、布料仿真等。</figcaption>
+    </div>
+
+    <!-- Social Networks -->
+    <h2 id="social">社交网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Social Networks</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>社交网络是图的经典应用场景。GNN 用于：</p>
+        <ul>
+          <li><strong>社区检测</strong>（Community Detection）</li>
+          <li><strong>用户分类</strong>（节点分类）</li>
+          <li><strong>链接预测</strong>（预测新的友谊关系）</li>
+          <li><strong>信息传播建模</strong>（谣言/病毒传播）</li>
+          <li><strong>影响力最大化</strong></li>
+        </ul>
+      </div>
+      <div class="en">
+        Social networks are a classical application of graphs. GNNs are used for community detection, node classification, link prediction, and influence maximization.
+      </div>
+    </div>
+
+    <!-- Recommender Systems -->
+    <h2 id="recommender">推荐系统<br><span style="font-size:0.7em;color:var(--text-secondary)">Recommender Systems</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>推荐系统可以建模为<strong>用户-物品二部图</strong>上的链接预测问题。GNN 通过在图上传播信息来学习用户和物品的表示。</p>
+        <p>代表工作：<strong>PinSage</strong> (Ying et al., 2018) — Pinterest 的大规模 GNN 推荐系统，处理数十亿节点和边。</p>
+      </div>
+      <div class="en">
+        Recommender systems can be modeled as link prediction on user-item bipartite graphs. PinSage scales to billions of nodes and edges.
+      </div>
+    </div>
+
+    <!-- Combinatorial Optimization -->
+    <h2 id="combinatorial">组合优化<br><span style="font-size:0.7em;color:var(--text-secondary)">Combinatorial Optimization</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>许多组合优化问题天然具有图结构（如 TSP、图着色、最大割等）。GNN 可以：</p>
+        <ul>
+          <li>学习启发式函数来指导搜索</li>
+          <li>直接输出（近似）解</li>
+          <li>与传统求解器结合（学习分支策略等）</li>
+        </ul>
+      </div>
+      <div class="en">
+        Many combinatorial optimization problems have natural graph structure. GNNs can learn heuristics, output approximate solutions, or guide traditional solvers.
+      </div>
+    </div>
+
+    <!-- CV -->
+    <h2 id="cv">计算机视觉<br><span style="font-size:0.7em;color:var(--text-secondary)">Computer Vision</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>CNN 已经彻底改变了计算机视觉。近年来 <strong>Vision Transformer</strong>（ViT, Dosovitskiy et al., 2020）表明自注意力也可以应用于图像——将图像分割为 patch 序列，每个 patch 作为一个"token"。从 GDL 的角度，ViT 是完全图上的注意力 GNN。</p>
+      </div>
+      <div class="en">
+        CNNs have revolutionized computer vision. Vision Transformers (ViT) show that self-attention can also be applied to images by treating image patches as tokens — from GDL's perspective, this is an attentional GNN on a complete graph.
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch6_p116_img0.jpeg" alt="Computer vision applications">
+      <figcaption>计算机视觉中的 GDL：从标准 CNN 到 Vision Transformer，再到 3D 点云处理。</figcaption>
+    </div>
+
+    <!-- NLP -->
+    <h2 id="nlp">自然语言处理<br><span style="font-size:0.7em;color:var(--text-secondary)">Natural Language Processing</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>Transformer 在 NLP 中的成功（BERT、GPT 等）可以从 GDL 的角度理解：文本序列上的自注意力 = 完全图上的注意力 GNN + 位置编码。</p>
+        <p>更结构化的方法包括将语法树或知识图谱建模为图，使用 GNN 进行推理。</p>
+      </div>
+      <div class="en">
+        Transformer's success in NLP (BERT, GPT) can be understood from GDL: self-attention on sequences = attentional GNN on complete graph + positional encoding.
+      </div>
+    </div>
+
+    <!-- Exercises -->
+    <div class="exercises" id="exercises">
+      <h3>练习题 Exercises</h3>
+      <ol>
+        <li>对于分子性质预测任务，比较使用 (a) SMILES 字符串 + RNN，(b) 分子指纹 + MLP，(c) 分子图 + GNN 三种方法。各自的优缺点是什么？哪种方法更好地利用了分子的几何结构？</li>
+        <li>解释为什么药物-靶标相互作用预测可以形式化为<strong>二部图上的链接预测</strong>问题。GNN 如何帮助解决这个问题？</li>
+        <li>在粒子物理中，为什么 <strong>Lorentz 等变性</strong>比 SE(3) 等变性更合适？Lorentz 群与 SE(3) 有什么不同？</li>
+        <li><strong>PhysRobot 思考</strong>：
+          <ul>
+            <li>(a) 列出三种在我们的物理仿真中可以使用的 GNN 变体，说明各自的优势</li>
+            <li>(b) MeshGraphNets 如何处理不同类型的边（网格边 vs 物理约束边）？</li>
+            <li>(c) 如何在我们的系统中引入<strong>多尺度仿真</strong>？</li>
+          </ul>
+        </li>
+        <li>Vision Transformer 将图像分成 patch 后作为"集合"处理。这丢失了什么几何信息？位置编码如何补偿？与 CNN 相比，这种方法在什么场景下更好/更差？</li>
+      </ol>
+    </div>
+
+    <div class="chapter-nav">
+      <a href="../chapter5/index.html">← Chapter 5: GDL 模型</a>
+      <a href="../chapter7/index.html">Chapter 7: 历史视角 →</a>
+    </div>
+  </main>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

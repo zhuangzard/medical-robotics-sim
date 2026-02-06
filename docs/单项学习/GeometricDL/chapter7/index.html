@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 7: Historic Perspective | GDL 学习指南</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+</head>
+<body>
+  <div class="progress-bar"></div>
+
+  <header class="header">
+    <div class="header-title"><a href="../index.html">📐 GDL 学习指南</a></div>
+    <div class="header-nav">
+      <a href="../chapter6/index.html">← 上一章</a>
+      <a href="../index.html">目录</a>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+  </header>
+
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+  <nav class="sidebar">
+    <h3>Chapter 7</h3>
+    <a href="#overview">概述</a>
+    <a href="#ancient">古代对称性思想</a>
+    <a href="#math-physics">数学与物理中的对称性</a>
+    <a href="#erlangen">Erlangen Program</a>
+    <a href="#noether" class="sub">Noether 定理</a>
+    <a href="#gauge-physics" class="sub">规范理论</a>
+    <a href="#harmonic">调和分析的发展</a>
+    <a href="#nn-history">神经网络的历史</a>
+    <a href="#perceptron" class="sub">感知机时代</a>
+    <a href="#cnn-history" class="sub">CNN 的诞生</a>
+    <a href="#gnn-history" class="sub">GNN 的兴起</a>
+    <a href="#transformer-history" class="sub">Transformer 革命</a>
+    <a href="#gdl-future">GDL 的未来</a>
+    <a href="#exercises">练习题</a>
+    <h3>导航</h3>
+    <a href="../index.html">📚 总目录</a>
+    <a href="../chapter6/index.html">← Ch.6 应用</a>
+  </nav>
+
+  <main class="main">
+    <h1>Chapter 7: Historic Perspective<br><span style="font-size:0.6em;color:var(--text-secondary)">历史视角</span></h1>
+
+    <div class="callout callout-info" id="overview">
+      <h4>本章概述</h4>
+      <p>本章追溯了从古代对称性思想到现代几何深度学习的发展历程。这是全书最长的章节（含参考文献共 43 页），涵盖了数学、物理和计算机科学的交汇史。</p>
+      <p><strong>预计阅读时间</strong>：2 小时（选读；参考文献部分可跳过）</p>
+    </div>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p style="font-style:italic;font-size:1.1em;text-align:center;margin:24px 0;color:var(--accent);">
+        "对称性，无论你如何定义它的含义，是人类在各个时代试图理解和创造秩序、美与完美的一个理念。"<br>
+        —— Hermann Weyl
+        </p>
+      </div>
+      <div class="en">
+        "Symmetry, as wide or as narrow as you may define its meaning, is one idea by which man through the ages has tried to comprehend and create order, beauty, and perfection." — Hermann Weyl
+      </div>
+    </div>
+
+    <!-- 古代 -->
+    <h2 id="ancient">古代对称性思想</h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>对称性在科学和艺术中一直占有特殊地位。从古苏美尔的对称设计，到毕达哥拉斯学派认为圆因旋转对称而完美，再到<span class="term">柏拉图</span>认为五种正多面体（<strong>柏拉图体</strong>）是构成物质世界的基本构件。</p>
+        <p>天文学家 <strong>Kepler</strong> 进行了对雪花六角对称结构的首次严格分析——他将其归因于粒子的六角密堆——这个思想至今仍是晶体学的基础。</p>
+      </div>
+      <div class="en">
+        From Sumerian symmetric designs to Pythagoreans who believed the circle to be perfect, to Plato's five regular polyhedra. Kepler performed the first rigorous analysis of the six-fold symmetry of snowflakes.
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch7_p118_img0.png" alt="Platonic solids and symmetry">
+      <figcaption>柏拉图体：正四面体、正方体、正八面体、正十二面体、正二十面体——古希腊人相信它们是构成世界的基本元素。</figcaption>
+    </div>
+
+    <!-- 数学与物理 -->
+    <h2 id="math-physics">数学与物理中的对称性</h2>
+
+    <h3 id="erlangen">Erlangen Program (1872)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><strong>Felix Klein</strong> 的 <span class="term">Erlangen Program</span>（1872）是本书精神的直接来源。Klein 提出：<strong>每种几何学都可以用其不变量的变换群来定义</strong>。</p>
+        <ul>
+          <li><strong>欧几里得几何</strong> → 欧几里得群 E(d)（平移 + 旋转 + 反射）</li>
+          <li><strong>仿射几何</strong> → 仿射群（线性变换 + 平移）</li>
+          <li><strong>射影几何</strong> → 射影群</li>
+          <li><strong>拓扑学</strong> → 同胚群</li>
+        </ul>
+        <p>这个分层结构（结构越多 → 群越小）正是 Chapter 3.2 中讨论的层级关系。</p>
+      </div>
+      <div class="en">
+        Felix Klein's Erlangen Program (1872) proposed that each kind of geometry can be defined by its transformation group. This is the direct spiritual ancestor of our geometric deep learning framework.
+      </div>
+    </div>
+
+    <h3 id="noether">Noether 定理 (1918)</h3>
+
+    <div class="callout callout-key">
+      <h4>Noether 定理：对称性 ↔ 守恒律</h4>
+      <p><strong>Emmy Noether</strong> 证明了物理学中最深刻的定理之一：每个<strong>连续对称性</strong>对应一个<strong>守恒量</strong>：</p>
+      <ul>
+        <li><strong>时间平移对称</strong> → 能量守恒</li>
+        <li><strong>空间平移对称</strong> → 动量守恒</li>
+        <li><strong>旋转对称</strong> → 角动量守恒</li>
+      </ul>
+      <p>这个定理建立了对称性和物理学的深层联系，也是我们在神经网络中强制对称性的物理动机。</p>
+    </div>
+
+    <div class="callout callout-project">
+      <h4>Noether 定理与 PhysRobot</h4>
+      <p>在物理仿真中，如果我们的网络是 SE(3)-等变的，那么 Noether 定理暗示它学到的物理会自动<strong>守恒动量和角动量</strong>。这不仅是美学上的优势，更是物理正确性的保证！</p>
+    </div>
+
+    <h3 id="gauge-physics">规范理论 Gauge Theory</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>20 世纪物理学最伟大的成就之一是<span class="term">规范理论</span>（Gauge Theory）——发现基本力可以从<strong>局部对称性</strong>（规范对称性）中推导出来：</p>
+        <ul>
+          <li><strong>电磁力</strong> → U(1) 规范对称</li>
+          <li><strong>弱核力</strong> → SU(2) 规范对称</li>
+          <li><strong>强核力</strong> → SU(3) 规范对称</li>
+          <li><strong>标准模型</strong> → $\text{SU}(3) \times \text{SU}(2) \times \text{U}(1)$</li>
+        </ul>
+        <p>Chapter 4.5 中讨论的规范等变网络正是这一物理思想在机器学习中的体现。</p>
+      </div>
+      <div class="en">
+        Gauge theory — the discovery that fundamental forces can be derived from local symmetries — is one of the greatest achievements of 20th century physics. The gauge equivariant networks of Chapter 4.5 embody this idea in machine learning.
+      </div>
+    </div>
+
+    <!-- 调和分析 -->
+    <h2 id="harmonic">调和分析的发展<br><span style="font-size:0.7em;color:var(--text-secondary)">Development of Harmonic Analysis</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><strong>调和分析</strong>（Harmonic Analysis）是连接对称性和信号处理的数学分支。从 Fourier（1807）的热传导方程到现代的群上 Fourier 分析，其核心思想一脉相承：将信号分解为群表示的不可约分量。</p>
+        <ul>
+          <li><strong>Fourier 分析</strong>（平移群 → 复指数基）</li>
+          <li><strong>球谐函数</strong>（旋转群 SO(3) → Spherical Harmonics）</li>
+          <li><strong>Peter-Weyl 定理</strong>（紧致群 → 不可约表示的完备基）</li>
+          <li><strong>小波变换</strong>（仿射群 → 多尺度分解）</li>
+        </ul>
+      </div>
+      <div class="en">
+        Harmonic analysis connects symmetry and signal processing. From Fourier's heat equation to modern group Fourier analysis, the core idea is decomposing signals into irreducible representations.
+      </div>
+    </div>
+
+    <!-- 神经网络历史 -->
+    <h2 id="nn-history">神经网络的历史<br><span style="font-size:0.7em;color:var(--text-secondary)">History of Neural Networks</span></h2>
+
+    <h3 id="perceptron">感知机时代 (1940s-1970s)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <ul>
+          <li><strong>McCulloch & Pitts</strong> (1943) — 第一个数学神经元模型</li>
+          <li><strong>Hebb</strong> (1949) — 赫布学习规则（"一起放电，一起连接"）</li>
+          <li><strong>Rosenblatt</strong> (1958) — 感知机（Perceptron），第一个可学习的神经网络</li>
+          <li><strong>Minsky & Papert</strong> (1969) — 《Perceptrons》指出感知机的局限性 → AI 寒冬</li>
+        </ul>
+      </div>
+      <div class="en">
+        From McCulloch-Pitts neurons (1943) to Rosenblatt's Perceptron (1958) to Minsky-Papert's critique (1969) leading to the first AI winter.
+      </div>
+    </div>
+
+    <h3 id="cnn-history">CNN 的诞生与发展 (1980s-2010s)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <ul>
+          <li><strong>Fukushima</strong> (1980) — Neocognitron，CNN 的先驱（局部感受野 + 权重共享）</li>
+          <li><strong>Rumelhart, Hinton & Williams</strong> (1986) — 反向传播算法的流行</li>
+          <li><strong>LeCun et al.</strong> (1989, 1998) — <strong>LeNet</strong>，第一个现代 CNN，用于手写数字识别</li>
+          <li><strong>Krizhevsky et al.</strong> (2012) — <strong>AlexNet</strong>，ImageNet 竞赛突破，GPU 训练 → 深度学习革命</li>
+          <li><strong>He et al.</strong> (2016) — <strong>ResNet</strong>，残差连接，训练超过 100 层的网络</li>
+        </ul>
+      </div>
+      <div class="en">
+        From Fukushima's Neocognitron (1980) to LeCun's LeNet (1989) to Krizhevsky's AlexNet (2012) to He's ResNet (2016) — the CNN revolution.
+      </div>
+    </div>
+
+    <h3 id="gnn-history">GNN 的兴起 (2005-present)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <ul>
+          <li><strong>Gori et al.</strong> (2005), <strong>Scarselli et al.</strong> (2009) — 最早的 GNN 概念</li>
+          <li><strong>Bruna et al.</strong> (2013) — 谱域图卷积</li>
+          <li><strong>Defferrard et al.</strong> (2016) — ChebNet，基于切比雪夫多项式的高效谱卷积</li>
+          <li><strong>Kipf & Welling</strong> (2017) — <strong>GCN</strong>，简单而高效的消息传递公式</li>
+          <li><strong>Gilmer et al.</strong> (2017) — <strong>MPNN</strong> 框架，统一多种 GNN 变体</li>
+          <li><strong>Veličković et al.</strong> (2018) — <strong>GAT</strong>，图注意力网络</li>
+          <li><strong>Xu et al.</strong> (2019) — <strong>GIN</strong>，分析 GNN 表达力与 WL 测试的关系</li>
+        </ul>
+      </div>
+      <div class="en">
+        From the first GNN concepts (2005-2009) to spectral convolution (2013), to GCN (2017), MPNN (2017), GAT (2018), and expressivity analysis (2019).
+      </div>
+    </div>
+
+    <h3 id="transformer-history">Transformer 革命 (2017-present)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <ul>
+          <li><strong>Vaswani et al.</strong> (2017) — <strong>Transformer</strong>（"Attention is All You Need"），自注意力取代 RNN</li>
+          <li><strong>Devlin et al.</strong> (2019) — <strong>BERT</strong>，双向 Transformer 预训练</li>
+          <li><strong>Brown et al.</strong> (2020) — <strong>GPT-3</strong>，大规模语言模型</li>
+          <li><strong>Dosovitskiy et al.</strong> (2020) — <strong>ViT</strong>，将 Transformer 应用于计算机视觉</li>
+          <li>从 GDL 角度：<strong>Transformer = 完全图上的注意力 GNN + 位置编码</strong></li>
+        </ul>
+      </div>
+      <div class="en">
+        The Transformer (2017) → BERT (2019) → GPT-3 (2020) → ViT (2020). From GDL: Transformer = attentional GNN on complete graph + positional encoding.
+      </div>
+    </div>
+
+    <!-- 未来 -->
+    <h2 id="gdl-future">GDL 的未来方向</h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>几何深度学习仍在快速发展中。一些激动人心的方向包括：</p>
+        <ul>
+          <li><strong>更强的等变架构</strong> — 超越 1-WL 的高阶 GNN、k-WL GNN</li>
+          <li><strong>学习对称性</strong> — 不是预定义对称群，而是从数据中学习对称性</li>
+          <li><strong>连续几何</strong> — Neural ODE、Neural PDE、连续深度模型</li>
+          <li><strong>因果推理与图</strong> — 将因果结构建模为 DAG，用 GNN 进行因果推理</li>
+          <li><strong>量子计算与对称性</strong> — 量子电路中的等变设计</li>
+          <li><strong>AI for Science</strong> — 将 GDL 原则应用于更广泛的科学问题</li>
+        </ul>
+      </div>
+      <div class="en">
+        Exciting future directions: higher-order GNNs, learning symmetries from data, continuous geometry, causal reasoning, quantum computing, and broader scientific applications.
+      </div>
+    </div>
+
+    <div class="callout callout-project">
+      <h4>未来方向与 PhysRobot</h4>
+      <ul>
+        <li><strong>Neural PDE</strong> — 将物理仿真视为在网格上求解 PDE，用 GNN 加速</li>
+        <li><strong>学习对称性</strong> — 如果我们不确定系统具有哪些对称性，能否从仿真数据中自动发现？</li>
+        <li><strong>多尺度等变架构</strong> — 结合细粒度和粗粒度的物理表示</li>
+        <li><strong>可微物理</strong> — 将 GDL 原则与可微仿真器结合，实现端到端的控制优化</li>
+      </ul>
+    </div>
+
+    <!-- Exercises -->
+    <div class="exercises" id="exercises">
+      <h3>练习题 Exercises</h3>
+      <ol>
+        <li>Erlangen Program 将几何分类为不同的对称群。给出至少三种"几何学"及其对应的对称群。解释它们之间的包含关系。</li>
+        <li>Noether 定理说连续对称性对应守恒量。如果一个物理系统具有<strong>离散</strong>对称性（如旋转 90°），有类似的守恒量吗？</li>
+        <li>追溯从 LeNet (1989) 到 GCN (2017) 的概念发展路线。哪些 CNN 的思想被保留了？哪些被推广了？</li>
+        <li><strong>PhysRobot 终极思考</strong>：综合全书所学，设计一个"理想的"物理仿真 GNN 架构。说明：
+          <ul>
+            <li>域的选择（图 vs 网格 vs 点云）</li>
+            <li>对称群的选择</li>
+            <li>消息传递的设计</li>
+            <li>多尺度策略</li>
+            <li>训练和推理的效率考虑</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+
+    <div class="chapter-nav">
+      <a href="../chapter6/index.html">← Chapter 6: 应用</a>
+      <a href="../index.html">📚 返回总目录</a>
+    </div>
+
+    <footer style="text-align:center; color:var(--text-muted); padding:40px 0 20px; font-size:0.85rem;">
+      <p>🎉 恭喜完成 Geometric Deep Learning 全书学习！</p>
+      <p>PhysRobot Project · 2026</p>
+    </footer>
+  </main>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

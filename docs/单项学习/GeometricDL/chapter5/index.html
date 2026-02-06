@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 5: Geometric Deep Learning Models | GDL 学习指南</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+</head>
+<body>
+  <div class="progress-bar"></div>
+
+  <header class="header">
+    <div class="header-title"><a href="../index.html">📐 GDL 学习指南</a></div>
+    <div class="header-nav">
+      <a href="../chapter4/index.html">← 上一章</a>
+      <a href="../index.html">目录</a>
+      <a href="../chapter6/index.html">下一章 →</a>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+  </header>
+
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+  <nav class="sidebar">
+    <h3>Chapter 5 ⭐</h3>
+    <a href="#overview">概述</a>
+    <a href="#sec5-1">5.1 CNN 卷积神经网络</a>
+    <a href="#cnn-conv" class="sub">卷积操作</a>
+    <a href="#cnn-multiscale" class="sub">多尺度计算</a>
+    <a href="#cnn-resnet" class="sub">残差网络</a>
+    <a href="#sec5-2">5.2 群等变 CNN</a>
+    <a href="#group-conv-impl" class="sub">群卷积实现</a>
+    <a href="#spherical-cnn" class="sub">球面 CNN</a>
+    <a href="#sec5-3">5.3 图神经网络 GNN</a>
+    <a href="#three-flavours" class="sub">三种风味</a>
+    <a href="#gnn-conv" class="sub">卷积型 GNN</a>
+    <a href="#gnn-attn" class="sub">注意力型 GNN</a>
+    <a href="#gnn-mp" class="sub">消息传递型 GNN</a>
+    <a href="#sec5-4">5.4 Deep Sets & Transformers</a>
+    <a href="#deep-sets" class="sub">Deep Sets</a>
+    <a href="#transformer" class="sub">Transformer 即 GNN</a>
+    <a href="#latent-graph" class="sub">隐式图推断</a>
+    <a href="#sec5-5">5.5 等变消息传递 🤖</a>
+    <a href="#egnn" class="sub">EGNN</a>
+    <a href="#irreps" class="sub">不可约表示</a>
+    <a href="#regular-rep" class="sub">正则表示</a>
+    <a href="#sec5-6">5.6 Mesh CNN</a>
+    <a href="#sec5-7">5.7 RNN</a>
+    <a href="#sec5-8">5.8 LSTM</a>
+    <a href="#exercises">练习题</a>
+    <h3>导航</h3>
+    <a href="../index.html">📚 总目录</a>
+    <a href="../chapter4/index.html">← Ch.4 几何域</a>
+    <a href="../chapter6/index.html">→ Ch.6 应用</a>
+  </nav>
+
+  <main class="main">
+    <h1>Chapter 5: Geometric Deep Learning Models<br><span style="font-size:0.6em;color:var(--text-secondary)">几何深度学习模型 ⭐ 与 PhysRobot 最相关</span></h1>
+
+    <div class="callout callout-project" id="overview">
+      <h4>本章是全书重点 · 与我们项目最直接相关</h4>
+      <p>本章展示了如何从 Chapter 3 的几何蓝图<strong>推导出</strong>具体的深度学习架构。覆盖了 8 个主要架构族：</p>
+      <ul>
+        <li><strong>5.1 CNN</strong> — 网格上的平移等变架构</li>
+        <li><strong>5.2 Group-equivariant CNN</strong> — 更丰富对称性的卷积</li>
+        <li><strong>5.3 GNN</strong> ⭐ — 图上的置换等变架构（三种风味）</li>
+        <li><strong>5.4 Deep Sets & Transformers</strong> — 集合/完全图上的特例</li>
+        <li><strong>5.5 Equivariant Message Passing</strong> ⭐⭐ — E(3)-等变 GNN，<span style="color:var(--success);font-weight:700">物理仿真核心</span></li>
+        <li><strong>5.6 Intrinsic Mesh CNN</strong> — 流形/网格上的卷积</li>
+        <li><strong>5.7-5.8 RNN & LSTM</strong> — 时间序列上的等变架构</li>
+      </ul>
+      <p><strong>预计阅读时间</strong>：5 小时</p>
+    </div>
+
+    <!-- 5.1 CNN -->
+    <h2 id="sec5-1">5.1 卷积神经网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Convolutional Neural Networks (CNNs)</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>CNN 是最早、最知名的遵循 GDL 蓝图的深度学习架构。在 Section 4.2 中，我们已经完整刻画了<strong>线性、局部、平移等变</strong>操作的类——它们就是<span class="term">卷积</span>。</p>
+      </div>
+      <div class="en">
+        CNNs are perhaps the earliest and most well known example of deep learning architectures following the GDL blueprint. The class of linear, local, translation equivariant operators is given by convolutions.
+      </div>
+    </div>
+
+    <h3 id="cnn-conv">卷积操作的详细展开</h3>
+
+    <div class="math-block">
+      $$F(x)_{u_1, u_2} = \sum_{a=1}^{H_f} \sum_{b=1}^{W_f} \alpha_{ab}\, x_{u_1+a,\, u_2+b}$$
+      <div class="math-explain">
+        2D 卷积的坐标形式。滤波器 $\alpha$ 的大小为 $H_f \times W_f$，在所有空间位置 $(u_1, u_2)$ 上<strong>共享</strong>（weight sharing）。这是平移等变性的直接数学后果。
+      </div>
+    </div>
+
+    <p><strong>多通道卷积</strong>（RGB → 多个特征图）：</p>
+
+    <div class="math-block">
+      $$F(x)_{uvj} = \sum_{a=1}^{H_f} \sum_{b=1}^{W_f} \sum_{c=1}^{M} \alpha_{jabc}\, x_{u+a,\, v+b,\, c}, \quad j \in [N]$$
+      <div class="math-explain">
+        $M$ = 输入通道数，$N$ = 输出通道数。滤波器张量 $\alpha \in \mathbb{R}^{N \times H_f \times W_f \times M}$ 表达了输入特征到输出特征的<strong>任意线性组合</strong>。这个基本操作涵盖了广泛的 CNN 架构。
+      </div>
+    </div>
+
+    <h3 id="cnn-multiscale">多尺度计算与池化</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>标准 CNN 层可以表示为 GDL 蓝图中基本操作的组合：</p>
+      </div>
+      <div class="en">
+        A 'vanilla' CNN layer can be expressed as the composition of basic objects from the GDL blueprint.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$h = P(\sigma(F(x)))$$
+      <div class="math-explain">
+        <strong>$F$</strong>：等变线性层（卷积）<br>
+        <strong>$\sigma$</strong>：逐点非线性（如 ReLU = $\max(x, 0)$）<br>
+        <strong>$P$</strong>：粗化操作（池化）— 降低空间分辨率<br>
+        池化方式：局部平均池化（低通滤波 + 下采样）或最大池化（max-pooling）
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch5_p79_img0.png" alt="CNN architectures timeline">
+      <figcaption>经典 CNN 架构时间线：从 LeNet (1998) 到 AlexNet (2012) 到 VGG (2014) 到 ResNet (2016)，架构越来越深但遵循相同的 GDL 蓝图。</figcaption>
+    </div>
+
+    <h3 id="cnn-resnet">残差网络 ResNet</h3>
+
+    <div class="callout callout-key">
+      <h4>残差连接的核心思想</h4>
+    </div>
+
+    <div class="math-block">
+      $$h = P(x + \sigma(F(x)))$$
+      <div class="math-explain">
+        <strong>残差重参数化</strong>（He et al., 2016）：每层建模前一层特征的<strong>扰动</strong>，而非通用非线性变换。这等价于 ODE 的<strong>前向 Euler 离散化</strong>：$\dot{x} = \sigma(F(x))$。<br>
+        关键优势：学习速度场（velocity field）比直接学习位置更容易，导致更好的优化景观，使训练深得多的网络成为可能。<br>
+        <strong>Neural ODE</strong>（Chen et al., 2018）将这个类比推到极致，直接学习 ODE 参数并使用数值积分。
+      </div>
+    </div>
+
+    <!-- 5.2 Group-equivariant CNN -->
+    <h2 id="sec5-2">5.2 群等变卷积神经网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Group-equivariant CNNs</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>标准 CNN 只利用了平移对称性。但很多数据具有更丰富的对称性——例如医学体积图像（3D CT/MRI）具有离散旋转对称性，DNA 序列具有反向互补对称性。<span class="term">群等变 CNN</span> 将卷积推广到任意群上。</p>
+      </div>
+      <div class="en">
+        Standard CNNs exploit only translation symmetry. Group-equivariant CNNs generalise convolution to arbitrary groups, capturing richer symmetries.
+      </div>
+    </div>
+
+    <h3 id="group-conv-impl">Transform + Convolve 实现策略</h3>
+
+    <div class="algorithm">
+      <div class="algorithm-title">Algorithm: 群卷积的高效实现（Transform + Convolve）</div>
+      <div class="algorithm-body">输入：信号 x，滤波器 θ，群变换集 H
+输出：群卷积 x ⋆ θ
+
+对每个 h ∈ H：
+  θ_h = ρ(h)θ           // 变换滤波器（如旋转、反向互补）
+  对每个平移 k：
+    (x ⋆ θ)(kh) = (x ⋆ θ_h)(k)  // 标准平移卷积
+
+// 输出可以看作 |H| 组"方向通道"的特征图
+// 例如 24 个旋转 → 24 个方向通道</div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch5_p79_img0.png" alt="Group-equivariant CNN filters">
+      <figcaption>3×3 滤波器在离散旋转群 $O_h$（48 个元素）下的所有旋转副本。群卷积等价于用所有旋转版本的滤波器做标准卷积。</figcaption>
+    </div>
+
+    <h3 id="spherical-cnn">球面 CNN Spherical CNNs</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>对于球面上的连续对称群 SO(3)，可以在<strong>谱域</strong>中实现卷积。球谐函数（Spherical Harmonics）是球面上的正交基——类似于经典 Fourier 基。SO(3) 上的 Fourier 基是 <strong>Wigner D-函数</strong>。卷积定理在两个域上都成立。</p>
+      </div>
+      <div class="en">
+        For the continuous symmetry group of the sphere, convolution can be implemented in the spectral domain using spherical harmonics (for S²) and Wigner D-functions (for SO(3)).
+      </div>
+    </div>
+
+    <!-- 5.3 GNN -->
+    <h2 id="sec5-3">5.3 图神经网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Graph Neural Networks (GNNs) ⭐</span></h2>
+
+    <div class="callout callout-project">
+      <h4>PhysRobot 核心架构</h4>
+      <p>GNN 是 GDL 蓝图在图上的实现。它们是目前最通用的深度学习架构之一——大多数其他架构可以理解为具有额外几何结构的 GNN 特例。</p>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch5_p88_img0.png" alt="Three flavours of GNN">
+      <figcaption>图 17：GNN 层的三种"风味"，以节点 b 的邻域为例。左→右：卷积型（固定权重 $c_{uv}$）、注意力型（计算注意力 $\alpha_{uv}$）、消息传递型（计算向量消息 $m_{uv}$）。</figcaption>
+    </div>
+
+    <h3 id="three-flavours">三种 GNN 风味</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>绝大部分 GNN 文献可以归入三种"风味"（flavours），它们在对邻域特征的变换程度上有所不同：</p>
+      </div>
+      <div class="en">
+        The vast majority of GNN literature may be derived from only three "flavours" of GNN layers.
+      </div>
+    </div>
+
+    <h4 id="gnn-conv">① 卷积型 Convolutional (GCN, ChebNet)</h4>
+
+    <div class="math-block">
+      $$h_u = \phi\left(x_u, \bigoplus_{v \in \mathcal{N}_u} c_{uv} \psi(x_v)\right)$$
+      <div class="math-explain">
+        <strong>$c_{uv}$</strong>：固定的重要性权重，通常直接来自邻接矩阵（如 GCN 中的归一化度数）<br>
+        <strong>$\psi$</strong>：对发送节点特征的变换（通常是线性变换）<br>
+        <strong>$\bigoplus$</strong>：求和聚合（相当于线性扩散或位置相关线性滤波）<br>
+        <strong>代表模型</strong>：GCN (Kipf & Welling, 2017)、ChebNet (Defferrard et al., 2016)
+      </div>
+    </div>
+
+    <h4 id="gnn-attn">② 注意力型 Attentional (GAT)</h4>
+
+    <div class="math-block">
+      $$h_u = \phi\left(x_u, \bigoplus_{v \in \mathcal{N}_u} a(x_u, x_v) \psi(x_v)\right)$$
+      <div class="math-explain">
+        <strong>$a(x_u, x_v)$</strong>：可学习的<strong>自注意力机制</strong>，隐式计算重要性系数 $\alpha_{uv}$（通常 softmax 归一化）<br>
+        权重是<strong>特征依赖的</strong>——不同的输入产生不同的注意力分布<br>
+        <strong>代表模型</strong>：GAT (Veličković et al., 2018)、MoNet (Monti et al., 2017)
+      </div>
+    </div>
+
+    <h4 id="gnn-mp">③ 消息传递型 Message-Passing (MPNN)</h4>
+
+    <div class="math-block">
+      $$h_u = \phi\left(x_u, \bigoplus_{v \in \mathcal{N}_u} \psi(x_u, x_v)\right)$$
+      <div class="math-explain">
+        <strong>$\psi(x_u, x_v)$</strong>：可学习的<strong>消息函数</strong>，计算从 $v$ 到 $u$ 的<strong>向量消息</strong><br>
+        最灵活的形式——消息可以是任意维度的向量<br>
+        <strong>代表模型</strong>：MPNN (Gilmer et al., 2017)、Interaction Networks (Battaglia et al., 2016)
+      </div>
+    </div>
+
+    <div class="callout callout-key">
+      <h4>表达力包含关系</h4>
+      <p style="text-align:center;font-size:1.2em;font-weight:700">
+        卷积型 ⊂ 注意力型 ⊂ 消息传递型
+      </p>
+      <ul>
+        <li>注意力型可以通过 $a(x_u, x_v) = c_{uv}$（查找表）模拟卷积型</li>
+        <li>消息传递型可以通过 $\psi(x_u, x_v) = a(x_u, x_v)\psi(x_v)$ 模拟注意力型</li>
+        <li>但表达力更强 ≠ 更好：消息传递需要更多内存，更难训练</li>
+        <li>对于<strong>同质图</strong>（homophilous graph），简单的卷积型往往效果更好</li>
+      </ul>
+    </div>
+
+    <!-- 5.4 Deep Sets & Transformers -->
+    <h2 id="sec5-4">5.4 Deep Sets、Transformers 与隐式图推断<br><span style="font-size:0.7em;color:var(--text-secondary)">Deep Sets, Transformers, and Latent Graph Inference</span></h2>
+
+    <h3 id="deep-sets">Deep Sets：空边集的 GNN</h3>
+
+    <div class="math-block">
+      $$h_u = \psi(x_u)$$
+      <div class="math-explain">
+        当 $A = I$（无边，$\mathcal{N}_u = \{u\}$）时，GNN 退化为对每个节点独立地应用共享变换 $\psi$。这就是 <strong>Deep Sets</strong>（Zaheer et al., 2017）/ <strong>PointNet</strong>（Qi et al., 2017）。
+      </div>
+    </div>
+
+    <h3 id="transformer">Transformer 即注意力 GNN over 完全图！</h3>
+
+    <div class="callout callout-key">
+      <h4>这是本节最重要的洞察</h4>
+    </div>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>当 $A = \mathbf{1}\mathbf{1}^\top$（完全图，$\mathcal{N}_u = V$）时，使用注意力型 GNN 就得到了<strong>自注意力算子</strong>——即 <span class="term">Transformer</span>（Vaswani et al., 2017）的核心：</p>
+      </div>
+      <div class="en">
+        With a complete graph and attentional aggregation, we recover the self-attention operator — the core of the Transformer architecture.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$h_u = \phi\left(x_u, \bigoplus_{v \in V} a(x_u, x_v) \psi(x_v)\right)$$
+      <div class="math-explain">
+        Transformer = <strong>注意力 GNN over 完全图</strong>（Joshi, 2020）<br>
+        自注意力隐式推断了一个<strong>软邻接矩阵</strong>：$a_{uv} = a(x_u, x_v) \in [0, 1]$（通过 softmax 归一化）<br>
+        <strong>位置编码</strong>（Positional Encoding）的作用：完全图丢失了位置信息，位置编码把位置信息补回来<br>
+        <strong>深层联系</strong>：Transformer 的位置编码与 DFT（离散 Fourier 变换）直接相关，进而与图拉普拉斯的特征向量相关
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>从 Transformer 到 Graph Transformer</h4>
+      <p>Transformer 的位置编码隐含假设输入节点连在<strong>循环网格</strong>上。对于更一般的图结构，可以使用图拉普拉斯特征向量作为位置编码（Dwivedi & Bresson, 2020 — Graph Transformer）。</p>
+    </div>
+
+    <h3 id="latent-graph">隐式图推断 Latent Graph Inference</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>第三种选择：既不假设空图（$A = I$），也不假设完全图（$A = \mathbf{1}\mathbf{1}^\top$），而是<strong>学习</strong>一个隐式邻接矩阵 $A$。这个问题被称为<span class="term">隐式图推断</span>（Latent Graph Inference），是高度活跃的研究方向。</p>
+        <p>挑战：图结构学习是<strong>离散优化</strong>问题，与基于梯度的下游任务优化之间存在张力。</p>
+      </div>
+      <div class="en">
+        One can try to learn the latent relational structure, leading to a general A that is neither I nor 11ᵀ. This requires balancing a discrete structure learning objective with any downstream task.
+      </div>
+    </div>
+
+    <!-- 5.5 EQUIVARIANT MESSAGE PASSING -->
+    <h2 id="sec5-5">5.5 等变消息传递网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Equivariant Message Passing Networks ⭐⭐ PhysRobot 核心</span></h2>
+
+    <div class="callout callout-project">
+      <h4>这是与我们项目最直接相关的部分！</h4>
+      <p>在物理仿真、分子动力学等应用中，节点特征不只是任意向量——它们包含<strong>几何实体的坐标</strong>（如原子的 3D 位置）。我们需要这些坐标在空间变换下<strong>正确变换</strong>——即对欧几里得群 E(3) 等变。</p>
+    </div>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>设定：区分节点的<strong>标量特征</strong> $f_u \in \mathbb{R}^d$ 和<strong>空间坐标</strong> $x_u \in \mathbb{R}^3$。等变层分别变换这两个输入，产生更新的 $f'_u$ 和 $x'_u$。</p>
+        <p><strong>等变性要求</strong>：如果对输入的空间坐标应用 $g \in E(3)$（$\rho(g)x = Rx + b$，其中 $R$ 是正交矩阵，$b$ 是平移向量），则：</p>
+        <ul>
+          <li>空间坐标输出以同样方式变换：$x'_u \mapsto Rx'_u + b$</li>
+          <li>标量特征输出<strong>不变</strong>：$f'_u$ 不变</li>
+        </ul>
+      </div>
+      <div class="en">
+        We distinguish node features f_u and spatial coordinates x_u. The coordinates are endowed with Euclidean symmetry. An equivariant layer transforms both separately, maintaining equivariance to E(3).
+      </div>
+    </div>
+
+    <h3 id="egnn">EGNN: Equivariant Graph Neural Network (Satorras et al., 2021)</h3>
+
+    <div class="blueprint">
+      <h4>🌟 EGNN 核心公式</h4>
+
+      <p><strong>特征更新</strong>（E(3)-不变）：</p>
+      $$f'_u = \phi\left(f_u, \bigoplus_{v \in \mathcal{N}_u} \psi_f(f_u, f_v, \|x_u - x_v\|^2)\right)$$
+
+      <p><strong>坐标更新</strong>（E(3)-等变）：</p>
+      $$x'_u = x_u + \sum_{v \neq u} (x_u - x_v)\, \psi_c(f_u, f_v, \|x_u - x_v\|^2)$$
+    </div>
+
+    <div class="math-explain">
+      <strong>为什么这是 E(3)-等变的？</strong>
+      <ul>
+        <li><strong>特征 $f'_u$</strong>：只依赖于距离 $\|x_u - x_v\|^2$，而 E(3) 变换保持距离不变 → $f'_u$ 是 E(3)-<strong>不变</strong>的 ✓</li>
+        <li><strong>坐标 $x'_u$</strong>：$x'_u = x_u + \sum (x_u - x_v) \cdot \text{scalar}$。设 $g = (R, b)$，则：
+          <ul>
+            <li>$g.x_u = Rx_u + b$</li>
+            <li>$g.x'_u = R(x_u + \sum (x_u - x_v) \cdot s_{uv}) + b = Rx_u + b + R\sum (x_u - x_v) \cdot s_{uv}$</li>
+            <li>而 $R(x_u - x_v) = Rx_u + b - (Rx_v + b) = g.x_u - g.x_v$ → 等变性成立 ✓</li>
+          </ul>
+        </li>
+      </ul>
+      <strong>关键洞察</strong>：使用<strong>相对位置向量</strong> $(x_u - x_v)$ 乘以<strong>标量权重</strong>来更新坐标——这自动保证了等变性！
+    </div>
+
+    <div class="callout callout-project">
+      <h4>EGNN 在 PhysRobot 中的应用</h4>
+      <p>EGNN 的结构与物理仿真完美对应：</p>
+      <ul>
+        <li><strong>特征更新</strong> = 更新粒子的内部状态（能量、速度大小等标量量）</li>
+        <li><strong>坐标更新</strong> = 更新粒子的位置（受到来自邻居的"力"的影响）</li>
+        <li><strong>$\psi_c$ 标量</strong> = 类似于力的大小（标量），乘以方向 $(x_u - x_v)$ 得到力向量</li>
+        <li>这与牛顿力学中 $F_{uv} = f(\|r_{uv}\|) \cdot \hat{r}_{uv}$ 的结构完全一致！</li>
+      </ul>
+    </div>
+
+    <h3 id="irreps">不可约表示方法 Irreducible Representations</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>EGNN 只处理<strong>标量</strong>特征和<strong>坐标</strong>（向量）。但有些特征可能需要编码为<strong>更高阶张量</strong>（如应力张量、电四极矩）。<span class="term">不可约表示</span>方法利用旋转群的 Fourier 分析来处理任意阶张量。</p>
+        <p>关键数学工具：<strong>Wigner D-矩阵</strong>（旋转群的不可约表示）和 <strong>Clebsch-Gordan 系数</strong>（张量积的分解）。</p>
+      </div>
+      <div class="en">
+        Irreducible representation approaches handle arbitrary tensor features using the Fourier analysis of the rotation group, via Wigner D-matrices and Clebsch-Gordan coefficients.
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>不可约表示方法的代表模型</h4>
+      <table>
+        <tr><th>模型</th><th>类型</th><th>年份</th><th>特点</th></tr>
+        <tr><td><strong>TFN</strong> (Thomas et al.)</td><td>卷积</td><td>2018</td><td>Tensor Field Networks，点云上的等变卷积</td></tr>
+        <tr><td><strong>3D Steerable CNN</strong> (Weiler et al.)</td><td>卷积</td><td>2018</td><td>可操控特征的 3D 卷积</td></tr>
+        <tr><td><strong>SE(3)-Transformer</strong> (Fuchs et al.)</td><td>注意力</td><td>2020</td><td>图上的等变注意力</td></tr>
+        <tr><td><strong>NequIP</strong> (Batzner et al.)</td><td>消息传递</td><td>2022</td><td>分子动力学的等变势能</td></tr>
+        <tr><td><strong>MACE</strong> (Batatia et al.)</td><td>消息传递</td><td>2022</td><td>多体等变交互</td></tr>
+      </table>
+    </div>
+
+    <h3 id="regular-rep">正则表示方法 Regular Representations</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>不可约表示需要直接推理群表示，可能很繁琐且只适用于紧致群。<span class="term">正则表示</span>方法更通用——通过存储所有群元素的特征副本来实现精确等变性。</p>
+        <p>代表模型：<strong>LieConv</strong>（Finzi et al., 2020）和 <strong>LieTransformer</strong>（Hutchinson et al., 2020），通过 Lie 群的指数/对数映射实现，支持快速原型化各种对称群。</p>
+      </div>
+      <div class="en">
+        Regular representation approaches are more general but require storing copies of embeddings for all group elements. Examples include LieConv and LieTransformer.
+      </div>
+    </div>
+
+    <!-- 5.6 Mesh CNN -->
+    <h2 id="sec5-6">5.6 内蕴网格 CNN<br><span style="font-size:0.7em;color:var(--text-secondary)">Intrinsic Mesh CNNs</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>三角网格是计算机图形学的"主食"，也是最常见的 3D 物体建模方式。<span class="term">Mesh CNN</span> 在网格上实现类卷积操作，利用测地距离和局部标架。</p>
+      </div>
+      <div class="en">
+        Triangular meshes are the 'bread and butter' of computer graphics. Mesh CNNs implement convolution-like operations on meshes using geodesic distances and local frames.
+      </div>
+    </div>
+
+    <div class="blueprint">
+      <h4>测地卷积滤波器 Geodesic Convolutional Filter</h4>
+      $$(Cx)(u) = \int_{\rho(u)} w(r, \vartheta) x(v(r, \vartheta))\, dr\, d\vartheta$$
+      <div class="math-explain">
+        在测地极坐标 $(r, \vartheta)$ 中定义卷积滤波器。$r$ = 测地距离，$\vartheta$ = 测地方向。<br>
+        关键问题：角度 $\vartheta$ 的零点依赖于<strong>标架选择</strong>——不同的标架给出不同的 $\vartheta$，导致<strong>规范模糊性</strong>。
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>代表性 Mesh CNN 架构</h4>
+      <ul>
+        <li><strong>GeodesicCNN</strong> (Masci et al., 2015) — 最早的测地卷积网络</li>
+        <li><strong>MoNet</strong> (Monti et al., 2017) — 混合高斯核作为测地滤波器</li>
+        <li><strong>Gauge-equivariant Mesh CNN</strong> (de Haan et al., 2020) — 规范等变网格卷积</li>
+        <li><strong>DiffusionNet</strong> (Sharp et al., 2022) — 基于扩散过程的网格学习</li>
+      </ul>
+    </div>
+
+    <div class="callout callout-project">
+      <h4>Mesh CNN 在 PhysRobot 中的潜在应用</h4>
+      <p>软组织表面通常用三角网格表示。Mesh CNN 可用于：</p>
+      <ul>
+        <li>预测网格顶点的位移/变形（手术仿真中的组织形变）</li>
+        <li>从表面形状推断材料属性</li>
+        <li>网格上的力传播建模</li>
+      </ul>
+    </div>
+
+    <!-- 5.7 RNN -->
+    <h2 id="sec5-7">5.7 循环神经网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Recurrent Neural Networks (RNNs)</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>RNN 可以从 GDL 的角度理解为 <strong>1D 时间网格</strong>上的架构。与 CNN 类似，RNN 具有<strong>时间平移等变性</strong>——但它们还需要处理<strong>因果性</strong>（只能使用过去的信息）。</p>
+      </div>
+      <div class="en">
+        RNNs can be understood as architectures on a 1D temporal grid. Like CNNs, they have temporal translation equivariance — but also need to handle causality.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$h_t = \sigma(Wh_{t-1} + Ux_t + b)$$
+      <div class="math-explain">
+        标准 RNN 递推：$h_t$ = 时刻 $t$ 的隐藏状态，$x_t$ = 时刻 $t$ 的输入。<br>
+        <strong>权重共享</strong>：$W, U, b$ 在所有时间步共享——这是时间平移等变性的数学后果。<br>
+        问题：<strong>梯度消失/爆炸</strong>——长序列中梯度通过 $W$ 的反复相乘会指数衰减或增长。
+      </div>
+    </div>
+
+    <!-- 5.8 LSTM -->
+    <h2 id="sec5-8">5.8 长短期记忆网络<br><span style="font-size:0.7em;color:var(--text-secondary)">Long Short-Term Memory (LSTM) Networks</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>LSTM 通过引入<span class="term">门控机制</span>（gating mechanism）解决了 RNN 的长程依赖问题。从 GDL 的角度，LSTM 的门控结构可以理解为对<strong>时间扭曲</strong>（time warping）变换的稳定性。</p>
+      </div>
+      <div class="en">
+        LSTM introduces gating mechanisms to handle long-range dependencies. From the GDL perspective, LSTM's gating can be understood as stability to time warping transformations.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\begin{aligned}
+      i_t &= \sigma(W_i x_t + U_i h_{t-1} + b_i) & \text{(输入门 input gate)} \\
+      f_t &= \sigma(W_f x_t + U_f h_{t-1} + b_f) & \text{(遗忘门 forget gate)} \\
+      o_t &= \sigma(W_o x_t + U_o h_{t-1} + b_o) & \text{(输出门 output gate)} \\
+      \tilde{c}_t &= \tanh(W_c x_t + U_c h_{t-1} + b_c) & \text{(候选记忆)} \\
+      c_t &= f_t \odot c_{t-1} + i_t \odot \tilde{c}_t & \text{(记忆更新)} \\
+      h_t &= o_t \odot \tanh(c_t) & \text{(输出)}
+      \end{aligned}$$
+      <div class="math-explain">
+        <strong>$i_t$</strong>（输入门）：控制多少新信息写入记忆<br>
+        <strong>$f_t$</strong>（遗忘门）：控制多少旧信息保留在记忆中<br>
+        <strong>$o_t$</strong>（输出门）：控制多少记忆信息输出<br>
+        <strong>$c_t$</strong>（细胞状态）：长期记忆——通过遗忘门的乘性更新，梯度可以无衰减地在时间上传播<br>
+        <strong>GDL 视角</strong>：门控结构保证了对时间扭曲（如信号拉伸/压缩）的<strong>稳定性</strong>，类似于 CNN 的形变稳定性。
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch5_p105_img0.png" alt="RNN and LSTM">
+      <figcaption>RNN 与 LSTM 的架构对比。LSTM 的门控机制允许梯度在长时间序列中有效传播。</figcaption>
+    </div>
+
+    <!-- Exercises -->
+    <div class="exercises" id="exercises">
+      <h3>练习题 Exercises</h3>
+      <ol>
+        <li><strong>CNN 作为特殊 GNN</strong>：证明一个作用在网格图（每个像素连接其相邻像素）上的 GNN 等价于标准 CNN。需要什么额外约束？</li>
+        <li><strong>GNN 风味对比</strong>：对于以下任务，你会选择哪种 GNN 风味（卷积/注意力/消息传递）？说明理由：
+          <ul>
+            <li>(a) 社交网络中的节点分类</li>
+            <li>(b) 分子性质预测</li>
+            <li>(c) 物理仿真中的力预测</li>
+          </ul>
+        </li>
+        <li><strong>Transformer = GNN</strong>：详细说明 Transformer 中的 Query-Key-Value 注意力 $\text{Attention}(Q, K, V)$ 如何映射到注意力 GNN 的公式中。$a(x_u, x_v)$ 和 $\psi(x_v)$ 分别对应什么？</li>
+        <li><strong>EGNN 等变性证明</strong>：完整证明 EGNN 坐标更新公式在旋转 $R$ 下是等变的，在平移 $b$ 下也是等变的。提示：直接代入 $x_u \mapsto Rx_u + b$ 并展开。</li>
+        <li><strong>EGNN 的局限性</strong>：EGNN 的特征 $f_u$ 只能是标量。如果我们想预测每个粒子的<strong>速度</strong>（向量量），EGNN 能直接做到吗？如何修改？</li>
+        <li><strong>PhysRobot 设计</strong>：为以下场景设计 GNN 架构：
+          <ul>
+            <li>输入：$N$ 个粒子的位置 $r_i \in \mathbb{R}^3$、速度 $v_i \in \mathbb{R}^3$、质量 $m_i \in \mathbb{R}$</li>
+            <li>输出：每个粒子的加速度 $a_i \in \mathbb{R}^3$</li>
+            <li>要求：SE(3)-等变</li>
+            <li>描述你会如何构建图（边的定义）、设计消息函数、保证等变性。</li>
+          </ul>
+        </li>
+        <li><strong>Mesh CNN 应用</strong>：考虑一个三角网格表示的心脏表面。我们想预测每个顶点在下一个心跳时的位移。应该选择哪种 GDL 架构？需要什么对称性？</li>
+        <li><strong>LSTM 的时间扭曲稳定性</strong>：直觉解释为什么遗忘门 $f_t$ 的值接近 1 时，LSTM 对时间扭曲更稳定。</li>
+      </ol>
+    </div>
+
+    <div class="chapter-nav">
+      <a href="../chapter4/index.html">← Chapter 4: 几何域</a>
+      <a href="../chapter6/index.html">Chapter 6: 应用 →</a>
+    </div>
+  </main>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

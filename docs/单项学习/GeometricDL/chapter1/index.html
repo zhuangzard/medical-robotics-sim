@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 1: Introduction | GDL 学习指南</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+</head>
+<body>
+  <div class="progress-bar"></div>
+
+  <header class="header">
+    <div class="header-title"><a href="../index.html">📐 GDL 学习指南</a></div>
+    <div class="header-nav">
+      <a href="../index.html">目录</a>
+      <a href="../chapter2/index.html">下一章 →</a>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+  </header>
+
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+  <nav class="sidebar">
+    <h3>Chapter 1</h3>
+    <a href="#intro">1. 引言</a>
+    <a href="#revolution" class="sub">深度学习革命</a>
+    <a href="#two-principles" class="sub">两个算法原则</a>
+    <a href="#symmetry" class="sub">对称性与正则性</a>
+    <a href="#erlangen" class="sub">Erlangen Program</a>
+    <a href="#project-link" class="sub">与项目的联系</a>
+    <a href="#exercises">练习题</a>
+    <h3>导航</h3>
+    <a href="../index.html">📚 总目录</a>
+    <a href="../chapter2/index.html">→ Ch.2 高维学习</a>
+  </nav>
+
+  <main class="main">
+    <h1>Chapter 1: Introduction<br><span style="font-size:0.6em;color:var(--text-secondary)">引言</span></h1>
+
+    <!-- 章节概述 -->
+    <div class="callout callout-info">
+      <h4>本章概述</h4>
+      <p>本章是全书的导论，介绍了 Geometric Deep Learning 的核心思想：用<strong>几何统一原则</strong>理解和构建深度学习架构。如同 Felix Klein 的 Erlangen Program 用变换群统一几何学一样，本书用对称性统一 CNN、RNN、GNN 和 Transformer。</p>
+    </div>
+
+    <h2 id="intro">1. 引言 Introduction</h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>过去十年见证了数据科学和机器学习的实验性革命，以<span class="term">深度学习</span>（Deep Learning）方法为代表。事实上，许多以前被认为无法解决的高维学习任务——比如<strong>计算机视觉</strong>、<strong>下围棋</strong>、<strong>蛋白质折叠</strong>——在适当的计算规模下都是可行的。</p>
+      </div>
+      <div class="en">
+        The last decade has witnessed an experimental revolution in data science and machine learning, epitomised by deep learning methods. Indeed, many high-dimensional learning tasks previously thought to be beyond reach – such as computer vision, playing Go, or protein folding – are in fact feasible with appropriate computational scale.
+      </div>
+    </div>
+
+    <h3 id="revolution">深度学习革命</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>深度学习的精髓建立在两个简单的<span class="term">算法原则</span>之上：</p>
+      </div>
+      <div class="en">
+        The essence of deep learning is built from two simple algorithmic principles.
+      </div>
+    </div>
+
+    <h3 id="two-principles">两个核心算法原则</h3>
+
+    <div class="callout callout-key">
+      <h4>核心原则</h4>
+      <ol>
+        <li><strong>表示学习 / 特征学习</strong>（Representation / Feature Learning）— 自适应的、通常是层级化的特征，能够捕捉每个任务的适当<strong>正则性</strong>（regularity）概念</li>
+        <li><strong>局部梯度下降学习</strong>（Learning by local gradient-descent）— 通常通过<strong>反向传播</strong>（backpropagation）实现</li>
+      </ol>
+    </div>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>虽然在高维空间中学习泛化函数是一个受到<span class="term">维度灾难</span>（curse of dimensionality）困扰的估计问题，但大多数感兴趣的任务并不是通用的——它们带有来自底层<strong>物理世界的低维性和结构</strong>所产生的本质性预定义正则性。</p>
+        <p>本书关注的就是通过统一的<strong>几何原则</strong>来揭示这些正则性，并将其应用于广泛的应用场景。</p>
+      </div>
+      <div class="en">
+        While learning generic functions in high dimensions is a cursed estimation problem, most tasks of interest are not generic, and come with essential pre-defined regularities arising from the underlying low-dimensionality and structure of the physical world. This text is concerned with exposing these regularities through unified geometric principles.
+      </div>
+    </div>
+
+    <h3 id="symmetry">对称性与正则性</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>利用大型系统的已知<span class="term">对称性</span>（symmetries）是对抗维度灾难的强大且经典的补救手段，也是大多数物理理论的基础。深度学习系统也不例外——从早期开始，研究者们就改编神经网络来利用来自物理测量的低维几何，例如：</p>
+        <ul>
+          <li><strong>图像中的网格</strong>（grids）→ CNN 利用平移对称性</li>
+          <li><strong>时间序列中的序列</strong>（sequences）→ RNN 利用时间平移</li>
+          <li><strong>分子中的位置和动量</strong>（position and momentum）→ GNN 利用旋转/置换对称性</li>
+        </ul>
+        <p>以及相关的对称性，如<strong>平移</strong>或<strong>旋转</strong>。</p>
+      </div>
+      <div class="en">
+        Exploiting the known symmetries of a large system is a powerful and classical remedy against the curse of dimensionality, and forms the basis of most physical theories. Deep learning systems are no exception, and since the early days researchers have adapted neural networks to exploit the low-dimensional geometry arising from physical measurements.
+      </div>
+    </div>
+
+    <h3 id="erlangen">Erlangen Program 精神的几何统一</h3>
+
+    <div class="callout callout-key">
+      <h4>Erlangen Program 类比</h4>
+      <p><strong>Felix Klein 的 Erlangen Program</strong>（1872）提出：每种几何学都可以用其对称变换群来定义。例如，欧几里得几何对应于刚体运动群（平移+旋转），仿射几何对应于仿射变换群。</p>
+      <p>本书将这一思想应用于深度学习：<strong>每种神经网络架构都可以用其保持的对称性来理解</strong>。</p>
+    </div>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>这种 Erlangen Program 精神的"<strong>几何统一</strong>"具有双重目的：</p>
+        <ol>
+          <li>提供<strong>通用数学框架</strong>来研究最成功的神经网络架构（CNN、RNN、GNN、Transformer）</li>
+          <li>提供<strong>构造性程序</strong>来将先验物理知识融入神经架构，并为尚未发明的未来架构提供原则性的构建方法</li>
+        </ol>
+      </div>
+      <div class="en">
+        Such a 'geometric unification' endeavour in the spirit of the Erlangen Program serves a dual purpose: on one hand, it provides a common mathematical framework to study the most successful neural network architectures. On the other, it gives a constructive procedure to incorporate prior physical knowledge into neural architectures.
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>架构 Architecture</th><th>域 Domain</th><th>对称群 Symmetry Group</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>CNN</td><td>网格 Grid</td><td>平移 Translation</td></tr>
+        <tr><td>Spherical CNN</td><td>球面 Sphere / SO(3)</td><td>旋转 Rotation SO(3)</td></tr>
+        <tr><td>GNN</td><td>图 Graph</td><td>置换 Permutation Σ<sub>n</sub></td></tr>
+        <tr><td>Deep Sets</td><td>集合 Set</td><td>置换 Permutation Σ<sub>n</sub></td></tr>
+        <tr><td>Transformer</td><td>完全图 Complete Graph</td><td>置换 Permutation Σ<sub>n</sub></td></tr>
+        <tr><td>Intrinsic/Mesh CNN</td><td>流形 Manifold</td><td>等距 Isometry / 规范 Gauge SO(2)</td></tr>
+        <tr><td>LSTM</td><td>1D 网格 1D Grid</td><td>时间扭曲 Time warping</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="project-link">与 PhysRobot 项目的联系</h3>
+
+    <div class="callout callout-project">
+      <h4>与 PhysRobot 项目的关系</h4>
+      <p>本章引言中提到的核心思想直接适用于我们的物理仿真项目：</p>
+      <ul>
+        <li><strong>物理世界的低维结构</strong> — 医疗机器人仿真中的物理量（力、位移、应力）都具有几何对称性（旋转不变性、平移等变性）</li>
+        <li><strong>对称性作为归纳偏置</strong> — 我们的 GNN 仿真器利用 SE(3) 等变性来保证物理一致性，这正是本书的核心方法论</li>
+        <li><strong>从原则构建架构</strong> — 本书提供的"构造性程序"帮助我们理解为什么 Equivariant Message Passing 是物理仿真的自然选择</li>
+      </ul>
+    </div>
+
+    <div class="exercises" id="exercises">
+      <h3>练习题 Exercises</h3>
+      <ol>
+        <li>列举三个你熟悉的物理系统，说明它们各自具有什么对称性。这些对称性如何被用来简化问题？</li>
+        <li>Erlangen Program 将几何学按其对称群分类。类比地，试着将你知道的神经网络架构（MLP、CNN、RNN、GNN）按它们保持的"对称性"分类。</li>
+        <li>为什么"利用对称性"能够缓解维度灾难？直觉上，如果输入空间中有一个对称群 $G$，那么有效的搜索空间缩小了多少？</li>
+        <li><strong>PhysRobot 思考</strong>：在我们的粒子系统仿真中，如果旋转系统中所有粒子的位置，物理行为应该如何变化？这暗示了什么样的网络设计？</li>
+      </ol>
+    </div>
+
+    <div class="chapter-nav">
+      <a href="../index.html">← 返回目录</a>
+      <a href="../chapter2/index.html">Chapter 2: 高维学习 →</a>
+    </div>
+  </main>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>
