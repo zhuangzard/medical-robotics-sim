@@ -1,0 +1,337 @@
+O(<span class="st">"MlpPolicy"</span>, env, policy_kwargs=policy_kwargs)
+model.learn(total_timesteps=<span class="nu">80000</span>)
+
+<span class="cm"># 3. PhysRobot — 用 PhysRobotFeaturesExtractor</span>
+policy_kwargs = <span class="bi">dict</span>(
+    features_extractor_class=PhysRobotFeaturesExtractor,
+    features_extractor_kwargs=<span class="bi">dict</span>(features_dim=<span class="nu">128</span>),
+)
+model = PPO(<span class="st">"MlpPolicy"</span>, env, policy_kwargs=policy_kwargs)
+model.learn(total_timesteps=<span class="nu">16000</span>)  <span class="cm"># 12× 更少的数据！</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button></code></pre>
+
+<hr>
+
+<!-- ==================== CHAPTER 7 ==================== -->
+<h1 id="ch7">第七章：完整训练流程</h1>
+
+<h2 id="s7-1">7.1 数据收集 — Rollout Buffer</h2>
+
+<div class="box def">
+  <div class="box-title">On-Policy 数据收集</div>
+  <p>PPO 是 <strong>on-policy</strong> 算法，每次更新前必须用<strong>当前策略</strong>收集新数据：</p>
+  <ol>
+    <li>用 π_θ_old 运行 4 个并行环境，每个收集 2048 步</li>
+    <li>总计 4 × 2048 = 8192 个 (s, a, r, s', done) 转移</li>
+    <li>存储到 Rollout Buffer 中</li>
+    <li>计算 GAE 优势和目标回报</li>
+  </ol>
+</div>
+
+<pre><code><span class="cm"># Rollout Buffer 数据结构</span>
+buffer = {
+    <span class="st">'observations'</span>: np.zeros((n_steps, n_envs, <span class="nu">16</span>)),   <span class="cm"># 状态</span>
+    <span class="st">'actions'</span>:      np.zeros((n_steps, n_envs, <span class="nu">2</span>)),    <span class="cm"># 动作</span>
+    <span class="st">'rewards'</span>:      np.zeros((n_steps, n_envs)),        <span class="cm"># 奖励</span>
+    <span class="st">'dones'</span>:        np.zeros((n_steps, n_envs)),        <span class="cm"># 终止标志</span>
+    <span class="st">'log_probs'</span>:    np.zeros((n_steps, n_envs)),        <span class="cm"># log π(a|s)</span>
+    <span class="st">'values'</span>:       np.zeros((n_steps, n_envs)),        <span class="cm"># V(s)</span>
+}
+<span class="cm"># n_steps=2048, n_envs=4 → 每批 8192 个转移</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button></code></pre>
+
+<h2 id="s7-2">7.2 优势计算 — GAE 逐步</h2>
+
+<pre><code><span class="cm"># GAE 计算的逐步示例（假设 T=5 步）</span>
+<span class="cm"># rewards = [r₀, r₁, r₂, r₃, r₄]</span>
+<span class="cm"># values  = [V₀, V₁, V₂, V₃, V₄]</span>
+<span class="cm"># V₅ (next_value) — 最后一个状态的价值估计</span>
+<span class="cm"># γ = 0.99, λ = 0.95</span>
+
+<span class="cm"># 步骤 1：计算 TD 残差</span>
+<span class="cm"># δ₄ = r₄ + γ·V₅ - V₄</span>
+<span class="cm"># δ₃ = r₃ + γ·V₄ - V₃</span>
+<span class="cm"># δ₂ = r₂ + γ·V₃ - V₂</span>
+<span class="cm"># δ₁ = r₁ + γ·V₂ - V₁</span>
+<span class="cm"># δ₀ = r₀ + γ·V₁ - V₀</span>
+
+<span class="cm"># 步骤 2：逆序累积 GAE</span>
+<span class="cm"># A₄^GAE = δ₄</span>
+<span class="cm"># A₃^GAE = δ₃ + (γλ)·A₄^GAE</span>
+<span class="cm"># A₂^GAE = δ₂ + (γλ)·A₃^GAE</span>
+<span class="cm"># A₁^GAE = δ₁ + (γλ)·A₂^GAE</span>
+<span class="cm"># A₀^GAE = δ₀ + (γλ)·A₁^GAE</span>
+
+<span class="cm"># 步骤 3：目标回报</span>
+<span class="cm"># V_target_t = A_t^GAE + V_t</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button></code></pre>
+
+<h2 id="s7-3">7.3 Mini-batch 训练 — 10 个 Epoch</h2>
+
+<pre><code><span class="cm"># PPO 更新循环</span>
+<span class="kw">for</span> epoch <span class="kw">in</span> <span class="bi">range</span>(<span class="nu">10</span>):  <span class="cm"># n_epochs = 10</span>
+    <span class="cm"># 随机打乱 8192 个样本</span>
+    indices = np.random.permutation(<span class="nu">8192</span>)
+
+    <span class="cm"># 分成 128 个 mini-batch (8192 / 64 = 128)</span>
+    <span class="kw">for</span> start <span class="kw">in</span> <span class="bi">range</span>(<span class="nu">0</span>, <span class="nu">8192</span>, <span class="nu">64</span>):
+        mb_idx = indices[start:start + <span class="nu">64</span>]
+
+        <span class="cm"># 取出 mini-batch 数据</span>
+        mb_obs = observations[mb_idx]
+        mb_actions = actions[mb_idx]
+        mb_old_log_probs = old_log_probs[mb_idx]
+        mb_advantages = advantages[mb_idx]
+        mb_returns = returns[mb_idx]
+
+        <span class="cm"># 正向传播</span>
+        dist, values = model(mb_obs)
+        new_log_probs = dist.log_prob(mb_actions).sum(-<span class="nu">1</span>)
+        entropy = dist.entropy().mean()
+
+        <span class="cm"># PPO-Clip Loss</span>
+        ratio = torch.exp(new_log_probs - mb_old_log_probs)
+        surr1 = ratio * mb_advantages
+        surr2 = torch.clamp(ratio, <span class="nu">0.8</span>, <span class="nu">1.2</span>) * mb_advantages
+        policy_loss = -torch.min(surr1, surr2).mean()
+
+        <span class="cm"># Value Loss + Entropy</span>
+        value_loss = ((values.squeeze() - mb_returns) ** <span class="nu">2</span>).mean()
+        loss = policy_loss + <span class="nu">0.5</span> * value_loss - <span class="nu">0.0</span> * entropy
+
+        <span class="cm"># 反向传播 + 更新</span>
+        optimizer.zero_grad()
+        loss.backward()
+        nn.utils.clip_grad_norm_(model.parameters(), <span class="nu">0.5</span>)
+        optimizer.step()
+
+<span class="cm"># 每批数据总共更新 10 × 128 = 1280 次梯度步</span>
+<button class="copy-btn" onclick="copyCode(this)">复制</button></code></pre>
+
+<h2 id="s7-4">7.4 学习曲线分析</h2>
+
+<div class="box def">
+  <div class="box-title">关键监控指标</div>
+  <ul>
+    <li><strong>explained_variance</strong>：价值函数解释的方差比例，理想值接近 1.0</li>
+    <li><strong>value_loss</strong>：L^VF，越低越好（Critic 预测越准）</li>
+    <li><strong>policy_loss</strong>：L^CLIP，不是越低越好——需要看趋势</li>
+    <li><strong>approx_kl</strong>：新旧策略的 KL 散度近似，不应超过 0.01~0.02</li>
+    <li><strong>clip_fraction</strong>：被裁剪的样本比例，通常 10%~30%</li>
+  </ul>
+</div>
+
+<div class="box warn">
+  <div class="box-title">训练诊断</div>
+  <ul>
+    <li><strong>EV ≈ 0 或负值</strong>：Critic 没学到东西，检查学习率/网络结构</li>
+    <li><strong>KL 太大</strong>：策略变化过大，降低学习率或增加裁剪</li>
+    <li><strong>clip_fraction &gt; 0.5</strong>：太多样本被裁剪，可能学习率过大</li>
+    <li><strong>entropy 趋向 0</strong>：探索崩塌，增大 ent_coef</li>
+  </ul>
+</div>
+
+<h2 id="s7-5">7.5 超参数调优</h2>
+
+<table>
+<tr><th>超参数</th><th>默认值</th><th>范围</th><th>建议</th></tr>
+<tr><td>n_steps</td><td>2048</td><td>[128, 8192]</td><td>长期任务用大值</td></tr>
+<tr><td>batch_size</td><td>64</td><td>[32, 512]</td><td>n_steps 的子集</td></tr>
+<tr><td>n_epochs</td><td>10</td><td>[3, 30]</td><td>太多会过拟合</td></tr>
+<tr><td>learning_rate</td><td>3e-4</td><td>[1e-5, 1e-3]</td><td>3e-4 经典起点</td></tr>
+<tr><td>γ (gamma)</td><td>0.99</td><td>[0.9, 0.999]</td><td>长期任务用大 γ</td></tr>
+<tr><td>λ (gae_lambda)</td><td>0.95</td><td>[0.9, 1.0]</td><td>0.95 最常用</td></tr>
+<tr><td>ε (clip_range)</td><td>0.2</td><td>[0.1, 0.3]</td><td>0.2 几乎不需调</td></tr>
+<tr><td>c₁ (vf_coef)</td><td>0.5</td><td>[0.25, 1.0]</td><td>共享网络时重要</td></tr>
+<tr><td>c₂ (ent_coef)</td><td>0.0</td><td>[0, 0.01]</td><td>探索不足时增大</td></tr>
+<tr><td>max_grad_norm</td><td>0.5</td><td>[0.3, 1.0]</td><td>防止梯度爆炸</td></tr>
+</table>
+
+<h2 id="s7-6">7.6 OOD 泛化测试</h2>
+
+<div class="box example">
+  <div class="box-title">箱子质量泛化测试</div>
+  <p>训练时使用 box_mass = 0.5 kg，测试时变化质量：</p>
+  <ul>
+    <li>box_mass = 0.1 kg（更轻）→ PPO 表现下降 30%</li>
+    <li>box_mass = 2.0 kg（更重）→ PPO 表现下降 50%</li>
+    <li>PhysRobot 由于内置物理理解，性能下降仅 10-15%</li>
+  </ul>
+</div>
+
+<pre><code><span class="cm"># OOD 测试代码</span>
+<span class="kw">def</span> <span class="fn">ood_test</span>(agent, test_masses=[<span class="nu">0.1</span>, <span class="nu">0.3</span>, <span class="nu">0.5</span>, <span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">5.0</span>]):
+    results = {}
+    <span class="kw">for</span> mass <span class="kw">in</span> test_masses:
+        env = PushBoxEnv(box_mass=mass)
+        metrics = agent.evaluate(env, n_episodes=<span class="nu">100</span>)
+        results[mass] = metrics[<span class="st">'success_rate'</span>]
+        <span class="bi">print</span>(<span class="st">f"mass={mass:.1f}kg → success={metrics['success_rate']:.1%}"</span>)
+    <span class="kw">return</span> results
+<button class="copy-btn" onclick="copyCode(this)">复制</button></code></pre>
+
+<hr>
+
+<!-- ==================== APPENDIX ==================== -->
+<h1 id="app-pseudo">附录 A：PPO 伪代码（完整版）</h1>
+
+<div class="box thm">
+  <div class="box-title">PPO 完整算法</div>
+<pre style="background:transparent;border:none;padding:0;font-size:13px;">
+算法: Proximal Policy Optimization (PPO-Clip)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+输入: 初始策略参数 θ₀, 初始价值参数 φ₀
+超参数: ε=0.2, γ=0.99, λ=0.95, c₁=0.5, c₂=0.0
+        K=10 (epochs), M=64 (batch), N=2048 (steps), E=4 (envs)
+
+for iteration = 1, 2, 3, ... do
+
+  1. 数据收集 (Rollout)
+     θ_old ← θ
+     for t = 1 to N, for env = 1 to E do
+       a_t ~ π_θ_old(·|s_t)
+       s_{t+1}, r_t ~ Env.step(a_t)
+       存储 (s_t, a_t, r_t, log π_θ_old(a_t|s_t))
+     end
+
+  2. 计算优势 (GAE)
+     A_T ← 0
+     for t = T-1 down to 0 do
+       δ_t = r_t + γ·V_φ(s_{t+1}) - V_φ(s_t)
+       A_t = δ_t + γ·λ·A_{t+1}
+     end
+     V_target_t = A_t + V_φ(s_t)
+
+  3. Mini-batch 优化
+     for epoch = 1 to K do
+       shuffle all N×E samples
+       for each mini-batch of M do
+         r_t = π_θ(a_t|s_t) / π_θ_old(a_t|s_t)
+         L_clip = min(r_t·A_t, clip(r_t,1-ε,1+ε)·A_t)
+         L_vf = (V_φ(s_t) - V_target)²
+         L_ent = -Entropy(π_θ)
+         L = -L_clip + c₁·L_vf + c₂·L_ent
+         θ ← θ - α·∇_θ L
+       end
+     end
+
+end
+</pre>
+</div>
+
+<h1 id="app-formulas">附录 B：关键公式速查表</h1>
+
+<table>
+<tr><th>概念</th><th>公式</th></tr>
+<tr><td>回报</td><td>\(G_t = \sum_{k=0}^{\infty} \gamma^k r_{t+k}\)</td></tr>
+<tr><td>状态价值</td><td>\(V^\pi(s) = \mathbb{E}_\pi[G_t | s_t = s]\)</td></tr>
+<tr><td>动作价值</td><td>\(Q^\pi(s,a) = \mathbb{E}_\pi[G_t | s_t=s, a_t=a]\)</td></tr>
+<tr><td>优势函数</td><td>\(A^\pi(s,a) = Q^\pi(s,a) - V^\pi(s)\)</td></tr>
+<tr><td>策略梯度</td><td>\(\nabla J = \mathbb{E}[\nabla\log\pi(a|s) \cdot A(s,a)]\)</td></tr>
+<tr><td>概率比</td><td>\(r_t(\theta) = \pi_\theta(a|s) / \pi_{\theta_{\text{old}}}(a|s)\)</td></tr>
+<tr><td>PPO-Clip</td><td>\(L = \mathbb{E}[\min(r_t A_t, \text{clip}(r_t) A_t)]\)</td></tr>
+<tr><td>TD 残差</td><td>\(\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)\)</td></tr>
+<tr><td>GAE</td><td>\(\hat{A}_t = \sum_l (\gamma\lambda)^l \delta_{t+l}\)</td></tr>
+<tr><td>总损失</td><td>\(L = -L^{\text{CLIP}} + c_1 L^{\text{VF}} - c_2 S\)</td></tr>
+</table>
+
+<h1 id="app-ref">附录 C：参考文献</h1>
+
+<ol>
+  <li><strong>Schulman, J. et al. (2017)</strong>. "Proximal Policy Optimization Algorithms". arXiv:1707.06347 — PPO 原始论文</li>
+  <li><strong>Schulman, J. et al. (2015)</strong>. "High-Dimensional Continuous Control Using Generalized Advantage Estimation". arXiv:1506.02438 — GAE</li>
+  <li><strong>Schulman, J. et al. (2015)</strong>. "Trust Region Policy Optimization". ICML 2015 — TRPO</li>
+  <li><strong>Sutton, R. &amp; Barto, A. (2018)</strong>. "Reinforcement Learning: An Introduction (2nd ed.)". MIT Press</li>
+  <li><strong>Sanchez-Gonzalez, A. et al. (2020)</strong>. "Learning to Simulate Complex Physics with Graph Networks". ICML 2020 — GNS</li>
+  <li><strong>Todorov, E. et al. (2012)</strong>. "MuJoCo: A physics engine for model-based control". IROS 2012</li>
+  <li><strong>Stable-Baselines3</strong>. <a href="https://stable-baselines3.readthedocs.io/">https://stable-baselines3.readthedocs.io/</a></li>
+  <li><strong>Williams, R.J. (1992)</strong>. "Simple Statistical Gradient-Following Algorithms for Connectionist RL". Machine Learning — REINFORCE</li>
+</ol>
+
+<hr>
+
+<p style="text-align:center;color:var(--text-secondary);margin-top:60px;">
+  <strong>🤖 PushBox PPO 教程</strong><br>
+  Medical Robotics Simulation Project<br>
+  © 2026 — 自动生成于 medical-robotics-sim 项目
+</p>
+
+</div> <!-- end .main -->
+
+<!-- ========== JavaScript ========== -->
+<script>
+// Theme Toggle
+function toggleTheme() {
+  const body = document.body;
+  const btn = document.querySelector('.theme-toggle');
+  if (body.getAttribute('data-theme') === 'dark') {
+    body.removeAttribute('data-theme');
+    btn.textContent = '🌙 暗色';
+    localStorage.setItem('theme', 'light');
+  } else {
+    body.setAttribute('data-theme', 'dark');
+    btn.textContent = '☀️ 亮色';
+    localStorage.setItem('theme', 'dark');
+  }
+}
+if (localStorage.getItem('theme') === 'dark') {
+  document.body.setAttribute('data-theme', 'dark');
+  document.querySelector('.theme-toggle').textContent = '☀️ 亮色';
+}
+
+// Copy Button
+function copyCode(btn) {
+  const pre = btn.closest('pre');
+  const code = pre.querySelector('code') || pre;
+  const text = code.textContent.replace('复制', '').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ 已复制';
+    setTimeout(() => btn.textContent = '复制', 2000);
+  });
+}
+
+// Reading Progress
+window.addEventListener('scroll', () => {
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  const pct = Math.min(window.scrollY / docH * 100, 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+});
+
+// Active Sidebar
+const secs = document.querySelectorAll('h1[id], h2[id]');
+const navs = document.querySelectorAll('.sidebar nav a');
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navs.forEach(n => n.classList.remove('active'));
+      const a = document.querySelector('.sidebar nav a[href="#' + e.target.id + '"]');
+      if (a) a.classList.add('active');
+    }
+  });
+}, { rootMargin: '-80px 0px -70% 0px' });
+secs.forEach(s => obs.observe(s));
+
+// KaTeX
+document.addEventListener("DOMContentLoaded", function() {
+  if (typeof renderMathInElement !== 'undefined') {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '\\[', right: '\\]', display: true},
+        {left: '$', right: '$', display: false},
+        {left: '\\(', right: '\\)', display: false}
+      ],
+      throwOnError: false
+    });
+  }
+});
+
+// Mobile sidebar close
+document.querySelectorAll('.sidebar nav a').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
