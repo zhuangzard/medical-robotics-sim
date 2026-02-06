@@ -275,7 +275,7 @@ class PushBoxEnv(gym.Env):
         
         # Success: box at goal for required duration
         box_pos = self._get_box_position()
-        dist_to_goal = np.linalg.norm(box_pos - self.goal_position)
+        dist_to_goal = np.linalg.norm(box_pos[:2] - self.goal_position)  # Only x, y
         
         if dist_to_goal < self.success_threshold:
             self.success_counter += 1
