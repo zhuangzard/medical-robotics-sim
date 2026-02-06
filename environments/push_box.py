@@ -129,6 +129,11 @@ class PushBoxEnv(gym.Env):
         self.current_step = 0
         self.success_counter = 0
         self.goal_position = np.array([1.0, 0.5])  # Will be randomized
+        
+        # Episode statistics (for StableBaselines3)
+        self.episode_reward = 0.0
+        self.episode_length = 0
+        
         self.episode_data = {
             'states': [],
             'actions': [],
@@ -226,6 +231,11 @@ class PushBoxEnv(gym.Env):
         # Reset counters
         self.current_step = 0
         self.success_counter = 0
+        
+        # Reset episode statistics
+        self.episode_reward = 0.0
+        self.episode_length = 0
+        
         self.episode_data = {
             'states': [],
             'actions': [],
@@ -295,6 +305,10 @@ class PushBoxEnv(gym.Env):
         if self.current_step >= self.max_episode_steps:
             truncated = True
         
+        # Update episode statistics
+        self.episode_reward += reward
+        self.episode_length += 1
+        
         # Store episode data
         self.episode_data['states'].append(observation)
         self.episode_data['actions'].append(action)
@@ -305,6 +319,13 @@ class PushBoxEnv(gym.Env):
         info = self._get_info()
         info.update(reward_info)
         info['success'] = self.success_counter >= self.success_duration
+        
+        # Add episode statistics when episode ends (required by StableBaselines3)
+        if terminated or truncated:
+            info['episode'] = {
+                'r': self.episode_reward,
+                'l': self.episode_length
+            }
         
         return observation, reward, terminated, truncated, info
     
