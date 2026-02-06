@@ -279,12 +279,13 @@ print('✅ Physics Core loaded')
 
 cells.append(code_cell(physics_clean))
 
-# All 3 Agents (compact)
+# All 3 Agents (with real physics-informed feature extractors)
 agents_code = """# === ALL 3 AGENTS ===
 from stable_baselines3 import PPO
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
 from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import BaseCallback
+from torch_geometric.data import Data as PyGData, Batch as PyGBatch
 
 class SuccessTrackingCallback(BaseCallback):
     def __init__(self, verbose=1):
@@ -333,14 +334,76 @@ class PurePPOAgent:
             successes.append(1 if info.get('success', False) else 0)
         return {'mean_reward': np.mean(rewards), 'success_rate': np.mean(successes)}
 
-# AGENT 2: GNS
+# ── Helper: build 2-node graph from 16-dim obs ──
+def obs_to_graph_batch(observations):
+    \"\"\"Convert batch of obs [B,16] → PyG Batch with 2 nodes (ee, box).\"\"\"
+    batch_size = observations.shape[0]
+    dev = observations.device
+    graphs = []
+    for i in range(batch_size):
+        o = observations[i]
+        # Parse: joint_pos(2), joint_vel(2), ee_pos(3), box_pos(3), box_vel(3), goal_pos(3)
+        ee_pos  = o[4:7]
+        ee_vel  = torch.zeros(3, device=dev)
+        box_pos = o[7:10]
+        box_vel = o[10:13]
+        positions  = torch.stack([ee_pos,  box_pos])       # [2,3]
+        velocities = torch.stack([ee_vel,  box_vel])        # [2,3]
+        node_feats = torch.cat([positions, velocities], dim=-1)  # [2,6]
+        edge_index = torch.tensor([[0,1],[1,0]], dtype=torch.long, device=dev).t().contiguous()  # [2,2]
+        # Edge attr: relative pos + distance  (for GNS edge encoder)
+        rel01 = box_pos - ee_pos
+        rel10 = ee_pos - box_pos
+        d01 = torch.norm(rel01).unsqueeze(0)
+        d10 = torch.norm(rel10).unsqueeze(0)
+        edge_attr = torch.stack([torch.cat([rel01, d01]), torch.cat([rel10, d10])])  # [2,4]
+        g = PyGData(x=node_feats, pos=positions, edge_index=edge_index, edge_attr=edge_attr)
+        graphs.append(g)
+    return PyGBatch.from_data_list(graphs)
+
+# AGENT 2: GNS  ── uses graph MessagePassing (no conservation constraints)
+class GNSGraphLayer(MessagePassing):
+    \"\"\"Standard GN layer: edge MLP → aggregate → node MLP (no physics constraints).\"\"\"
+    def __init__(self, node_dim, edge_dim, hidden_dim=128):
+        super().__init__(aggr='add')
+        self.edge_mlp = nn.Sequential(
+            nn.Linear(2*node_dim + edge_dim, hidden_dim), nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim), nn.ReLU(),
+            nn.Linear(hidden_dim, edge_dim))
+        self.node_mlp = nn.Sequential(
+            nn.Linear(node_dim + edge_dim, hidden_dim), nn.ReLU(),
+            nn.Linear(hidden_dim, hidden_dim), nn.ReLU(),
+            nn.Linear(hidden_dim, node_dim))
+    def forward(self, x, edge_index, edge_attr):
+        return self.propagate(edge_index, x=x, edge_attr=edge_attr)
+    def message(self, x_i, x_j, edge_attr):
+        return self.edge_mlp(torch.cat([x_i, x_j, edge_attr], dim=-1))
+    def update(self, aggr_out, x):
+        return self.node_mlp(torch.cat([x, aggr_out], dim=-1))
+
 class GNSFeaturesExtractor(BaseFeaturesExtractor):
+    \"\"\"Graph-Network-Simulator feature extractor (learns physics without conservation).\"\"\"
     def __init__(self, observation_space, features_dim=128):
         super().__init__(observation_space, features_dim)
-        self.feature_proj = nn.Sequential(nn.Linear(16, features_dim), nn.ReLU())
+        hid = 128
+        edge_dim = 4   # rel_pos(3) + distance(1)
+        self.node_encoder = nn.Sequential(nn.Linear(6, hid), nn.ReLU(), nn.Linear(hid, hid))
+        self.edge_encoder = nn.Sequential(nn.Linear(edge_dim, hid), nn.ReLU(), nn.Linear(hid, hid))
+        self.gn_layers = nn.ModuleList([GNSGraphLayer(hid, hid, hid) for _ in range(3)])
+        self.decoder = nn.Sequential(nn.Linear(hid, hid), nn.ReLU(), nn.Linear(hid, 3))
+        self.feature_proj = nn.Sequential(nn.Linear(3 + 16, features_dim), nn.ReLU())
     
     def forward(self, observations):
-        return self.feature_proj(observations)
+        graph = obs_to_graph_batch(observations)
+        x = self.node_encoder(graph.x)
+        ea = self.edge_encoder(graph.edge_attr)
+        for layer in self.gn_layers:
+            x = x + layer(x, graph.edge_index, ea)
+        acc = self.decoder(x)
+        # Take box node predictions (every other node starting from index 1)
+        box_acc = acc[1::2]   # [B, 3]
+        combined = torch.cat([box_acc, observations], dim=-1)
+        return self.feature_proj(combined)
 
 class GNSAgent:
     def __init__(self, env, verbose=1):
@@ -372,16 +435,38 @@ class GNSAgent:
             successes.append(1 if info.get('success', False) else 0)
         return {'mean_reward': np.mean(rewards), 'success_rate': np.mean(successes)}
 
-# AGENT 3: PhysRobot
+# AGENT 3: PhysRobot  ── uses EdgeFrame + DynamicalGNN from Cell 5
 class PhysRobotFeaturesExtractor(BaseFeaturesExtractor):
+    \"\"\"Physics-informed feature extractor using EdgeFrame + DynamicalGNN (conservation laws).\"\"\"
     def __init__(self, observation_space, features_dim=128):
         super().__init__(observation_space, features_dim)
-        self.policy_stream = nn.Sequential(nn.Linear(16, 128), nn.ReLU(), nn.Linear(128, features_dim), nn.ReLU())
-        self.fusion = nn.Sequential(nn.Linear(features_dim, features_dim), nn.ReLU())
+        # Physics core — reuses DynamicalGNN defined in Cell 5
+        self.physics_gnn = DynamicalGNN(
+            node_dim=6, hidden_dim=128, edge_hidden_dim=64,
+            n_message_passing=3, output_dim=3)
+        # Policy stream (standard MLP)
+        self.policy_stream = nn.Sequential(
+            nn.Linear(16, 128), nn.ReLU(),
+            nn.Linear(128, 128), nn.ReLU(),
+            nn.Linear(128, features_dim))
+        # Fusion: policy features + physics prediction → final features
+        self.fusion = nn.Sequential(
+            nn.Linear(features_dim + 3, features_dim), nn.ReLU())
     
     def forward(self, observations):
-        policy_features = self.policy_stream(observations)
-        return self.fusion(policy_features)
+        # ── Physics stream ──
+        graph = obs_to_graph_batch(observations)
+        # DynamicalGNN expects (positions, velocities, edge_index)
+        positions  = graph.pos           # [B*2, 3]
+        velocities = graph.x[:, 3:6]     # [B*2, 3] (last 3 dims of node feat)
+        acc = self.physics_gnn(positions, velocities, graph.edge_index)
+        # Extract box-node predictions (index 1, 3, 5, …)
+        box_physics = acc[1::2]           # [B, 3]
+        # ── Policy stream ──
+        policy_features = self.policy_stream(observations)  # [B, features_dim]
+        # ── Fusion ──
+        combined = torch.cat([policy_features, box_physics], dim=-1)
+        return self.fusion(combined)
 
 class PhysRobotAgent:
     def __init__(self, env, verbose=1):
@@ -422,8 +507,8 @@ cells.append(code_cell(agents_code))
 cells.append(code_cell([
     "CONFIG = {\n",
     "    'ppo_timesteps': 200000,\n",
-    "    'gns_timesteps': 80000,\n",
-    "    'physrobot_timesteps': 16000,\n",
+    "    'gns_timesteps': 200000,\n",
+    "    'physrobot_timesteps': 200000,\n",
     "    'n_envs': 4,\n",
     "    'box_mass': 0.5,\n",
     "    'eval_episodes': 50\n",
