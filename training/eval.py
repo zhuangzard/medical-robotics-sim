@@ -15,17 +15,36 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from stable_baselines3.common.vec_env import DummyVecEnv
 import pandas as pd
 
-from environments.push_box_env import make_push_box_env
+from environments.push_box_env import make_push_box_env as make_push_box_env_16
+from environments.push_box import make_push_box_env as make_push_box_env_10
 from baselines.ppo_baseline import PurePPOAgent
 from baselines.gns_baseline import GNSAgent
 from baselines.physics_informed import PhysRobotAgent
+
+
+def _detect_obs_dim(agent):
+    """Detect the observation space dimension a loaded model expects."""
+    try:
+        obs_shape = agent.model.observation_space.shape
+        return obs_shape[0] if obs_shape else 16
+    except Exception:
+        return 16  # default to 16-dim
+
+
+def _make_env_for_obs_dim(obs_dim):
+    """Return the correct make_push_box_env based on obs dimension."""
+    if obs_dim == 10:
+        return make_push_box_env_10
+    else:
+        return make_push_box_env_16
 
 
 def evaluate_ood_generalization(
     agent, 
     agent_type,
     mass_range=[0.5, 0.75, 1.0, 1.25, 1.5, 2.0],
-    n_episodes_per_mass=100
+    n_episodes_per_mass=100,
+    make_env_fn=None
 ):
     """
     Test agent on different box masses (OOD scenario)
@@ -39,6 +58,12 @@ def evaluate_ood_generalization(
     Returns:
         dict with OOD results
     """
+    # Auto-detect obs dimension and pick correct env factory
+    if make_env_fn is None:
+        obs_dim = _detect_obs_dim(agent)
+        make_env_fn = _make_env_for_obs_dim(obs_dim)
+        print(f"   Auto-detected obs_dim={obs_dim}, using matching env")
+    
     print(f"\n🧪 Testing {agent_type} OOD Generalization")
     print(f"   Mass range: {mass_range}")
     print(f"   Episodes per mass: {n_episodes_per_mass}")
@@ -48,8 +73,8 @@ def evaluate_ood_generalization(
     for mass in mass_range:
         print(f"\n  Testing mass = {mass:.2f} kg...")
         
-        # Create environment with specific mass
-        env = DummyVecEnv([make_push_box_env(box_mass=mass)])
+        # Create environment with specific mass (matching model's obs space)
+        env = DummyVecEnv([make_env_fn(box_mass=mass)])
         
         success_count = 0
         rewards = []
@@ -111,7 +136,9 @@ def validate_conservation_laws(agent, agent_type, n_episodes=50):
     print(f"\n⚖️  Validating Conservation Laws for {agent_type}")
     print(f"   Episodes: {n_episodes}")
     
-    env = DummyVecEnv([make_push_box_env(box_mass=1.0)])
+    obs_dim = _detect_obs_dim(agent)
+    _make_env = _make_env_for_obs_dim(obs_dim)
+    env = DummyVecEnv([_make_env(box_mass=1.0)])
     
     momentum_errors = []
     energy_errors = []
@@ -256,9 +283,29 @@ def calculate_energy_drift(trajectory):
     return drift
 
 
+def _load_agent(AgentClass, model_path, name):
+    """Load an agent, auto-detecting obs dimension from saved model."""
+    from stable_baselines3 import PPO
+    # Peek at the saved model's observation space
+    try:
+        tmp_model = PPO.load(model_path)
+        obs_dim = tmp_model.observation_space.shape[0]
+        del tmp_model
+    except Exception:
+        obs_dim = 16  # default
+    
+    make_env = _make_env_for_obs_dim(obs_dim)
+    env = DummyVecEnv([make_env(box_mass=1.0)])
+    agent = AgentClass(env)
+    agent.load(model_path)
+    print(f"   ✅ Loaded {name} (obs_dim={obs_dim})")
+    env.close()
+    return agent
+
+
 def load_trained_models(models_dir="./models"):
     """
-    Load all trained models
+    Load all trained models, auto-detecting observation space.
     
     Returns:
         dict with loaded agents
@@ -271,11 +318,7 @@ def load_trained_models(models_dir="./models"):
     ppo_path = os.path.join(models_dir, "pure_ppo_final.zip")
     if os.path.exists(ppo_path):
         print(f"   Loading Pure PPO from {ppo_path}")
-        env = DummyVecEnv([make_push_box_env(box_mass=1.0)])
-        agent = PurePPOAgent(env)
-        agent.load(ppo_path)
-        agents['Pure PPO'] = agent
-        env.close()
+        agents['Pure PPO'] = _load_agent(PurePPOAgent, ppo_path, "Pure PPO")
     else:
         print(f"   ⚠️  Pure PPO model not found")
     
@@ -283,11 +326,7 @@ def load_trained_models(models_dir="./models"):
     gns_path = os.path.join(models_dir, "gns_final.zip")
     if os.path.exists(gns_path):
         print(f"   Loading GNS from {gns_path}")
-        env = DummyVecEnv([make_push_box_env(box_mass=1.0)])
-        agent = GNSAgent(env)
-        agent.load(gns_path)
-        agents['GNS'] = agent
-        env.close()
+        agents['GNS'] = _load_agent(GNSAgent, gns_path, "GNS")
     else:
         print(f"   ⚠️  GNS model not found")
     
@@ -295,11 +334,7 @@ def load_trained_models(models_dir="./models"):
     physrobot_path = os.path.join(models_dir, "physrobot_final.zip")
     if os.path.exists(physrobot_path):
         print(f"   Loading PhysRobot from {physrobot_path}")
-        env = DummyVecEnv([make_push_box_env(box_mass=1.0)])
-        agent = PhysRobotAgent(env)
-        agent.load(physrobot_path)
-        agents['PhysRobot'] = agent
-        env.close()
+        agents['PhysRobot'] = _load_agent(PhysRobotAgent, physrobot_path, "PhysRobot")
     else:
         print(f"   ⚠️  PhysRobot model not found")
     
