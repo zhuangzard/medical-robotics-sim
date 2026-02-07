@@ -1,337 +1,3853 @@
-O(<span class="st">"MlpPolicy"</span>, env, policy_kwargs=policy_kwargs)
-model.learn(total_timesteps=<span class="nu">80000</span>)
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PPO 近端策略优化 — 从策略梯度到机器人控制 · 超详细学习教程</title>
 
-<span class="cm"># 3. PhysRobot — 用 PhysRobotFeaturesExtractor</span>
-policy_kwargs = <span class="bi">dict</span>(
-    features_extractor_class=PhysRobotFeaturesExtractor,
-    features_extractor_kwargs=<span class="bi">dict</span>(features_dim=<span class="nu">128</span>),
-)
-model = PPO(<span class="st">"MlpPolicy"</span>, env, policy_kwargs=policy_kwargs)
-model.learn(total_timesteps=<span class="nu">16000</span>)  <span class="cm"># 12× 更少的数据！</span>
-<button class="copy-btn" onclick="copyCode(this)">复制</button></code></pre>
+<!-- KaTeX for math rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false
+  });"></script>
 
-<hr>
+<style>
+/* ===== CSS Variables ===== */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-code: #f4f5f7;
+  --bg-sidebar: #f0f2f5;
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6a;
+  --text-muted: #8888aa;
+  --border-color: #e0e0e8;
+  --accent: #e6553a;
+  --accent-light: #fef0ed;
+  --link: #e6553a;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,0.1);
+  --radius: 12px;
+  --sidebar-width: 300px;
+  --def-bg: #e8f4fd;
+  --def-border: #3b82f6;
+  --thm-bg: #ecfdf5;
+  --thm-border: #10b981;
+  --example-bg: #fefce8;
+  --example-border: #f59e0b;
+  --warn-bg: #fef2f2;
+  --warn-border: #ef4444;
+  --tip-bg: #f0f9ff;
+  --tip-border: #0ea5e9;
+  --physrobot-bg: #faf5ff;
+  --physrobot-border: #a855f7;
+  --exercise-bg: #f0fdf4;
+  --exercise-border: #22c55e;
+  --math-bg: #fffbeb;
+  --math-border: #f59e0b;
+  --code-keyword: #d73a49;
+  --code-string: #032f62;
+  --code-comment: #6a737d;
+  --code-function: #6f42c1;
+  --code-number: #005cc5;
+  --code-class: #e36209;
+  --code-builtin: #005cc5;
+  --code-decorator: #6f42c1;
+  --code-self: #d73a49;
+  --progress-color: #e6553a;
+}
 
-<!-- ==================== CHAPTER 7 ==================== -->
-<h1 id="ch7">第七章：完整训练流程</h1>
+[data-theme="dark"] {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-code: #1c2333;
+  --bg-sidebar: #0d1117;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --border-color: #30363d;
+  --accent: #ff7b5c;
+  --accent-light: #2d1a14;
+  --link: #ff7b5c;
+  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,0.4);
+  --def-bg: #0d1f3c;
+  --def-border: #58a6ff;
+  --thm-bg: #0d2818;
+  --thm-border: #3fb950;
+  --example-bg: #2d2000;
+  --example-border: #d29922;
+  --warn-bg: #2d0000;
+  --warn-border: #f85149;
+  --tip-bg: #0d1f3c;
+  --tip-border: #58a6ff;
+  --physrobot-bg: #1a0d2e;
+  --physrobot-border: #a78bfa;
+  --exercise-bg: #0d2818;
+  --exercise-border: #3fb950;
+  --math-bg: #2d2000;
+  --math-border: #d29922;
+  --code-keyword: #ff7b72;
+  --code-string: #a5d6ff;
+  --code-comment: #8b949e;
+  --code-function: #d2a8ff;
+  --code-number: #79c0ff;
+  --code-class: #ffa657;
+  --code-builtin: #79c0ff;
+  --code-decorator: #d2a8ff;
+  --code-self: #ff7b72;
+  --progress-color: #ff7b5c;
+}
 
-<h2 id="s7-1">7.1 数据收集 — Rollout Buffer</h2>
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<div class="box def">
-  <div class="box-title">On-Policy 数据收集</div>
-  <p>PPO 是 <strong>on-policy</strong> 算法，每次更新前必须用<strong>当前策略</strong>收集新数据：</p>
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.8;
+  font-size: 16px;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ===== Reading Progress Bar ===== */
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), #ff8c42);
+  z-index: 9999;
+  transition: width 0.1s;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  z-index: 100;
+  padding: 20px 0;
+  transition: transform 0.3s ease, background 0.3s;
+}
+
+.sidebar-header {
+  padding: 10px 20px 20px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 10px;
+}
+
+.sidebar-header h2 {
+  font-size: 18px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.sidebar-header p {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.sidebar nav { padding: 0 12px; }
+
+.sidebar nav a {
+  display: block;
+  padding: 6px 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  line-height: 1.5;
+}
+
+.sidebar nav a:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.sidebar nav a.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.sidebar nav .chapter-title {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 14px;
+  padding: 12px 12px 4px;
+  margin-top: 6px;
+}
+
+.sidebar nav .chapter-title:first-child { margin-top: 0; }
+
+/* ===== Main Content ===== */
+.main-content {
+  margin-left: var(--sidebar-width);
+  max-width: 900px;
+  padding: 30px 50px 80px;
+}
+
+/* ===== Top Bar ===== */
+.top-bar {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  height: 56px;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 30px;
+  z-index: 99;
+  transition: background 0.3s;
+  gap: 12px;
+}
+
+.top-bar .btn-theme {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.top-bar .btn-theme:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.menu-toggle {
+  display: none;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+/* ===== Hero Section ===== */
+.hero {
+  margin-top: 56px;
+  padding: 60px 0 40px;
+  text-align: center;
+}
+
+.hero h1 {
+  font-size: 2.8em;
+  font-weight: 800;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #e6553a, #ff8c42);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero .subtitle {
+  font-size: 1.2em;
+  color: var(--text-secondary);
+  max-width: 700px;
+  margin: 0 auto 30px;
+}
+
+.hero .badges {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ===== Headings ===== */
+h2 {
+  font-size: 2em;
+  font-weight: 700;
+  margin-top: 60px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--accent);
+  color: var(--text-primary);
+}
+
+h3 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 40px;
+  margin-bottom: 14px;
+  color: var(--text-primary);
+}
+
+h4 {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin-top: 30px;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+}
+
+p { margin-bottom: 14px; }
+
+a { color: var(--link); text-decoration: none; }
+
+/* ===== Callout Boxes ===== */
+.callout {
+  padding: 18px 22px;
+  border-radius: var(--radius);
+  margin: 20px 0;
+  border-left: 4px solid;
+}
+
+.callout-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.callout-info { background: var(--def-bg); border-color: var(--def-border); }
+.callout-info .callout-title { color: var(--def-border); }
+
+.callout-warning { background: var(--warn-bg); border-color: var(--warn-border); }
+.callout-warning .callout-title { color: var(--warn-border); }
+
+.callout-math { background: var(--math-bg); border-color: var(--math-border); }
+.callout-math .callout-title { color: var(--math-border); }
+
+.callout-tip { background: var(--tip-bg); border-color: var(--tip-border); }
+.callout-tip .callout-title { color: var(--tip-border); }
+
+.callout-exercise { background: var(--exercise-bg); border-color: var(--exercise-border); }
+.callout-exercise .callout-title { color: var(--exercise-border); }
+
+.callout-physrobot { background: var(--physrobot-bg); border-color: var(--physrobot-border); }
+.callout-physrobot .callout-title { color: var(--physrobot-border); }
+
+.callout-theorem { background: var(--thm-bg); border-color: var(--thm-border); }
+.callout-theorem .callout-title { color: var(--thm-border); }
+
+.callout-example { background: var(--example-bg); border-color: var(--example-border); }
+.callout-example .callout-title { color: var(--example-border); }
+
+/* ===== Code Blocks ===== */
+.code-container {
+  background: var(--bg-code);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  margin: 20px 0;
+  overflow: hidden;
+}
+
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.copy-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.copy-btn:hover { background: var(--accent-light); color: var(--accent); }
+
+pre {
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-family: "SF Mono", "Fira Code", Consolas, monospace;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+
+code {
+  font-family: "SF Mono", "Fira Code", Consolas, monospace;
+}
+
+/* Inline code */
+p code, li code, td code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  border: 1px solid var(--border-color);
+}
+
+/* Syntax highlighting */
+.kw { color: var(--code-keyword); font-weight: 600; }
+.str { color: var(--code-string); }
+.cmt { color: var(--code-comment); font-style: italic; }
+.fn { color: var(--code-function); }
+.num { color: var(--code-number); }
+.cls { color: var(--code-class); font-weight: 600; }
+.bi { color: var(--code-builtin); }
+.dec { color: var(--code-decorator); }
+.sf { color: var(--code-self); }
+
+/* ===== Tables ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 14px;
+}
+
+th, td {
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  text-align: left;
+}
+
+th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+tr:nth-child(even) { background: var(--bg-secondary); }
+
+/* ===== Lists ===== */
+ul, ol {
+  margin: 10px 0 14px 24px;
+}
+
+li {
+  margin-bottom: 6px;
+}
+
+/* ===== SVG Diagrams ===== */
+.diagram-container {
+  text-align: center;
+  margin: 24px 0;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius);
+  border: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.diagram-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.diagram-caption {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .main-content {
+    margin-left: 0;
+    padding: 20px 20px 60px;
+  }
+  .top-bar {
+    left: 0;
+  }
+  .menu-toggle {
+    display: block;
+  }
+  .hero h1 { font-size: 2em; }
+}
+
+@media (max-width: 600px) {
+  .hero h1 { font-size: 1.6em; }
+  .hero .subtitle { font-size: 1em; }
+  pre { font-size: 12px; padding: 12px; }
+}
+
+/* ===== Algorithm Box ===== */
+.algorithm-box {
+  background: var(--bg-secondary);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 24px 0;
+}
+
+.algorithm-box .algo-title {
+  font-weight: 700;
+  font-size: 1.1em;
+  color: var(--accent);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.algorithm-box ol {
+  margin-left: 20px;
+}
+
+.algorithm-box li {
+  margin-bottom: 8px;
+}
+
+/* ===== Comparison Cards ===== */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.comparison-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 18px;
+  transition: box-shadow 0.2s;
+}
+
+.comparison-card:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+.comparison-card h4 {
+  margin-top: 0;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+/* ===== Checklist ===== */
+.checklist {
+  list-style: none;
+  margin-left: 0;
+}
+
+.checklist li {
+  padding: 6px 0;
+  padding-left: 28px;
+  position: relative;
+}
+
+.checklist li::before {
+  content: "☐";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 1.1em;
+}
+
+/* ===== Scrollbar ===== */
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-track { background: transparent; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+/* ===== Print ===== */
+@media print {
+  .sidebar, .top-bar, .progress-bar, .menu-toggle { display: none !important; }
+  .main-content { margin-left: 0; max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- Reading Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Sidebar Navigation -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>🎯 PPO 教程</h2>
+    <p>从策略梯度到机器人控制</p>
+  </div>
+  <nav>
+    <div class="chapter-title">导论</div>
+    <a href="#overview">教程概览</a>
+    <a href="#prereqs">前置知识</a>
+    <a href="#roadmap">学习路线图</a>
+
+    <div class="chapter-title">第一章：策略梯度基础</div>
+    <a href="#s1-1">1.1 为什么要学策略梯度</a>
+    <a href="#s1-2">1.2 MDP 与策略定义</a>
+    <a href="#s1-3">1.3 策略梯度定理推导</a>
+    <a href="#s1-4">1.4 REINFORCE 算法</a>
+    <a href="#s1-5">1.5 代码：CartPole REINFORCE</a>
+    <a href="#s1-6">1.6 方差问题与 Baseline</a>
+
+    <div class="chapter-title">第二章：Actor-Critic</div>
+    <a href="#s2-1">2.1 从 REINFORCE 到 AC</a>
+    <a href="#s2-2">2.2 优势函数 A(s,a)</a>
+    <a href="#s2-3">2.3 GAE 广义优势估计</a>
+    <a href="#s2-4">2.4 代码：A2C 实现</a>
+    <a href="#s2-5">2.5 N-step 与 GAE 对比</a>
+
+    <div class="chapter-title">第三章：PPO 核心</div>
+    <a href="#s3-1">3.1 Trust Region 思想</a>
+    <a href="#s3-2">3.2 TRPO 算法</a>
+    <a href="#s3-3">3.3 PPO-Clip 完整推导</a>
+    <a href="#s3-4">3.4 逐符号解读</a>
+    <a href="#s3-5">3.5 代码：PPO from Scratch</a>
+
+    <div class="chapter-title">第四章：PPO 实现细节</div>
+    <a href="#s4-1">4.1 Value Loss 设计</a>
+    <a href="#s4-2">4.2 Entropy Bonus</a>
+    <a href="#s4-3">4.3 总损失函数</a>
+    <a href="#s4-4">4.4 Mini-batch SGD</a>
+    <a href="#s4-5">4.5 归一化与退火技巧</a>
+    <a href="#s4-6">4.6 代码：手写 vs SB3</a>
+
+    <div class="chapter-title">第五章：机器人控制</div>
+    <a href="#s5-1">5.1 连续动作空间</a>
+    <a href="#s5-2">5.2 动作裁剪与 Squashing</a>
+    <a href="#s5-3">5.3 观测归一化</a>
+    <a href="#s5-4">5.4 Reward Shaping</a>
+    <a href="#s5-5">5.5 PhysRobot PushBox</a>
+    <a href="#s5-6">5.6 代码：连续控制 PPO</a>
+
+    <div class="chapter-title">第六章：高级变体</div>
+    <a href="#s6-1">6.1 PPO-Penalty</a>
+    <a href="#s6-2">6.2 MAPPO 多智能体</a>
+    <a href="#s6-3">6.3 PPO + RNN/Transformer</a>
+    <a href="#s6-4">6.4 PPO + 物理先验</a>
+    <a href="#s6-5">6.5 PPO + 课程学习</a>
+
+    <div class="chapter-title">第七章：超参数调优</div>
+    <a href="#s7-1">7.1 学习率</a>
+    <a href="#s7-2">7.2 Batch Size 与 N-steps</a>
+    <a href="#s7-3">7.3 Clip Range</a>
+    <a href="#s7-4">7.4 Gamma 与 GAE Lambda</a>
+    <a href="#s7-5">7.5 Entropy 系数</a>
+    <a href="#s7-6">7.6 Failure Modes 诊断</a>
+    <a href="#s7-7">7.7 实战 Checklist</a>
+
+    <div class="chapter-title">附录</div>
+    <a href="#appA">A: PPO 论文逐段解读</a>
+    <a href="#appB">B: PPO vs 其他算法</a>
+    <a href="#references">参考文献</a>
+  </nav>
+</aside>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+  <button class="btn-theme" onclick="toggleTheme()">🌓 主题</button>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+<!-- ============================================================ -->
+<!-- HERO SECTION -->
+<!-- ============================================================ -->
+<section class="hero">
+  <h1>PPO 近端策略优化</h1>
+  <p class="subtitle">从策略梯度理论到机器人控制实践 —— 一份超详细的中文学习教程</p>
+  <div class="badges">
+    <span class="badge">📐 完整数学推导</span>
+    <span class="badge">🐍 PyTorch 代码</span>
+    <span class="badge">🤖 机器人应用</span>
+    <span class="badge">📊 可视化图解</span>
+    <span class="badge">⏱ 约 3-4 小时</span>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- OVERVIEW -->
+<!-- ============================================================ -->
+<h2 id="overview">教程概览</h2>
+
+<p>Proximal Policy Optimization (PPO) 是 OpenAI 在 2017 年提出的策略优化算法，也是当前强化学习中应用最广泛的算法之一。从 Atari 游戏到机器人控制，从 ChatGPT 的 RLHF 到复杂的多智能体博弈，PPO 以其出色的<strong>稳定性</strong>、<strong>实现简洁性</strong>和<strong>通用性</strong>成为了事实上的行业标准。</p>
+
+<p>本教程面向有深度学习基础但初学强化学习的读者，从最基础的策略梯度定理出发，通过严谨的数学推导和丰富的代码实例，一步步构建到完整的 PPO 算法，并将其应用于机器人控制任务。</p>
+
+<div class="callout callout-info">
+  <div class="callout-title">📘 本教程涵盖</div>
+  <ul>
+    <li><strong>7 个完整章节</strong>：策略梯度 → Actor-Critic → PPO 核心 → 实现细节 → 机器人控制 → 高级变体 → 超参数调优</li>
+    <li><strong>2 个附录</strong>：PPO 论文逐段解读 + 算法对比分析</li>
+    <li><strong>完整代码</strong>：REINFORCE、A2C、PPO from scratch、SB3 对比、连续控制等</li>
+    <li><strong>数学推导</strong>：策略梯度定理、GAE、PPO-Clip 每一步都有详细展开</li>
+    <li><strong>项目关联</strong>：与 PhysRobot 项目的 PushBox 训练分析结合</li>
+  </ul>
+</div>
+
+<h3 id="prereqs">前置知识</h3>
+
+<table>
+  <tr>
+    <th>领域</th>
+    <th>要求</th>
+    <th>推荐资源</th>
+  </tr>
+  <tr>
+    <td>深度学习</td>
+    <td>理解反向传播、损失函数、SGD</td>
+    <td>PyTorch 教程</td>
+  </tr>
+  <tr>
+    <td>概率论</td>
+    <td>概率分布、期望、条件概率</td>
+    <td>统计学基础</td>
+  </tr>
+  <tr>
+    <td>Python</td>
+    <td>类、装饰器、NumPy 基本操作</td>
+    <td>Python 官方教程</td>
+  </tr>
+  <tr>
+    <td>RL 基础</td>
+    <td>了解 MDP、reward、episode 概念（本教程也会复习）</td>
+    <td>Sutton & Barto Ch.1-3</td>
+  </tr>
+</table>
+
+<h3 id="roadmap">学习路线图</h3>
+
+<div class="diagram-container">
+  <svg width="780" height="120" viewBox="0 0 780 120">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 Z" fill="var(--accent)"/>
+      </marker>
+    </defs>
+    <!-- Boxes -->
+    <rect x="5" y="30" width="95" height="50" rx="8" fill="var(--bg-code)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="52" y="60" text-anchor="middle" font-size="12" fill="var(--text-primary)" font-weight="600">策略梯度</text>
+    <line x1="100" y1="55" x2="115" y2="55" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="120" y="30" width="95" height="50" rx="8" fill="var(--bg-code)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="167" y="60" text-anchor="middle" font-size="12" fill="var(--text-primary)" font-weight="600">Actor-Critic</text>
+    <line x1="215" y1="55" x2="230" y2="55" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="235" y="30" width="95" height="50" rx="8" fill="var(--bg-code)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="282" y="60" text-anchor="middle" font-size="12" fill="var(--text-primary)" font-weight="600">PPO 核心</text>
+    <line x1="330" y1="55" x2="345" y2="55" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="350" y="30" width="95" height="50" rx="8" fill="var(--bg-code)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="397" y="60" text-anchor="middle" font-size="12" fill="var(--text-primary)" font-weight="600">实现细节</text>
+    <line x1="445" y1="55" x2="460" y2="55" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="465" y="30" width="95" height="50" rx="8" fill="var(--bg-code)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="512" y="60" text-anchor="middle" font-size="12" fill="var(--text-primary)" font-weight="600">机器人控制</text>
+    <line x1="560" y1="55" x2="575" y2="55" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="580" y="30" width="95" height="50" rx="8" fill="var(--bg-code)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="627" y="60" text-anchor="middle" font-size="12" fill="var(--text-primary)" font-weight="600">高级变体</text>
+    <line x1="675" y1="55" x2="690" y2="55" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <rect x="695" y="30" width="80" height="50" rx="8" fill="var(--accent-light)" stroke="var(--accent)" stroke-width="2"/>
+    <text x="735" y="60" text-anchor="middle" font-size="12" fill="var(--accent)" font-weight="700">调参实战</text>
+  </svg>
+  <div class="diagram-caption">图：PPO 学习路线 — 从理论基础到实战调参</div>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- CHAPTER 1: 策略梯度基础 -->
+<!-- ============================================================ -->
+<h2 id="ch1">第一章：策略梯度基础</h2>
+
+<p>策略梯度是一大类强化学习算法的统称。与 DQN 这类<strong>基于值函数</strong>的方法不同，策略梯度方法<strong>直接参数化策略</strong>，并通过梯度上升来最大化期望回报。PPO 正是策略梯度家族中最成功的成员之一。</p>
+
+<h3 id="s1-1">1.1 为什么要学策略梯度？</h3>
+
+<p>在开始数学推导之前，让我们先理解为什么需要策略梯度方法，以及它相对于值函数方法的优势在哪里。</p>
+
+<div class="comparison-grid">
+  <div class="comparison-card">
+    <h4>值函数方法（DQN 系列）</h4>
+    <ul>
+      <li>学习 $Q(s,a)$，然后 $\arg\max_a Q(s,a)$</li>
+      <li>✅ 采样效率较高</li>
+      <li>❌ 只能处理离散动作空间</li>
+      <li>❌ 无法学习随机策略</li>
+      <li>❌ $\arg\max$ 可能导致策略突变</li>
+    </ul>
+  </div>
+  <div class="comparison-card">
+    <h4>策略梯度方法</h4>
+    <ul>
+      <li>直接学习 $\pi(a|s;\theta)$</li>
+      <li>✅ 自然支持连续动作空间</li>
+      <li>✅ 可以学习随机策略（探索）</li>
+      <li>✅ 策略参数化保证平滑更新</li>
+      <li>❌ 高方差，需要更多样本</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout callout-tip">
+  <div class="callout-title">💡 关键直觉</div>
+  <p>想象你在学打篮球。<strong>值函数方法</strong>相当于先评估每个投篮角度的得分期望，然后选最高分的角度；<strong>策略梯度方法</strong>则是直接调整你的投篮动作（手腕角度、力度等连续参数），通过反复练习让好动作出现概率更高。对于连续、高维的动作空间，后者明显更自然。</p>
+</div>
+
+<p>策略梯度方法在以下场景特别有优势：</p>
+
+<ul>
+  <li><strong>连续控制</strong>：机器人关节角度、力矩等都是连续值，无法枚举所有动作</li>
+  <li><strong>随机策略</strong>：某些博弈场景需要混合策略（如石头剪刀布）</li>
+  <li><strong>高维动作空间</strong>：动作维度很高时，$\arg\max$ 计算不可行</li>
+  <li><strong>策略结构先验</strong>：可以设计特定的策略网络结构（如高斯分布输出）</li>
+</ul>
+
+<h3 id="s1-2">1.2 马尔可夫决策过程 (MDP) 与策略定义</h3>
+
+<p>强化学习的数学框架是<strong>马尔可夫决策过程</strong> (Markov Decision Process, MDP)。我们先精确定义 MDP，然后引出策略的形式化定义。</p>
+
+<div class="callout callout-math">
+  <div class="callout-title">📐 定义：MDP 五元组</div>
+  <p>一个 MDP 由五元组 $(\mathcal{S}, \mathcal{A}, P, R, \gamma)$ 定义：</p>
+  <ul>
+    <li>$\mathcal{S}$：<strong>状态空间</strong>（可以是离散或连续的）</li>
+    <li>$\mathcal{A}$：<strong>动作空间</strong>（可以是离散或连续的）</li>
+    <li>$P(s'|s,a)$：<strong>状态转移概率</strong>，描述环境的动态</li>
+    <li>$R(s,a,s')$：<strong>奖励函数</strong>，也常写成 $r(s,a)$</li>
+    <li>$\gamma \in [0,1)$：<strong>折扣因子</strong>，平衡即时回报与远期回报</li>
+  </ul>
+</div>
+
+<p><strong>策略 (Policy)</strong> 是智能体决策的核心。形式上，策略是一个从状态到动作分布的映射：</p>
+
+$$\pi(a|s;\theta): \mathcal{S} \times \mathcal{A} \rightarrow [0, 1]$$
+
+<p>其中 $\theta$ 是策略的参数（通常是神经网络的权重）。$\pi(a|s;\theta)$ 表示在状态 $s$ 下选择动作 $a$ 的概率。</p>
+
+<div class="callout callout-info">
+  <div class="callout-title">📘 策略的两种类型</div>
+  <ul>
+    <li><strong>确定性策略</strong>：$a = \mu(s;\theta)$，给定状态直接输出动作</li>
+    <li><strong>随机策略</strong>：$a \sim \pi(\cdot|s;\theta)$，输出动作的概率分布，从中采样</li>
+  </ul>
+  <p>策略梯度方法通常使用<strong>随机策略</strong>，因为随机性提供了天然的探索机制。</p>
+</div>
+
+<h4>轨迹与回报</h4>
+
+<p>智能体与环境交互产生一条<strong>轨迹</strong> (trajectory)：</p>
+
+$$\tau = (s_0, a_0, r_0, s_1, a_1, r_1, \ldots, s_T)$$
+
+<p>轨迹的概率由策略和环境动态共同决定：</p>
+
+$$P(\tau|\theta) = \rho(s_0) \prod_{t=0}^{T-1} \pi(a_t|s_t;\theta) \cdot P(s_{t+1}|s_t,a_t)$$
+
+<p>其中 $\rho(s_0)$ 是初始状态分布。轨迹的<strong>折扣回报</strong>定义为：</p>
+
+$$R(\tau) = \sum_{t=0}^{T-1} \gamma^t r_t$$
+
+<h4>关键价值函数</h4>
+
+<p>三个核心价值函数构成了策略梯度方法的基石：</p>
+
+<div class="callout callout-math">
+  <div class="callout-title">📐 价值函数定义</div>
+  <p><strong>状态价值函数</strong>（从状态 $s$ 出发、遵循策略 $\pi$ 能获得的期望回报）：</p>
+  $$V^\pi(s) = \mathbb{E}_\pi\left[\sum_{t=0}^{\infty}\gamma^t r_t \;\middle|\; s_0 = s\right]$$
+  <p><strong>动作价值函数</strong>（在状态 $s$ 执行动作 $a$ 后、遵循策略 $\pi$ 的期望回报）：</p>
+  $$Q^\pi(s,a) = \mathbb{E}_\pi\left[\sum_{t=0}^{\infty}\gamma^t r_t \;\middle|\; s_0 = s, a_0 = a\right]$$
+  <p><strong>优势函数</strong>（动作 $a$ 比"平均动作"好多少）：</p>
+  $$A^\pi(s,a) = Q^\pi(s,a) - V^\pi(s)$$
+</div>
+
+<p>$V^\pi(s)$ 衡量一个状态有多"好"，$Q^\pi(s,a)$ 衡量一个状态-动作对有多好，$A^\pi(s,a)$ 衡量某个特定动作相比平均水平的<strong>相对优势</strong>。优势函数在后续 PPO 的推导中起核心作用。</p>
+
+<h3 id="s1-3">1.3 策略梯度定理推导</h3>
+
+<p>现在我们进入本章的核心：<strong>策略梯度定理</strong> (Policy Gradient Theorem)。这个定理告诉我们如何计算目标函数关于策略参数的梯度，是所有策略梯度算法的理论基础。</p>
+
+<h4>Step 1: 定义目标函数</h4>
+
+<p>我们希望找到最优策略参数 $\theta^*$，使得期望回报最大：</p>
+
+$$J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta}[R(\tau)] = \mathbb{E}_{\tau \sim \pi_\theta}\left[\sum_{t=0}^{T-1} \gamma^t r_t\right]$$
+
+<p>展开期望的定义，这等价于对所有可能轨迹的加权求和：</p>
+
+$$J(\theta) = \int_\tau P(\tau|\theta) R(\tau) \, d\tau$$
+
+<p>其中 $P(\tau|\theta)$ 是策略 $\pi_\theta$ 下产生轨迹 $\tau$ 的概率。</p>
+
+<h4>Step 2: 计算梯度</h4>
+
+<p>我们需要求 $\nabla_\theta J(\theta)$：</p>
+
+$$\nabla_\theta J(\theta) = \nabla_\theta \int_\tau P(\tau|\theta) R(\tau) \, d\tau = \int_\tau \nabla_\theta P(\tau|\theta) R(\tau) \, d\tau$$
+
+<p>直接计算 $\nabla_\theta P(\tau|\theta)$ 很困难，因为轨迹概率涉及复杂的连乘。这里就需要一个巧妙的数学技巧。</p>
+
+<h4>Step 3: Log-Derivative Trick</h4>
+
+<p>这是策略梯度推导中最关键的一步。利用恒等式：</p>
+
+$$\nabla_\theta P(\tau|\theta) = P(\tau|\theta) \cdot \nabla_\theta \log P(\tau|\theta)$$
+
+<div class="callout callout-math">
+  <div class="callout-title">📐 证明：Log-Derivative Trick</div>
+  <p>由链式法则：</p>
+  $$\nabla_\theta \log P(\tau|\theta) = \frac{\nabla_\theta P(\tau|\theta)}{P(\tau|\theta)}$$
+  <p>因此：</p>
+  $$\nabla_\theta P(\tau|\theta) = P(\tau|\theta) \cdot \nabla_\theta \log P(\tau|\theta)$$
+  <p>这个恒等式之所以有用，是因为它把对概率的梯度转化为对 log 概率的梯度，后者的形式更加友好。</p>
+</div>
+
+<p>代入梯度表达式：</p>
+
+$$\nabla_\theta J(\theta) = \int_\tau P(\tau|\theta) \cdot \nabla_\theta \log P(\tau|\theta) \cdot R(\tau) \, d\tau$$
+
+$$= \mathbb{E}_{\tau \sim \pi_\theta}\left[\nabla_\theta \log P(\tau|\theta) \cdot R(\tau)\right]$$
+
+<h4>Step 4: 展开 $\log P(\tau|\theta)$</h4>
+
+<p>回忆轨迹概率的定义：</p>
+
+$$P(\tau|\theta) = \rho(s_0) \prod_{t=0}^{T-1} \pi(a_t|s_t;\theta) \cdot P(s_{t+1}|s_t,a_t)$$
+
+<p>取对数：</p>
+
+$$\log P(\tau|\theta) = \log \rho(s_0) + \sum_{t=0}^{T-1}\left[\log \pi(a_t|s_t;\theta) + \log P(s_{t+1}|s_t,a_t)\right]$$
+
+<p>对 $\theta$ 求梯度时，$\log \rho(s_0)$ 和 $\log P(s_{t+1}|s_t,a_t)$ 都与 $\theta$ 无关，因此：</p>
+
+$$\nabla_\theta \log P(\tau|\theta) = \sum_{t=0}^{T-1} \nabla_\theta \log \pi(a_t|s_t;\theta)$$
+
+<div class="callout callout-tip">
+  <div class="callout-title">💡 重要意义</div>
+  <p>环境动态 $P(s'|s,a)$ 在梯度中消失了！这意味着策略梯度是 <strong>model-free</strong> 的 —— 我们不需要知道环境的转移概率，只需要能从环境中采样轨迹即可。这对于复杂环境（如真实机器人）至关重要。</p>
+</div>
+
+<h4>Step 5: 策略梯度定理的最终形式</h4>
+
+<p>将 Step 3 和 Step 4 的结果合并，我们得到：</p>
+
+<div class="callout callout-theorem">
+  <div class="callout-title">🎯 定理：策略梯度定理 (Policy Gradient Theorem)</div>
+  $$\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[\sum_{t=0}^{T-1} \nabla_\theta \log \pi(a_t|s_t;\theta) \cdot R(\tau)\right]$$
+  <p>更常见的单步形式（利用因果性 —— 当前动作不影响过去的回报）：</p>
+  $$\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim \pi_\theta}\left[\sum_{t=0}^{T-1} \nabla_\theta \log \pi(a_t|s_t;\theta) \cdot \hat{Q}_t\right]$$
+  <p>其中 $\hat{Q}_t = \sum_{t'=t}^{T-1} \gamma^{t'-t} r_{t'}$ 是从时间步 $t$ 开始的 reward-to-go。</p>
+</div>
+
+<p><strong>直觉解释</strong>：这个公式的含义非常优美 ——</p>
+<ul>
+  <li>$\nabla_\theta \log \pi(a_t|s_t;\theta)$：增加动作 $a_t$ 概率的方向</li>
+  <li>$\hat{Q}_t$：这个动作后续获得的回报</li>
+  <li>两者相乘：如果一个动作带来了高回报，就增加它的概率；如果带来低回报，就降低概率</li>
+</ul>
+
+<p>这正是强化学习"试错"思想的数学表达。</p>
+
+<h4>因果性 (Causality) 的推导</h4>
+
+<p>为什么可以用 reward-to-go $\hat{Q}_t$ 代替完整回报 $R(\tau)$？因为时间步 $t$ 的动作不可能影响 $t$ 之前的奖励：</p>
+
+$$\mathbb{E}\left[\nabla_\theta \log \pi(a_t|s_t;\theta) \cdot \sum_{t'=0}^{t-1} \gamma^{t'} r_{t'}\right] = 0$$
+
+<p>这可以通过条件期望来证明：给定 $s_t$，$\nabla_\theta \log \pi(a_t|s_t;\theta)$ 的期望为零（因为概率的梯度和为零），而 $t$ 之前的奖励只依赖于 $s_t$ 之前的轨迹。因此，使用 reward-to-go 可以在不引入偏差的情况下降低方差。</p>
+
+<h3 id="s1-4">1.4 REINFORCE 算法</h3>
+
+<p>REINFORCE (Williams, 1992) 是最简单的策略梯度算法，直接使用 Monte Carlo 采样来估计策略梯度。</p>
+
+<div class="algorithm-box">
+  <div class="algo-title">算法 1: REINFORCE (带 Baseline)</div>
   <ol>
-    <li>用 π_θ_old 运行 4 个并行环境，每个收集 2048 步</li>
-    <li>总计 4 × 2048 = 8192 个 (s, a, r, s', done) 转移</li>
-    <li>存储到 Rollout Buffer 中</li>
-    <li>计算 GAE 优势和目标回报</li>
+    <li><strong>初始化</strong>：策略参数 $\theta$，baseline 网络参数 $\phi$（可选）</li>
+    <li><strong>循环</strong> 每个 episode：
+      <ol type="a">
+        <li>用当前策略 $\pi_\theta$ 采集一条完整轨迹 $\tau = (s_0, a_0, r_0, \ldots, s_T)$</li>
+        <li>对每个时间步 $t$，计算 reward-to-go：$\hat{G}_t = \sum_{t'=t}^{T-1} \gamma^{t'-t} r_{t'}$</li>
+        <li>（可选）计算 baseline：$b_t = V_\phi(s_t)$</li>
+        <li>计算策略梯度估计：$\hat{g} = \frac{1}{T}\sum_{t=0}^{T-1} \nabla_\theta \log \pi(a_t|s_t;\theta) \cdot (\hat{G}_t - b_t)$</li>
+        <li>更新策略：$\theta \leftarrow \theta + \alpha \hat{g}$</li>
+        <li>（可选）更新 baseline：$\phi \leftarrow \phi - \beta \nabla_\phi \sum_t (V_\phi(s_t) - \hat{G}_t)^2$</li>
+      </ol>
+    </li>
   </ol>
 </div>
 
-<pre><code><span class="cm"># Rollout Buffer 数据结构</span>
-buffer = {
-    <span class="st">'observations'</span>: np.zeros((n_steps, n_envs, <span class="nu">16</span>)),   <span class="cm"># 状态</span>
-    <span class="st">'actions'</span>:      np.zeros((n_steps, n_envs, <span class="nu">2</span>)),    <span class="cm"># 动作</span>
-    <span class="st">'rewards'</span>:      np.zeros((n_steps, n_envs)),        <span class="cm"># 奖励</span>
-    <span class="st">'dones'</span>:        np.zeros((n_steps, n_envs)),        <span class="cm"># 终止标志</span>
-    <span class="st">'log_probs'</span>:    np.zeros((n_steps, n_envs)),        <span class="cm"># log π(a|s)</span>
-    <span class="st">'values'</span>:       np.zeros((n_steps, n_envs)),        <span class="cm"># V(s)</span>
-}
-<span class="cm"># n_steps=2048, n_envs=4 → 每批 8192 个转移</span>
-<button class="copy-btn" onclick="copyCode(this)">复制</button></code></pre>
-
-<h2 id="s7-2">7.2 优势计算 — GAE 逐步</h2>
-
-<pre><code><span class="cm"># GAE 计算的逐步示例（假设 T=5 步）</span>
-<span class="cm"># rewards = [r₀, r₁, r₂, r₃, r₄]</span>
-<span class="cm"># values  = [V₀, V₁, V₂, V₃, V₄]</span>
-<span class="cm"># V₅ (next_value) — 最后一个状态的价值估计</span>
-<span class="cm"># γ = 0.99, λ = 0.95</span>
-
-<span class="cm"># 步骤 1：计算 TD 残差</span>
-<span class="cm"># δ₄ = r₄ + γ·V₅ - V₄</span>
-<span class="cm"># δ₃ = r₃ + γ·V₄ - V₃</span>
-<span class="cm"># δ₂ = r₂ + γ·V₃ - V₂</span>
-<span class="cm"># δ₁ = r₁ + γ·V₂ - V₁</span>
-<span class="cm"># δ₀ = r₀ + γ·V₁ - V₀</span>
-
-<span class="cm"># 步骤 2：逆序累积 GAE</span>
-<span class="cm"># A₄^GAE = δ₄</span>
-<span class="cm"># A₃^GAE = δ₃ + (γλ)·A₄^GAE</span>
-<span class="cm"># A₂^GAE = δ₂ + (γλ)·A₃^GAE</span>
-<span class="cm"># A₁^GAE = δ₁ + (γλ)·A₂^GAE</span>
-<span class="cm"># A₀^GAE = δ₀ + (γλ)·A₁^GAE</span>
-
-<span class="cm"># 步骤 3：目标回报</span>
-<span class="cm"># V_target_t = A_t^GAE + V_t</span>
-<button class="copy-btn" onclick="copyCode(this)">复制</button></code></pre>
-
-<h2 id="s7-3">7.3 Mini-batch 训练 — 10 个 Epoch</h2>
-
-<pre><code><span class="cm"># PPO 更新循环</span>
-<span class="kw">for</span> epoch <span class="kw">in</span> <span class="bi">range</span>(<span class="nu">10</span>):  <span class="cm"># n_epochs = 10</span>
-    <span class="cm"># 随机打乱 8192 个样本</span>
-    indices = np.random.permutation(<span class="nu">8192</span>)
-
-    <span class="cm"># 分成 128 个 mini-batch (8192 / 64 = 128)</span>
-    <span class="kw">for</span> start <span class="kw">in</span> <span class="bi">range</span>(<span class="nu">0</span>, <span class="nu">8192</span>, <span class="nu">64</span>):
-        mb_idx = indices[start:start + <span class="nu">64</span>]
-
-        <span class="cm"># 取出 mini-batch 数据</span>
-        mb_obs = observations[mb_idx]
-        mb_actions = actions[mb_idx]
-        mb_old_log_probs = old_log_probs[mb_idx]
-        mb_advantages = advantages[mb_idx]
-        mb_returns = returns[mb_idx]
-
-        <span class="cm"># 正向传播</span>
-        dist, values = model(mb_obs)
-        new_log_probs = dist.log_prob(mb_actions).sum(-<span class="nu">1</span>)
-        entropy = dist.entropy().mean()
-
-        <span class="cm"># PPO-Clip Loss</span>
-        ratio = torch.exp(new_log_probs - mb_old_log_probs)
-        surr1 = ratio * mb_advantages
-        surr2 = torch.clamp(ratio, <span class="nu">0.8</span>, <span class="nu">1.2</span>) * mb_advantages
-        policy_loss = -torch.min(surr1, surr2).mean()
-
-        <span class="cm"># Value Loss + Entropy</span>
-        value_loss = ((values.squeeze() - mb_returns) ** <span class="nu">2</span>).mean()
-        loss = policy_loss + <span class="nu">0.5</span> * value_loss - <span class="nu">0.0</span> * entropy
-
-        <span class="cm"># 反向传播 + 更新</span>
-        optimizer.zero_grad()
-        loss.backward()
-        nn.utils.clip_grad_norm_(model.parameters(), <span class="nu">0.5</span>)
-        optimizer.step()
-
-<span class="cm"># 每批数据总共更新 10 × 128 = 1280 次梯度步</span>
-<button class="copy-btn" onclick="copyCode(this)">复制</button></code></pre>
-
-<h2 id="s7-4">7.4 学习曲线分析</h2>
-
-<div class="box def">
-  <div class="box-title">关键监控指标</div>
+<div class="callout callout-warning">
+  <div class="callout-title">⚠️ REINFORCE 的局限</div>
   <ul>
-    <li><strong>explained_variance</strong>：价值函数解释的方差比例，理想值接近 1.0</li>
-    <li><strong>value_loss</strong>：L^VF，越低越好（Critic 预测越准）</li>
-    <li><strong>policy_loss</strong>：L^CLIP，不是越低越好——需要看趋势</li>
-    <li><strong>approx_kl</strong>：新旧策略的 KL 散度近似，不应超过 0.01~0.02</li>
-    <li><strong>clip_fraction</strong>：被裁剪的样本比例，通常 10%~30%</li>
+    <li><strong>高方差</strong>：Monte Carlo 估计的方差很大，训练不稳定</li>
+    <li><strong>On-policy</strong>：每次更新策略后，之前的数据就失效了，采样效率低</li>
+    <li><strong>需要完整 episode</strong>：必须等到 episode 结束才能更新，无法在线学习</li>
+    <li><strong>无法利用 bootstrapping</strong>：不能用当前 value 估计来辅助计算回报</li>
   </ul>
+  <p>这些问题将在后续的 Actor-Critic 和 PPO 中得到解决。</p>
 </div>
 
-<div class="box warn">
-  <div class="box-title">训练诊断</div>
-  <ul>
-    <li><strong>EV ≈ 0 或负值</strong>：Critic 没学到东西，检查学习率/网络结构</li>
-    <li><strong>KL 太大</strong>：策略变化过大，降低学习率或增加裁剪</li>
-    <li><strong>clip_fraction &gt; 0.5</strong>：太多样本被裁剪，可能学习率过大</li>
-    <li><strong>entropy 趋向 0</strong>：探索崩塌，增大 ent_coef</li>
-  </ul>
+<h3 id="s1-5">1.5 代码：CartPole REINFORCE 完整实现</h3>
+
+<p>下面是一个完整的、可运行的 REINFORCE 实现，用于解决经典的 CartPole 问题。代码包含详细注释，解释每一步与上面的数学公式的对应关系。</p>
+
+<div class="code-container">
+  <div class="code-header">
+    <span>reinforce_cartpole.py — 完整 REINFORCE 实现</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+  </div>
+  <pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.optim <span class="kw">as</span> optim
+<span class="kw">from</span> torch.distributions <span class="kw">import</span> Categorical
+<span class="kw">import</span> gymnasium <span class="kw">as</span> gym
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 1. 策略网络：π(a|s;θ)</span>
+<span class="cmt"># 输入: 状态 s (4维: 位置, 速度, 角度, 角速度)</span>
+<span class="cmt"># 输出: 动作概率分布 (2维: 左, 右)</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">class</span> <span class="cls">PolicyNetwork</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, state_dim, action_dim, hidden=<span class="num">128</span>):
+        <span class="bi">super</span>().__init__()
+        <span class="sf">self</span>.network = nn.Sequential(
+            nn.Linear(state_dim, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, action_dim),
+            nn.Softmax(dim=-<span class="num">1</span>)   <span class="cmt"># 输出概率分布</span>
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, state):
+        <span class="kw">return</span> <span class="sf">self</span>.network(state)
+
+    <span class="kw">def</span> <span class="fn">get_action</span>(<span class="sf">self</span>, state):
+        <span class="str">"""根据策略采样动作，并返回 log 概率"""</span>
+        state = torch.FloatTensor(state).unsqueeze(<span class="num">0</span>)
+        probs = <span class="sf">self</span>.forward(state)
+        dist = Categorical(probs)        <span class="cmt"># 构建分类分布</span>
+        action = dist.sample()           <span class="cmt"># 从 π(·|s) 采样</span>
+        log_prob = dist.log_prob(action)  <span class="cmt"># log π(a|s;θ)</span>
+        <span class="kw">return</span> action.item(), log_prob
+
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 2. Baseline 网络 V(s;φ)（可选，用于方差缩减）</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">class</span> <span class="cls">ValueNetwork</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, state_dim, hidden=<span class="num">128</span>):
+        <span class="bi">super</span>().__init__()
+        <span class="sf">self</span>.network = nn.Sequential(
+            nn.Linear(state_dim, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, <span class="num">1</span>)
+        )
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, state):
+        <span class="kw">return</span> <span class="sf">self</span>.network(state).squeeze(-<span class="num">1</span>)
+
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 3. 计算折扣 reward-to-go</span>
+<span class="cmt"># G_t = r_t + γ·r_{t+1} + γ²·r_{t+2} + ...</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">def</span> <span class="fn">compute_returns</span>(rewards, gamma=<span class="num">0.99</span>):
+    <span class="str">"""从后往前计算折扣回报（reward-to-go）"""</span>
+    returns = []
+    G = <span class="num">0.0</span>
+    <span class="kw">for</span> r <span class="kw">in</span> <span class="bi">reversed</span>(rewards):
+        G = r + gamma * G
+        returns.insert(<span class="num">0</span>, G)
+    returns = torch.FloatTensor(returns)
+    <span class="cmt"># 标准化可以稳定训练（不影响梯度方向，只影响步长）</span>
+    returns = (returns - returns.mean()) / (returns.std() + <span class="num">1e-8</span>)
+    <span class="kw">return</span> returns
+
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 4. 训练循环</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">def</span> <span class="fn">train_reinforce</span>(
+    env_name=<span class="str">"CartPole-v1"</span>,
+    num_episodes=<span class="num">1000</span>,
+    gamma=<span class="num">0.99</span>,
+    lr_policy=<span class="num">1e-3</span>,
+    lr_value=<span class="num">1e-3</span>,
+    use_baseline=<span class="num">True</span>,
+    seed=<span class="num">42</span>
+):
+    <span class="cmt"># 环境设置</span>
+    env = gym.make(env_name)
+    state_dim = env.observation_space.shape[<span class="num">0</span>]
+    action_dim = env.action_space.n
+
+    <span class="cmt"># 网络初始化</span>
+    policy = PolicyNetwork(state_dim, action_dim)
+    optimizer_policy = optim.Adam(policy.parameters(), lr=lr_policy)
+
+    value_net = <span class="num">None</span>
+    optimizer_value = <span class="num">None</span>
+    <span class="kw">if</span> use_baseline:
+        value_net = ValueNetwork(state_dim)
+        optimizer_value = optim.Adam(value_net.parameters(), lr=lr_value)
+
+    <span class="cmt"># 训练记录</span>
+    episode_rewards = []
+    running_avg = []
+
+    <span class="kw">for</span> ep <span class="kw">in</span> <span class="bi">range</span>(num_episodes):
+        state, _ = env.reset(seed=seed + ep)
+        log_probs = []
+        rewards = []
+        states = []
+
+        <span class="cmt"># ---- 采集一条完整轨迹 ----</span>
+        done = <span class="num">False</span>
+        <span class="kw">while</span> <span class="kw">not</span> done:
+            action, log_prob = policy.get_action(state)
+            next_state, reward, terminated, truncated, _ = env.step(action)
+            done = terminated <span class="kw">or</span> truncated
+
+            states.append(state)
+            log_probs.append(log_prob)
+            rewards.append(reward)
+            state = next_state
+
+        <span class="cmt"># ---- 计算回报 ----</span>
+        returns = compute_returns(rewards, gamma)
+        log_probs = torch.stack(log_probs)
+
+        <span class="cmt"># ---- 计算策略梯度 ----</span>
+        <span class="kw">if</span> use_baseline <span class="kw">and</span> value_net <span class="kw">is</span> <span class="kw">not</span> <span class="num">None</span>:
+            states_tensor = torch.FloatTensor(np.array(states))
+            values = value_net(states_tensor).detach()
+            advantages = returns - values   <span class="cmt"># A(s,a) ≈ G_t - V(s_t)</span>
+
+            <span class="cmt"># 更新 value baseline</span>
+            v_pred = value_net(states_tensor)
+            value_loss = nn.MSELoss()(v_pred, returns)
+            optimizer_value.zero_grad()
+            value_loss.backward()
+            optimizer_value.step()
+        <span class="kw">else</span>:
+            advantages = returns
+
+        <span class="cmt"># 策略损失: -1/T * Σ log π(a|s) * A</span>
+        <span class="cmt"># 注意: 取负号是因为 PyTorch 默认最小化损失，而我们要最大化回报</span>
+        policy_loss = -(log_probs * advantages).mean()
+
+        optimizer_policy.zero_grad()
+        policy_loss.backward()
+        optimizer_policy.step()
+
+        <span class="cmt"># 记录</span>
+        total_reward = <span class="bi">sum</span>(rewards)
+        episode_rewards.append(total_reward)
+        avg = np.mean(episode_rewards[-<span class="num">100</span>:])
+        running_avg.append(avg)
+
+        <span class="kw">if</span> (ep + <span class="num">1</span>) % <span class="num">50</span> == <span class="num">0</span>:
+            <span class="bi">print</span>(<span class="str">f"Episode {ep+1:4d} | Reward: {total_reward:6.1f} | Avg100: {avg:6.1f}"</span>)
+
+        <span class="kw">if</span> avg >= <span class="num">475</span>:
+            <span class="bi">print</span>(<span class="str">f"\n✅ 环境解决! Episode {ep+1}, Avg100 = {avg:.1f}"</span>)
+            <span class="kw">break</span>
+
+    env.close()
+    <span class="kw">return</span> episode_rewards, running_avg
+
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 5. 运行并可视化</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    <span class="cmt"># 对比: 有 baseline vs 无 baseline</span>
+    <span class="bi">print</span>(<span class="str">"=== 无 Baseline ==="</span>)
+    rewards_no_bl, avg_no_bl = train_reinforce(use_baseline=<span class="num">False</span>)
+
+    <span class="bi">print</span>(<span class="str">"\n=== 有 Baseline ==="</span>)
+    rewards_bl, avg_bl = train_reinforce(use_baseline=<span class="num">True</span>)
+
+    <span class="cmt"># 绘图对比</span>
+    plt.figure(figsize=(<span class="num">12</span>, <span class="num">5</span>))
+    plt.plot(avg_no_bl, label=<span class="str">"REINFORCE (no baseline)"</span>, alpha=<span class="num">0.8</span>)
+    plt.plot(avg_bl, label=<span class="str">"REINFORCE (with baseline)"</span>, alpha=<span class="num">0.8</span>)
+    plt.xlabel(<span class="str">"Episode"</span>)
+    plt.ylabel(<span class="str">"Average Reward (100 ep)"</span>)
+    plt.title(<span class="str">"REINFORCE on CartPole-v1"</span>)
+    plt.legend()
+    plt.grid(<span class="num">True</span>, alpha=<span class="num">0.3</span>)
+    plt.tight_layout()
+    plt.savefig(<span class="str">"reinforce_cartpole.png"</span>, dpi=<span class="num">150</span>)
+    plt.show()
+</code></pre>
 </div>
 
-<h2 id="s7-5">7.5 超参数调优</h2>
+<div class="callout callout-exercise">
+  <div class="callout-title">🏋️ 练习 1</div>
+  <ol>
+    <li>运行上面的代码，对比有/无 baseline 的训练曲线差异</li>
+    <li>尝试调整 <code>hidden</code> 层大小（64, 128, 256），观察对收敛速度的影响</li>
+    <li>修改 <code>gamma</code> 值（0.9, 0.99, 0.999），理解折扣因子对长期回报权衡的作用</li>
+    <li>将环境替换为 <code>LunarLander-v2</code>（离散动作），观察 REINFORCE 的表现</li>
+  </ol>
+</div>
+
+<h3 id="s1-6">1.6 方差问题与 Baseline</h3>
+
+<p>REINFORCE 的核心问题是<strong>高方差</strong>。直觉上，Monte Carlo 采样的回报可能差异很大——同一个状态，不同的采样轨迹可能产生截然不同的回报值。这导致梯度估计波动剧烈，训练不稳定。</p>
+
+<h4>方差的数学分析</h4>
+
+<p>策略梯度估计 $\hat{g} = \nabla_\theta \log \pi(a|s;\theta) \cdot R(\tau)$ 的方差为：</p>
+
+$$\text{Var}[\hat{g}] = \mathbb{E}[\hat{g}^2] - (\mathbb{E}[\hat{g}])^2$$
+
+<p>$R(\tau)$ 可能很大（比如 CartPole 的 500 步），导致 $\hat{g}$ 的量级波动很大。</p>
+
+<h4>Baseline 的引入</h4>
+
+<p>一个关键的方差缩减技巧是引入 <strong>baseline</strong> $b(s)$：</p>
+
+$$\nabla_\theta J(\theta) = \mathbb{E}\left[\sum_{t=0}^{T-1} \nabla_\theta \log \pi(a_t|s_t;\theta) \cdot \left(\hat{Q}_t - b(s_t)\right)\right]$$
+
+<h4>证明：任意 baseline 不引入偏差</h4>
+
+<div class="callout callout-math">
+  <div class="callout-title">📐 定理：Baseline 的无偏性</div>
+  <p>对于任何只依赖状态 $s$ 的函数 $b(s)$，有：</p>
+  $$\mathbb{E}_{a \sim \pi}\left[\nabla_\theta \log \pi(a|s;\theta) \cdot b(s)\right] = 0$$
+  <p><strong>证明</strong>：</p>
+  $$\mathbb{E}_{a \sim \pi}\left[\nabla_\theta \log \pi(a|s;\theta) \cdot b(s)\right] = b(s) \cdot \sum_a \pi(a|s;\theta) \cdot \frac{\nabla_\theta \pi(a|s;\theta)}{\pi(a|s;\theta)}$$
+  $$= b(s) \cdot \sum_a \nabla_\theta \pi(a|s;\theta) = b(s) \cdot \nabla_\theta \sum_a \pi(a|s;\theta) = b(s) \cdot \nabla_\theta 1 = 0$$
+  <p>由于 $\sum_a \pi(a|s;\theta) = 1$（概率归一化），其梯度为零。$\square$</p>
+</div>
+
+<h4>最优 Baseline</h4>
+
+<p>理论上，最优 baseline（使方差最小的 baseline）为：</p>
+
+$$b^*(s) = \frac{\mathbb{E}\left[\|\nabla_\theta \log \pi\|^2 \cdot R(\tau) \;\middle|\; s\right]}{\mathbb{E}\left[\|\nabla_\theta \log \pi\|^2 \;\middle|\; s\right]}$$
+
+<p>实际中，使用 $b(s) = V(s)$（状态价值函数的估计）已经能提供很好的方差缩减效果，而且更容易实现。此时梯度估计变为：</p>
+
+$$\hat{g} = \nabla_\theta \log \pi(a_t|s_t;\theta) \cdot \underbrace{(\hat{Q}_t - V(s_t))}_{\approx A(s_t, a_t)}$$
+
+<p>这就是<strong>优势函数 (Advantage Function)</strong> 的雏形，也是通往 Actor-Critic 的桥梁。</p>
+
+<div class="callout callout-info">
+  <div class="callout-title">📘 方差缩减技巧汇总</div>
+  <table>
+    <tr><th>技巧</th><th>方法</th><th>代价</th></tr>
+    <tr><td>Reward-to-go</td><td>用 $\hat{Q}_t$ 替代 $R(\tau)$</td><td>无（减少方差且无偏）</td></tr>
+    <tr><td>Baseline</td><td>减去 $b(s)$（通常是 $V(s)$）</td><td>需要额外学习 $V(s)$</td></tr>
+    <tr><td>标准化</td><td>对回报做 z-score 标准化</td><td>轻微偏差</td></tr>
+    <tr><td>多轨迹平均</td><td>增加每次更新的采样量</td><td>计算成本增加</td></tr>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- CHAPTER 2: ACTOR-CRITIC -->
+<!-- ============================================================ -->
+<h2 id="ch2">第二章：Actor-Critic 方法</h2>
+
+<p>上一章我们看到，REINFORCE 使用完整轨迹的 Monte Carlo 回报来估计策略梯度，方差很大。<strong>Actor-Critic</strong> 方法通过引入一个学习到的价值函数来辅助策略梯度估计，在方差和偏差之间取得更好的平衡。</p>
+
+<h3 id="s2-1">2.1 从 REINFORCE 到 Actor-Critic</h3>
+
+<p>Actor-Critic 架构包含两个组件：</p>
+
+<ul>
+  <li><strong>Actor（演员）</strong>：策略网络 $\pi(a|s;\theta)$，负责决定在每个状态采取什么动作</li>
+  <li><strong>Critic（评论家）</strong>：价值网络 $V(s;\phi)$，评估当前状态的好坏，为 Actor 提供梯度信号</li>
+</ul>
+
+<div class="diagram-container">
+  <svg width="500" height="280" viewBox="0 0 500 280">
+    <!-- Environment -->
+    <rect x="180" y="10" width="140" height="50" rx="10" fill="var(--tip-bg)" stroke="var(--tip-border)" stroke-width="2"/>
+    <text x="250" y="40" text-anchor="middle" font-size="14" fill="var(--text-primary)" font-weight="600">环境 (Environment)</text>
+
+    <!-- State arrow down -->
+    <line x1="210" y1="60" x2="210" y2="100" stroke="var(--text-muted)" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="195" y="85" font-size="11" fill="var(--text-muted)">s, r</text>
+
+    <!-- Action arrow up -->
+    <line x1="290" y1="100" x2="290" y2="60" stroke="var(--accent)" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="300" y="85" font-size="11" fill="var(--accent)">a</text>
+
+    <!-- Actor -->
+    <rect x="40" y="110" width="180" height="60" rx="10" fill="var(--example-bg)" stroke="var(--example-border)" stroke-width="2"/>
+    <text x="130" y="137" text-anchor="middle" font-size="13" fill="var(--text-primary)" font-weight="600">Actor: π(a|s;θ)</text>
+    <text x="130" y="157" text-anchor="middle" font-size="11" fill="var(--text-secondary)">选择动作</text>
+
+    <!-- Critic -->
+    <rect x="280" y="110" width="180" height="60" rx="10" fill="var(--def-bg)" stroke="var(--def-border)" stroke-width="2"/>
+    <text x="370" y="137" text-anchor="middle" font-size="13" fill="var(--text-primary)" font-weight="600">Critic: V(s;φ)</text>
+    <text x="370" y="157" text-anchor="middle" font-size="11" fill="var(--text-secondary)">评估状态</text>
+
+    <!-- TD Error -->
+    <rect x="160" y="210" width="180" height="50" rx="10" fill="var(--warn-bg)" stroke="var(--warn-border)" stroke-width="2"/>
+    <text x="250" y="233" text-anchor="middle" font-size="12" fill="var(--text-primary)" font-weight="600">δ = r + γV(s') - V(s)</text>
+    <text x="250" y="250" text-anchor="middle" font-size="11" fill="var(--text-secondary)">TD Error → 优势估计</text>
+
+    <!-- Arrows from Actor/Critic to TD -->
+    <line x1="130" y1="170" x2="200" y2="210" stroke="var(--text-muted)" stroke-width="1.5" stroke-dasharray="4"/>
+    <line x1="370" y1="170" x2="300" y2="210" stroke="var(--text-muted)" stroke-width="1.5" stroke-dasharray="4"/>
+  </svg>
+  <div class="diagram-caption">图 2.1: Actor-Critic 架构 — Actor 选择动作，Critic 评估状态，TD Error 连接二者</div>
+</div>
+
+<p>REINFORCE 与 Actor-Critic 的核心区别在于如何估计"动作的好坏"：</p>
 
 <table>
-<tr><th>超参数</th><th>默认值</th><th>范围</th><th>建议</th></tr>
-<tr><td>n_steps</td><td>2048</td><td>[128, 8192]</td><td>长期任务用大值</td></tr>
-<tr><td>batch_size</td><td>64</td><td>[32, 512]</td><td>n_steps 的子集</td></tr>
-<tr><td>n_epochs</td><td>10</td><td>[3, 30]</td><td>太多会过拟合</td></tr>
-<tr><td>learning_rate</td><td>3e-4</td><td>[1e-5, 1e-3]</td><td>3e-4 经典起点</td></tr>
-<tr><td>γ (gamma)</td><td>0.99</td><td>[0.9, 0.999]</td><td>长期任务用大 γ</td></tr>
-<tr><td>λ (gae_lambda)</td><td>0.95</td><td>[0.9, 1.0]</td><td>0.95 最常用</td></tr>
-<tr><td>ε (clip_range)</td><td>0.2</td><td>[0.1, 0.3]</td><td>0.2 几乎不需调</td></tr>
-<tr><td>c₁ (vf_coef)</td><td>0.5</td><td>[0.25, 1.0]</td><td>共享网络时重要</td></tr>
-<tr><td>c₂ (ent_coef)</td><td>0.0</td><td>[0, 0.01]</td><td>探索不足时增大</td></tr>
-<tr><td>max_grad_norm</td><td>0.5</td><td>[0.3, 1.0]</td><td>防止梯度爆炸</td></tr>
+  <tr><th>方法</th><th>梯度中的信号</th><th>偏差</th><th>方差</th></tr>
+  <tr><td>REINFORCE</td><td>$\hat{G}_t = \sum_{t'=t}^{T} \gamma^{t'-t} r_{t'}$（Monte Carlo 回报）</td><td>无偏</td><td>高</td></tr>
+  <tr><td>Actor-Critic</td><td>$\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$（TD error）</td><td>有偏（依赖 $V$ 的准确性）</td><td>低</td></tr>
 </table>
 
-<h2 id="s7-6">7.6 OOD 泛化测试</h2>
+<h4>Actor-Critic 的梯度更新</h4>
 
-<div class="box example">
-  <div class="box-title">箱子质量泛化测试</div>
-  <p>训练时使用 box_mass = 0.5 kg，测试时变化质量：</p>
+<p>策略梯度使用 TD error 作为优势估计：</p>
+
+$$\nabla_\theta J(\theta) \approx \mathbb{E}\left[\nabla_\theta \log \pi(a_t|s_t;\theta) \cdot \delta_t\right]$$
+
+<p>其中 <strong>TD error</strong> $\delta_t$ 是 Critic 提供的"动作好坏"的信号：</p>
+
+$$\delta_t = r_t + \gamma V_\phi(s_{t+1}) - V_\phi(s_t)$$
+
+<h4>为什么 TD error 可以作为优势估计？</h4>
+
+<p>当 $V_\phi \approx V^\pi$ 时：</p>
+
+$$\mathbb{E}[\delta_t | s_t, a_t] = \mathbb{E}[r_t + \gamma V^\pi(s_{t+1}) | s_t, a_t] - V^\pi(s_t) = Q^\pi(s_t, a_t) - V^\pi(s_t) = A^\pi(s_t, a_t)$$
+
+<p>即 TD error 的条件期望就是优势函数！虽然单个 TD error 是有偏的（因为 $V_\phi$ 不完美），但它是优势函数的无偏估计（在 Critic 完美的假设下）。</p>
+
+<h3 id="s2-2">2.2 优势函数 $A(s,a)$ 深入分析</h3>
+
+<p>优势函数在 PPO 中起核心作用，值得深入理解。</p>
+
+<div class="callout callout-math">
+  <div class="callout-title">📐 优势函数的性质</div>
+  <ol>
+    <li><strong>定义</strong>：$A^\pi(s,a) = Q^\pi(s,a) - V^\pi(s)$</li>
+    <li><strong>零均值</strong>：$\mathbb{E}_{a \sim \pi}[A^\pi(s,a)] = \sum_a \pi(a|s)[Q^\pi(s,a) - V^\pi(s)] = V^\pi(s) - V^\pi(s) = 0$</li>
+    <li><strong>正值 → 好动作</strong>：$A > 0$ 表示这个动作比平均水平好</li>
+    <li><strong>负值 → 差动作</strong>：$A < 0$ 表示这个动作比平均水平差</li>
+  </ol>
+</div>
+
+<p>使用优势函数代替 Q 值或完整回报，有两个好处：</p>
+
+<ul>
+  <li><strong>方差更低</strong>：减去 $V(s)$ 相当于使用了一个好的 baseline</li>
+  <li><strong>梯度信号更清晰</strong>：直接告诉我们"这个动作比平均好多少"，而不是绝对好坏</li>
+</ul>
+
+<h4>不同的优势估计方法</h4>
+
+<table>
+  <tr><th>方法</th><th>公式</th><th>偏差</th><th>方差</th></tr>
+  <tr><td>Monte Carlo</td><td>$\hat{A}_t^{MC} = \hat{G}_t - V(s_t)$</td><td>低（V 的偏差）</td><td>高</td></tr>
+  <tr><td>1-step TD</td><td>$\hat{A}_t^{(1)} = r_t + \gamma V(s_{t+1}) - V(s_t)$</td><td>高（强依赖 V 准确性）</td><td>低</td></tr>
+  <tr><td>N-step TD</td><td>$\hat{A}_t^{(n)} = \sum_{k=0}^{n-1}\gamma^k r_{t+k} + \gamma^n V(s_{t+n}) - V(s_t)$</td><td>中</td><td>中</td></tr>
+  <tr><td>GAE</td><td>$\hat{A}_t^{GAE} = \sum_{l=0}^{\infty}(\gamma\lambda)^l \delta_{t+l}$</td><td>可调（$\lambda$）</td><td>可调（$\lambda$）</td></tr>
+</table>
+
+<h4>TD 残差作为优势估计</h4>
+
+<p>1-step TD 残差 (Temporal Difference residual) 是最简单的优势估计：</p>
+
+$$\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$$
+
+<p>物理含义：$V(s_t)$ 是 Critic 对状态 $s_t$ 的期望回报预测，$r_t + \gamma V(s_{t+1})$ 是"实际一步回报 + 对下一状态的预测"。两者之差反映了实际体验与预期之间的<strong>惊讶程度</strong>。</p>
+
+<ul>
+  <li>$\delta_t > 0$：实际体验比预期好 → 这个动作是好的</li>
+  <li>$\delta_t < 0$：实际体验比预期差 → 这个动作是差的</li>
+  <li>$\delta_t \approx 0$：与预期一致 → 这是一个"平均"动作</li>
+</ul>
+
+<h3 id="s2-3">2.3 GAE：广义优势估计</h3>
+
+<p>GAE (Generalized Advantage Estimation, Schulman et al., 2015) 是 PPO 中默认使用的优势估计方法。它提供了一种优雅的方式来在偏差和方差之间进行权衡。</p>
+
+<h4>Step 1: 定义不同步数的优势估计器</h4>
+
+<p>首先，定义 $n$-step 优势估计：</p>
+
+$$\hat{A}_t^{(1)} = \delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$$
+$$\hat{A}_t^{(2)} = \delta_t + \gamma\delta_{t+1} = r_t + \gamma r_{t+1} + \gamma^2 V(s_{t+2}) - V(s_t)$$
+$$\hat{A}_t^{(3)} = \delta_t + \gamma\delta_{t+1} + \gamma^2\delta_{t+2}$$
+
+<p>一般地：</p>
+
+$$\hat{A}_t^{(n)} = \sum_{l=0}^{n-1} \gamma^l \delta_{t+l}$$
+
+<h4>Step 2: 指数加权平均</h4>
+
+<p>GAE 是所有 $n$-step 估计的指数加权平均：</p>
+
+$$\hat{A}_t^{GAE(\gamma,\lambda)} = (1-\lambda)\left[\hat{A}_t^{(1)} + \lambda\hat{A}_t^{(2)} + \lambda^2\hat{A}_t^{(3)} + \cdots\right]$$
+
+<p>$\lambda \in [0, 1]$ 是权衡参数，$(1-\lambda)$ 是归一化系数。</p>
+
+<h4>Step 3: 化简为递推形式</h4>
+
+<div class="callout callout-math">
+  <div class="callout-title">📐 GAE 的等价递推形式</div>
+  <p>经过展开和化简，GAE 可以表达为 TD 残差的指数加权和：</p>
+  $$\hat{A}_t^{GAE(\gamma,\lambda)} = \sum_{l=0}^{\infty} (\gamma\lambda)^l \delta_{t+l}$$
+  <p>或等价的递推形式（从后向前计算）：</p>
+  $$\hat{A}_t^{GAE} = \delta_t + \gamma\lambda \cdot \hat{A}_{t+1}^{GAE}$$
+</div>
+
+<h4>完整推导</h4>
+
+<p>将定义展开：</p>
+
+$$\hat{A}_t^{GAE} = (1-\lambda)\sum_{n=1}^{\infty}\lambda^{n-1}\hat{A}_t^{(n)}$$
+
+$$= (1-\lambda)\sum_{n=1}^{\infty}\lambda^{n-1}\sum_{l=0}^{n-1}\gamma^l\delta_{t+l}$$
+
+<p>交换求和顺序（先对 $l$ 求和）：</p>
+
+$$= (1-\lambda)\sum_{l=0}^{\infty}\gamma^l\delta_{t+l}\sum_{n=l+1}^{\infty}\lambda^{n-1}$$
+
+$$= (1-\lambda)\sum_{l=0}^{\infty}\gamma^l\delta_{t+l}\cdot\frac{\lambda^l}{1-\lambda}$$
+
+$$= \sum_{l=0}^{\infty}(\gamma\lambda)^l\delta_{t+l}$$
+
+<p>这个结果非常优雅：GAE 就是 TD 残差以 $\gamma\lambda$ 为衰减因子的加权和。</p>
+
+<h4>$\lambda$ 的直觉理解</h4>
+
+<div class="callout callout-info">
+  <div class="callout-title">📘 $\lambda$ 的偏差-方差权衡</div>
   <ul>
-    <li>box_mass = 0.1 kg（更轻）→ PPO 表现下降 30%</li>
-    <li>box_mass = 2.0 kg（更重）→ PPO 表现下降 50%</li>
-    <li>PhysRobot 由于内置物理理解，性能下降仅 10-15%</li>
+    <li><strong>$\lambda = 0$</strong>：$\hat{A}_t = \delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)$<br>
+      → 只用 1-step TD，<strong>低方差但高偏差</strong>（完全依赖 V 的准确性）</li>
+    <li><strong>$\lambda = 1$</strong>：$\hat{A}_t = \sum_{l=0}^{\infty}\gamma^l\delta_{t+l} = \hat{G}_t - V(s_t)$<br>
+      → 等价于 Monte Carlo，<strong>无偏但高方差</strong></li>
+    <li><strong>$\lambda \in (0,1)$</strong>：在两个极端之间平滑插值<br>
+      → <strong>PPO 默认 $\lambda = 0.95$</strong>，接近 Monte Carlo 但有一定方差缩减</li>
   </ul>
 </div>
 
-<pre><code><span class="cm"># OOD 测试代码</span>
-<span class="kw">def</span> <span class="fn">ood_test</span>(agent, test_masses=[<span class="nu">0.1</span>, <span class="nu">0.3</span>, <span class="nu">0.5</span>, <span class="nu">1.0</span>, <span class="nu">2.0</span>, <span class="nu">5.0</span>]):
-    results = {}
-    <span class="kw">for</span> mass <span class="kw">in</span> test_masses:
-        env = PushBoxEnv(box_mass=mass)
-        metrics = agent.evaluate(env, n_episodes=<span class="nu">100</span>)
-        results[mass] = metrics[<span class="st">'success_rate'</span>]
-        <span class="bi">print</span>(<span class="st">f"mass={mass:.1f}kg → success={metrics['success_rate']:.1%}"</span>)
-    <span class="kw">return</span> results
-<button class="copy-btn" onclick="copyCode(this)">复制</button></code></pre>
+<h4>递推计算实现</h4>
 
-<hr>
+<p>在实际实现中，我们使用递推公式从后向前高效计算 GAE：</p>
 
-<!-- ==================== APPENDIX ==================== -->
-<h1 id="app-pseudo">附录 A：PPO 伪代码（完整版）</h1>
+<div class="code-container">
+  <div class="code-header">
+    <span>gae_computation.py — GAE 递推计算</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+  </div>
+  <pre><code><span class="kw">def</span> <span class="fn">compute_gae</span>(rewards, values, dones, next_value, gamma=<span class="num">0.99</span>, lam=<span class="num">0.95</span>):
+    <span class="str">"""
+    计算 Generalized Advantage Estimation (GAE)
 
-<div class="box thm">
-  <div class="box-title">PPO 完整算法</div>
-<pre style="background:transparent;border:none;padding:0;font-size:13px;">
-算法: Proximal Policy Optimization (PPO-Clip)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-输入: 初始策略参数 θ₀, 初始价值参数 φ₀
-超参数: ε=0.2, γ=0.99, λ=0.95, c₁=0.5, c₂=0.0
-        K=10 (epochs), M=64 (batch), N=2048 (steps), E=4 (envs)
+    参数:
+        rewards:    [T] 每步奖励
+        values:     [T] V(s_t) 的估计值
+        dones:      [T] 是否终止 (0 或 1)
+        next_value: V(s_T) 最后一个状态的价值
+        gamma:      折扣因子
+        lam:        GAE lambda (偏差-方差权衡)
 
-for iteration = 1, 2, 3, ... do
+    返回:
+        advantages: [T] GAE 优势估计
+        returns:    [T] 目标回报 (advantages + values)
+    """</span>
+    T = <span class="bi">len</span>(rewards)
+    advantages = np.zeros(T)
+    last_gae = <span class="num">0.0</span>
 
-  1. 数据收集 (Rollout)
-     θ_old ← θ
-     for t = 1 to N, for env = 1 to E do
-       a_t ~ π_θ_old(·|s_t)
-       s_{t+1}, r_t ~ Env.step(a_t)
-       存储 (s_t, a_t, r_t, log π_θ_old(a_t|s_t))
-     end
+    <span class="kw">for</span> t <span class="kw">in</span> <span class="bi">reversed</span>(<span class="bi">range</span>(T)):
+        <span class="cmt"># 处理 episode 边界</span>
+        <span class="kw">if</span> t == T - <span class="num">1</span>:
+            next_val = next_value
+        <span class="kw">else</span>:
+            next_val = values[t + <span class="num">1</span>]
 
-  2. 计算优势 (GAE)
-     A_T ← 0
-     for t = T-1 down to 0 do
-       δ_t = r_t + γ·V_φ(s_{t+1}) - V_φ(s_t)
-       A_t = δ_t + γ·λ·A_{t+1}
-     end
-     V_target_t = A_t + V_φ(s_t)
+        non_terminal = <span class="num">1.0</span> - dones[t]
 
-  3. Mini-batch 优化
-     for epoch = 1 to K do
-       shuffle all N×E samples
-       for each mini-batch of M do
-         r_t = π_θ(a_t|s_t) / π_θ_old(a_t|s_t)
-         L_clip = min(r_t·A_t, clip(r_t,1-ε,1+ε)·A_t)
-         L_vf = (V_φ(s_t) - V_target)²
-         L_ent = -Entropy(π_θ)
-         L = -L_clip + c₁·L_vf + c₂·L_ent
-         θ ← θ - α·∇_θ L
-       end
-     end
+        <span class="cmt"># δ_t = r_t + γ·V(s_{t+1}) - V(s_t)</span>
+        delta = rewards[t] + gamma * next_val * non_terminal - values[t]
 
-end
-</pre>
+        <span class="cmt"># A_t^GAE = δ_t + γλ · A_{t+1}^GAE</span>
+        advantages[t] = last_gae = delta + gamma * lam * non_terminal * last_gae
+
+    returns = advantages + values  <span class="cmt"># 目标回报 = 优势 + 价值</span>
+    <span class="kw">return</span> advantages, returns
+
+
+<span class="cmt"># 使用示例</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># 假设一个 5 步的小 episode</span>
+rewards = np.array([<span class="num">1.0</span>, <span class="num">0.0</span>, <span class="num">-1.0</span>, <span class="num">2.0</span>, <span class="num">1.0</span>])
+values  = np.array([<span class="num">0.5</span>, <span class="num">0.8</span>, <span class="num">0.3</span>, <span class="num">1.5</span>, <span class="num">0.7</span>])
+dones   = np.array([<span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">0.0</span>, <span class="num">1.0</span>])
+next_value = <span class="num">0.0</span>  <span class="cmt"># 终止状态价值为 0</span>
+
+advantages, returns = compute_gae(rewards, values, dones, next_value)
+<span class="bi">print</span>(<span class="str">"Advantages:"</span>, advantages)
+<span class="bi">print</span>(<span class="str">"Returns:"</span>, returns)
+</code></pre>
 </div>
 
-<h1 id="app-formulas">附录 B：关键公式速查表</h1>
+<h3 id="s2-4">2.4 代码：A2C 完整实现</h3>
+
+<p>Advantage Actor-Critic (A2C) 是 Actor-Critic 的同步版本，也是 PPO 的直接前身。理解 A2C 的实现对于理解 PPO 至关重要。</p>
+
+<div class="code-container">
+  <div class="code-header">
+    <span>a2c_cartpole.py — 完整 A2C 实现</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+  </div>
+  <pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.optim <span class="kw">as</span> optim
+<span class="kw">from</span> torch.distributions <span class="kw">import</span> Categorical
+<span class="kw">import</span> gymnasium <span class="kw">as</span> gym
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 1. Actor-Critic 共享网络</span>
+<span class="cmt"># 共享底层特征提取器，分别输出策略和价值</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">class</span> <span class="cls">ActorCritic</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, state_dim, action_dim, hidden=<span class="num">128</span>):
+        <span class="bi">super</span>().__init__()
+        <span class="cmt"># 共享特征提取器</span>
+        <span class="sf">self</span>.shared = nn.Sequential(
+            nn.Linear(state_dim, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, hidden),
+            nn.ReLU()
+        )
+        <span class="cmt"># Actor 头：输出动作概率</span>
+        <span class="sf">self</span>.actor_head = nn.Sequential(
+            nn.Linear(hidden, action_dim),
+            nn.Softmax(dim=-<span class="num">1</span>)
+        )
+        <span class="cmt"># Critic 头：输出状态价值</span>
+        <span class="sf">self</span>.critic_head = nn.Linear(hidden, <span class="num">1</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, state):
+        features = <span class="sf">self</span>.shared(state)
+        policy = <span class="sf">self</span>.actor_head(features)
+        value = <span class="sf">self</span>.critic_head(features).squeeze(-<span class="num">1</span>)
+        <span class="kw">return</span> policy, value
+
+    <span class="kw">def</span> <span class="fn">get_action</span>(<span class="sf">self</span>, state):
+        state = torch.FloatTensor(state).unsqueeze(<span class="num">0</span>)
+        probs, value = <span class="sf">self</span>.forward(state)
+        dist = Categorical(probs)
+        action = dist.sample()
+        <span class="kw">return</span> (action.item(), dist.log_prob(action),
+                dist.entropy(), value)
+
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 2. A2C Agent</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">class</span> <span class="cls">A2CAgent</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, state_dim, action_dim,
+                 lr=<span class="num">7e-4</span>, gamma=<span class="num">0.99</span>, lam=<span class="num">0.95</span>,
+                 value_coef=<span class="num">0.5</span>, entropy_coef=<span class="num">0.01</span>,
+                 n_steps=<span class="num">5</span>, max_grad_norm=<span class="num">0.5</span>):
+        <span class="sf">self</span>.model = ActorCritic(state_dim, action_dim)
+        <span class="sf">self</span>.optimizer = optim.Adam(<span class="sf">self</span>.model.parameters(), lr=lr)
+        <span class="sf">self</span>.gamma = gamma
+        <span class="sf">self</span>.lam = lam
+        <span class="sf">self</span>.value_coef = value_coef
+        <span class="sf">self</span>.entropy_coef = entropy_coef
+        <span class="sf">self</span>.n_steps = n_steps
+        <span class="sf">self</span>.max_grad_norm = max_grad_norm
+
+    <span class="kw">def</span> <span class="fn">compute_gae</span>(<span class="sf">self</span>, rewards, values, dones, next_value):
+        <span class="str">"""计算 GAE 优势估计"""</span>
+        T = <span class="bi">len</span>(rewards)
+        advantages = np.zeros(T)
+        last_gae = <span class="num">0.0</span>
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="bi">reversed</span>(<span class="bi">range</span>(T)):
+            next_val = next_value <span class="kw">if</span> t == T - <span class="num">1</span> <span class="kw">else</span> values[t + <span class="num">1</span>]
+            non_terminal = <span class="num">1.0</span> - dones[t]
+            delta = rewards[t] + <span class="sf">self</span>.gamma * next_val * non_terminal - values[t]
+            advantages[t] = last_gae = delta + <span class="sf">self</span>.gamma * <span class="sf">self</span>.lam * non_terminal * last_gae
+        returns = advantages + np.array(values)
+        <span class="kw">return</span> advantages, returns
+
+    <span class="kw">def</span> <span class="fn">update</span>(<span class="sf">self</span>, states, actions, log_probs, rewards, dones,
+               values, entropies, next_value):
+        <span class="str">"""A2C 单步更新"""</span>
+        <span class="cmt"># 计算 GAE</span>
+        values_np = [v.item() <span class="kw">for</span> v <span class="kw">in</span> values]
+        advantages, returns = <span class="sf">self</span>.compute_gae(
+            rewards, values_np, dones, next_value
+        )
+
+        <span class="cmt"># 转为 tensor</span>
+        advantages = torch.FloatTensor(advantages)
+        returns = torch.FloatTensor(returns)
+        log_probs = torch.stack(log_probs)
+        entropies = torch.stack(entropies)
+        values_t = torch.stack(values)
+
+        <span class="cmt"># 标准化优势（关键技巧！）</span>
+        advantages = (advantages - advantages.mean()) / (advantages.std() + <span class="num">1e-8</span>)
+
+        <span class="cmt"># 三个损失分量</span>
+        <span class="cmt"># 1. 策略损失: -E[log π(a|s) · A(s,a)]</span>
+        policy_loss = -(log_probs * advantages.detach()).mean()
+
+        <span class="cmt"># 2. 价值损失: E[(V(s) - R)²]</span>
+        value_loss = nn.MSELoss()(values_t, returns.detach())
+
+        <span class="cmt"># 3. 熵奖励: -E[H(π)]  (鼓励探索)</span>
+        entropy_loss = -entropies.mean()
+
+        <span class="cmt"># 总损失 = 策略损失 + c₁·价值损失 + c₂·熵损失</span>
+        total_loss = (policy_loss
+                      + <span class="sf">self</span>.value_coef * value_loss
+                      + <span class="sf">self</span>.entropy_coef * entropy_loss)
+
+        <span class="cmt"># 反向传播</span>
+        <span class="sf">self</span>.optimizer.zero_grad()
+        total_loss.backward()
+        nn.utils.clip_grad_norm_(<span class="sf">self</span>.model.parameters(), <span class="sf">self</span>.max_grad_norm)
+        <span class="sf">self</span>.optimizer.step()
+
+        <span class="kw">return</span> {
+            <span class="str">"policy_loss"</span>: policy_loss.item(),
+            <span class="str">"value_loss"</span>: value_loss.item(),
+            <span class="str">"entropy"</span>: -entropy_loss.item()
+        }
+
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 3. 训练循环</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">def</span> <span class="fn">train_a2c</span>(env_name=<span class="str">"CartPole-v1"</span>, total_steps=<span class="num">200000</span>, n_steps=<span class="num">5</span>):
+    env = gym.make(env_name)
+    state_dim = env.observation_space.shape[<span class="num">0</span>]
+    action_dim = env.action_space.n
+
+    agent = A2CAgent(state_dim, action_dim, n_steps=n_steps)
+
+    state, _ = env.reset()
+    episode_reward = <span class="num">0</span>
+    episode_rewards = []
+    step = <span class="num">0</span>
+
+    <span class="kw">while</span> step < total_steps:
+        <span class="cmt"># 收集 n_steps 的经验</span>
+        states, actions, log_probs = [], [], []
+        rewards, dones, values, entropies = [], [], [], []
+
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_steps):
+            action, log_prob, entropy, value = agent.model.get_action(state)
+            next_state, reward, terminated, truncated, _ = env.step(action)
+            done = terminated <span class="kw">or</span> truncated
+
+            states.append(state)
+            actions.append(action)
+            log_probs.append(log_prob)
+            rewards.append(reward)
+            dones.append(<span class="bi">float</span>(done))
+            values.append(value)
+            entropies.append(entropy)
+
+            episode_reward += reward
+            state = next_state
+            step += <span class="num">1</span>
+
+            <span class="kw">if</span> done:
+                episode_rewards.append(episode_reward)
+                episode_reward = <span class="num">0</span>
+                state, _ = env.reset()
+
+        <span class="cmt"># 计算 next_value 用于 bootstrap</span>
+        <span class="kw">with</span> torch.no_grad():
+            _, next_value = agent.model(
+                torch.FloatTensor(state).unsqueeze(<span class="num">0</span>))
+            next_value = next_value.item()
+
+        <span class="cmt"># 更新网络</span>
+        info = agent.update(states, actions, log_probs, rewards,
+                           dones, values, entropies, next_value)
+
+        <span class="kw">if</span> <span class="bi">len</span>(episode_rewards) % <span class="num">50</span> == <span class="num">0</span> <span class="kw">and</span> <span class="bi">len</span>(episode_rewards) > <span class="num">0</span>:
+            avg = np.mean(episode_rewards[-<span class="num">100</span>:])
+            <span class="bi">print</span>(<span class="str">f"Step {step:6d} | Episodes: {len(episode_rewards):4d} | "
+                  f"Avg100: {avg:6.1f} | Entropy: {info['entropy']:.3f}"</span>)
+
+    env.close()
+    <span class="kw">return</span> episode_rewards
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    rewards = train_a2c()
+</code></pre>
+</div>
+
+<div class="callout callout-tip">
+  <div class="callout-title">💡 A2C vs A3C</div>
+  <p><strong>A3C</strong> (Asynchronous Advantage Actor-Critic) 使用多个异步 worker 并行采样。<strong>A2C</strong> 是其同步版本，所有 worker 同步更新。实践中 A2C 与 A3C 性能相当，但实现更简单，GPU 利用率更高。PPO 在 A2C 的基础上增加了 clipped objective，进一步提升了训练稳定性。</p>
+</div>
+
+<h3 id="s2-5">2.5 N-step Returns 与 GAE 对比</h3>
+
+<p>为了加深理解，让我们详细对比 N-step returns 和 GAE 的关系。</p>
+
+<h4>N-step Return</h4>
+
+<p>$n$-step return 使用前 $n$ 步的实际奖励，加上第 $n$ 步的价值估计进行 bootstrap：</p>
+
+$$G_t^{(n)} = r_t + \gamma r_{t+1} + \cdots + \gamma^{n-1} r_{t+n-1} + \gamma^n V(s_{t+n})$$
 
 <table>
-<tr><th>概念</th><th>公式</th></tr>
-<tr><td>回报</td><td>\(G_t = \sum_{k=0}^{\infty} \gamma^k r_{t+k}\)</td></tr>
-<tr><td>状态价值</td><td>\(V^\pi(s) = \mathbb{E}_\pi[G_t | s_t = s]\)</td></tr>
-<tr><td>动作价值</td><td>\(Q^\pi(s,a) = \mathbb{E}_\pi[G_t | s_t=s, a_t=a]\)</td></tr>
-<tr><td>优势函数</td><td>\(A^\pi(s,a) = Q^\pi(s,a) - V^\pi(s)\)</td></tr>
-<tr><td>策略梯度</td><td>\(\nabla J = \mathbb{E}[\nabla\log\pi(a|s) \cdot A(s,a)]\)</td></tr>
-<tr><td>概率比</td><td>\(r_t(\theta) = \pi_\theta(a|s) / \pi_{\theta_{\text{old}}}(a|s)\)</td></tr>
-<tr><td>PPO-Clip</td><td>\(L = \mathbb{E}[\min(r_t A_t, \text{clip}(r_t) A_t)]\)</td></tr>
-<tr><td>TD 残差</td><td>\(\delta_t = r_t + \gamma V(s_{t+1}) - V(s_t)\)</td></tr>
-<tr><td>GAE</td><td>\(\hat{A}_t = \sum_l (\gamma\lambda)^l \delta_{t+l}\)</td></tr>
-<tr><td>总损失</td><td>\(L = -L^{\text{CLIP}} + c_1 L^{\text{VF}} - c_2 S\)</td></tr>
+  <tr><th>$n$</th><th>偏差</th><th>方差</th><th>适用场景</th></tr>
+  <tr><td>$n=1$ (TD(0))</td><td>高偏差</td><td>低方差</td><td>V 较准确时</td></tr>
+  <tr><td>$n=5$</td><td>中等</td><td>中等</td><td>通用默认</td></tr>
+  <tr><td>$n=20$</td><td>低偏差</td><td>较高方差</td><td>奖励延迟大时</td></tr>
+  <tr><td>$n=\infty$ (MC)</td><td>无偏</td><td>最高方差</td><td>episode 短时</td></tr>
 </table>
 
-<h1 id="app-ref">附录 C：参考文献</h1>
+<h4>GAE 作为 N-step 的软版本</h4>
+
+<p>N-step return 在第 $n$ 步有一个"硬截断"：完全信任实际奖励 $n$ 步，然后完全信任 $V$。GAE 则是"软截断"：通过 $\lambda$ 平滑地衰减对远处 TD 残差的信任度。</p>
+
+$$\text{N-step: } \hat{A}_t^{(n)} = \sum_{l=0}^{n-1}\gamma^l\delta_{t+l} \quad\quad \text{GAE: } \hat{A}_t^{GAE} = \sum_{l=0}^{\infty}(\gamma\lambda)^l\delta_{t+l}$$
+
+<p>GAE 的指数衰减比 N-step 的硬截断更加平滑，通常能得到更好的梯度估计。这也是为什么 PPO 默认使用 GAE ($\lambda = 0.95$) 而非固定 N-step。</p>
+
+
+<!-- ============================================================ -->
+<!-- CHAPTER 3: PPO 核心 -->
+<!-- ============================================================ -->
+<h2 id="ch3">第三章：PPO 核心算法</h2>
+
+<p>终于来到本教程的核心——PPO。我们将从 Trust Region 的思想出发，经过 TRPO，最终推导出 PPO 的 clipped objective。</p>
+
+<h3 id="s3-1">3.1 Trust Region 思想</h3>
+
+<p>策略梯度方法有一个根本问题：<strong>步长选择</strong>。如果学习率太大，一次更新可能让策略变差很多，而变差的策略又会产生更差的数据，导致恶性循环（<strong>performance collapse</strong>）。</p>
+
+<div class="callout callout-warning">
+  <div class="callout-title">⚠️ 策略崩溃的直觉</div>
+  <p>想象你在悬崖边走路。普通梯度下降就像闭着眼向前跨一大步——可能直接掉下悬崖。Trust Region 方法则是在脚下画一个小圆圈，只在圆圈内选择最优方向——每一步都是安全的。</p>
+</div>
+
+<p><strong>Trust Region（信赖域）</strong>的核心思想是：每次更新策略时，限制新策略与旧策略的差异不超过一个小的范围。这样即使优化方向不完美，也不会让策略性能大幅下降。</p>
+
+<h4>数学表达</h4>
+
+<p>我们希望在每次更新中，最大化一个关于新策略性能的替代目标（surrogate objective），同时约束新策略不要偏离旧策略太远：</p>
+
+$$\max_\theta \; L(\theta) \quad \text{s.t.} \quad D_{KL}(\pi_{\theta_{old}} \| \pi_\theta) \leq \delta$$
+
+<p>其中 $D_{KL}$ 是 KL 散度，衡量两个概率分布的差异。</p>
+
+<h4>为什么不能直接用策略梯度？</h4>
+
+<p>策略梯度 $\nabla_\theta J(\theta)$ 只在当前参数 $\theta$ 附近是准确的——它是一个<strong>局部线性近似</strong>。沿梯度方向走太远，真实目标函数可能已经完全不同了。这类似于泰勒展开只在展开点附近有效。</p>
+
+<p>Trust Region 方法通过显式限制更新的幅度，保证了更新后的策略性能有理论下界保证（monotonic improvement guarantee）。</p>
+
+<h3 id="s3-2">3.2 TRPO 算法</h3>
+
+<p>TRPO (Trust Region Policy Optimization, Schulman et al., 2015) 是 PPO 的直接前身，提供了策略单调改善的理论保证。</p>
+
+<h4>Surrogate Objective（替代目标）</h4>
+
+<p>TRPO 的优化目标是新策略在旧策略数据上的期望回报改善：</p>
+
+$$L^{CPI}(\theta) = \mathbb{E}_{s,a \sim \pi_{\theta_{old}}}\left[\frac{\pi_\theta(a|s)}{\pi_{\theta_{old}}(a|s)} \hat{A}^{\pi_{\theta_{old}}}(s,a)\right]$$
+
+<p>其中 $\frac{\pi_\theta(a|s)}{\pi_{\theta_{old}}(a|s)}$ 是<strong>重要性采样比率</strong> (importance sampling ratio)，通常记作 $r_t(\theta)$：</p>
+
+$$r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$$
+
+<p>这个比率衡量了新策略相对于旧策略对同一动作的概率变化：</p>
+<ul>
+  <li>$r_t(\theta) = 1$：新旧策略对这个动作的概率相同</li>
+  <li>$r_t(\theta) > 1$：新策略更倾向于选择这个动作</li>
+  <li>$r_t(\theta) < 1$：新策略更不倾向于选择这个动作</li>
+</ul>
+
+<div class="callout callout-info">
+  <div class="callout-title">📘 为什么叫 CPI？</div>
+  <p>CPI = Conservative Policy Iteration。这个目标函数来自 Kakade & Langford (2002) 的保守策略迭代理论。当 $\theta = \theta_{old}$ 时，$L^{CPI} = 0$，且 $\nabla_\theta L^{CPI}|_{\theta=\theta_{old}} = \nabla_\theta J(\theta)|_{\theta=\theta_{old}}$，即在旧参数处的梯度等于真实策略梯度。</p>
+</div>
+
+<h4>TRPO 的约束优化</h4>
+
+<p>TRPO 在 surrogate objective 上加 KL 散度约束：</p>
+
+$$\max_\theta \; \mathbb{E}\left[r_t(\theta) \hat{A}_t\right] \quad \text{s.t.} \quad \mathbb{E}\left[D_{KL}(\pi_{\theta_{old}}(\cdot|s) \| \pi_\theta(\cdot|s))\right] \leq \delta$$
+
+<p>用拉格朗日对偶和 Fisher Information Matrix 的二阶展开，TRPO 的更新步骤是：</p>
+
+$$\theta_{new} = \theta_{old} + \alpha \sqrt{\frac{2\delta}{g^T F^{-1} g}} F^{-1} g$$
+
+<p>其中 $g = \nabla_\theta L^{CPI}$ 是策略梯度，$F$ 是 Fisher 信息矩阵。</p>
+
+<div class="callout callout-warning">
+  <div class="callout-title">⚠️ TRPO 的缺点</div>
+  <ul>
+    <li><strong>计算昂贵</strong>：需要计算和求逆 Fisher 信息矩阵（即使用共轭梯度近似也很慢）</li>
+    <li><strong>实现复杂</strong>：line search、共轭梯度、Hessian-vector product</li>
+    <li><strong>不兼容共享网络</strong>：策略和值函数共享参数时 KL 约束很难处理</li>
+    <li><strong>不兼容 dropout/BatchNorm</strong>：二阶方法对这些操作不友好</li>
+  </ul>
+  <p>PPO 的出现就是为了解决这些问题——用一阶方法实现类似 Trust Region 的效果。</p>
+</div>
+
+<h3 id="s3-3">3.3 PPO-Clip 完整推导</h3>
+
+<p>PPO (Schulman et al., 2017) 的核心创新是用 <strong>clipping</strong> 代替 KL 约束，保留了 Trust Region 的思想精髓，同时大幅简化了实现。</p>
+
+<h4>Step 1: 从 TRPO 的动机出发</h4>
+
+<p>我们希望最大化 $\mathbb{E}[r_t(\theta)\hat{A}_t]$，但要限制 $r_t(\theta)$ 不要偏离 1 太远。TRPO 用 KL 约束实现这一点。PPO 则直接对 $r_t(\theta)$ 进行裁剪。</p>
+
+<h4>Step 2: Clipped Surrogate Objective</h4>
+
+<div class="callout callout-theorem">
+  <div class="callout-title">🎯 PPO-Clip 目标函数</div>
+  $$L^{CLIP}(\theta) = \mathbb{E}_t\left[\min\left(r_t(\theta)\hat{A}_t, \;\text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t\right)\right]$$
+  <p>其中 $\epsilon$ 是裁剪参数（默认 $\epsilon = 0.2$），$r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$。</p>
+</div>
+
+<h4>Step 3: 逐符号解读</h4>
+
+<table>
+  <tr><th>符号</th><th>含义</th><th>详细说明</th></tr>
+  <tr>
+    <td>$r_t(\theta)$</td>
+    <td>概率比率</td>
+    <td>$\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$，新旧策略对同一动作的概率之比。初始为 1，更新后偏离 1。</td>
+  </tr>
+  <tr>
+    <td>$\hat{A}_t$</td>
+    <td>优势估计</td>
+    <td>通过 GAE 计算的优势函数估计值。正值=好动作，负值=差动作。</td>
+  </tr>
+  <tr>
+    <td>$\epsilon$</td>
+    <td>裁剪范围</td>
+    <td>控制策略允许变化的幅度。$\epsilon=0.2$ 意味着 $r_t$ 被限制在 $[0.8, 1.2]$ 范围内。</td>
+  </tr>
+  <tr>
+    <td>$\text{clip}(\cdot)$</td>
+    <td>裁剪函数</td>
+    <td>$\text{clip}(x, a, b) = \max(a, \min(x, b))$，将 $x$ 限制在 $[a, b]$ 范围内。</td>
+  </tr>
+  <tr>
+    <td>$\min(\cdot, \cdot)$</td>
+    <td>取较小值</td>
+    <td>在原始目标和裁剪后目标之间取较小值，形成<strong>悲观下界</strong>。</td>
+  </tr>
+</table>
+
+<h4>Step 4: 分情况分析（核心直觉）</h4>
+
+<p>理解 PPO-Clip 的关键是分两种情况分析 $\min$ 操作的行为：</p>
+
+<div class="comparison-grid">
+  <div class="comparison-card">
+    <h4>情况 1: $\hat{A}_t > 0$（好动作）</h4>
+    <p>这个动作比平均水平好，我们希望增加它的概率，即 $r_t(\theta) > 1$。</p>
+    <p>$L^{CLIP} = \min(r_t\hat{A}_t, \; (1+\epsilon)\hat{A}_t)$</p>
+    <ul>
+      <li>当 $r_t \leq 1+\epsilon$ 时：使用原始目标 $r_t\hat{A}_t$（正常优化）</li>
+      <li>当 $r_t > 1+\epsilon$ 时：使用 $(1+\epsilon)\hat{A}_t$（梯度为零，停止增加概率）</li>
+    </ul>
+    <p>🔑 <strong>效果</strong>：允许增加好动作的概率，但不超过 $1+\epsilon$ 倍。</p>
+  </div>
+  <div class="comparison-card">
+    <h4>情况 2: $\hat{A}_t < 0$（差动作）</h4>
+    <p>这个动作比平均水平差，我们希望减少它的概率，即 $r_t(\theta) < 1$。</p>
+    <p>$L^{CLIP} = \min(r_t\hat{A}_t, \; (1-\epsilon)\hat{A}_t)$</p>
+    <ul>
+      <li>当 $r_t \geq 1-\epsilon$ 时：使用原始目标 $r_t\hat{A}_t$（正常优化）</li>
+      <li>当 $r_t < 1-\epsilon$ 时：使用 $(1-\epsilon)\hat{A}_t$（梯度为零，停止减少概率）</li>
+    </ul>
+    <p>🔑 <strong>效果</strong>：允许减少差动作的概率，但不低于 $1-\epsilon$ 倍。</p>
+  </div>
+</div>
+
+<h4>Step 5: 可视化理解</h4>
+
+<p>下面的图展示了 PPO-Clip 目标函数随 $r_t$ 变化的形状：</p>
+
+<div class="diagram-container">
+  <svg width="650" height="320" viewBox="0 0 650 320">
+    <defs>
+      <marker id="arrowAxis" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 Z" fill="var(--text-muted)"/>
+      </marker>
+    </defs>
+    <!-- Title -->
+    <text x="160" y="20" font-size="13" fill="var(--accent)" font-weight="700">A > 0（好动作）</text>
+    <text x="480" y="20" font-size="13" fill="var(--def-border)" font-weight="700">A &lt; 0（差动作）</text>
+
+    <!-- Left plot: A > 0 -->
+    <g transform="translate(30, 40)">
+      <!-- Axes -->
+      <line x1="20" y1="230" x2="270" y2="230" stroke="var(--text-muted)" stroke-width="1.5" marker-end="url(#arrowAxis)"/>
+      <line x1="20" y1="230" x2="20" y2="20" stroke="var(--text-muted)" stroke-width="1.5" marker-end="url(#arrowAxis)"/>
+      <text x="270" y="250" font-size="11" fill="var(--text-muted)">r(θ)</text>
+      <text x="5" y="18" font-size="11" fill="var(--text-muted)">L</text>
+
+      <!-- Clipped region shading -->
+      <rect x="100" y="30" width="100" height="200" fill="var(--accent-light)" opacity="0.3"/>
+
+      <!-- Unclipped line (dashed) -->
+      <line x1="20" y1="230" x2="250" y2="40" stroke="var(--text-muted)" stroke-width="1.5" stroke-dasharray="5,3"/>
+
+      <!-- Clipped line (solid) -->
+      <line x1="20" y1="230" x2="200" y2="65" stroke="var(--accent)" stroke-width="2.5"/>
+      <line x1="200" y1="65" x2="260" y2="65" stroke="var(--accent)" stroke-width="2.5"/>
+
+      <!-- Labels -->
+      <text x="95" y="255" font-size="10" fill="var(--text-muted)">1-ε</text>
+      <text x="195" y="255" font-size="10" fill="var(--text-muted)">1+ε</text>
+      <line x1="100" y1="225" x2="100" y2="235" stroke="var(--text-muted)" stroke-width="1"/>
+      <line x1="200" y1="225" x2="200" y2="235" stroke="var(--text-muted)" stroke-width="1"/>
+
+      <text x="210" y="55" font-size="10" fill="var(--accent)" font-weight="600">clip!</text>
+    </g>
+
+    <!-- Right plot: A < 0 -->
+    <g transform="translate(350, 40)">
+      <!-- Axes -->
+      <line x1="20" y1="120" x2="270" y2="120" stroke="var(--text-muted)" stroke-width="1.5" marker-end="url(#arrowAxis)"/>
+      <line x1="20" y1="230" x2="20" y2="20" stroke="var(--text-muted)" stroke-width="1.5" marker-end="url(#arrowAxis)"/>
+      <text x="270" y="140" font-size="11" fill="var(--text-muted)">r(θ)</text>
+      <text x="5" y="18" font-size="11" fill="var(--text-muted)">L</text>
+
+      <!-- Clipped region shading -->
+      <rect x="100" y="30" width="100" height="200" fill="var(--def-bg)" opacity="0.3"/>
+
+      <!-- Unclipped line (dashed) -->
+      <line x1="20" y1="30" x2="250" y2="210" stroke="var(--text-muted)" stroke-width="1.5" stroke-dasharray="5,3"/>
+
+      <!-- Clipped line (solid) -->
+      <line x1="20" y1="95" x2="100" y2="95" stroke="var(--def-border)" stroke-width="2.5"/>
+      <line x1="100" y1="95" x2="250" y2="210" stroke="var(--def-border)" stroke-width="2.5"/>
+
+      <!-- Labels -->
+      <text x="95" y="255" font-size="10" fill="var(--text-muted)">1-ε</text>
+      <text x="195" y="255" font-size="10" fill="var(--text-muted)">1+ε</text>
+      <line x1="100" y1="115" x2="100" y2="125" stroke="var(--text-muted)" stroke-width="1"/>
+      <line x1="200" y1="115" x2="200" y2="125" stroke="var(--text-muted)" stroke-width="1"/>
+
+      <text x="30" y="85" font-size="10" fill="var(--def-border)" font-weight="600">clip!</text>
+    </g>
+  </svg>
+  <div class="diagram-caption">图 3.1: PPO-Clip 目标函数 — 左图：好动作 (A>0) 时上限裁剪；右图：差动作 (A&lt;0) 时下限裁剪</div>
+</div>
+
+<div class="callout callout-tip">
+  <div class="callout-title">💡 PPO-Clip 的核心直觉</div>
+  <p>PPO-Clip 的 $\min$ 操作构成了一个<strong>悲观下界</strong>（pessimistic lower bound）：</p>
+  <ul>
+    <li>对于好动作：限制增加概率的幅度（不要太贪心）</li>
+    <li>对于差动作：限制减少概率的幅度（不要太激进）</li>
+  </ul>
+  <p>这保证了策略在每次更新中不会发生剧烈变化，从而实现了类似 Trust Region 的稳定性，但<strong>只用了一阶优化</strong>（普通 SGD 即可）。</p>
+</div>
+
+<h3 id="s3-4">3.4 PPO 目标函数逐符号解读</h3>
+
+<p>让我们再次写出完整的 PPO 目标函数，并对每个组成部分给出详细的解释：</p>
+
+$$L^{CLIP}(\theta) = \hat{\mathbb{E}}_t\left[\min\left(r_t(\theta)\hat{A}_t, \;\text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t\right)\right]$$
+
+<div class="callout callout-math">
+  <div class="callout-title">📐 完整分解</div>
+  <p><strong>1. 概率比率 $r_t(\theta)$</strong></p>
+  $$r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)} = \exp\left(\log\pi_\theta(a_t|s_t) - \log\pi_{\theta_{old}}(a_t|s_t)\right)$$
+  <p>实际实现中用 log 空间计算更稳定。初始时 $r_t = 1$，更新后 $r_t$ 偏离 1。</p>
+
+  <p><strong>2. 原始目标项 $r_t(\theta)\hat{A}_t$</strong></p>
+  <p>这就是 TRPO 的 surrogate objective：如果好动作（$\hat{A}_t > 0$）的概率增加（$r_t > 1$），目标值增大。</p>
+
+  <p><strong>3. 裁剪目标项 $\text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t$</strong></p>
+  <p>先将 $r_t$ 限制在 $[1-\epsilon, 1+\epsilon]$ 范围内，再与 $\hat{A}_t$ 相乘。这个项的梯度在 $r_t$ 超出范围时为零。</p>
+
+  <p><strong>4. $\min(\cdot, \cdot)$ 操作</strong></p>
+  <p>取两个目标中的较小值。这确保了：</p>
+  <ul>
+    <li>当 $r_t$ 在 $[1-\epsilon, 1+\epsilon]$ 内时，两项相等，梯度正常流动</li>
+    <li>当 $r_t$ 超出范围且目标在"改善"时（好动作概率太高或差动作概率太低），$\min$ 会选择较小的裁剪值，梯度为零，阻止进一步更新</li>
+  </ul>
+</div>
+
+<h3 id="s3-5">3.5 代码：PPO from Scratch</h3>
+
+<p>下面是一个完整的 PPO 实现，包含所有核心组件。我们先定义网络结构，再实现数据收集和更新循环。</p>
+
+<div class="code-container">
+  <div class="code-header">
+    <span>ppo_from_scratch.py — 完整 PPO 实现 (离散动作)</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+  </div>
+  <pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> torch.optim <span class="kw">as</span> optim
+<span class="kw">from</span> torch.distributions <span class="kw">import</span> Categorical
+<span class="kw">import</span> gymnasium <span class="kw">as</span> gym
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 1. Actor-Critic 网络</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">class</span> <span class="cls">PPOActorCritic</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, state_dim, action_dim, hidden=<span class="num">64</span>):
+        <span class="bi">super</span>().__init__()
+        <span class="cmt"># Actor 和 Critic 使用独立网络 (PPO 推荐做法)</span>
+        <span class="sf">self</span>.actor = nn.Sequential(
+            nn.Linear(state_dim, hidden), nn.Tanh(),
+            nn.Linear(hidden, hidden), nn.Tanh(),
+            nn.Linear(hidden, action_dim), nn.Softmax(dim=-<span class="num">1</span>)
+        )
+        <span class="sf">self</span>.critic = nn.Sequential(
+            nn.Linear(state_dim, hidden), nn.Tanh(),
+            nn.Linear(hidden, hidden), nn.Tanh(),
+            nn.Linear(hidden, <span class="num">1</span>)
+        )
+
+    <span class="kw">def</span> <span class="fn">get_action_and_value</span>(<span class="sf">self</span>, state):
+        <span class="str">"""获取动作、log概率、熵和状态价值"""</span>
+        probs = <span class="sf">self</span>.actor(state)
+        dist = Categorical(probs)
+        action = dist.sample()
+        <span class="kw">return</span> action, dist.log_prob(action), dist.entropy(), <span class="sf">self</span>.critic(state).squeeze(-<span class="num">1</span>)
+
+    <span class="kw">def</span> <span class="fn">evaluate_actions</span>(<span class="sf">self</span>, states, actions):
+        <span class="str">"""评估已有动作的 log概率、熵和价值（用于 PPO 更新）"""</span>
+        probs = <span class="sf">self</span>.actor(states)
+        dist = Categorical(probs)
+        <span class="kw">return</span> dist.log_prob(actions), dist.entropy(), <span class="sf">self</span>.critic(states).squeeze(-<span class="num">1</span>)
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 2. Rollout Buffer</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">class</span> <span class="cls">RolloutBuffer</span>:
+    <span class="str">"""存储 rollout 数据的缓冲区"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>):
+        <span class="sf">self</span>.states, <span class="sf">self</span>.actions, <span class="sf">self</span>.rewards = [], [], []
+        <span class="sf">self</span>.dones, <span class="sf">self</span>.log_probs, <span class="sf">self</span>.values = [], [], []
+
+    <span class="kw">def</span> <span class="fn">add</span>(<span class="sf">self</span>, state, action, reward, done, log_prob, value):
+        <span class="sf">self</span>.states.append(state)
+        <span class="sf">self</span>.actions.append(action)
+        <span class="sf">self</span>.rewards.append(reward)
+        <span class="sf">self</span>.dones.append(done)
+        <span class="sf">self</span>.log_probs.append(log_prob)
+        <span class="sf">self</span>.values.append(value)
+
+    <span class="kw">def</span> <span class="fn">compute_returns_and_advantages</span>(<span class="sf">self</span>, next_value, gamma=<span class="num">0.99</span>, lam=<span class="num">0.95</span>):
+        <span class="str">"""计算 GAE 优势和目标回报"""</span>
+        T = <span class="bi">len</span>(<span class="sf">self</span>.rewards)
+        advantages = np.zeros(T)
+        last_gae = <span class="num">0.0</span>
+        values_np = np.array([v.item() <span class="kw">for</span> v <span class="kw">in</span> <span class="sf">self</span>.values])
+
+        <span class="kw">for</span> t <span class="kw">in</span> <span class="bi">reversed</span>(<span class="bi">range</span>(T)):
+            next_val = next_value <span class="kw">if</span> t == T - <span class="num">1</span> <span class="kw">else</span> values_np[t + <span class="num">1</span>]
+            non_terminal = <span class="num">1.0</span> - <span class="sf">self</span>.dones[t]
+            delta = <span class="sf">self</span>.rewards[t] + gamma * next_val * non_terminal - values_np[t]
+            advantages[t] = last_gae = delta + gamma * lam * non_terminal * last_gae
+
+        returns = advantages + values_np
+        <span class="sf">self</span>.advantages = torch.FloatTensor(advantages)
+        <span class="sf">self</span>.returns = torch.FloatTensor(returns)
+
+    <span class="kw">def</span> <span class="fn">get_batches</span>(<span class="sf">self</span>, batch_size):
+        <span class="str">"""生成随机 mini-batch"""</span>
+        states = torch.FloatTensor(np.array(<span class="sf">self</span>.states))
+        actions = torch.LongTensor(<span class="sf">self</span>.actions)
+        old_log_probs = torch.stack(<span class="sf">self</span>.log_probs).detach()
+        T = <span class="bi">len</span>(<span class="sf">self</span>.rewards)
+        indices = np.random.permutation(T)
+        <span class="kw">for</span> start <span class="kw">in</span> <span class="bi">range</span>(<span class="num">0</span>, T, batch_size):
+            end = start + batch_size
+            idx = indices[start:end]
+            <span class="kw">yield</span> (states[idx], actions[idx], old_log_probs[idx],
+                   <span class="sf">self</span>.advantages[idx], <span class="sf">self</span>.returns[idx])
+
+    <span class="kw">def</span> <span class="fn">clear</span>(<span class="sf">self</span>):
+        <span class="sf">self</span>.states.clear(); <span class="sf">self</span>.actions.clear()
+        <span class="sf">self</span>.rewards.clear(); <span class="sf">self</span>.dones.clear()
+        <span class="sf">self</span>.log_probs.clear(); <span class="sf">self</span>.values.clear()
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 3. PPO Agent</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">class</span> <span class="cls">PPOAgent</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, state_dim, action_dim,
+                 lr=<span class="num">3e-4</span>, gamma=<span class="num">0.99</span>, lam=<span class="num">0.95</span>,
+                 clip_range=<span class="num">0.2</span>, value_coef=<span class="num">0.5</span>,
+                 entropy_coef=<span class="num">0.01</span>, max_grad_norm=<span class="num">0.5</span>,
+                 n_epochs=<span class="num">4</span>, batch_size=<span class="num">64</span>):
+
+        <span class="sf">self</span>.model = PPOActorCritic(state_dim, action_dim)
+        <span class="sf">self</span>.optimizer = optim.Adam(<span class="sf">self</span>.model.parameters(), lr=lr)
+        <span class="sf">self</span>.gamma = gamma
+        <span class="sf">self</span>.lam = lam
+        <span class="sf">self</span>.clip_range = clip_range
+        <span class="sf">self</span>.value_coef = value_coef
+        <span class="sf">self</span>.entropy_coef = entropy_coef
+        <span class="sf">self</span>.max_grad_norm = max_grad_norm
+        <span class="sf">self</span>.n_epochs = n_epochs
+        <span class="sf">self</span>.batch_size = batch_size
+        <span class="sf">self</span>.buffer = RolloutBuffer()
+
+    <span class="kw">def</span> <span class="fn">update</span>(<span class="sf">self</span>, next_value):
+        <span class="str">"""PPO 核心更新逻辑"""</span>
+        <span class="sf">self</span>.buffer.compute_returns_and_advantages(next_value, <span class="sf">self</span>.gamma, <span class="sf">self</span>.lam)
+
+        <span class="cmt"># Advantage 标准化</span>
+        adv = <span class="sf">self</span>.buffer.advantages
+        <span class="sf">self</span>.buffer.advantages = (adv - adv.mean()) / (adv.std() + <span class="num">1e-8</span>)
+
+        total_pg_loss, total_vf_loss, total_entropy = <span class="num">0</span>, <span class="num">0</span>, <span class="num">0</span>
+        n_updates = <span class="num">0</span>
+
+        <span class="cmt"># 多轮 epoch（同一批数据重复利用）</span>
+        <span class="kw">for</span> epoch <span class="kw">in</span> <span class="bi">range</span>(<span class="sf">self</span>.n_epochs):
+            <span class="kw">for</span> batch <span class="kw">in</span> <span class="sf">self</span>.buffer.get_batches(<span class="sf">self</span>.batch_size):
+                states, actions, old_log_probs, advantages, returns = batch
+
+                <span class="cmt"># 用当前策略重新评估旧动作</span>
+                new_log_probs, entropy, values = <span class="sf">self</span>.model.evaluate_actions(states, actions)
+
+                <span class="cmt"># ---- PPO-Clip 核心 ----</span>
+                <span class="cmt"># 概率比率 r(θ)</span>
+                ratio = torch.exp(new_log_probs - old_log_probs)
+
+                <span class="cmt"># 裁剪目标</span>
+                surr1 = ratio * advantages
+                surr2 = torch.clamp(ratio, <span class="num">1</span> - <span class="sf">self</span>.clip_range,
+                                           <span class="num">1</span> + <span class="sf">self</span>.clip_range) * advantages
+                policy_loss = -torch.min(surr1, surr2).mean()
+
+                <span class="cmt"># 价值损失</span>
+                value_loss = nn.MSELoss()(values, returns)
+
+                <span class="cmt"># 熵奖励</span>
+                entropy_loss = -entropy.mean()
+
+                <span class="cmt"># 总损失</span>
+                loss = (policy_loss
+                        + <span class="sf">self</span>.value_coef * value_loss
+                        + <span class="sf">self</span>.entropy_coef * entropy_loss)
+
+                <span class="sf">self</span>.optimizer.zero_grad()
+                loss.backward()
+                nn.utils.clip_grad_norm_(<span class="sf">self</span>.model.parameters(), <span class="sf">self</span>.max_grad_norm)
+                <span class="sf">self</span>.optimizer.step()
+
+                total_pg_loss += policy_loss.item()
+                total_vf_loss += value_loss.item()
+                total_entropy += -entropy_loss.item()
+                n_updates += <span class="num">1</span>
+
+        <span class="sf">self</span>.buffer.clear()
+        <span class="kw">return</span> {
+            <span class="str">"policy_loss"</span>: total_pg_loss / n_updates,
+            <span class="str">"value_loss"</span>: total_vf_loss / n_updates,
+            <span class="str">"entropy"</span>: total_entropy / n_updates
+        }
+
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 4. 训练循环</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">def</span> <span class="fn">train_ppo</span>(env_name=<span class="str">"CartPole-v1"</span>, total_steps=<span class="num">200000</span>, n_steps=<span class="num">2048</span>):
+    env = gym.make(env_name)
+    state_dim = env.observation_space.shape[<span class="num">0</span>]
+    action_dim = env.action_space.n
+
+    agent = PPOAgent(state_dim, action_dim)
+    state, _ = env.reset()
+    episode_reward = <span class="num">0</span>
+    episode_rewards = []
+    step = <span class="num">0</span>
+
+    <span class="kw">while</span> step < total_steps:
+        <span class="cmt"># 收集 n_steps 的数据</span>
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_steps):
+            state_t = torch.FloatTensor(state).unsqueeze(<span class="num">0</span>)
+            <span class="kw">with</span> torch.no_grad():
+                action, log_prob, _, value = agent.model.get_action_and_value(state_t)
+
+            next_state, reward, terminated, truncated, _ = env.step(action.item())
+            done = terminated <span class="kw">or</span> truncated
+
+            agent.buffer.add(state, action.item(), reward, <span class="bi">float</span>(done),
+                            log_prob, value)
+            episode_reward += reward
+            state = next_state
+            step += <span class="num">1</span>
+
+            <span class="kw">if</span> done:
+                episode_rewards.append(episode_reward)
+                episode_reward = <span class="num">0</span>
+                state, _ = env.reset()
+
+        <span class="cmt"># 计算 bootstrap value</span>
+        <span class="kw">with</span> torch.no_grad():
+            _, _, _, next_value = agent.model.get_action_and_value(
+                torch.FloatTensor(state).unsqueeze(<span class="num">0</span>))
+            next_value = next_value.item()
+
+        <span class="cmt"># PPO 更新</span>
+        info = agent.update(next_value)
+
+        <span class="kw">if</span> <span class="bi">len</span>(episode_rewards) > <span class="num">0</span>:
+            avg = np.mean(episode_rewards[-<span class="num">100</span>:])
+            <span class="bi">print</span>(<span class="str">f"Step {step:6d} | Episodes: {len(episode_rewards):4d} | "
+                  f"Avg100: {avg:.1f} | PG Loss: {info['policy_loss']:.4f} | "
+                  f"VF Loss: {info['value_loss']:.4f} | Entropy: {info['entropy']:.3f}"</span>)
+
+    env.close()
+    <span class="kw">return</span> episode_rewards
+
+<span class="kw">if</span> __name__ == <span class="str">"__main__"</span>:
+    rewards = train_ppo()
+</code></pre>
+</div>
+
+<div class="callout callout-exercise">
+  <div class="callout-title">🏋️ 练习 2</div>
+  <ol>
+    <li>运行 PPO from scratch 代码，验证在 CartPole 上的收敛速度（应该比 REINFORCE 和 A2C 都快）</li>
+    <li>将 <code>clip_range</code> 从 0.2 改为 0.1 和 0.3，观察训练曲线的变化</li>
+    <li>将 <code>n_epochs</code> 从 4 改为 1 和 10，理解多次重用数据的好处和风险</li>
+    <li>去掉 advantage normalization（注释掉标准化那一行），观察训练稳定性的变化</li>
+  </ol>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- CHAPTER 4: PPO 实现细节 -->
+<!-- ============================================================ -->
+<h2 id="ch4">第四章：PPO 实现细节</h2>
+
+<p>上一章介绍了 PPO 的核心算法——clipped surrogate objective。但在实际实现中，还有很多关键的"工程细节"直接影响训练效果。本章深入探讨这些细节，它们往往是 PPO 成功的关键，却经常被教科书忽略。</p>
+
+<div class="callout callout-info">
+  <div class="callout-title">📘 实现细节的重要性</div>
+  <p>Engstrom et al. (2020) 的研究表明，PPO 的许多性能提升实际上来自实现细节（如 advantage normalization、gradient clipping），而非算法本身。因此理解这些细节对于成功训练至关重要。</p>
+</div>
+
+<h3 id="s4-1">4.1 Value Function Loss 设计</h3>
+
+<p>Critic 网络 $V_\phi(s)$ 的训练目标是最小化与目标回报之间的误差。PPO 论文中提到了两种 value loss 的设计方式。</p>
+
+<h4>标准 Value Loss（最常用）</h4>
+
+$$L^{VF}(\phi) = \mathbb{E}_t\left[(V_\phi(s_t) - \hat{R}_t)^2\right]$$
+
+<p>其中 $\hat{R}_t = \hat{A}_t^{GAE} + V_{\phi_{old}}(s_t)$ 是目标回报值。这就是简单的 MSE 损失。</p>
+
+<h4>Clipped Value Loss（可选）</h4>
+
+<p>类似于 policy loss 的 clipping，PPO 也可以对 value loss 进行裁剪：</p>
+
+$$V_{clip}(s_t) = V_{\phi_{old}}(s_t) + \text{clip}(V_\phi(s_t) - V_{\phi_{old}}(s_t), -\epsilon, \epsilon)$$
+
+$$L^{VF}_{clip}(\phi) = \mathbb{E}_t\left[\max\left((V_\phi(s_t) - \hat{R}_t)^2, \;(V_{clip}(s_t) - \hat{R}_t)^2\right)\right]$$
+
+<div class="callout callout-warning">
+  <div class="callout-title">⚠️ Clipped Value Loss 的争议</div>
+  <p>Clipped value loss 在 PPO 论文中被提及，但后续研究（如 Andrychowicz et al., 2021）发现它有时反而<strong>损害性能</strong>。原因是：当 value 估计不准确时，clipping 会阻止 critic 快速修正。<strong>SB3 默认不使用 clipped value loss</strong>。</p>
+  <p>建议：除非有特殊原因，使用标准 MSE value loss 即可。</p>
+</div>
+
+<h4>Huber Loss 替代方案</h4>
+
+<p>某些实现使用 Huber loss 代替 MSE，对异常值更加鲁棒：</p>
+
+$$L^{VF}_{Huber}(\phi) = \begin{cases} \frac{1}{2}(V_\phi - \hat{R}_t)^2 & \text{if } |V_\phi - \hat{R}_t| \leq \delta \\ \delta(|V_\phi - \hat{R}_t| - \frac{1}{2}\delta) & \text{otherwise} \end{cases}$$
+
+<h3 id="s4-2">4.2 Entropy Bonus 鼓励探索</h3>
+
+<p>策略的<strong>熵</strong> (entropy) 衡量了策略的"随机程度"。高熵策略更均匀地分配概率给不同动作（更多探索），低熵策略集中概率给少数动作（更多利用）。</p>
+
+<h4>离散动作的熵</h4>
+
+$$H(\pi(\cdot|s)) = -\sum_a \pi(a|s) \log \pi(a|s)$$
+
+<h4>连续动作的熵（高斯策略）</h4>
+
+$$H(\mathcal{N}(\mu, \sigma^2)) = \frac{1}{2}\log(2\pi e \sigma^2) = \frac{1}{2}(1 + \log(2\pi\sigma^2))$$
+
+<p>在 PPO 的总损失函数中，我们添加一个<strong>熵奖励项</strong>，鼓励策略保持一定的随机性：</p>
+
+$$L_{entropy} = -H(\pi_\theta(\cdot|s_t))$$
+
+<p>由于我们在最小化总损失，减去熵（等价于最大化熵）可以：</p>
+<ul>
+  <li><strong>防止策略过早收敛</strong>到确定性策略</li>
+  <li><strong>鼓励探索</strong>未知的动作和状态</li>
+  <li><strong>平滑优化景观</strong>：熵正则化使得损失表面更平滑</li>
+</ul>
+
+<div class="callout callout-tip">
+  <div class="callout-title">💡 Entropy 系数的选择</div>
+  <p><strong>典型范围</strong>：$c_2 \in [0.0, 0.05]$</p>
+  <ul>
+    <li><strong>$c_2 = 0$</strong>：不使用熵奖励。适用于动作空间简单或不需要额外探索的任务</li>
+    <li><strong>$c_2 = 0.01$</strong>：PPO 论文默认值。适用于大多数任务</li>
+    <li><strong>$c_2 = 0.05$</strong>：更强的探索。适用于需要大量探索的复杂环境</li>
+    <li><strong>$c_2$ 太大</strong>：策略变得太随机，无法收敛到好的策略</li>
+  </ul>
+</div>
+
+<h3 id="s4-3">4.3 总损失函数</h3>
+
+<p>PPO 的完整损失函数由三个部分组成：</p>
+
+<div class="callout callout-theorem">
+  <div class="callout-title">🎯 PPO 总损失函数</div>
+  $$L(\theta, \phi) = \underbrace{L^{CLIP}(\theta)}_{\text{策略损失}} + \underbrace{c_1 \cdot L^{VF}(\phi)}_{\text{价值损失}} - \underbrace{c_2 \cdot H(\pi_\theta)}_{\text{熵奖励}}$$
+  <p>注意符号：策略损失 $L^{CLIP}$ 是要最大化的，所以在代码中取负号；价值损失最小化；熵要最大化（所以减去）。</p>
+  <p>在代码中，总损失为：</p>
+  <p><code>loss = -policy_loss + c1 * value_loss - c2 * entropy</code></p>
+</div>
+
+<table>
+  <tr><th>系数</th><th>符号</th><th>默认值</th><th>作用</th></tr>
+  <tr><td>Value coefficient</td><td>$c_1$</td><td>0.5</td><td>平衡策略和价值学习的权重</td></tr>
+  <tr><td>Entropy coefficient</td><td>$c_2$</td><td>0.01</td><td>控制探索程度</td></tr>
+</table>
+
+<h4>共享网络 vs 独立网络</h4>
+
+<p>Actor 和 Critic 可以共享底层特征提取器（共享网络）或使用独立网络：</p>
+
+<table>
+  <tr><th>架构</th><th>优点</th><th>缺点</th><th>适用场景</th></tr>
+  <tr>
+    <td>共享网络</td>
+    <td>参数效率高、特征共享</td>
+    <td>两个损失可能冲突、需要仔细调节 $c_1$</td>
+    <td>简单任务、Atari 游戏</td>
+  </tr>
+  <tr>
+    <td>独立网络</td>
+    <td>避免梯度冲突、更稳定</td>
+    <td>参数量更大</td>
+    <td>复杂连续控制、机器人任务</td>
+  </tr>
+</table>
+
+<div class="callout callout-physrobot">
+  <div class="callout-title">🤖 PhysRobot 关联</div>
+  <p>在 PhysRobot 项目中，我们使用<strong>独立的 Actor 和 Critic 网络</strong>，因为物理仿真任务（如 PushBox）的观测空间复杂，策略和价值函数可能需要提取不同的特征。</p>
+</div>
+
+<h3 id="s4-4">4.4 Mini-batch SGD + Multiple Epochs</h3>
+
+<p>PPO 的一个关键工程创新是在同一批数据上进行<strong>多轮</strong> (multiple epochs) 的 mini-batch SGD 更新。</p>
+
+<h4>数据收集与更新流程</h4>
+
+<div class="algorithm-box">
+  <div class="algo-title">算法 2: PPO 的数据收集与更新循环</div>
+  <ol>
+    <li>用当前策略收集 $N$ 步 (n_steps) 的轨迹数据</li>
+    <li>计算 GAE 优势估计和目标回报</li>
+    <li>将数据存入 buffer</li>
+    <li><strong>循环 $K$ 次 (n_epochs，通常 $K=3 \sim 10$)</strong>：
+      <ol type="a">
+        <li>将 buffer 中的 $N$ 个样本随机打乱</li>
+        <li>分成 $N/M$ 个 mini-batch（每个大小 $M$）</li>
+        <li>对每个 mini-batch 计算 PPO 损失并更新参数</li>
+      </ol>
+    </li>
+    <li>清空 buffer，回到步骤 1</li>
+  </ol>
+</div>
+
+<h4>为什么可以重用数据？</h4>
+
+<p>传统策略梯度（如 REINFORCE、A2C）是严格 on-policy 的：每次更新只能用当前策略生成的数据。PPO 之所以能重用数据，是因为：</p>
 
 <ol>
-  <li><strong>Schulman, J. et al. (2017)</strong>. "Proximal Policy Optimization Algorithms". arXiv:1707.06347 — PPO 原始论文</li>
-  <li><strong>Schulman, J. et al. (2015)</strong>. "High-Dimensional Continuous Control Using Generalized Advantage Estimation". arXiv:1506.02438 — GAE</li>
-  <li><strong>Schulman, J. et al. (2015)</strong>. "Trust Region Policy Optimization". ICML 2015 — TRPO</li>
-  <li><strong>Sutton, R. &amp; Barto, A. (2018)</strong>. "Reinforcement Learning: An Introduction (2nd ed.)". MIT Press</li>
-  <li><strong>Sanchez-Gonzalez, A. et al. (2020)</strong>. "Learning to Simulate Complex Physics with Graph Networks". ICML 2020 — GNS</li>
-  <li><strong>Todorov, E. et al. (2012)</strong>. "MuJoCo: A physics engine for model-based control". IROS 2012</li>
-  <li><strong>Stable-Baselines3</strong>. <a href="https://stable-baselines3.readthedocs.io/">https://stable-baselines3.readthedocs.io/</a></li>
-  <li><strong>Williams, R.J. (1992)</strong>. "Simple Statistical Gradient-Following Algorithms for Connectionist RL". Machine Learning — REINFORCE</li>
+  <li><strong>重要性采样</strong>：$r_t(\theta) = \pi_\theta / \pi_{\theta_{old}}$ 修正了新旧策略的分布差异</li>
+  <li><strong>Clipping</strong>：限制了 $r_t$ 的范围，防止重要性采样比率过大导致的高方差</li>
 </ol>
 
-<hr>
+<p>但注意：epoch 数不能太多。如果数据被重用太多次，策略已经变化较大，旧数据的 advantage 估计就不再准确了。</p>
 
-<p style="text-align:center;color:var(--text-secondary);margin-top:60px;">
-  <strong>🤖 PushBox PPO 教程</strong><br>
-  Medical Robotics Simulation Project<br>
-  © 2026 — 自动生成于 medical-robotics-sim 项目
-</p>
+<h4>n_steps 与 batch_size 的关系</h4>
 
-</div> <!-- end .main -->
+<table>
+  <tr><th>参数</th><th>含义</th><th>典型值</th></tr>
+  <tr><td><code>n_steps</code></td><td>每次收集的数据步数（buffer 大小）</td><td>2048</td></tr>
+  <tr><td><code>batch_size</code></td><td>每个 mini-batch 的大小</td><td>64</td></tr>
+  <tr><td><code>n_epochs</code></td><td>每批数据重用的轮次</td><td>4 ~ 10</td></tr>
+  <tr><td>每次更新的梯度步数</td><td>$K \times \lceil N/M \rceil$</td><td>$4 \times 32 = 128$</td></tr>
+</table>
 
-<!-- ========== JavaScript ========== -->
+<h3 id="s4-5">4.5 归一化与退火技巧</h3>
+
+<h4>Advantage Normalization</h4>
+
+<p>在每次更新前，对 advantage 进行 z-score 标准化：</p>
+
+$$\hat{A}_t \leftarrow \frac{\hat{A}_t - \mu(\hat{A})}{\sigma(\hat{A}) + \epsilon}$$
+
+<p>这是一个几乎<strong>免费</strong>的技巧，但对训练稳定性有巨大帮助：</p>
+<ul>
+  <li>消除回报尺度的影响（不同环境的 reward 量级可能差异很大）</li>
+  <li>使梯度信号更一致</li>
+  <li>标准化后大约一半的 advantage 是正的，一半是负的</li>
+</ul>
+
+<div class="callout callout-warning">
+  <div class="callout-title">⚠️ 注意：batch 级别 vs mini-batch 级别</div>
+  <p>Advantage normalization 应该在<strong>整个 batch 级别</strong>（所有 n_steps 个样本）进行，而不是在每个 mini-batch 内独立归一化。在 mini-batch 内归一化会引入噪声（因为 mini-batch 太小，均值和方差不准确）。</p>
+</div>
+
+<h4>学习率退火 (Learning Rate Annealing)</h4>
+
+<p>线性退火是 PPO 中常用的学习率调度策略：</p>
+
+$$\text{lr}(t) = \text{lr}_0 \times \left(1 - \frac{t}{T_{total}}\right)$$
+
+<p>学习率从初始值线性衰减到 0。直觉：</p>
+<ul>
+  <li>训练初期：较大的学习率帮助快速探索</li>
+  <li>训练后期：较小的学习率帮助精细调整，避免在最优策略附近振荡</li>
+</ul>
+
+<div class="code-container">
+  <div class="code-header">
+    <span>lr_annealing.py — 学习率退火实现</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+  </div>
+  <pre><code><span class="kw">def</span> <span class="fn">linear_schedule</span>(initial_lr, total_timesteps):
+    <span class="str">"""创建线性退火的学习率调度器"""</span>
+    <span class="kw">def</span> <span class="fn">schedule</span>(progress_remaining):
+        <span class="cmt"># progress_remaining: 从 1.0 线性衰减到 0.0</span>
+        <span class="kw">return</span> initial_lr * progress_remaining
+    <span class="kw">return</span> schedule
+
+<span class="cmt"># 在 PPO 训练中使用</span>
+<span class="kw">def</span> <span class="fn">update_learning_rate</span>(optimizer, current_step, total_steps, initial_lr):
+    <span class="str">"""手动更新学习率"""</span>
+    frac = <span class="num">1.0</span> - current_step / total_steps
+    lr = initial_lr * frac
+    <span class="kw">for</span> param_group <span class="kw">in</span> optimizer.param_groups:
+        param_group[<span class="str">'lr'</span>] = lr
+    <span class="kw">return</span> lr
+
+<span class="cmt"># SB3 中使用线性退火</span>
+<span class="kw">from</span> stable_baselines3 <span class="kw">import</span> PPO
+model = PPO(<span class="str">"MlpPolicy"</span>, env,
+            learning_rate=linear_schedule(<span class="num">3e-4</span>, <span class="num">1000000</span>))
+</code></pre>
+</div>
+
+<h4>梯度裁剪 (Gradient Clipping)</h4>
+
+<p>限制梯度的最大范数，防止梯度爆炸：</p>
+
+<div class="code-container">
+  <div class="code-header">
+    <span>gradient_clipping.py</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+  </div>
+  <pre><code><span class="cmt"># PPO 默认 max_grad_norm = 0.5</span>
+torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=<span class="num">0.5</span>)
+</code></pre>
+</div>
+
+<h4>权重初始化</h4>
+
+<p>PPO 对网络初始化比较敏感。推荐的初始化方案：</p>
+
+<div class="code-container">
+  <div class="code-header">
+    <span>weight_init.py — PPO 推荐的权重初始化</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+  </div>
+  <pre><code><span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="kw">def</span> <span class="fn">layer_init</span>(layer, std=np.sqrt(<span class="num">2</span>), bias_const=<span class="num">0.0</span>):
+    <span class="str">"""正交初始化（orthogonal initialization）"""</span>
+    nn.init.orthogonal_(layer.weight, std)
+    nn.init.constant_(layer.bias, bias_const)
+    <span class="kw">return</span> layer
+
+<span class="cmt"># 使用方式</span>
+<span class="kw">class</span> <span class="cls">PPONetwork</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, obs_dim, act_dim):
+        <span class="bi">super</span>().__init__()
+        <span class="sf">self</span>.critic = nn.Sequential(
+            layer_init(nn.Linear(obs_dim, <span class="num">64</span>)),
+            nn.Tanh(),
+            layer_init(nn.Linear(<span class="num">64</span>, <span class="num">64</span>)),
+            nn.Tanh(),
+            layer_init(nn.Linear(<span class="num">64</span>, <span class="num">1</span>), std=<span class="num">1.0</span>),  <span class="cmt"># critic 输出层较小初始化</span>
+        )
+        <span class="sf">self</span>.actor = nn.Sequential(
+            layer_init(nn.Linear(obs_dim, <span class="num">64</span>)),
+            nn.Tanh(),
+            layer_init(nn.Linear(<span class="num">64</span>, <span class="num">64</span>)),
+            nn.Tanh(),
+            layer_init(nn.Linear(<span class="num">64</span>, act_dim), std=<span class="num">0.01</span>),  <span class="cmt"># actor 输出层更小！</span>
+        )
+</code></pre>
+</div>
+
+<div class="callout callout-tip">
+  <div class="callout-title">💡 为什么 Actor 输出层用 std=0.01？</div>
+  <p>这使得初始策略接近均匀分布（所有动作概率接近），保证初始阶段有足够的探索。如果 Actor 输出层初始化太大，初始策略可能就非常集中在少数动作上，导致探索不足。</p>
+</div>
+
+<h3 id="s4-6">4.6 代码：手写 PPO vs SB3 PPO 对比</h3>
+
+<p>让我们直接对比手写实现和 SB3（Stable-Baselines3）的 PPO。</p>
+
+<div class="code-container">
+  <div class="code-header">
+    <span>ppo_sb3_comparison.py — SB3 PPO 等效实现</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+  </div>
+  <pre><code><span class="kw">from</span> stable_baselines3 <span class="kw">import</span> PPO
+<span class="kw">from</span> stable_baselines3.common.env_util <span class="kw">import</span> make_vec_env
+<span class="kw">from</span> stable_baselines3.common.callbacks <span class="kw">import</span> EvalCallback
+<span class="kw">import</span> gymnasium <span class="kw">as</span> gym
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># SB3 PPO — 几行代码搞定</span>
+<span class="cmt"># ============================================================</span>
+env = make_vec_env(<span class="str">"CartPole-v1"</span>, n_envs=<span class="num">4</span>)  <span class="cmt"># 4 个并行环境</span>
+
+model = PPO(
+    <span class="str">"MlpPolicy"</span>,
+    env,
+    <span class="cmt"># ---- 这些参数对应我们手写版本的设置 ----</span>
+    learning_rate=<span class="num">3e-4</span>,       <span class="cmt"># 学习率</span>
+    n_steps=<span class="num">2048</span>,             <span class="cmt"># 每个环境收集的步数 (总数据量=n_steps*n_envs)</span>
+    batch_size=<span class="num">64</span>,            <span class="cmt"># mini-batch 大小</span>
+    n_epochs=<span class="num">10</span>,              <span class="cmt"># 每批数据重用的轮次</span>
+    gamma=<span class="num">0.99</span>,               <span class="cmt"># 折扣因子</span>
+    gae_lambda=<span class="num">0.95</span>,          <span class="cmt"># GAE lambda</span>
+    clip_range=<span class="num">0.2</span>,           <span class="cmt"># ε (clipping 参数)</span>
+    ent_coef=<span class="num">0.0</span>,             <span class="cmt"># 熵系数（CartPole 不需要）</span>
+    vf_coef=<span class="num">0.5</span>,              <span class="cmt"># 价值损失系数</span>
+    max_grad_norm=<span class="num">0.5</span>,        <span class="cmt"># 梯度裁剪</span>
+    verbose=<span class="num">1</span>,
+)
+
+<span class="cmt"># 训练</span>
+model.learn(total_timesteps=<span class="num">200_000</span>)
+
+<span class="cmt"># 评估</span>
+eval_env = gym.make(<span class="str">"CartPole-v1"</span>)
+total_reward = <span class="num">0</span>
+<span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(<span class="num">10</span>):
+    obs, _ = eval_env.reset()
+    done = <span class="num">False</span>
+    ep_reward = <span class="num">0</span>
+    <span class="kw">while</span> <span class="kw">not</span> done:
+        action, _ = model.predict(obs, deterministic=<span class="num">True</span>)
+        obs, reward, terminated, truncated, _ = eval_env.step(action)
+        ep_reward += reward
+        done = terminated <span class="kw">or</span> truncated
+    total_reward += ep_reward
+<span class="bi">print</span>(<span class="str">f"Average reward over 10 episodes: {total_reward / 10:.1f}"</span>)
+</code></pre>
+</div>
+
+<div class="callout callout-info">
+  <div class="callout-title">📘 手写 vs SB3 对比总结</div>
+  <table>
+    <tr><th>特性</th><th>手写 PPO</th><th>SB3 PPO</th></tr>
+    <tr><td>代码量</td><td>~200 行</td><td>~10 行</td></tr>
+    <tr><td>并行环境</td><td>需手写</td><td>内置 VecEnv</td></tr>
+    <tr><td>观测归一化</td><td>需手写</td><td>VecNormalize 封装</td></tr>
+    <tr><td>日志记录</td><td>需手写</td><td>内置 TensorBoard</td></tr>
+    <tr><td>保存/加载</td><td>需手写</td><td>model.save()/load()</td></tr>
+    <tr><td>学习价值</td><td>深入理解算法</td><td>快速实验</td></tr>
+    <tr><td>调试难度</td><td>完全透明</td><td>黑箱（需要阅读源码）</td></tr>
+  </table>
+  <p><strong>建议</strong>：先手写一次 PPO 理解算法，之后的实验用 SB3。</p>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- CHAPTER 5: 机器人控制应用 -->
+<!-- ============================================================ -->
+<h2 id="ch5">第五章：PPO 在机器人控制中的应用</h2>
+
+<p>前四章讲解了 PPO 在离散动作空间（如 CartPole）中的应用。但机器人控制通常涉及<strong>连续动作空间</strong>——关节角度、力矩、速度等都是连续值。本章讨论如何将 PPO 应用于连续控制任务。</p>
+
+<h3 id="s5-1">5.1 连续动作空间：高斯策略</h3>
+
+<p>在连续动作空间中，策略网络不再输出离散概率分布，而是输出一个<strong>高斯分布</strong>的参数：</p>
+
+$$\pi(a|s;\theta) = \mathcal{N}(\mu_\theta(s), \sigma_\theta(s)^2)$$
+
+<p>其中：</p>
+<ul>
+  <li>$\mu_\theta(s)$：均值网络，输出每个动作维度的期望值</li>
+  <li>$\sigma_\theta(s)$：标准差，可以是可学习参数或网络输出</li>
+</ul>
+
+<h4>两种标准差参数化方式</h4>
+
+<div class="comparison-grid">
+  <div class="comparison-card">
+    <h4>状态无关的 log_std（SB3 默认）</h4>
+    <p>$\sigma$ 作为可学习参数，不依赖于状态：</p>
+    <p><code>self.log_std = nn.Parameter(torch.zeros(act_dim))</code></p>
+    <ul>
+      <li>✅ 实现简单，训练稳定</li>
+      <li>❌ 无法根据状态调整探索程度</li>
+    </ul>
+  </div>
+  <div class="comparison-card">
+    <h4>状态依赖的 σ(s)</h4>
+    <p>$\sigma$ 由网络根据状态输出：</p>
+    <p><code>self.log_std_head = nn.Linear(hidden, act_dim)</code></p>
+    <ul>
+      <li>✅ 可以在不同状态使用不同的探索程度</li>
+      <li>❌ 训练更不稳定，需要仔细调参</li>
+    </ul>
+  </div>
+</div>
+
+<h4>Log 概率计算</h4>
+
+<p>对于高斯分布，给定动作 $a$，其 log 概率为：</p>
+
+$$\log\pi(a|s) = -\frac{1}{2}\sum_{i=1}^{d}\left[\frac{(a_i - \mu_i)^2}{\sigma_i^2} + 2\log\sigma_i + \log(2\pi)\right]$$
+
+<p>其中 $d$ 是动作维度。在代码中通常用 PyTorch 的 <code>Normal</code> 分布类自动计算。</p>
+
+<div class="code-container">
+  <div class="code-header">
+    <span>continuous_policy.py — 连续动作高斯策略</span>
+    <button class="copy-btn" onclick="copyCode(this)">复制</button>
+  </div>
+  <pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">from</span> torch.distributions <span class="kw">import</span> Normal
+
+<span class="kw">class</span> <span class="cls">ContinuousActorCritic</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, obs_dim, act_dim, hidden=<span class="num">256</span>):
+        <span class="bi">super</span>().__init__()
+
+        <span class="cmt"># Actor: 输出动作均值</span>
+        <span class="sf">self</span>.actor_mean = nn.Sequential(
+            nn.Linear(obs_dim, hidden), nn.Tanh(),
+            nn.Linear(hidden, hidden), nn.Tanh(),
+            nn.Linear(hidden, act_dim),
+        )
+        <span class="cmt"># 状态无关的 log 标准差</span>
+        <span class="sf">self</span>.actor_log_std = nn.Parameter(torch.zeros(act_dim))
+
+        <span class="cmt"># Critic: 输出状态价值</span>
+        <span class="sf">self</span>.critic = nn.Sequential(
+            nn.Linear(obs_dim, hidden), nn.Tanh(),
+            nn.Linear(hidden, hidden), nn.Tanh(),
+            nn.Linear(hidden, <span class="num">1</span>),
+        )
+
+    <span class="kw">def</span> <span class="fn">get_action_and_value</span>(<span class="sf">self</span>, obs):
+        mean = <span class="sf">self</span>.actor_mean(obs)
+        std = <span class="sf">self</span>.actor_log_std.exp()
+        dist = Normal(mean, std)
+
+        action = dist.sample()
+        log_prob = dist.log_prob(action).sum(dim=-<span class="num">1</span>)  <span class="cmt"># 各维度独立，求和</span>
+        entropy = dist.entropy().sum(dim=-<span class="num">1</span>)
+        value = <span class="sf">self</span>.critic(obs).squeeze(-<span class="num">1</span>)
+
+        <span class="kw">return</span> action, log_prob, entropy, value
+
+    <span class="kw">def</span> <span class="fn">evaluate</span>(<span class="sf">self</span>, obs, actions):
+        mean = <span class="sf">self</span>.actor_mean(obs)
+        std = <span class="sf">self</span>.actor_log_std.exp()
+        dist = Normal(mean, std)
+
+        log_prob = dist.log_prob(actions).sum(dim=-<span class="num">1</span>)
+        entropy = dist.entropy().sum(dim=-<span class="num">1</span>)
+        value = <span class="sf">self</span>.critic(obs).squeeze(-<span class="num">1</span>)
+
+        <span class="kw">return</span> log_prob, entropy, value
+</code></pre>
+</div>
+
+<h3 id="s5-2">5.2 动作裁剪与 Squashing (tanh)</h3>
+
+<p>大多数物理环境的动作空间是有界的，例如 $a \in [-1, 1]$。高斯分布的采样值理论上可以是任意实数，因此需要处理这个问题。</p>
+
+<h4>方法 1: 硬裁剪 (Hard Clipping)</h4>
+
+<p>直接将采样动作裁剪到动作空间范围内：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>hard_clipping.py</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code>action = dist.sample()
+action = torch.clamp(action, -<span class="num">1.0</span>, <span class="num">1.0</span>)  <span class="cmt"># 硬裁剪</span>
+</code></pre>
+</div>
+
+<p>问题：裁剪改变了分布的形状，导致 log 概率计算不准确。</p>
+
+<h4>方法 2: Tanh Squashing (SAC 风格)</h4>
+
+<p>用 tanh 函数将无界的高斯采样压缩到 $(-1, 1)$：</p>
+
+$$a = \tanh(u), \quad u \sim \mathcal{N}(\mu, \sigma^2)$$
+
+<p>需要应用变量替换公式修正 log 概率：</p>
+
+$$\log\pi(a|s) = \log\mathcal{N}(u|\mu,\sigma^2) - \sum_{i=1}^{d}\log(1 - \tanh^2(u_i))$$
+
+<div class="callout callout-tip">
+  <div class="callout-title">💡 PPO 中哪种方法更好？</div>
+  <p><strong>对于 PPO</strong>：通常使用<strong>硬裁剪</strong>或<strong>不裁剪</strong>（让环境自己处理）。Tanh squashing 更常见于 SAC。原因是 PPO 的 clipping 已经提供了足够的稳定性，tanh squashing 反而增加了实现复杂度。</p>
+  <p><strong>SB3 的默认行为</strong>：对于连续动作空间，SB3 的 PPO 采样后直接将动作传给环境（由 <code>gym.spaces.Box</code> 处理边界）。</p>
+</div>
+
+<h3 id="s5-3">5.3 观测归一化 (Observation Normalization)</h3>
+
+<p>在物理仿真环境中，不同的观测维度可能有完全不同的量级和范围。例如：</p>
+<ul>
+  <li>位置：$[-10, 10]$ 米</li>
+  <li>速度：$[-100, 100]$ 米/秒</li>
+  <li>关节角度：$[-\pi, \pi]$ 弧度</li>
+  <li>力/力矩：$[-1000, 1000]$ 牛</li>
+</ul>
+
+<p>如果不进行归一化，网络很难学到有效的特征表示。</p>
+
+<h4>Running Mean/Std 归一化</h4>
+
+<p>SB3 提供了 <code>VecNormalize</code> 封装器，自动维护观测的运行均值和标准差：</p>
+
+$$\hat{s} = \frac{s - \mu_s}{\sigma_s + \epsilon}$$
+
+<div class="code-container">
+  <div class="code-header"><span>vec_normalize.py — SB3 观测归一化</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">from</span> stable_baselines3.common.vec_env <span class="kw">import</span> VecNormalize, DummyVecEnv
+
+<span class="cmt"># 创建带归一化的环境</span>
+env = DummyVecEnv([<span class="kw">lambda</span>: gym.make(<span class="str">"HalfCheetah-v4"</span>)])
+env = VecNormalize(
+    env,
+    norm_obs=<span class="num">True</span>,       <span class="cmt"># 归一化观测</span>
+    norm_reward=<span class="num">True</span>,    <span class="cmt"># 归一化奖励（可选）</span>
+    clip_obs=<span class="num">10.0</span>,       <span class="cmt"># 裁剪归一化后的观测</span>
+    clip_reward=<span class="num">10.0</span>,    <span class="cmt"># 裁剪归一化后的奖励</span>
+    gamma=<span class="num">0.99</span>,          <span class="cmt"># 用于奖励折扣归一化</span>
+)
+
+model = PPO(<span class="str">"MlpPolicy"</span>, env, verbose=<span class="num">1</span>)
+model.learn(<span class="num">1_000_000</span>)
+
+<span class="cmt"># 保存时也要保存归一化统计量！</span>
+model.save(<span class="str">"ppo_halfcheetah"</span>)
+env.save(<span class="str">"vec_normalize.pkl"</span>)
+</code></pre>
+</div>
+
+<div class="callout callout-warning">
+  <div class="callout-title">⚠️ 常见错误：评估时忘记加载归一化统计量</div>
+  <p>训练时使用了 <code>VecNormalize</code>，评估时必须加载相同的归一化参数，否则网络收到的输入完全不同，性能会急剧下降。</p>
+</div>
+
+<h3 id="s5-4">5.4 Reward Shaping 技巧</h3>
+
+<p>Reward shaping 是强化学习中最重要（也最容易搞砸）的技巧之一。好的奖励设计可以让算法快速学到有效策略，差的奖励设计会导致"reward hacking"——智能体找到了最大化奖励但不符合预期的"歪门邪道"。</p>
+
+<h4>稀疏奖励 vs 密集奖励</h4>
+
+<table>
+  <tr><th>类型</th><th>示例</th><th>优点</th><th>缺点</th></tr>
+  <tr>
+    <td>稀疏奖励</td>
+    <td>只有成功推箱子到目标时 +1</td>
+    <td>定义简单，不引入偏见</td>
+    <td>智能体很难发现正向信号</td>
+  </tr>
+  <tr>
+    <td>密集奖励</td>
+    <td>每步根据距离目标的远近给奖励</td>
+    <td>梯度信号丰富，学习快</td>
+    <td>可能引入错误的归纳偏置</td>
+  </tr>
+</table>
+
+<h4>常用的 Reward Shaping 策略</h4>
+
+<ol>
+  <li><strong>距离奖励</strong>：$r_t = -\|x_t - x_{goal}\|_2$（越近越好）</li>
+  <li><strong>速度奖励</strong>：$r_t = v_t \cdot \hat{d}$（向目标方向移动奖励）</li>
+  <li><strong>能量惩罚</strong>：$r_t = -c\|a_t\|^2$（鼓励高效动作）</li>
+  <li><strong>存活奖励</strong>：每步 +1（鼓励活着）</li>
+  <li><strong>里程碑奖励</strong>：达到中间目标给额外奖励</li>
+</ol>
+
+<div class="callout callout-math">
+  <div class="callout-title">📐 Potential-Based Reward Shaping</div>
+  <p>Ng et al. (1999) 证明了一种特殊的 reward shaping 方式不会改变最优策略：</p>
+  $$r'(s, a, s') = r(s, a, s') + \gamma\Phi(s') - \Phi(s)$$
+  <p>其中 $\Phi(s)$ 是势函数。这种形式的 shaping 可以加速学习但保证收敛到同一个最优策略。直觉上，$\Phi(s)$ 相当于给 value function 一个"提示"。</p>
+</div>
+
+<h3 id="s5-5">5.5 PhysRobot PushBox 训练分析</h3>
+
+<div class="callout callout-physrobot">
+  <div class="callout-title">🤖 PhysRobot 项目关联：PushBox 环境</div>
+  <p>PushBox 是 PhysRobot 项目中的核心测试环境：一个机械臂需要将桌面上的箱子推到目标位置。</p>
+</div>
+
+<h4>V1 版本：稀疏奖励（6% 成功率）</h4>
+
+<p>初始版本使用简单的稀疏奖励：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>pushbox_v1_reward.py — V1 稀疏奖励</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">def</span> <span class="fn">compute_reward_v1</span>(box_pos, target_pos, threshold=<span class="num">0.05</span>):
+    <span class="str">"""V1: 稀疏奖励 — 只有成功才有奖励"""</span>
+    dist = np.linalg.norm(box_pos - target_pos)
+    <span class="kw">if</span> dist < threshold:
+        <span class="kw">return</span> <span class="num">10.0</span>   <span class="cmt"># 成功！</span>
+    <span class="kw">return</span> -<span class="num">0.01</span>    <span class="cmt"># 每步小惩罚</span>
+</code></pre>
+</div>
+
+<p><strong>问题分析</strong>：PPO 在 V1 奖励下只达到 6% 的成功率。原因：</p>
+<ul>
+  <li><strong>信用分配困难</strong>：智能体很少偶然地把箱子推到目标，获得正向信号的概率太低</li>
+  <li><strong>探索不足</strong>：在稀疏奖励下，PPO 的标准探索（高斯噪声）不够</li>
+  <li><strong>奖励信号太弱</strong>：大部分时间步的奖励都是 -0.01，梯度信号微弱</li>
+</ul>
+
+<h4>V2 版本：密集奖励 + Shaping</h4>
+
+<div class="code-container">
+  <div class="code-header"><span>pushbox_v2_reward.py — V2 密集奖励</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">def</span> <span class="fn">compute_reward_v2</span>(
+    gripper_pos, box_pos, target_pos,
+    action, prev_box_dist, prev_gripper_dist
+):
+    <span class="str">"""V2: 密集奖励 + potential-based shaping"""</span>
+
+    <span class="cmt"># 1. 接近奖励：鼓励夹爪靠近箱子</span>
+    gripper_dist = np.linalg.norm(gripper_pos - box_pos)
+    r_approach = (prev_gripper_dist - gripper_dist) * <span class="num">5.0</span>
+
+    <span class="cmt"># 2. 推动奖励：鼓励箱子靠近目标</span>
+    box_dist = np.linalg.norm(box_pos - target_pos)
+    r_push = (prev_box_dist - box_dist) * <span class="num">10.0</span>
+
+    <span class="cmt"># 3. 距离惩罚：当前距离越远惩罚越大</span>
+    r_dist = -box_dist * <span class="num">0.5</span>
+
+    <span class="cmt"># 4. 动作能量惩罚：鼓励高效动作</span>
+    r_energy = -np.sum(action ** <span class="num">2</span>) * <span class="num">0.01</span>
+
+    <span class="cmt"># 5. 成功奖励</span>
+    r_success = <span class="num">50.0</span> <span class="kw">if</span> box_dist < <span class="num">0.05</span> <span class="kw">else</span> <span class="num">0.0</span>
+
+    <span class="kw">return</span> r_approach + r_push + r_dist + r_energy + r_success
+</code></pre>
+</div>
+
+<p><strong>V2 改进效果</strong>：密集奖励版本的 PPO 显著提升了学习效率，原因：</p>
+<ul>
+  <li>每步都有非零的梯度信号</li>
+  <li>分阶段引导：先接近箱子 → 再推箱子 → 最后到达目标</li>
+  <li>Potential-based shaping 不改变最优策略</li>
+</ul>
+
+<div class="callout callout-physrobot">
+  <div class="callout-title">🤖 为什么 PPO 在 PushBox 上仍有挑战？</div>
+  <p>即使有密集奖励，标准 PPO 在 PushBox 上也面临困难：</p>
+  <ol>
+    <li><strong>高维连续动作空间</strong>：7-DoF 机械臂有 7 个连续动作维度，探索空间巨大</li>
+    <li><strong>接触动力学</strong>：推箱子涉及复杂的接触力学，策略需要学习精确的力控制</li>
+    <li><strong>长期规划</strong>：需要多步有意义的动作序列，对 $\gamma$ 和 GAE $\lambda$ 敏感</li>
+    <li><strong>物理先验缺失</strong>：标准 MLP 策略不了解物理规律，需要大量样本来隐式学习</li>
+  </ol>
+  <p>这正是 PhysRobot 项目引入<strong>物理先验</strong>和<strong>dual-stream 方法</strong>的动机（第六章详述）。</p>
+</div>
+
+<h3 id="s5-6">5.6 代码：连续控制 PPO 完整示例</h3>
+
+<p>下面是在 MuJoCo HalfCheetah 环境中使用 SB3 PPO 的完整示例：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>ppo_halfcheetah.py — 连续控制 PPO 完整流程</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">import</span> gymnasium <span class="kw">as</span> gym
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> stable_baselines3 <span class="kw">import</span> PPO
+<span class="kw">from</span> stable_baselines3.common.vec_env <span class="kw">import</span> DummyVecEnv, VecNormalize
+<span class="kw">from</span> stable_baselines3.common.callbacks <span class="kw">import</span> EvalCallback
+<span class="kw">from</span> stable_baselines3.common.monitor <span class="kw">import</span> Monitor
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 1. 环境设置</span>
+<span class="cmt"># ============================================================</span>
+<span class="kw">def</span> <span class="fn">make_env</span>(env_id, seed):
+    <span class="kw">def</span> <span class="fn">_init</span>():
+        env = gym.make(env_id)
+        env = Monitor(env)
+        env.reset(seed=seed)
+        <span class="kw">return</span> env
+    <span class="kw">return</span> _init
+
+<span class="cmt"># 8 个并行环境</span>
+n_envs = <span class="num">8</span>
+env = DummyVecEnv([make_env(<span class="str">"HalfCheetah-v4"</span>, seed=i) <span class="kw">for</span> i <span class="kw">in</span> <span class="bi">range</span>(n_envs)])
+env = VecNormalize(env, norm_obs=<span class="num">True</span>, norm_reward=<span class="num">True</span>)
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 2. PPO 配置（连续控制推荐参数）</span>
+<span class="cmt"># ============================================================</span>
+model = PPO(
+    <span class="str">"MlpPolicy"</span>,
+    env,
+    learning_rate=<span class="num">3e-4</span>,
+    n_steps=<span class="num">2048</span>,            <span class="cmt"># 每个环境 2048 步</span>
+    batch_size=<span class="num">64</span>,
+    n_epochs=<span class="num">10</span>,
+    gamma=<span class="num">0.99</span>,
+    gae_lambda=<span class="num">0.95</span>,
+    clip_range=<span class="num">0.2</span>,
+    ent_coef=<span class="num">0.0</span>,            <span class="cmt"># 连续空间通常不需要额外熵奖励</span>
+    vf_coef=<span class="num">0.5</span>,
+    max_grad_norm=<span class="num">0.5</span>,
+    policy_kwargs=<span class="bi">dict</span>(
+        net_arch=<span class="bi">dict</span>(
+            pi=[<span class="num">256</span>, <span class="num">256</span>],    <span class="cmt"># Actor 网络结构</span>
+            vf=[<span class="num">256</span>, <span class="num">256</span>]     <span class="cmt"># Critic 网络结构</span>
+        ),
+        activation_fn=nn.Tanh,  <span class="cmt"># 连续控制推荐 Tanh</span>
+    ),
+    verbose=<span class="num">1</span>,
+    tensorboard_log=<span class="str">"./tb_logs/"</span>,
+)
+
+<span class="cmt"># ============================================================</span>
+<span class="cmt"># 3. 训练</span>
+<span class="cmt"># ============================================================</span>
+eval_callback = EvalCallback(
+    VecNormalize(DummyVecEnv([make_env(<span class="str">"HalfCheetah-v4"</span>, seed=<span class="num">100</span>)]),
+                 norm_obs=<span class="num">True</span>, norm_reward=<span class="num">False</span>, training=<span class="num">False</span>),
+    best_model_save_path=<span class="str">"./best_model/"</span>,
+    eval_freq=<span class="num">10000</span>,
+    n_eval_episodes=<span class="num">5</span>,
+)
+
+model.learn(total_timesteps=<span class="num">1_000_000</span>, callback=eval_callback)
+
+<span class="cmt"># 保存</span>
+model.save(<span class="str">"ppo_halfcheetah_1M"</span>)
+env.save(<span class="str">"vec_normalize_halfcheetah.pkl"</span>)
+</code></pre>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- CHAPTER 6: 高级 PPO 变体 -->
+<!-- ============================================================ -->
+<h2 id="ch6">第六章：高级 PPO 变体</h2>
+
+<p>PPO 的成功催生了许多变体和扩展，针对不同的应用场景进行优化。本章介绍最重要的五个方向。</p>
+
+<h3 id="s6-1">6.1 PPO-Penalty（KL 惩罚版本）</h3>
+
+<p>PPO 论文实际上提出了两个版本：PPO-Clip（第三章）和 PPO-Penalty。PPO-Penalty 使用 KL 散度作为正则项而非硬约束：</p>
+
+$$L^{KLPEN}(\theta) = \mathbb{E}_t\left[r_t(\theta)\hat{A}_t - \beta \cdot D_{KL}\left(\pi_{\theta_{old}}(\cdot|s_t) \| \pi_\theta(\cdot|s_t)\right)\right]$$
+
+<p>其中 $\beta$ 是自适应调整的 KL 惩罚系数：</p>
+
+<div class="algorithm-box">
+  <div class="algo-title">算法 3: PPO-Penalty 的自适应 β</div>
+  <ol>
+    <li>计算每次更新后的平均 KL 散度 $d = \hat{\mathbb{E}}_t[D_{KL}(\pi_{old} \| \pi)]$</li>
+    <li>如果 $d < d_{targ} / 1.5$：$\beta \leftarrow \beta / 2$（KL 太小，放松约束）</li>
+    <li>如果 $d > d_{targ} \times 1.5$：$\beta \leftarrow \beta \times 2$（KL 太大，加强约束）</li>
+    <li>否则保持 $\beta$ 不变</li>
+  </ol>
+</div>
+
+<div class="callout callout-info">
+  <div class="callout-title">📘 PPO-Clip vs PPO-Penalty</div>
+  <table>
+    <tr><th>特性</th><th>PPO-Clip</th><th>PPO-Penalty</th></tr>
+    <tr><td>实现复杂度</td><td>低</td><td>中（需要自适应 β）</td></tr>
+    <tr><td>超参数</td><td>ε（通常 0.2）</td><td>β_init, d_targ</td></tr>
+    <tr><td>性能</td><td>通常更好</td><td>在某些任务上更稳定</td></tr>
+    <tr><td>理论联系</td><td>启发式</td><td>更接近 TRPO</td></tr>
+    <tr><td>使用频率</td><td>⭐⭐⭐⭐⭐（主流）</td><td>⭐⭐（较少）</td></tr>
+  </table>
+</div>
+
+<h3 id="s6-2">6.2 MAPPO（多智能体 PPO）</h3>
+
+<p>MAPPO (Multi-Agent PPO) 将 PPO 扩展到多智能体场景，在《星际争霸》等复杂博弈中取得了优异表现。</p>
+
+<h4>核心思想：集中式训练，分布式执行 (CTDE)</h4>
+
+<ul>
+  <li><strong>训练时</strong>：每个智能体的 Critic 可以看到全局状态（集中式价值函数）</li>
+  <li><strong>执行时</strong>：每个智能体只根据自己的局部观测做决策（分布式策略）</li>
+</ul>
+
+<div class="callout callout-math">
+  <div class="callout-title">📐 MAPPO 的形式化</div>
+  <p>对于 $N$ 个智能体：</p>
+  <ul>
+    <li>每个智能体 $i$ 有局部观测 $o_i$ 和策略 $\pi_i(a_i|o_i;\theta_i)$</li>
+    <li>集中式价值函数：$V_i(s;\phi_i)$，其中 $s = (o_1, o_2, \ldots, o_N)$ 是全局状态</li>
+    <li>每个智能体独立使用 PPO 更新自己的策略</li>
+  </ul>
+  <p><strong>参数共享</strong>：当智能体是同质的（如多个相同的机器人），可以让所有智能体共享同一套策略参数 $\theta$，大幅提高样本效率。</p>
+</div>
+
+<h4>MAPPO 的关键技巧</h4>
+
+<ol>
+  <li><strong>全局状态</strong>作为 Critic 输入（而非单个智能体的观测）</li>
+  <li><strong>参数共享</strong>：同质智能体共享策略网络</li>
+  <li><strong>价值归一化</strong>：使用 PopArt 对价值目标进行归一化</li>
+  <li><strong>更大的 batch_size</strong>：多智能体产生更多数据，支持更大的 batch</li>
+</ol>
+
+<h3 id="s6-3">6.3 PPO + RNN/Transformer（序列决策）</h3>
+
+<p>标准 PPO 使用 MLP 策略网络，只能基于当前观测做决策。在<strong>部分可观测</strong> (POMDP) 环境中，智能体需要利用历史信息。</p>
+
+<h4>PPO + LSTM</h4>
+
+<p>将 MLP 替换为 LSTM，让策略能够"记住"过去的观测：</p>
+
+<div class="code-container">
+  <div class="code-header"><span>ppo_lstm.py — 带记忆的 PPO</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">class</span> <span class="cls">RecurrentActorCritic</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, obs_dim, act_dim, hidden=<span class="num">128</span>):
+        <span class="bi">super</span>().__init__()
+        <span class="sf">self</span>.feature = nn.Linear(obs_dim, hidden)
+        <span class="sf">self</span>.lstm = nn.LSTM(hidden, hidden, batch_first=<span class="num">True</span>)
+        <span class="sf">self</span>.actor = nn.Linear(hidden, act_dim)
+        <span class="sf">self</span>.critic = nn.Linear(hidden, <span class="num">1</span>)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, obs_seq, hidden_state):
+        <span class="str">"""
+        obs_seq: [batch, seq_len, obs_dim]
+        hidden_state: (h, c) LSTM 隐状态
+        """</span>
+        x = torch.relu(<span class="sf">self</span>.feature(obs_seq))
+        lstm_out, new_hidden = <span class="sf">self</span>.lstm(x, hidden_state)
+        policy = <span class="sf">self</span>.actor(lstm_out)
+        value = <span class="sf">self</span>.critic(lstm_out)
+        <span class="kw">return</span> policy, value, new_hidden
+
+<span class="cmt"># SB3 直接支持 RecurrentPPO</span>
+<span class="kw">from</span> sb3_contrib <span class="kw">import</span> RecurrentPPO
+model = RecurrentPPO(<span class="str">"MlpLstmPolicy"</span>, env, verbose=<span class="num">1</span>)
+</code></pre>
+</div>
+
+<h4>PPO + Transformer</h4>
+
+<p>近年来，Transformer 架构也被引入强化学习：</p>
+<ul>
+  <li><strong>Decision Transformer</strong>（Chen et al., 2021）：将 RL 转化为序列建模问题</li>
+  <li><strong>GTrXL</strong>（Parisotto et al., 2020）：稳定的 Transformer-XL 用于 RL</li>
+</ul>
+
+<div class="callout callout-warning">
+  <div class="callout-title">⚠️ PPO + 序列模型的注意事项</div>
+  <ul>
+    <li><strong>Rollout 管理</strong>：需要在 episode 边界正确重置隐状态</li>
+    <li><strong>Mini-batch 处理</strong>：需要按序列切分数据，不能随机打乱时间步</li>
+    <li><strong>计算成本</strong>：LSTM/Transformer 增加了推理和训练的计算量</li>
+    <li><strong>不一定需要</strong>：如果环境是完全可观测的（MDP），MLP 就够了</li>
+  </ul>
+</div>
+
+<h3 id="s6-4">6.4 PPO + 物理先验</h3>
+
+<div class="callout callout-physrobot">
+  <div class="callout-title">🤖 PhysRobot 的 Dual-Stream 方法</div>
+  <p>PhysRobot 项目提出了将物理先验融入 PPO 的 <strong>dual-stream 架构</strong>：</p>
+  <ul>
+    <li><strong>物理流 (Physics Stream)</strong>：基于物理模型（如刚体动力学、接触模型）的先验策略，提供基础的物理合理动作</li>
+    <li><strong>学习流 (Learning Stream)</strong>：标准的 PPO 策略网络，学习残差修正</li>
+    <li><strong>融合</strong>：$a = a_{physics} + \alpha \cdot a_{learned}$，其中 $\alpha$ 从 0 逐渐增大</li>
+  </ul>
+</div>
+
+<h4>物理先验的几种融入方式</h4>
+
+<table>
+  <tr><th>方式</th><th>描述</th><th>优点</th><th>缺点</th></tr>
+  <tr>
+    <td>残差策略</td>
+    <td>$a = a_{base} + \pi_\theta(s)$</td>
+    <td>简单，保留 base 策略的优势</td>
+    <td>base 策略需要足够好</td>
+  </tr>
+  <tr>
+    <td>观测增强</td>
+    <td>将物理量（力、能量等）加入观测</td>
+    <td>不修改算法，即插即用</td>
+    <td>依赖网络提取有用信息</td>
+  </tr>
+  <tr>
+    <td>奖励塑造</td>
+    <td>物理量（如能量消耗）作为奖励</td>
+    <td>引导物理合理的行为</td>
+    <td>可能引入偏差</td>
+  </tr>
+  <tr>
+    <td>网络架构</td>
+    <td>物理对称性/等变性嵌入网络</td>
+    <td>强归纳偏置，样本效率高</td>
+    <td>设计复杂</td>
+  </tr>
+</table>
+
+<h4>物理信息增强的连续控制 PPO</h4>
+
+<div class="code-container">
+  <div class="code-header"><span>physics_informed_ppo.py — 物理先验融合示例</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">class</span> <span class="cls">PhysicsInformedActor</span>(nn.Module):
+    <span class="str">"""
+    融合物理先验的 Actor 网络
+    - physics_controller: 基于物理模型的控制器
+    - residual_net: 学习残差修正
+    """</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, obs_dim, act_dim, physics_controller):
+        <span class="bi">super</span>().__init__()
+        <span class="sf">self</span>.physics = physics_controller  <span class="cmt"># 预定义的物理控制器</span>
+
+        <span class="cmt"># 残差网络：学习物理模型未捕捉的部分</span>
+        <span class="sf">self</span>.residual = nn.Sequential(
+            nn.Linear(obs_dim, <span class="num">256</span>), nn.ReLU(),
+            nn.Linear(<span class="num">256</span>, <span class="num">256</span>), nn.ReLU(),
+            nn.Linear(<span class="num">256</span>, act_dim), nn.Tanh(),
+        )
+        <span class="sf">self</span>.log_std = nn.Parameter(torch.zeros(act_dim))
+
+        <span class="cmt"># 混合系数（训练过程中逐渐增大）</span>
+        <span class="sf">self</span>.alpha = nn.Parameter(torch.tensor(<span class="num">0.1</span>))
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, obs):
+        <span class="cmt"># 物理先验动作</span>
+        a_physics = <span class="sf">self</span>.physics(obs)
+        <span class="cmt"># 学习的残差</span>
+        a_residual = <span class="sf">self</span>.residual(obs)
+        <span class="cmt"># 融合：物理 + α * 残差</span>
+        mean = a_physics + <span class="sf">self</span>.alpha.clamp(<span class="num">0</span>, <span class="num">1</span>) * a_residual
+        std = <span class="sf">self</span>.log_std.exp()
+        <span class="kw">return</span> Normal(mean, std)
+</code></pre>
+</div>
+
+<h3 id="s6-5">6.5 PPO + 课程学习 (Curriculum Learning)</h3>
+
+<p>课程学习通过逐渐增加任务难度来帮助 PPO 学习复杂任务。这类似于人类学习：先学简单的，再学难的。</p>
+
+<h4>常见的课程策略</h4>
+
+<ol>
+  <li><strong>目标距离课程</strong>：先让目标位置很近，逐渐增大距离</li>
+  <li><strong>环境复杂度课程</strong>：先在简单环境训练，逐渐增加障碍物</li>
+  <li><strong>动作约束课程</strong>：先允许大范围动作，逐渐收紧约束</li>
+  <li><strong>自动课程 (PLR/ACCEL)</strong>：自动选择适当难度的训练关卡</li>
+</ol>
+
+<div class="code-container">
+  <div class="code-header"><span>curriculum_example.py — 简单课程学习示例</span><button class="copy-btn" onclick="copyCode(this)">复制</button></div>
+  <pre><code><span class="kw">class</span> <span class="cls">CurriculumPushBoxEnv</span>(PushBoxEnv):
+    <span class="str">"""带课程学习的 PushBox 环境"""</span>
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>):
+        <span class="bi">super</span>().__init__()
+        <span class="sf">self</span>.difficulty = <span class="num">0.0</span>   <span class="cmt"># 0~1, 逐渐增大</span>
+        <span class="sf">self</span>.success_history = []
+
+    <span class="kw">def</span> <span class="fn">reset</span>(<span class="sf">self</span>):
+        <span class="cmt"># 根据难度设置目标距离</span>
+        max_dist = <span class="num">0.1</span> + <span class="sf">self</span>.difficulty * <span class="num">0.4</span>  <span class="cmt"># 0.1m ~ 0.5m</span>
+        <span class="sf">self</span>.target_pos = <span class="sf">self</span>.box_pos + np.random.uniform(
+            -max_dist, max_dist, size=<span class="num">3</span>)
+        <span class="kw">return</span> <span class="bi">super</span>().reset()
+
+    <span class="kw">def</span> <span class="fn">update_curriculum</span>(<span class="sf">self</span>, success_rate):
+        <span class="str">"""根据最近的成功率调整难度"""</span>
+        <span class="kw">if</span> success_rate > <span class="num">0.7</span>:    <span class="cmt"># 成功率 > 70% → 增加难度</span>
+            <span class="sf">self</span>.difficulty = <span class="bi">min</span>(<span class="num">1.0</span>, <span class="sf">self</span>.difficulty + <span class="num">0.1</span>)
+        <span class="kw">elif</span> success_rate < <span class="num">0.3</span>:  <span class="cmt"># 成功率 < 30% → 降低难度</span>
+            <span class="sf">self</span>.difficulty = <span class="bi">max</span>(<span class="num">0.0</span>, <span class="sf">self</span>.difficulty - <span class="num">0.05</span>)
+</code></pre>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- CHAPTER 7: 超参数调优 -->
+<!-- ============================================================ -->
+<h2 id="ch7">第七章：超参数调优指南</h2>
+
+<p>PPO 被认为对超参数相对不敏感，但"相对不敏感"不等于"不需要调"。本章提供一份实用的超参数调优指南，帮助你快速找到合适的参数配置。</p>
+
+<h3 id="s7-1">7.1 学习率 (Learning Rate)</h3>
+
+<p>学习率是最重要的超参数，直接控制策略更新的步长大小。</p>
+
+<div class="callout callout-theorem">
+  <div class="callout-title">🎯 经验法则</div>
+  <p><strong>黄金范围</strong>：$\text{lr} \in [1 \times 10^{-4}, \; 3 \times 10^{-4}]$</p>
+  <p>几乎所有环境都可以从 $3 \times 10^{-4}$ 开始尝试。</p>
+</div>
+
+<table>
+  <tr><th>学习率</th><th>表现</th><th>适用场景</th></tr>
+  <tr><td>$1 \times 10^{-5}$</td><td>太小，学习极慢</td><td>极少使用</td></tr>
+  <tr><td>$1 \times 10^{-4}$</td><td>稳定但可能较慢</td><td>复杂连续控制</td></tr>
+  <tr><td>$3 \times 10^{-4}$</td><td>⭐ 默认推荐值</td><td>大多数任务</td></tr>
+  <tr><td>$1 \times 10^{-3}$</td><td>较快但可能不稳定</td><td>简单离散任务</td></tr>
+  <tr><td>$1 \times 10^{-2}$</td><td>太大，训练发散</td><td>几乎不使用</td></tr>
+</table>
+
+<h4>诊断学习率问题</h4>
+<ul>
+  <li><strong>policy_loss 波动剧烈</strong>：学习率可能太大</li>
+  <li><strong>value_loss 不下降</strong>：学习率可能太小</li>
+  <li><strong>approx_kl 持续 > 0.1</strong>：学习率太大，策略更新过激</li>
+  <li><strong>entropy 快速下降到 0</strong>：学习率太大导致策略过早确定化</li>
+</ul>
+
+<h3 id="s7-2">7.2 Batch Size 与 N-steps 的关系</h3>
+
+<p><code>n_steps</code> 和 <code>batch_size</code> 的关系经常让初学者困惑。让我们明确它们的含义和关系：</p>
+
+<div class="callout callout-info">
+  <div class="callout-title">📘 参数关系</div>
+  <ul>
+    <li><code>n_steps</code>：每个环境收集的步数。如果有 $N$ 个并行环境，总数据量 = <code>n_steps × N</code></li>
+    <li><code>batch_size</code>：每个 mini-batch 的样本数</li>
+    <li><code>n_epochs</code>：对同一批数据训练的轮数</li>
+    <li>每次更新的梯度步数 = <code>n_epochs × (n_steps × N / batch_size)</code></li>
+  </ul>
+  <p>例如 SB3 默认：<code>n_steps=2048, batch_size=64, n_epochs=10, n_envs=1</code>
+  → 每次更新 = $10 \times 2048/64 = 320$ 步梯度下降</p>
+</div>
+
+<table>
+  <tr><th>参数</th><th>典型范围</th><th>增大效果</th><th>减小效果</th></tr>
+  <tr>
+    <td><code>n_steps</code></td>
+    <td>128 ~ 4096</td>
+    <td>更稳定的 GAE 估计，更好的长期规划</td>
+    <td>更频繁的更新，但 GAE 估计噪声更大</td>
+  </tr>
+  <tr>
+    <td><code>batch_size</code></td>
+    <td>32 ~ 512</td>
+    <td>梯度估计更准确，训练更稳定</td>
+    <td>更多噪声但可能逃出局部最优</td>
+  </tr>
+  <tr>
+    <td><code>n_epochs</code></td>
+    <td>3 ~ 30</td>
+    <td>更充分地利用数据</td>
+    <td>减少过拟合旧数据的风险</td>
+  </tr>
+</table>
+
+<h3 id="s7-3">7.3 Clip Range ($\epsilon$)</h3>
+
+<p><code>clip_range</code>（即 $\epsilon$）控制策略每次更新允许变化的幅度。</p>
+
+<table>
+  <tr><th>clip_range</th><th>行为</th><th>适用场景</th></tr>
+  <tr><td>0.1</td><td>非常保守的更新</td><td>训练不稳定时尝试</td></tr>
+  <tr><td>0.2</td><td>⭐ 默认推荐值</td><td>大多数任务</td></tr>
+  <tr><td>0.3</td><td>较激进的更新</td><td>简单任务或需要快速收敛时</td></tr>
+  <tr><td>0.4+</td><td>接近无约束</td><td>基本不使用</td></tr>
+</table>
+
+<div class="callout callout-tip">
+  <div class="callout-title">💡 动态 Clip Range</div>
+  <p>SB3 支持 clip_range 随训练进度变化：</p>
+  <p><code>clip_range = lambda progress: 0.2 * progress</code></p>
+  <p>从 0.2 线性衰减到 0。直觉：训练初期允许大幅探索，后期精细调整。但这不是标准做法，大多数情况下固定 0.2 即可。</p>
+</div>
+
+<h3 id="s7-4">7.4 Gamma ($\gamma$) 和 GAE Lambda ($\lambda$)</h3>
+
+<h4>折扣因子 $\gamma$</h4>
+
+<p>$\gamma$ 控制对未来回报的重视程度：</p>
+
+<table>
+  <tr><th>$\gamma$</th><th>有效视野</th><th>行为</th></tr>
+  <tr><td>0.9</td><td>~10 步</td><td>短视，适合快速奖励反馈的环境</td></tr>
+  <tr><td>0.99</td><td>~100 步</td><td>⭐ 默认值，平衡近期和远期</td></tr>
+  <tr><td>0.999</td><td>~1000 步</td><td>长期规划，适合奖励延迟大的任务</td></tr>
+  <tr><td>0.9999</td><td>~10000 步</td><td>极长期规划，但值函数估计困难</td></tr>
+</table>
+
+<h4>GAE Lambda ($\lambda$)</h4>
+
+<table>
+  <tr><th>$\lambda$</th><th>偏差</th><th>方差</th><th>说明</th></tr>
+  <tr><td>0.0</td><td>高</td><td>低</td><td>纯 1-step TD</td></tr>
+  <tr><td>0.9</td><td>中</td><td>中</td><td>偏向短期 TD</td></tr>
+  <tr><td>0.95</td><td>低偏中</td><td>中偏高</td><td>⭐ 默认值</td></tr>
+  <tr><td>1.0</td><td>无（最低）</td><td>最高</td><td>纯 Monte Carlo</td></tr>
+</table>
+
+<div class="callout callout-warning">
+  <div class="callout-title">⚠️ $\gamma$ 和 $\lambda$ 的交互效果</div>
+  <p>GAE 中实际的衰减因子是 $\gamma\lambda$。这意味着：</p>
+  <ul>
+    <li>$\gamma = 0.99, \lambda = 0.95$：实际衰减 $0.9405$ → 有效视野约 17 步</li>
+    <li>$\gamma = 0.99, \lambda = 0.99$：实际衰减 $0.9801$ → 有效视野约 50 步</li>
+    <li>$\gamma = 0.999, \lambda = 0.95$：实际衰减 $0.94905$ → 有效视野约 20 步</li>
+  </ul>
+  <p>如果任务需要长期规划，需要 $\gamma$ 和 $\lambda$ <strong>同时</strong>较大。只增大 $\gamma$ 而 $\lambda$ 较小，优势估计仍然是短视的。</p>
+</div>
+
+<h3 id="s7-5">7.5 Entropy 系数 ($c_2$)</h3>
+
+<p>Entropy 系数控制探索程度。它的最优值高度依赖于任务：</p>
+
+<table>
+  <tr><th>场景</th><th>推荐 $c_2$</th><th>理由</th></tr>
+  <tr><td>CartPole（简单离散）</td><td>0.0</td><td>任务简单，不需要额外探索</td></tr>
+  <tr><td>Atari 游戏</td><td>0.01</td><td>标准默认值</td></tr>
+  <tr><td>连续控制（MuJoCo）</td><td>0.0 ~ 0.001</td><td>高斯噪声已提供探索</td></tr>
+  <tr><td>复杂探索（稀疏奖励）</td><td>0.01 ~ 0.05</td><td>需要更多随机探索</td></tr>
+  <tr><td>多智能体博弈</td><td>0.01 ~ 0.03</td><td>防止过早收敛到确定性策略</td></tr>
+</table>
+
+<h4>监控 entropy 的变化</h4>
+
+<p>训练过程中的 entropy 变化可以帮助诊断问题：</p>
+<ul>
+  <li><strong>Entropy 稳定下降</strong>：正常，策略在逐渐变得更确定</li>
+  <li><strong>Entropy 急剧下降到 0</strong>：策略过早坍缩，可能需要增加 $c_2$ 或降低学习率</li>
+  <li><strong>Entropy 不下降</strong>：策略没有在学习，检查 reward signal 是否足够</li>
+  <li><strong>Entropy 波动</strong>：训练不稳定，考虑减小学习率或 clip_range</li>
+</ul>
+
+<h3 id="s7-6">7.6 常见 Failure Modes 诊断</h3>
+
+<p>当 PPO 训练不成功时，以下是最常见的问题及其诊断方法：</p>
+
+<h4>Failure Mode 1: 策略崩溃 (Policy Collapse)</h4>
+
+<p><strong>症状</strong>：reward 突然大幅下降，且无法恢复</p>
+<p><strong>诊断指标</strong>：approx_kl 突然变大（> 0.1），clip_fraction 接近 1</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+  <li>降低学习率</li>
+  <li>减小 clip_range</li>
+  <li>增加 n_steps（更稳定的 advantage 估计）</li>
+  <li>减少 n_epochs</li>
+</ul>
+
+<h4>Failure Mode 2: 学习停滞 (Plateau)</h4>
+
+<p><strong>症状</strong>：reward 达到某个水平后不再提升</p>
+<p><strong>诊断指标</strong>：entropy 很低但 reward 未达最优</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+  <li>增加 entropy 系数，鼓励更多探索</li>
+  <li>使用更大的网络</li>
+  <li>检查 reward shaping 是否有误导</li>
+  <li>增加训练总步数</li>
+</ul>
+
+<h4>Failure Mode 3: 高方差 (High Variance)</h4>
+
+<p><strong>症状</strong>：reward 曲线波动剧烈，多次实验结果差异大</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+  <li>增加 n_steps 和 batch_size</li>
+  <li>使用更多并行环境</li>
+  <li>增加 n_epochs（更充分利用数据）</li>
+  <li>确保 advantage normalization 开启</li>
+</ul>
+
+<h4>Failure Mode 4: Value Function 不准确</h4>
+
+<p><strong>症状</strong>：value_loss 始终很大，explained_variance 接近 0 或为负</p>
+<p><strong>解决方案</strong>：</p>
+<ul>
+  <li>增大 Critic 网络容量</li>
+  <li>增加 value_coef（$c_1$）</li>
+  <li>使用独立的 Critic 网络</li>
+  <li>降低 $\gamma$（减小 value function 需要预测的范围）</li>
+</ul>
+
+<h3 id="s7-7">7.7 实战 Checklist</h3>
+
+<p>当你开始一个新的 PPO 训练任务时，按照以下 checklist 依次检查：</p>
+
+<ul class="checklist">
+  <li><strong>环境验证</strong>：随机策略能否正常运行？观测和奖励范围是否合理？</li>
+  <li><strong>观测归一化</strong>：是否使用了 VecNormalize 或手动归一化？</li>
+  <li><strong>奖励范围</strong>：奖励值是否在合理范围内（通常 [-10, 10]）？是否需要 reward normalization？</li>
+  <li><strong>默认超参数启动</strong>：先用 SB3 默认参数跑一次基线</li>
+  <li><strong>TensorBoard 监控</strong>：policy_loss, value_loss, entropy, approx_kl, clip_fraction 都正常？</li>
+  <li><strong>多个随机种子</strong>：至少 3-5 个种子，确认结果的一致性</li>
+  <li><strong>学习率调整</strong>：基线效果不好时，首先尝试调学习率</li>
+  <li><strong>网络容量</strong>：任务复杂时增大隐藏层（128 → 256 → 512）</li>
+  <li><strong>n_steps 调整</strong>：如果需要长期规划，增大 n_steps</li>
+  <li><strong>训练时间</strong>：确保总训练步数足够（连续控制通常需要 1M+ 步）</li>
+</ul>
+
+<div class="callout callout-tip">
+  <div class="callout-title">💡 SB3 推荐起始参数</div>
+  <p>对于大多数连续控制任务：</p>
+  <table>
+    <tr><th>参数</th><th>推荐值</th></tr>
+    <tr><td>learning_rate</td><td>3e-4</td></tr>
+    <tr><td>n_steps</td><td>2048</td></tr>
+    <tr><td>batch_size</td><td>64</td></tr>
+    <tr><td>n_epochs</td><td>10</td></tr>
+    <tr><td>gamma</td><td>0.99</td></tr>
+    <tr><td>gae_lambda</td><td>0.95</td></tr>
+    <tr><td>clip_range</td><td>0.2</td></tr>
+    <tr><td>ent_coef</td><td>0.0</td></tr>
+    <tr><td>vf_coef</td><td>0.5</td></tr>
+    <tr><td>max_grad_norm</td><td>0.5</td></tr>
+    <tr><td>net_arch</td><td>[256, 256]</td></tr>
+    <tr><td>activation_fn</td><td>Tanh</td></tr>
+  </table>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- APPENDIX A: PPO 论文解读 -->
+<!-- ============================================================ -->
+<h2 id="appA">附录 A：PPO 论文逐段解读</h2>
+
+<p>论文全称：<em>"Proximal Policy Optimization Algorithms"</em> (Schulman, Wolski, Dhariwal, Radford, Klimov, 2017)</p>
+
+<h3>Abstract 解读</h3>
+
+<p>论文开篇指出，策略梯度方法在数据效率和鲁棒性方面需要改进。作者提出了一族新的策略梯度方法，在被信赖域约束和一阶优化方法之间取得平衡。核心创新是使用 <strong>clipped surrogate objective</strong>，通过多轮 mini-batch SGD 来近似 trust region 更新。</p>
+
+<h3>Section 1: Introduction</h3>
+
+<p>论文列举了当时 RL 算法的几个痛点：</p>
+<ul>
+  <li>Q-learning (DQN)：难以用于连续动作空间，且使用函数逼近时缺乏理论保证</li>
+  <li>Vanilla Policy Gradient (REINFORCE)：高方差，数据利用率低</li>
+  <li>TRPO：效果好但实现复杂（需要二阶方法），且难以与参数共享或辅助损失结合</li>
+</ul>
+
+<p>PPO 的目标是：保持 TRPO 的稳定性，同时使用一阶优化，让实现更简单、通用性更强。</p>
+
+<h3>Section 2: Background</h3>
+
+<p>论文回顾了策略梯度和 TRPO 的基础。关键公式：</p>
+
+$$L^{CPI}(\theta) = \hat{\mathbb{E}}_t\left[\frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}\hat{A}_t\right] = \hat{\mathbb{E}}_t\left[r_t(\theta)\hat{A}_t\right]$$
+
+<p>指出 $L^{CPI}$ 如果不加约束地最大化，可能导致过大的策略更新。</p>
+
+<h3>Section 3: Clipped Surrogate Objective</h3>
+
+<p>这是论文的核心贡献。提出两种 PPO 变体：</p>
+
+<h4>PPO-Clip（Section 3.1）</h4>
+
+$$L^{CLIP}(\theta) = \hat{\mathbb{E}}_t\left[\min(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t)\right]$$
+
+<p>论文中的 Figure 1 展示了不同 $\hat{A}$ 符号下的目标函数形状。$\min$ 操作形成了一个悲观下界（pessimistic bound）。</p>
+
+<h4>PPO-Penalty（Section 3.2）</h4>
+
+<p>使用自适应 KL 惩罚系数。论文指出在实验中 PPO-Clip 通常优于 PPO-Penalty。</p>
+
+<h3>Section 4: Algorithm</h3>
+
+<p>论文描述了完整的算法流程：</p>
+<ol>
+  <li>使用多个并行 actor 收集数据</li>
+  <li>在收集的数据上运行多轮 epoch 的 mini-batch SGD</li>
+  <li>总损失包含策略目标、价值函数损失和熵奖励</li>
+</ol>
+
+<p>论文还提到两种架构选择：</p>
+<ul>
+  <li><strong>共享参数</strong>：策略和价值函数共享特征提取层，需要组合损失</li>
+  <li><strong>独立网络</strong>：策略和价值函数完全独立</li>
+</ul>
+
+<h3>Section 5 & 6: Experiments</h3>
+
+<p>论文在以下环境中测试了 PPO：</p>
+<ul>
+  <li><strong>连续控制</strong>（MuJoCo）：与 TRPO、CEM、A2C 等对比</li>
+  <li><strong>Atari 游戏</strong>：与 A2C、ACER 对比</li>
+</ul>
+
+<p>关键实验结果：</p>
+<ul>
+  <li>PPO-Clip 在大多数环境中优于或持平其他方法</li>
+  <li>PPO 对超参数不太敏感（$\epsilon$ 在 0.1~0.3 范围内效果相近）</li>
+  <li>KL penalty 版本通常不如 clipping 版本</li>
+</ul>
+
+<div class="callout callout-tip">
+  <div class="callout-title">💡 论文中未解答的问题</div>
+  <ul>
+    <li>PPO 为什么有效？clipping 提供了什么理论保证？（至今仍是开放问题）</li>
+    <li>最优的 $\epsilon$ 是否与环境有关？如何自适应选择？</li>
+    <li>PPO 在哪些场景下会失败？（后续工作有讨论）</li>
+  </ul>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- APPENDIX B: 算法对比 -->
+<!-- ============================================================ -->
+<h2 id="appB">附录 B：PPO vs 其他算法对比</h2>
+
+<p>本附录对比 PPO 与其他主流深度强化学习算法，帮助你在实际项目中选择合适的算法。</p>
+
+<h3>B.1 算法全面对比</h3>
+
+<table>
+  <tr>
+    <th>特性</th>
+    <th>PPO</th>
+    <th>TRPO</th>
+    <th>SAC</th>
+    <th>TD3</th>
+  </tr>
+  <tr>
+    <td>类型</td>
+    <td>On-policy</td>
+    <td>On-policy</td>
+    <td>Off-policy</td>
+    <td>Off-policy</td>
+  </tr>
+  <tr>
+    <td>动作空间</td>
+    <td>离散 + 连续</td>
+    <td>离散 + 连续</td>
+    <td>连续</td>
+    <td>连续</td>
+  </tr>
+  <tr>
+    <td>采样效率</td>
+    <td>中</td>
+    <td>中</td>
+    <td>⭐ 高</td>
+    <td>⭐ 高</td>
+  </tr>
+  <tr>
+    <td>训练稳定性</td>
+    <td>⭐ 高</td>
+    <td>⭐ 高</td>
+    <td>高</td>
+    <td>中高</td>
+  </tr>
+  <tr>
+    <td>实现复杂度</td>
+    <td>⭐ 低</td>
+    <td>高（二阶方法）</td>
+    <td>中</td>
+    <td>中</td>
+  </tr>
+  <tr>
+    <td>超参数敏感度</td>
+    <td>⭐ 低</td>
+    <td>低</td>
+    <td>中</td>
+    <td>中</td>
+  </tr>
+  <tr>
+    <td>并行化</td>
+    <td>⭐ 优秀</td>
+    <td>优秀</td>
+    <td>有限</td>
+    <td>有限</td>
+  </tr>
+  <tr>
+    <td>Replay Buffer</td>
+    <td>不需要</td>
+    <td>不需要</td>
+    <td>需要</td>
+    <td>需要</td>
+  </tr>
+  <tr>
+    <td>随机策略</td>
+    <td>✅</td>
+    <td>✅</td>
+    <td>✅（最大熵）</td>
+    <td>❌（确定性）</td>
+  </tr>
+  <tr>
+    <td>多智能体扩展</td>
+    <td>⭐ MAPPO</td>
+    <td>有限</td>
+    <td>MASAC</td>
+    <td>MATD3</td>
+  </tr>
+  <tr>
+    <td>RLHF 适用</td>
+    <td>⭐ ChatGPT</td>
+    <td>可以</td>
+    <td>理论上可以</td>
+    <td>不适用</td>
+  </tr>
+</table>
+
+<h3>B.2 何时选择 PPO？</h3>
+
+<div class="callout callout-tip">
+  <div class="callout-title">💡 算法选择决策树</div>
+  <ol>
+    <li><strong>离散动作空间？</strong> → PPO 或 DQN</li>
+    <li><strong>连续动作 + 需要大量并行？</strong> → PPO（on-policy 天然支持并行）</li>
+    <li><strong>连续动作 + 样本珍贵？</strong> → SAC（off-policy 更样本高效）</li>
+    <li><strong>需要确定性策略？</strong> → TD3</li>
+    <li><strong>多智能体？</strong> → MAPPO</li>
+    <li><strong>RLHF？</strong> → PPO</li>
+    <li><strong>不确定选什么？</strong> → PPO（最安全的默认选择）</li>
+  </ol>
+</div>
+
+<h3>B.3 PPO vs SAC 深度对比</h3>
+
+<p>PPO 和 SAC 是当前最流行的两个算法，各有所长：</p>
+
+<div class="comparison-grid">
+  <div class="comparison-card">
+    <h4>PPO 的优势</h4>
+    <ul>
+      <li>⭐ 实现简单，bug 少</li>
+      <li>⭐ 天然支持离散和连续动作</li>
+      <li>⭐ 容易并行化（GPU 利用率高）</li>
+      <li>⭐ 对超参数不敏感</li>
+      <li>⭐ 多智能体扩展成熟（MAPPO）</li>
+    </ul>
+  </div>
+  <div class="comparison-card">
+    <h4>SAC 的优势</h4>
+    <ul>
+      <li>⭐ 样本效率更高（off-policy + replay buffer）</li>
+      <li>⭐ 最大熵框架天然鼓励探索</li>
+      <li>⭐ 自动调节温度参数 α</li>
+      <li>⭐ 对 reward scale 不敏感</li>
+      <li>⭐ 在复杂连续控制中常更优</li>
+    </ul>
+  </div>
+</div>
+
+<h3>B.4 性能基准参考</h3>
+
+<p>以下是不同算法在 MuJoCo 环境中的典型性能（1M 步训练后）：</p>
+
+<table>
+  <tr><th>环境</th><th>PPO</th><th>SAC</th><th>TD3</th></tr>
+  <tr><td>HalfCheetah-v4</td><td>~5000</td><td>~11000</td><td>~9500</td></tr>
+  <tr><td>Hopper-v4</td><td>~2500</td><td>~3200</td><td>~3000</td></tr>
+  <tr><td>Walker2d-v4</td><td>~3500</td><td>~4500</td><td>~4000</td></tr>
+  <tr><td>Ant-v4</td><td>~3000</td><td>~5500</td><td>~4500</td></tr>
+</table>
+
+<div class="callout callout-info">
+  <div class="callout-title">📘 注意</div>
+  <p>上表数字仅供参考，实际性能高度依赖于超参数、随机种子和训练时间。SAC 和 TD3 在给定更多训练步数后通常能达到更高分数（因为 off-policy 的样本效率优势），但 PPO 在训练稳定性和实现简洁性方面始终有优势。</p>
+</div>
+
+
+<!-- ============================================================ -->
+<!-- REFERENCES -->
+<!-- ============================================================ -->
+<h2 id="references">参考文献</h2>
+
+<ol>
+  <li><strong>Schulman, J., et al.</strong> (2017). <em>Proximal Policy Optimization Algorithms.</em> arXiv:1707.06347. [PPO 原论文]</li>
+  <li><strong>Schulman, J., et al.</strong> (2015). <em>Trust Region Policy Optimization.</em> ICML 2015. [TRPO]</li>
+  <li><strong>Schulman, J., et al.</strong> (2015). <em>High-Dimensional Continuous Control Using Generalized Advantage Estimation.</em> arXiv:1506.02438. [GAE]</li>
+  <li><strong>Williams, R. J.</strong> (1992). <em>Simple Statistical Gradient-Following Algorithms for Connectionist Reinforcement Learning.</em> Machine Learning. [REINFORCE]</li>
+  <li><strong>Mnih, V., et al.</strong> (2016). <em>Asynchronous Methods for Deep Reinforcement Learning.</em> ICML 2016. [A3C/A2C]</li>
+  <li><strong>Haarnoja, T., et al.</strong> (2018). <em>Soft Actor-Critic: Off-Policy Maximum Entropy Deep RL with a Stochastic Actor.</em> ICML 2018. [SAC]</li>
+  <li><strong>Fujimoto, S., et al.</strong> (2018). <em>Addressing Function Approximation Error in Actor-Critic Methods.</em> ICML 2018. [TD3]</li>
+  <li><strong>Yu, C., et al.</strong> (2022). <em>The Surprising Effectiveness of PPO in Cooperative Multi-Agent Games.</em> NeurIPS 2022. [MAPPO]</li>
+  <li><strong>Andrychowicz, M., et al.</strong> (2021). <em>What Matters In On-Policy Reinforcement Learning?</em> arXiv:2006.05990. [PPO 实现细节]</li>
+  <li><strong>Engstrom, L., et al.</strong> (2020). <em>Implementation Matters in Deep Policy Gradients.</em> ICLR 2020. [PPO code-level optimizations]</li>
+  <li><strong>Raffin, A., et al.</strong> (2021). <em>Stable-Baselines3: Reliable Reinforcement Learning Implementations.</em> JMLR 2021. [SB3]</li>
+  <li><strong>Ng, A., et al.</strong> (1999). <em>Policy Invariance Under Reward Transformations.</em> ICML 1999. [Reward Shaping]</li>
+  <li><strong>Kakade, S. & Langford, J.</strong> (2002). <em>Approximately Optimal Approximate Reinforcement Learning.</em> ICML 2002. [CPI]</li>
+  <li><strong>Sutton, R. S. & Barto, A. G.</strong> (2018). <em>Reinforcement Learning: An Introduction.</em> MIT Press. [RL 教科书]</li>
+</ol>
+
+</div><!-- end main-content -->
+
+<!-- ============================================================ -->
+<!-- JavaScript -->
+<!-- ============================================================ -->
 <script>
-// Theme Toggle
+// ===== Theme Toggle =====
 function toggleTheme() {
-  const body = document.body;
-  const btn = document.querySelector('.theme-toggle');
-  if (body.getAttribute('data-theme') === 'dark') {
-    body.removeAttribute('data-theme');
-    btn.textContent = '🌙 暗色';
-    localStorage.setItem('theme', 'light');
-  } else {
-    body.setAttribute('data-theme', 'dark');
-    btn.textContent = '☀️ 亮色';
-    localStorage.setItem('theme', 'dark');
-  }
-}
-if (localStorage.getItem('theme') === 'dark') {
-  document.body.setAttribute('data-theme', 'dark');
-  document.querySelector('.theme-toggle').textContent = '☀️ 亮色';
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem('ppo-theme', next);
 }
 
-// Copy Button
+// Load saved theme
+(function() {
+  const saved = localStorage.getItem('ppo-theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+
+// ===== Code Copy =====
 function copyCode(btn) {
-  const pre = btn.closest('pre');
-  const code = pre.querySelector('code') || pre;
-  const text = code.textContent.replace('复制', '').trim();
+  const code = btn.closest('.code-container').querySelector('code');
+  const text = code.innerText;
   navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
     btn.textContent = '✓ 已复制';
-    setTimeout(() => btn.textContent = '复制', 2000);
+    btn.style.color = 'var(--thm-border)';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.color = '';
+    }, 2000);
   });
 }
 
-// Reading Progress
-window.addEventListener('scroll', () => {
-  const docH = document.documentElement.scrollHeight - window.innerHeight;
-  const pct = Math.min(window.scrollY / docH * 100, 100);
-  document.getElementById('progressBar').style.width = pct + '%';
+// ===== Reading Progress Bar =====
+window.addEventListener('scroll', function() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+  document.getElementById('progressBar').style.width = progress + '%';
 });
 
-// Active Sidebar
-const secs = document.querySelectorAll('h1[id], h2[id]');
-const navs = document.querySelectorAll('.sidebar nav a');
-const obs = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      navs.forEach(n => n.classList.remove('active'));
-      const a = document.querySelector('.sidebar nav a[href="#' + e.target.id + '"]');
-      if (a) a.classList.add('active');
-    }
-  });
-}, { rootMargin: '-80px 0px -70% 0px' });
-secs.forEach(s => obs.observe(s));
+// ===== Active Sidebar Link =====
+(function() {
+  const sections = document.querySelectorAll('h2[id], h3[id]');
+  const navLinks = document.querySelectorAll('.sidebar nav a');
 
-// KaTeX
-document.addEventListener("DOMContentLoaded", function() {
-  if (typeof renderMathInElement !== 'undefined') {
-    renderMathInElement(document.body, {
-      delimiters: [
-        {left: '$$', right: '$$', display: true},
-        {left: '\\[', right: '\\]', display: true},
-        {left: '$', right: '$', display: false},
-        {left: '\\(', right: '\\)', display: false}
-      ],
-      throwOnError: false
+  function updateActiveLink() {
+    let current = '';
+    const scrollPos = window.scrollY + 100;
+
+    sections.forEach(section => {
+      if (section.offsetTop <= scrollPos) {
+        current = section.id;
+      }
+    });
+
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) {
+        link.classList.add('active');
+        // Scroll sidebar to keep active link visible
+        const sidebar = document.getElementById('sidebar');
+        const linkRect = link.getBoundingClientRect();
+        const sidebarRect = sidebar.getBoundingClientRect();
+        if (linkRect.top < sidebarRect.top || linkRect.bottom > sidebarRect.bottom) {
+          link.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+      }
     });
   }
+
+  window.addEventListener('scroll', updateActiveLink);
+  updateActiveLink();
+})();
+
+// ===== Mobile Sidebar Toggle =====
+document.addEventListener('click', function(e) {
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.querySelector('.menu-toggle');
+  if (sidebar.classList.contains('open') &&
+      !sidebar.contains(e.target) &&
+      !toggle.contains(e.target)) {
+    sidebar.classList.remove('open');
+  }
 });
 
-// Mobile sidebar close
+// ===== Close sidebar on nav click (mobile) =====
 document.querySelectorAll('.sidebar nav a').forEach(link => {
   link.addEventListener('click', () => {
-    if (window.innerWidth <= 900) document.getElementById('sidebar').classList.remove('open');
+    if (window.innerWidth <= 900) {
+      document.getElementById('sidebar').classList.remove('open');
+    }
   });
 });
 </script>
+
 </body>
 </html>
