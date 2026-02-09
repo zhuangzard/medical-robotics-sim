@@ -1,6 +1,8 @@
 # Python
 __pycache__/
+**/__pycache__/
 *.py[cod]
+*.pyc
 *$py.class
 *.so
 .Python
@@ -93,6 +95,10 @@ results/**/*.pkl
 # Cache
 .cache/
 .pytest_cache/
+
+# Specific large directories to ignore
+research/dynamical-gnn/source/.venv/
+firebase-debug.log
 
 # MuJoCo
 *.mjb
