@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 2: Learning in High Dimensions | GDL 学习指南</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+  <style>
+    /* 增强区块样式 */
+    .enrichment-block {
+      margin: 2rem 0;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+      border-left: 4px solid #3b82f6;
+      border-radius: 0 12px 12px 0;
+    }
+    [data-theme="dark"] .enrichment-block {
+      background: linear-gradient(135deg, #1a2332 0%, #1e293b 100%);
+    }
+    .enrichment-qa { margin-bottom: 1.5rem; }
+    .qa-pair { margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.5); border-radius: 8px; }
+    [data-theme="dark"] .qa-pair { background: rgba(0,0,0,0.2); }
+    .question { font-weight: 600; color: #2563eb; margin-bottom: 0.5rem; }
+    [data-theme="dark"] .question { color: #60a5fa; }
+    .answer { line-height: 1.8; }
+    .enrichment-intuition { margin: 1rem 0; padding: 1rem; background: rgba(251,191,36,0.1); border-radius: 8px; border-left: 3px solid #f59e0b; }
+    .enrichment-application { margin: 1rem 0; padding: 1rem; background: rgba(16,185,129,0.1); border-radius: 8px; border-left: 3px solid #10b981; }
+  </style>
+</head>
+<body>
+  <div class="progress-bar"></div>
+
+  <header class="header">
+    <div class="header-title"><a href="../index.html">📐 GDL 学习指南</a></div>
+    <div class="header-nav">
+      <a href="../chapter1/index.html">← 上一章</a>
+      <a href="../index.html">目录</a>
+      <a href="../chapter3/index.html">下一章 →</a>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+  </header>
+
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+  <nav class="sidebar">
+    <h3>Chapter 2</h3>
+    <a href="#overview">概述</a>
+    <a href="#setup">学习问题的形式化</a>
+    <a href="#supervised" class="sub">监督学习设置</a>
+    <a href="#risk" class="sub">经验风险 vs 泛化风险</a>
+    <a href="#interpolation" class="sub">插值体制</a>
+    <a href="#sec2-1">2.1 归纳偏置与函数正则性</a>
+    <a href="#universal-approx" class="sub">万能逼近定理</a>
+    <a href="#complexity-measure" class="sub">复杂度度量</a>
+    <a href="#regularization" class="sub">正则化</a>
+    <a href="#implicit-reg" class="sub">隐式正则化</a>
+    <a href="#sec2-2">2.2 维度灾难</a>
+    <a href="#lipschitz" class="sub">Lipschitz 类的灾难</a>
+    <a href="#sobolev" class="sub">Sobolev 类的灾难</a>
+    <a href="#volume-concentration" class="sub">体积集中现象</a>
+    <a href="#geometric-intuition" class="sub">几何直觉</a>
+    <a href="#breaking-curse">2.3 打破维度灾难</a>
+    <a href="#fc-nets" class="sub">全连接网络的方法</a>
+    <a href="#low-dim-proj" class="sub">低维投影假设</a>
+    <a href="#limitations" class="sub">局限性</a>
+    <a href="#geometric-priors">2.4 走向几何先验</a>
+    <a href="#structure-exploitation" class="sub">利用结构</a>
+    <a href="#preview-ch3" class="sub">Chapter 3 预览</a>
+    <a href="#code-examples">代码示例</a>
+    <a href="#curse-demo" class="sub">维度灾难演示</a>
+    <a href="#mlp-demo" class="sub">MLP 万能逼近</a>
+    <a href="#bias-demo" class="sub">归纳偏置实验</a>
+    <a href="#physrobot">PhysRobot 关联</a>
+    <a href="#exercises">练习题</a>
+    <h3>导航</h3>
+    <a href="../index.html">📚 总目录</a>
+    <a href="../chapter1/index.html">← Ch.1 引言</a>
+    <a href="../chapter3/index.html">→ Ch.3 几何先验</a>
+  </nav>
+
+  <main class="main">
+    <h1>Chapter 2: Learning in High Dimensions<br><span style="font-size:0.6em;color:var(--text-secondary)">高维学习 — 为什么我们需要几何先验</span></h1>
+
+    <div class="callout callout-info" id="overview">
+      <h4>本章概述</h4>
+      <p>本章是全书的<strong>动机章</strong>——回答一个根本问题：<em>为什么</em>我们需要几何先验？通过严格的数学分析，我们将看到：</p>
+      <ul>
+        <li>在高维空间中学习<strong>通用函数</strong>需要指数级的样本——<strong>维度灾难</strong></li>
+        <li><strong>万能逼近定理</strong>保证了表达能力，但<em>不</em>保证学习效率</li>
+        <li><strong>归纳偏置</strong>（通过正则性假设）是克服维度灾难的唯一途径</li>
+        <li>全连接网络可以通过稀疏正则化部分缓解灾难，但假设太强</li>
+        <li>唯一现实的出路：利用数据的<strong>几何结构</strong>——引出 Chapter 3</li>
+      </ul>
+      <p><strong>预计阅读时间</strong>：2 小时 &nbsp;|&nbsp; <strong>先修知识</strong>：概率论基础、函数分析入门</p>
+    </div>
+
+    <div class="enrichment-block">
+      <div class="enrichment-qa">
+        <h4>🔍 深入理解</h4>
+        
+        <div class="qa-pair">
+          <p class="question">❓ 小白提问：本章说的"几何先验"到底是什么意思？和我在其他机器学习课程中学的"先验"有什么区别？</p>
+          <div class="answer">
+            <p>💡 专家解答：这是一个非常好的问题，涉及机器学习中"先验"概念的不同层次。</p>
+            <p>在传统贝叶斯统计中，<strong>先验</strong>指的是在看到数据之前对参数的信念分布，比如"我认为这个权重应该接近零，服从正态分布 $\mathcal{N}(0, \sigma^2)$"。这是<strong>参数层面</strong>的先验。</p>
+            <p>而<strong>几何先验</strong>是更高层次的——它关注的是<strong>函数空间</strong>的结构。具体来说：</p>
+            <ul>
+              <li><strong>传统先验</strong>："我认为好的模型参数应该满足某种分布"（如权重衰减对应高斯先验）</li>
+              <li><strong>几何先验</strong>："我认为好的函数应该满足某种对称性"（如图像分类函数应该对平移不变）</li>
+            </ul>
+            <p>几何先验的强大之处在于它直接约束了<strong>函数的行为</strong>，而不仅仅是参数的数值。例如，"平移不变性"这个几何先验告诉我们：$f(x) = f(x + \delta)$ 对所有平移 $\delta$ 成立。这比简单地说"权重应该小"要强得多——它实际上定义了一个<strong>更小的函数类</strong>，从而从根本上缓解维度灾难。</p>
+            <p>类比一下：传统先验像是说"我觉得这本书的字数应该在5万左右"；几何先验像是说"我知道这本书是一本推理小说，所以它应该有谋杀案、侦探和真相揭露这样的结构"。后者提供的约束要强得多！</p>
+          </div>
+        </div>
+
+        <div class="qa-pair">
+          <p class="question">❓ 小白提问：为什么这一章要花这么大篇幅讨论"维度灾难"？现在计算机这么强大，多收集些数据不就行了吗？</p>
+          <div class="answer">
+            <p>💡 专家解答：这个直觉是可以理解的，但问题的关键在于"指数增长"这个词的恐怖之处。</p>
+            <p>让我们做个具体计算。假设我们要学习一个定义在 $d$ 维空间上的函数，需要在每个维度上采样 10 个点才能获得足够的覆盖（这已经是非常粗糙的精度）。那么总共需要的样本数是 $10^d$：</p>
+            <ul>
+              <li>$d = 2$（平面）：$10^2 = 100$ 个样本 ✅ 完全可行</li>
+              <li>$d = 3$（3D空间）：$10^3 = 1000$ 个样本 ✅ 还行</li>
+              <li>$d = 10$：$10^{10} = 100$ 亿个样本 ⚠️ 已经很困难</li>
+              <li>$d = 100$（MNIST 图像是 784 维！）：$10^{100}$ 个样本 ❌ 比宇宙中的原子数还多</li>
+            </ul>
+            <p>即使是 Google、Facebook 这样的公司，拥有的图像数据也就是百万到十亿级别（$10^6$ 到 $10^9$），远远不够覆盖 $10^{100}$ 的需求。这不是"多收集数据"能解决的——这是<strong>物理上不可能</strong>的。</p>
+            <p>而且更糟糕的是：计算能力的增长也帮不上忙。即使你有无限强大的GPU，如果根本没有足够的训练数据，模型也无法泛化到未见过的区域。这就是为什么我们<strong>必须</strong>利用某种结构或对称性来打破这个诅咒。</p>
+          </div>
+        </div>
+
+        <div class="qa-pair">
+          <p class="question">❓ 小白提问：本章提到"万能逼近定理不保证学习效率"——但我在其他教材中看到万能逼近定理被当作深度学习成功的理论基础，这是怎么回事？</p>
+          <div class="answer">
+            <p>💡 专家解答：这是一个常见的误解，反映了理论与实践之间的重要差距。让我详细解释一下。</p>
+            <p><strong>万能逼近定理说了什么</strong>：对于任何连续函数 $f$，存在一个足够大的神经网络可以以任意精度逼近它。这是一个<strong>存在性</strong>结果——它保证了表达能力。</p>
+            <p><strong>万能逼近定理没说什么</strong>：</p>
+            <ol>
+              <li><strong>网络需要多大</strong>：在最坏情况下，隐藏层的宽度可能需要随着维度指数增长。</li>
+              <li><strong>需要多少数据</strong>：即使网络能表达函数 $f$，你也需要足够的样本才能找到正确的权重。</li>
+              <li><strong>能否高效训练</strong>：梯度下降是否能在合理时间内找到好的解？还是会卡在局部最优？</li>
+            </ol>
+            <p>用一个类比：万能逼近定理就像说"只要字母表够大，你可以写出任何故事"。这当然是对的——但它没告诉你：</p>
+            <ul>
+              <li>写《哈利·波特》需要多少个字母（可能需要几百万个）</li>
+              <li>你需要读多少本书才能学会写作（样本复杂度）</li>
+              <li>一个猴子随机敲键盘是否能写出《哈利·波特》（优化难度）</li>
+            </ul>
+            <p>所以万能逼近定理是<strong>必要但不充分</strong>的：它告诉我们神经网络"能做什么"，但没告诉我们"怎么高效地做"。这正是本章要解决的核心问题——通过归纳偏置和几何先验来实现<strong>高效学习</strong>。</p>
+          </div>
+        </div>
+
+        <div class="qa-pair">
+          <p class="question">❓ 小白提问：Chapter 2 的核心结论是什么？如果让我用一句话总结，应该怎么说？</p>
+          <div class="answer">
+            <p>💡 专家解答：非常好的问题！如果用一句话总结 Chapter 2，我会说：</p>
+            <p><strong>"在高维空间中，没有结构假设的通用学习是不可能的——我们必须利用数据的几何性质。"</strong></p>
+            <p>更详细地说，本章建立了以下逻辑链条：</p>
+            <ol>
+              <li><strong>问题陈述</strong>：现代机器学习处理的是高维输入空间（图像、文本、物理仿真等）</li>
+              <li><strong>第一个障碍</strong>：在高维空间中学习通用函数需要指数级样本（维度灾难）</li>
+              <li><strong>尝试1</strong>：用万能逼近定理？不行，它只保证表达能力，不保证学习效率</li>
+              <li><strong>尝试2</strong>：用更强的光滑性假设（Sobolev 类）？不行，除非光滑度随维度增长（不现实）</li>
+              <li><strong>尝试3</strong>：用稀疏性/低维投影假设？部分有效，但不适用于大多数实际问题（如图像）</li>
+              <li><strong>唯一出路</strong>：利用数据的<strong>几何结构</strong>——对称性、不变性、局部性等</li>
+            </ol>
+            <p>这个结论不仅是理论上的——它直接解释了为什么 CNN 在图像上成功（利用平移不变性），为什么 Transformer 在序列上成功（利用置换等变性），以及为什么 GNN 在图上成功（利用图结构）。所有成功的现代架构都在利用某种几何先验，这不是巧合——这是<strong>数学上的必然</strong>。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="enrichment-intuition">
+        <h4>🎯 直觉理解</h4>
+        <p><strong>维度灾难的日常类比</strong>：想象你要在一个黑暗的房间里找到一个小球。</p>
+        <ul>
+          <li>如果是一条线（1维）：你只需要左右移动，很容易找到</li>
+          <li>如果是一个房间（3维）：你需要探索前后、左右、上下，困难多了</li>
+          <li>如果是100维空间：你需要在100个"方向"上搜索——这个空间太大了，你几乎不可能碰巧找到那个球</li>
+        </ul>
+        <p>除非...你知道一些关于球位置的信息！比如"球在地板上"（降低到2维）、"球在角落附近"（利用结构）、"球在所有镜像房间的相同位置"（利用对称性）。这就是几何先验的作用——它把"大海捞针"变成了"在指定区域寻找"。</p>
+      </div>
+
+      <div class="enrichment-application">
+        <h4>🏥 医疗机器人应用</h4>
+        <p>在医疗机器人手术仿真（PhysRobot）中，维度灾难无处不在：</p>
+        <ul>
+          <li><strong>组织建模</strong>：软组织的形变可以用有限元网格表示，每个节点有3个自由度（xyz位置）。对于1000个节点的网格，状态空间是3000维——如果不利用物理约束（如连续性、局部性、材料对称性），根本无法学习准确的形变模型。</li>
+          <li><strong>手术规划</strong>：机器人手臂有7个关节角度，加上手术工具的姿态，一个时间步的配置空间就超过10维。要规划一个100步的手术轨迹，搜索空间是 $10^{100}$ 维！必须利用运动学约束、碰撞避免、任务目标等几何先验。</li>
+          <li><strong>力反馈控制</strong>：触觉传感器可能有数百个通道，直接处理原始信号会遇到维度灾难。但如果我们知道力的分布应该具有空间平滑性和对称性，就可以用少量参数建模。</li>
+        </ul>
+        <p>总结：医疗机器人系统的成功依赖于正确识别和利用物理世界的几何结构——这正是几何深度学习的核心思想。</p>
+      </div>
+    </div>
+
+    <!-- ========= 学习问题的形式化 ========= -->
+    <h2 id="setup">学习问题的形式化<br><span style="font-size:0.7em;color:var(--text-secondary)">Formalisation of the Learning Problem</span></h2>
+
+    <h3 id="supervised">监督学习设置</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>监督机器学习，在最简单的形式化中，考虑从底层数据分布 $P$ 中独立同分布抽取的 $N$ 个观测值的集合 $\mathcal{D} = \{(x_i, y_i)\}_{i=1}^N$，其中 $P$ 定义在 $\mathcal{X} \times \mathcal{Y}$ 上。</p>
+        <p>这个设置的<strong>定义性特征</strong>是 $\mathcal{X}$ 是一个<strong>高维空间</strong>：通常假设 $\mathcal{X} = \mathbb{R}^d$，维度 $d$ 很大。</p>
+      </div>
+      <div class="en">
+        Supervised machine learning considers a set of $N$ observations $\mathcal{D} = \{(x_i, y_i)\}_{i=1}^N$ drawn i.i.d. from an underlying data distribution $P$ defined over $\mathcal{X} \times \mathcal{Y}$. The defining feature is that $\mathcal{X}$ is a high-dimensional space.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\mathcal{D} = \{(x_i, y_i)\}_{i=1}^N \sim P(\mathcal{X} \times \mathcal{Y}), \quad \mathcal{X} = \mathbb{R}^d, \; d \gg 1$$
+      <div class="math-explain">
+        <strong>关键要素</strong>：
+        <br>• $\mathcal{X} = \mathbb{R}^d$ — 输入空间（高维）。对于 MNIST 图像：$d = 28 \times 28 = 784$。对于 ImageNet：$d = 224 \times 224 \times 3 = 150{,}528$。
+        <br>• $\mathcal{Y}$ — 标签空间。分类：$\mathcal{Y} = \{1, \ldots, K\}$；回归：$\mathcal{Y} = \mathbb{R}$。
+        <br>• $P$ — 数据的联合分布（未知）。
+        <br>• $N$ — 训练样本数。
+      </div>
+    </div>
+
+    <p>进一步假设标签由未知函数 $f$ 生成：$y_i = f(x_i)$。学习问题归结为使用参数化函数类 $\mathcal{F} = \{f_\theta : \theta \in \Theta\}$ 来估计函数 $f$。</p>
+
+    <div class="math-block">
+      $$\text{目标: 找到 } \tilde{f} \in \mathcal{F} \text{ 使得 } \tilde{f} \approx f$$
+      <div class="math-explain">
+        神经网络是这种参数化函数类的一种常见实现，其中 $\theta \in \Theta$ 对应网络权重。在理想化设置中，标签没有噪声，现代深度学习系统通常在所谓的<strong>插值体制</strong>中运行。
+      </div>
+    </div>
+
+    <div class="enrichment-block">
+      <div class="enrichment-qa">
+        <h4>🔍 深入理解</h4>
+        
+        <div class="qa-pair">
+          <p class="question">❓ 小白提问：为什么要强调"高维"？低维和高维的学习有什么本质区别吗？</p>
+          <div class="answer">
+            <p>💡 专家解答：这是一个触及本章核心的问题。低维和高维学习之间的区别不是量变，而是<strong>质变</strong>。</p>
+            <p>在<strong>低维空间</strong>（比如 $d = 1, 2, 3$）：</p>
+            <ul>
+              <li>我们可以"看见"整个空间——在2D平面上画出函数的图像</li>
+              <li>简单的插值方法（如三次样条）就能很好地工作</li>
+              <li>样本数量的需求随维度<strong>线性或多项式</strong>增长：$N \sim d$ 或 $N \sim d^2$</li>
+              <li>人类的几何直觉大多适用</li>
+            </ul>
+            <p>在<strong>高维空间</strong>（比如 $d \geq 10$）：</p>
+            <ul>
+              <li>我们完全失去了"看见"的能力——100维空间中的球体是什么样的？人脑无法想象</li>
+              <li>传统插值方法完全失效——样本点之间的"空隙"太大了</li>
+              <li>样本数量的需求<strong>指数增长</strong>：$N \sim \exp(d)$——这是灾难性的</li>
+              <li>直觉失效：比如高维球的体积几乎全在表面，最近邻和最远邻距离相同</li>
+            </ul>
+            <p>举个具体例子：假设你要学习一个函数 $f : [0, 1]^d \to \mathbb{R}$，精度要求 0.1。</p>
+            <ul>
+              <li>$d = 1$：需要 10 个样本（每隔 0.1 采样一次）</li>
+              <li>$d = 2$：需要 $10 \times 10 = 100$ 个样本</li>
+              <li>$d = 3$：需要 $10^3 = 1000$ 个样本</li>
+              <li>$d = 100$：需要 $10^{100}$ 个样本——比宇宙原子数还多！</li>
+            </ul>
+            <p>这就是为什么本章反复强调"高维"——因为这不是技术细节，而是根本性的挑战。</p>
+          </div>
+        </div>
+
+        <div class="qa-pair">
+          <p class="question">❓ 小白提问："i.i.d. 假设"在实际应用中总是成立吗？如果不成立会怎样？</p>
+          <div class="answer">
+            <p>💡 专家解答：这是一个非常实际的问题！i.i.d.（独立同分布）假设实际上是一个<strong>理想化的简化</strong>，在现实中经常被违背。</p>
+            <p><strong>i.i.d. 假设的含义</strong>：</p>
+            <ol>
+              <li><strong>独立性</strong>：每个样本的抽取不影响其他样本</li>
+              <li><strong>同分布</strong>：所有样本来自同一个分布 $P$</li>
+            </ol>
+            <p><strong>现实中的违背情况</strong>：</p>
+            <ul>
+              <li><strong>时间序列数据</strong>：今天的股价依赖于昨天的股价——违背独立性</li>
+              <li><strong>医学数据</strong>：同一个病人的多次检查结果相关——违背独立性</li>
+              <li><strong>分布漂移</strong>：训练数据来自2020年，测试数据来自2024年，社会环境已变——违背同分布</li>
+              <li><strong>主动学习</strong>：我们根据已有数据选择下一个要标注的样本——违背独立性</li>
+            </ul>
+            <p><strong>违背 i.i.d. 的后果</strong>：</p>
+            <ul>
+              <li>泛化误差的经典界（如 Hoeffding 不

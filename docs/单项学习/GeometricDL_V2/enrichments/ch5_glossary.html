@@ -1,0 +1,446 @@
+<!-- 第5章：GNN 核心术语词典 -->
+
+<div class="enrichment-block" style="border-left-color: #ec4899;">
+  <h4>📖 第5章核心概念详解</h4>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">消息传递 (Message Passing) 🔑</h5>
+    <p><strong>一句话</strong>：节点通过边向邻居"发送消息"，邻居收集这些消息后更新自己的特征——这是 GNN 最基础的计算范式。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>消息传递分为三个步骤：</p>
+    <ol>
+      <li><strong>消息计算</strong>：节点 \( v \) 根据自己的特征 \( x_v \) 和邻居 \( u \) 的特征 \( x_u \) 计算要发送的消息：
+        <p style="text-align: center;">$$ m_{uv} = \psi(x_u, x_v) $$</p>
+      </li>
+      <li><strong>消息聚合</strong>：节点 \( u \) 收集所有邻居发来的消息：
+        <p style="text-align: center;">$$ \tilde{m}_u = \bigoplus_{v \in \mathcal{N}_u} m_{uv} $$</p>
+      </li>
+      <li><strong>特征更新</strong>：节点 \( u \) 根据聚合后的消息更新自己的特征：
+        <p style="text-align: center;">$$ h_u = \phi(x_u, \tilde{m}_u) $$</p>
+      </li>
+    </ol>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>消息传递是 GNN 实现<strong>置换等变性</strong>的核心机制。由于消息在邻居间传递，无论节点的编号如何排列，最终的聚合结果都是相同的（因为聚合函数是置换不变的）。这使得 GNN 能够"看到"图的拓扑结构，而不依赖于节点的具体标号。</p>
+    
+    <p><strong>🌍 生活类比</strong>：想象一个村庄，每个人（节点）把自己的消息告诉邻居，邻居们汇总所有听到的消息后，更新自己的想法——这就是消息传递的本质。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">聚合 (Aggregation) 🔑</h5>
+    <p><strong>一句话</strong>：聚合函数把多个邻居的消息"合并"成一个向量，是 GNN 中实现置换不变性的关键操作。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>聚合函数 \( \bigoplus \) 必须满足<strong>置换不变性</strong>：无论邻居的顺序如何排列，聚合结果都相同。常用的聚合函数有三种：</p>
+    
+    <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+      <p><strong>1. SUM（求和）</strong></p>
+      <p style="text-align: center;">$$ \tilde{m}_u = \sum_{v \in \mathcal{N}_u} m_{uv} $$</p>
+      <ul>
+        <li><strong>优点</strong>：保留了邻居数量信息（度敏感）</li>
+        <li><strong>缺点</strong>：高度节点的特征值会很大，可能导致数值不稳定</li>
+        <li><strong>适用</strong>：需要区分节点度的场景（如社交网络中的"网红"节点）</li>
+      </ul>
+      
+      <p style="margin-top: 1rem;"><strong>2. MEAN（平均）</strong></p>
+      <p style="text-align: center;">$$ \tilde{m}_u = \frac{1}{|\mathcal{N}_u|} \sum_{v \in \mathcal{N}_u} m_{uv} $$</p>
+      <ul>
+        <li><strong>优点</strong>：数值稳定，不受节点度影响</li>
+        <li><strong>缺点</strong>：丢失了邻居数量信息（度不敏感）</li>
+        <li><strong>适用</strong>：节点度差异不重要的场景（如分子图中的原子）</li>
+      </ul>
+      
+      <p style="margin-top: 1rem;"><strong>3. MAX（最大值）</strong></p>
+      <p style="text-align: center;">$$ \tilde{m}_u = \max_{v \in \mathcal{N}_u} m_{uv} \quad \text{(element-wise)} $$</p>
+      <ul>
+        <li><strong>优点</strong>：关注"最显著"的邻居特征，适合识别局部模式</li>
+        <li><strong>缺点</strong>：丢失大部分邻居信息（只保留极值）</li>
+        <li><strong>适用</strong>：需要检测"关键特征"的场景（如点云中的形状尖端）</li>
+      </ul>
+    </div>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>聚合函数是 GNN 的"对称性守门员"——它确保了无论邻居如何排列，GNN 的输出都保持置换等变性。选择合适的聚合函数相当于选择<strong>什么样的统计量</strong>来总结邻居信息：SUM 关注"总量"，MEAN 关注"平均水平"，MAX 关注"极端情况"。</p>
+    
+    <p><strong>🌍 生活类比</strong>：班级统计成绩时，求和得到"总分"，平均得到"班级水平"，最大值得到"最高分"——不同的聚合方式提取不同的信息。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">多头注意力 (Multi-head Attention) 🔑</h5>
+    <p><strong>一句话</strong>：同时使用多个独立的注意力机制，让模型从不同"视角"关注邻居特征，就像同时用多个相机拍摄同一场景。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>在 Graph Attention Network（GAT）中，注意力机制计算节点 \( u \) 对邻居 \( v \) 的重要性：</p>
+    <p style="text-align: center;">$$ \alpha_{uv} = \frac{\exp(a(x_u, x_v))}{\sum_{w \in \mathcal{N}_u} \exp(a(x_u, x_w))} $$</p>
+    <p>然后加权聚合：</p>
+    <p style="text-align: center;">$$ h_u = \sigma\left( \sum_{v \in \mathcal{N}_u} \alpha_{uv} W x_v \right) $$</p>
+    
+    <p><strong>多头注意力</strong>的做法是并行运行 \( K \) 个独立的注意力头：</p>
+    <p style="text-align: center;">$$ h_u = \bigoplus_{k=1}^K \sigma\left( \sum_{v \in \mathcal{N}_u} \alpha_{uv}^k W^k x_v \right) $$</p>
+    <p>其中 \( \bigoplus \) 通常是拼接（concatenation）或平均。</p>
+    
+    <p><strong>为什么有用？</strong></p>
+    <ul>
+      <li><strong>多样性</strong>：每个头学习不同的"关注模式"（如结构特征 vs. 语义特征）</li>
+      <li><strong>稳定性</strong>：类似集成学习，降低单一注意力机制的偏差</li>
+      <li><strong>表达力</strong>：增加模型容量，能捕捉更复杂的节点间关系</li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>多头注意力是<strong>隐式推断图结构</strong>的强大工具。在 Transformer 中，完全图上的多头注意力允许模型学习哪些节点应该相互关注（即"软邻接矩阵"）。在 GAT 中，它细化了图的边权重，使模型能动态调整信息传递的强度。</p>
+    
+    <p><strong>🌍 生活类比</strong>：面试时，不同面试官从不同角度评估候选人（技术能力、沟通能力、文化契合度），最后综合所有评价——这就是多头注意力的思想。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">过平滑 (Over-smoothing) 🔑</h5>
+    <p><strong>一句话</strong>：GNN 层数过多时，所有节点的特征会变得越来越相似（趋于平滑），导致模型失去区分不同节点的能力。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>每经过一层 GNN，节点的特征会与邻居的特征"混合"：</p>
+    <p style="text-align: center;">$$ h_u^{(l+1)} = \sigma\left( W^{(l)} \left[ h_u^{(l)} \| \text{AGG}(\{h_v^{(l)} : v \in \mathcal{N}_u\}) \right] \right) $$</p>
+    <p>经过 \( L \) 层后，节点 \( u \) 的特征聚合了 \( L \)-hop 邻域内所有节点的信息。在连通图中，随着 \( L \to \infty \)，每个节点的感受野会扩展到整个图，导致：</p>
+    <p style="text-align: center;">$$ h_u^{(\infty)} \approx h_v^{(\infty)} \quad \forall u, v $$</p>
+    <p>即所有节点的特征收敛到同一个向量（图的"全局平均"）！</p>
+    
+    <p><strong>理论解释</strong>：</p>
+    <p>GNN 的消息传递可以看作图拉普拉斯矩阵的低通滤波器，它会不断"平滑"节点特征，抑制高频信号（节点间的差异）。</p>
+    
+    <p><strong>危害</strong>：</p>
+    <ul>
+      <li>节点分类任务：无法区分不同类别的节点</li>
+      <li>链接预测任务：所有节点对的相似度都趋于相同</li>
+      <li>图分类任务：不同图的表示趋于相同</li>
+    </ul>
+    
+    <p><strong>缓解方法</strong>：</p>
+    <ul>
+      <li><strong>浅层网络</strong>：限制 GNN 层数（通常 2-4 层）</li>
+      <li><strong>残差连接</strong>：\( h_u^{(l+1)} = h_u^{(l+1)} + h_u^{(l)} \)</li>
+      <li><strong>跳跃连接</strong>：拼接所有层的特征 \( h_u = [h_u^{(1)} \| h_u^{(2)} \| \ldots \| h_u^{(L)}] \)</li>
+      <li><strong>Dropout</strong>：在消息传递中随机丢弃部分邻居</li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>过平滑是 GNN 的<strong>深度困境</strong>——虽然更深的网络理论上能聚合更远的信息，但实际上会导致信息过度混合。这反映了图结构学习的本质挑战：如何平衡<strong>局部性</strong>（保留节点个性）和<strong>全局性</strong>（捕获长程依赖）。</p>
+    
+    <p><strong>🌍 生活类比</strong>：在电话传话游戏中，传递的人越多（层数越深），最终的消息越模糊，每个人的理解趋于相同——这就是过平滑。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">过压缩 (Over-squashing) 🔑</h5>
+    <p><strong>一句话</strong>：GNN 试图把大量远距离邻居的信息"压缩"到固定维度的节点表示中,导致信息瓶颈，长程依赖难以建模。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>考虑一个节点 \( u \)，它的 \( k \)-hop 邻域包含 \( N_k \) 个节点。当 \( k \) 增大时，\( N_k \) 可能呈指数增长（如在度为 \( d \) 的树上，\( N_k \sim d^k \)）。但 GNN 的节点表示维度 \( h_u \in \mathbb{R}^m \) 是固定的！</p>
+    
+    <p><strong>信息瓶颈</strong>：</p>
+    <p>要把 \( N_k \) 个邻居的信息（总共 \( N_k \cdot m \) 维）压缩到 \( m \) 维，必然会丢失大量信息。这种"信息压缩"导致：</p>
+    <ul>
+      <li>远距离节点的影响被"稀释"</li>
+      <li>长程依赖难以传递</li>
+      <li>图的全局结构难以捕捉</li>
+    </ul>
+    
+    <p><strong>与过平滑的区别</strong>：</p>
+    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95em;">
+      <thead>
+        <tr style="background: rgba(236,72,153,0.1);">
+          <th style="padding: 0.5rem; border: 1px solid #f9a8d4;"></th>
+          <th style="padding: 0.5rem; border: 1px solid #f9a8d4;">过平滑</th>
+          <th style="padding: 0.5rem; border: 1px solid #f9a8d4;">过压缩</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;"><strong>问题本质</strong></td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">信息过度混合</td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">信息传递瓶颈</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;"><strong>表现</strong></td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">节点表示趋于相同</td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">远程信息丢失</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;"><strong>影响</strong></td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">浅层也会出现</td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">深层更严重</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <p><strong>缓解方法</strong>：</p>
+    <ul>
+      <li><strong>增加特征维度</strong>：提高 \( m \)，但计算成本增加</li>
+      <li><strong>注意力机制</strong>：选择性地关注重要邻居，减少冗余信息</li>
+      <li><strong>图重连</strong>：添加长程边（如虚拟节点），缩短信息传递路径</li>
+      <li><strong>Transformer 架构</strong>：用全连接（完全图）替代稀疏图，直接建模长程依赖</li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>过压缩揭示了 GNN 的<strong>表达力瓶颈</strong>——固定维度的向量表示无法充分编码大规模图的信息。这激发了对<strong>自适应架构</strong>（如层次化 GNN、图 Transformer）的研究，试图突破这一限制。</p>
+    
+    <p><strong>🌍 生活类比</strong>：用一页 PPT 总结一本书——书越厚（邻域越大），信息丢失越严重；只有加大 PPT 页数（增加维度）或改用视频（换架构）才能解决。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">表达力 (Expressiveness) 🔑</h5>
+    <p><strong>一句话</strong>：表达力衡量 GNN 能区分多少种不同的图结构——表达力越强，模型能"看出"的图结构差异越细微。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>形式化定义：如果存在两个非同构的图 \( G_1, G_2 \)，但 GNN 对它们产生相同的表示：</p>
+    <p style="text-align: center;">$$ f_{\text{GNN}}(G_1) = f_{\text{GNN}}(G_2) $$</p>
+    <p>则称 GNN 无法区分 \( G_1 \) 和 \( G_2 \)。<strong>表达力</strong>指的是 GNN 能区分的图的"等价类"数量。</p>
+    
+    <p><strong>为什么重要？</strong></p>
+    <ul>
+      <li><strong>图分类</strong>：不同类别的图必须能被区分</li>
+      <li><strong>图生成</strong>：需要生成多样化的图结构</li>
+      <li><strong>分子性质预测</strong>：同分异构体（拓扑结构不同但分子式相同）需要被区分</li>
+    </ul>
+    
+    <p><strong>影响表达力的因素</strong>：</p>
+    <ol>
+      <li><strong>聚合函数</strong>：
+        <ul>
+          <li>SUM/MEAN：表达力较强（在某些条件下能达到 WL 测试的表达力）</li>
+          <li>MAX：表达力较弱（无法区分多重集的差异）</li>
+        </ul>
+      </li>
+      <li><strong>消息函数</strong>：
+        <ul>
+          <li>简单线性变换：表达力有限</li>
+          <li>MLP（多层感知机）：表达力更强</li>
+        </ul>
+      </li>
+      <li><strong>网络深度</strong>：
+        <ul>
+          <li>更深的网络能捕捉更远的拓扑信息</li>
+          <li>但受过平滑和过压缩限制</li>
+        </ul>
+      </li>
+    </ol>
+    
+    <p><strong>理论基准：WL 测试</strong>（见下一条）</p>
+    <p>标准 GNN（如 GCN、GraphSAGE）的表达力<strong>最多等同于 1-WL 测试</strong>。更高表达力的架构包括：</p>
+    <ul>
+      <li><strong>GIN (Graph Isomorphism Network)</strong>：理论上达到 1-WL 的上界</li>
+      <li><strong>高阶 GNN</strong>：基于 \( k \)-WL 测试（\( k > 1 \)）</li>
+      <li><strong>子图 GNN</strong>：通过枚举子图模式增强表达力</li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>表达力是 GNN 的<strong>理论上界</strong>——它告诉我们模型"能做什么"和"不能做什么"。Geometric Deep Learning 强调通过<strong>对称性约束</strong>（如置换等变性）来设计架构，而表达力分析确保这些约束不会过度限制模型能力。</p>
+    
+    <p><strong>🌍 生活类比</strong>：人脸识别系统的"表达力"是能区分多少张不同的脸——系统越强，双胞胎也能分辨；系统越弱，只能分辨性别和年龄段。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">WL 测试 (Weisfeiler-Leman Test) 🔑</h5>
+    <p><strong>一句话</strong>：WL 测试是一个经典的图同构测试算法，它通过迭代地给节点"染色"来判断两个图是否同构——GNN 的表达力上界就是 WL 测试的表达力。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p><strong>1-WL 测试</strong>（也称 Color Refinement）的步骤：</p>
+    <ol>
+      <li><strong>初始化</strong>：每个节点根据自身特征（如度数）获得一个初始"颜色" \( c_v^{(0)} \)</li>
+      <li><strong>迭代染色</strong>：在第 \( t \) 轮，节点 \( v \) 的新颜色基于：
+        <ul>
+          <li>自己的旧颜色 \( c_v^{(t-1)} \)</li>
+          <li>邻居颜色的<strong>多重集</strong> \( \{c_u^{(t-1)} : u \in \mathcal{N}_v\} \)</li>
+        </ul>
+        <p style="text-align: center;">$$ c_v^{(t)} = \text{HASH}\left( c_v^{(t-1)}, \{\!\{ c_u^{(t-1)} : u \in \mathcal{N}_v \}\!\} \right) $$</p>
+      </li>
+      <li><strong>判定</strong>：重复直到颜色分布稳定。如果两个图的颜色分布相同，则"可能同构"；否则"必然不同构"</li>
+    </ol>
+    
+    <p><strong>与 GNN 的联系</strong>（Xu et al., 2019）：</p>
+    <p>标准 GNN 的消息传递：</p>
+    <p style="text-align: center;">$$ h_v^{(t)} = \sigma\left( W \left[ h_v^{(t-1)} \| \text{AGG}(\{h_u^{(t-1)} : u \in \mathcal{N}_v\}) \right] \right) $$</p>
+    <p>与 1-WL 的颜色更新<strong>高度相似</strong>！关键差异：</p>
+    <ul>
+      <li><strong>WL</strong>：使用<strong>单射</strong>的 HASH 函数（保证不同多重集得到不同颜色）</li>
+      <li><strong>GNN</strong>：使用可学习的函数（如 MLP），<strong>不一定单射</strong></li>
+    </ul>
+    
+    <p><strong>理论结果</strong>：</p>
+    <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+      <p><strong>定理（Xu et al., 2019）</strong>：如果 GNN 的聚合和更新函数都是<strong>单射</strong>的，则其表达力等同于 1-WL 测试。</p>
+      <p style="margin-top: 0.5rem;"><strong>推论</strong>：标准 GNN（如 GCN、GAT）的表达力<strong>不超过</strong> 1-WL 测试。</p>
+    </div>
+    
+    <p><strong>1-WL 的局限性</strong>：</p>
+    <p>存在非同构的图，1-WL 无法区分。经典例子：</p>
+    <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin: 1rem 0; font-family: monospace; text-align: center;">
+      图1: 正六边形<br>
+      图2: 两个独立的三角形<br>
+      （两者的节点度数分布相同，1-WL 无法区分）
+    </div>
+    
+    <p><strong>超越 1-WL：高阶 GNN</strong>：</p>
+    <ul>
+      <li><strong>\( k \)-WL 测试</strong>：同时考虑 \( k \) 个节点的元组</li>
+      <li><strong>\( k \)-阶 GNN</strong>：在 \( k \)-元组的超图上做消息传递</li>
+      <li>代价：计算复杂度从 \( O(|V|) \) 增长到 \( O(|V|^k) \)</li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>WL 测试提供了 GNN 表达力的<strong>理论基准</strong>。它揭示了消息传递架构的本质局限：只能"看到"局部拓扑模式。这推动了对<strong>更强架构</strong>（高阶 GNN、子图方法、Transformer）的探索，以及对<strong>任务适配性</strong>的思考（是否所有任务都需要完全区分图同构？）。</p>
+    
+    <p><strong>🌍 生活类比</strong>：WL 测试像"层层筛网"——第一层筛掉明显不同的图，第二层筛掉更细微的差异……标准 GNN 只能用"第一层筛网"，高阶 GNN 用"多层筛网"。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">等变消息传递 (Equivariant Message Passing) 🔑</h5>
+    <p><strong>一句话</strong>：在保持置换等变性的同时，还保持对<strong>几何变换</strong>（如旋转、平移）的等变性——让 GNN 能正确处理 3D 分子、点云等带空间坐标的图数据。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>标准 GNN 只处理"抽象图"（节点特征 \( x_v \in \mathbb{R}^d \)，没有几何含义）。但在很多应用中，节点特征包含<strong>空间坐标</strong>：</p>
+    <ul>
+      <li><strong>分子图</strong>：原子位置 \( \mathbf{r}_v \in \mathbb{R}^3 \)</li>
+      <li><strong>点云</strong>：点的 3D 坐标</li>
+      <li><strong>蛋白质结构</strong>：氨基酸残基的空间位置</li>
+    </ul>
+    
+    <p><strong>几何等变性要求</strong>：</p>
+    <p>如果输入坐标经过欧几里得变换 \( g \in E(3) \)（旋转 \( R \) + 平移 \( \mathbf{t} \)）：</p>
+    <p style="text-align: center;">$$ \mathbf{r}_v \mapsto R \mathbf{r}_v + \mathbf{t} $$</p>
+    <p>则输出坐标也应该相应变换：</p>
+    <p style="text-align: center;">$$ \mathbf{r}'_v \mapsto R \mathbf{r}'_v + \mathbf{t} $$</p>
+    <p>而标量特征 \( f_v \) 保持不变（<strong>不变性</strong>）。</p>
+    
+    <p><strong>实现方式（EGNN，Satorras et al., 2021）</strong>：</p>
+    <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+      <p><strong>标量特征更新</strong>（不变量）：</p>
+      <p style="text-align: center;">$$ f'_u = \phi\left( f_u, \bigoplus_{v \in \mathcal{N}_u} \psi_f(f_u, f_v, \|\mathbf{r}_u - \mathbf{r}_v\|^2) \right) $$</p>
+      <p style="font-size: 0.9em; color: #6b7280;">↳ 只依赖<strong>距离</strong>（旋转/平移不变量）</p>
+      
+      <p style="margin-top: 1rem;"><strong>坐标更新</strong>（等变量）：</p>
+      <p style="text-align: center;">$$ \mathbf{r}'_u = \mathbf{r}_u + \sum_{v \neq u} (\mathbf{r}_u - \mathbf{r}_v) \cdot \psi_c(f_u, f_v, \|\mathbf{r}_u - \mathbf{r}_v\|^2) $$</p>
+      <p style="font-size: 0.9em; color: #6b7280;">↳ 沿相对位置方向加权移动</p>
+    </div>
+    
+    <p><strong>为什么这样设计？</strong></p>
+    <ul>
+      <li><strong>距离不变</strong>：\( \|\mathbf{r}_u - \mathbf{r}_v\| \) 在旋转和平移下不变</li>
+      <li><strong>相对位置等变</strong>：\( \mathbf{r}_u - \mathbf{r}_v \) 在旋转下等变（\( R(\mathbf{r}_u - \mathbf{r}_v) = R\mathbf{r}_u - R\mathbf{r}_v \)），平移下不变</li>
+      <li><strong>线性组合保持等变性</strong>：\( \sum \alpha_v (\mathbf{r}_u - \mathbf{r}_v) \) 仍然等变</li>
+    </ul>
+    
+    <p><strong>更强的框架：不可约表示</strong>（见下一条）</p>
+    <p>EGNN 只处理标量（0阶）和向量（1阶）特征。更一般的框架（如 SE(3)-Transformer）允许处理<strong>任意阶张量</strong>（如速度、力矩、应力张量），通过球谐函数和 Clebsch-Gordan 系数实现。</p>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>等变消息传递是 Geometric Deep Learning 框架在<strong>欧几里得群</strong>上的实例化。它展示了如何将<strong>多个对称性</strong>（置换 + 欧几里得）结合到同一架构中，这是 GDL 的核心思想："<strong>对称性叠加</strong>"。</p>
+    
+    <p><strong>🌍 生活类比</strong>：设计一个"识别椅子"的算法——无论椅子如何摆放（旋转、平移），算法都能识别。等变消息传递确保：如果输入的椅子旋转了90度，输出的"椅子方向"也相应旋转90度。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">不可约表示 (Irreducible Representation) 🔑</h5>
+    <p><strong>一句话</strong>：不可约表示是群作用的"原子单元"——任何复杂的几何对象（如张量）都可以分解为不可约表示的直和，就像任何数都可以分解为质因数。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>在群论中，<strong>表示</strong>（representation）是把群元素 \( g \) 映射到线性变换（矩阵） \( \rho(g) \) 的方式。对于旋转群 \( SO(3) \)：</p>
+    <ul>
+      <li><strong>标量</strong>（如温度）：0阶，旋转下不变 → \( \rho(g) = 1 \)</li>
+      <li><strong>向量</strong>（如速度）：1阶，旋转下等变 → \( \rho(g) = R \in \mathbb{R}^{3 \times 3} \)</li>
+      <li><strong>张量</strong>（如应力张量）：2阶及以上 → \( \rho(g) \) 是更高维的矩阵</li>
+    </ul>
+    
+    <p><strong>不可约表示的定义</strong>：</p>
+    <p>表示 \( \rho \) 是<strong>不可约的</strong>，如果它不能被进一步分解为更小的独立子表示。对于 \( SO(3) \)，不可约表示由<strong>阶数</strong> \( \ell = 0, 1, 2, \ldots \) 标记：</p>
+    <ul>
+      <li>\( \ell = 0 \)：标量（1 维）</li>
+      <li>\( \ell = 1 \)：向量（3 维）</li>
+      <li>\( \ell = 2 \)：对称无迹张量（5 维）</li>
+      <li>一般地，\( \ell \) 阶表示是 \( 2\ell + 1 \) 维</li>
+    </ul>
+    
+    <p><strong>球谐函数的角色</strong>（见下一条）：</p>
+    <p>\( \ell \) 阶球谐函数 \( Y_{\ell}^m(\theta, \phi) \)（\( m = -\ell, \ldots, \ell \)）构成了 \( \ell \) 阶不可约表示的<strong>标准基</strong>。</p>
+    
+    <p><strong>在等变 GNN 中的应用</strong>：</p>
+    <p>等变 GNN（如 SE(3)-Transformer）把节点特征分解为不可约表示的直和：</p>
+    <p style="text-align: center;">$$ \mathbf{f}_v = \mathbf{f}_v^{(0)} \oplus \mathbf{f}_v^{(1)} \oplus \mathbf{f}_v^{(2)} \oplus \ldots $$</p>
+    <p>其中 \( \mathbf{f}_v^{(\ell)} \in \mathbb{R}^{2\ell+1} \) 是 \( \ell \) 阶特征。消息传递时，不同阶的特征通过<strong>Clebsch-Gordan 系数</strong>组合：</p>
+    <p style="text-align: center;">$$ \mathbf{f}_u^{(\ell_3)} \leftarrow \sum_{\ell_1, \ell_2} C_{\ell_1, \ell_2}^{\ell_3} \left( \mathbf{f}_u^{(\ell_1)} \otimes \mathbf{f}_v^{(\ell_2)} \right) $$</p>
+    
+    <p><strong>优势</strong>：</p>
+    <ul>
+      <li><strong>理论保证</strong>：表示论确保等变性严格成立</li>
+      <li><strong>丰富表达</strong>：可以处理任意复杂的几何对象（不限于标量和向量）</li>
+      <li><strong>模块化</strong>：不同阶的特征独立处理，易于扩展</li>
+    </ul>
+    
+    <p><strong>代价</strong>：</p>
+    <ul>
+      <li>计算复杂度高（需要计算 Clebsch-Gordan 系数和 Wigner D-矩阵）</li>
+      <li>需要深入的群论知识</li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>不可约表示是 Geometric Deep Learning 的<strong>数学基石</strong>。它提供了一套<strong>完备的语言</strong>来描述所有可能的几何等变操作，就像傅里叶变换提供了描述所有平移等变操作的完备基。</p>
+    
+    <p><strong>🌍 生活类比</strong>：光可以分解为红、绿、蓝三原色（类比不可约表示），任何颜色都是三原色的组合（类比可约表示）。球谐函数就是"几何世界的三原色"。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">球谐函数 (Spherical Harmonics) 🔑</h5>
+    <p><strong>一句话</strong>：球谐函数是定义在球面上的"傅里叶基函数"——它们对旋转等变，是构建 3D 等变神经网络的核心数学工具。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>球谐函数 \( Y_{\ell}^m(\theta, \phi) \) 是球面 \( S^2 \) 上的正交函数族，由两个参数定义：</p>
+    <ul>
+      <li><strong>\( \ell \in \{0, 1, 2, \ldots\} \)</strong>：阶数（degree），控制"频率"</li>
+      <li><strong>\( m \in \{-\ell, \ldots, \ell\} \)</strong>：序数（order），共 \( 2\ell + 1 \) 个</li>
+    </ul>
+    
+    <p><strong>直观理解</strong>：</p>
+    <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+      <p><strong>\( \ell = 0 \)</strong>：常数（球面上均匀分布）</p>
+      <p><strong>\( \ell = 1 \)</strong>：线性函数（类似 \( x, y, z \) 坐标）</p>
+      <p><strong>\( \ell = 2 \)</strong>：二次函数（类似 \( xy, xz, x^2 - y^2 \) 等）</p>
+      <p>\( \ell \) 越大，球面上的"波纹"越密集（高频成分）。</p>
+    </div>
+    
+    <p><strong>关键性质</strong>：</p>
+    <ol>
+      <li><strong>正交完备</strong>：任何球面函数都可以表示为球谐函数的线性组合（类比傅里叶级数）</li>
+      <li><strong>旋转等变</strong>：旋转球面函数 \( f \) 后，其球谐系数按 Wigner D-矩阵变换：
+        <p style="text-align: center;">$$ [f(R^{-1} \cdot)]_{\ell}^m = \sum_{m'} D_{\ell}^{mm'}(R) \cdot [f]_{\ell}^{m'} $$</p>
+      </li>
+      <li><strong>卷积定理</strong>：球面卷积在球谐域是逐频率相乘（类比欧几里得空间的卷积定理）</li>
+    </ol>
+    
+    <p><strong>在 3D 等变 GNN 中的应用</strong>：</p>
+    <ul>
+      <li><strong>特征表示</strong>：节点 \( v \) 的 \( \ell \) 阶特征 \( \mathbf{f}_v^{(\ell)} \) 用 \( 2\ell+1 \) 个球谐系数表示</li>
+      <li><strong>消息计算</strong>：相对位置 \( \mathbf{r}_{uv} = \mathbf{r}_v - \mathbf{r}_u \) 用球谐函数编码：
+        <p style="text-align: center;">$$ Y_{\ell}^m(\mathbf{r}_{uv}) = Y_{\ell}^m(\theta_{uv}, \phi_{uv}) $$</p>
+      </li>
+      <li><strong>等变滤波</strong>：利用球谐函数的旋转等变性，设计等变的卷积核</li>
+    </ul>
+    
+    <p><strong>实际应用</strong>：</p>
+    <ul>
+      <li><strong>分子建模</strong>：SchNet、DimeNet 用球谐函数编码原子间的角度信息</li>
+      <li><strong>蛋白质结构预测</strong>：AlphaFold 的早期版本使用球谐特征</li>
+      <li><strong>点云处理</strong>：Spherical CNNs 在球面上做卷积</li>
+    </ul>
+    
+    <p><strong>计算挑战</strong>：</p>
+    <ul>
+      <li>高阶球谐函数计算昂贵（需要特殊优化）</li>
+      <li>Clebsch-Gordan 系数预计算和存储占用内存</li>
+      <li>需要 FFT-like 算法（如 SO(3) FFT）加速</li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>球谐函数是 Geometric Deep Learning 在<strong>球面</strong>和 <strong>SO(3) 群</strong>上的"傅里叶基"。它们提供了一种<strong>标准化</strong>的方式来表示和操作旋转等变特征，就像傅里叶变换为平移等变提供了标准化表示。</p>
+    
+    <p><strong>🌍 生活类比</strong>：音乐可以分解为不同频率的正弦波（傅里叶分解），球面上的"图案"可以分解为不同阶的球谐函数。低阶球谐函数是"低音"（平滑变化），高阶球谐函数是"高音"（快速变化）。</p>
+  </div>
+  
+</div>

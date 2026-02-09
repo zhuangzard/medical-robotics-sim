@@ -1,0 +1,329 @@
+<div class="enrichment-block" style="border-left-color: #8b5cf6;">
+  <h4>📐 第5章核心公式详解</h4>
+  <!-- 公式 1: GCN -->
+    <div class="formula-explain">
+        <p>$$H^{(l+1)} = \sigma\left(\tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}H^{(l)}W^{(l)}\right)$$</p>
+        <table>
+            <tr>
+                <td>$H^{(l)}$</td>
+                <td>第 $l$ 层的节点特征矩阵，每一行是一个节点的特征向量</td>
+            </tr>
+            <tr>
+                <td>$H^{(l+1)}$</td>
+                <td>第 $l+1$ 层更新后的节点特征</td>
+            </tr>
+            <tr>
+                <td>$\tilde{A}$</td>
+                <td>邻接矩阵 $A$ 加上自连接（$A + I$），表示"连接关系+自己"</td>
+            </tr>
+            <tr>
+                <td>$\tilde{D}$</td>
+                <td>度矩阵，对角线元素是每个节点的连接数（包括自己）</td>
+            </tr>
+            <tr>
+                <td>$\tilde{D}^{-1/2}$</td>
+                <td>度矩阵的逆平方根，用于归一化（防止度数大的节点影响过大）</td>
+            </tr>
+            <tr>
+                <td>$W^{(l)}$</td>
+                <td>第 $l$ 层的可学习权重矩阵</td>
+            </tr>
+            <tr>
+                <td>$\sigma$</td>
+                <td>激活函数（如 ReLU），给网络引入非线性</td>
+            </tr>
+        </table>
+        <p><strong>🗣️ 用人话说：</strong>每个节点先把自己和邻居的特征收集起来（$\tilde{A}H^{(l)}$），然后根据大家的连接数做个"公平调整"（$\tilde{D}^{-1/2}$ 归一化），再用权重矩阵 $W$ 做线性变换，最后过激活函数更新特征。</p>
+        <p><strong>🔍 类比：</strong>微信朋友圈点赞。你的"新影响力"=（你的点赞数 + 朋友们给你的点赞数）÷ 各自的朋友总数。朋友多的人单次点赞权重会小一点，避免"大V"垄断。</p>
+    </div>
+
+    <!-- 公式 2: MPNN -->
+    <div class="formula-explain">
+        <p>$$h_v^{(k+1)} = \phi\left(h_v^{(k)}, \bigoplus_{u \in N(v)} \psi(h_v^{(k)}, h_u^{(k)}, e_{uv})\right)$$</p>
+        <table>
+            <tr>
+                <td>$h_v^{(k)}$</td>
+                <td>节点 $v$ 在第 $k$ 步的特征向量</td>
+            </tr>
+            <tr>
+                <td>$h_v^{(k+1)}$</td>
+                <td>节点 $v$ 在第 $k+1$ 步更新后的特征</td>
+            </tr>
+            <tr>
+                <td>$N(v)$</td>
+                <td>节点 $v$ 的邻居集合</td>
+            </tr>
+            <tr>
+                <td>$\psi$</td>
+                <td>消息函数，计算从邻居 $u$ 发送给 $v$ 的消息</td>
+            </tr>
+            <tr>
+                <td>$e_{uv}$</td>
+                <td>边 $(u,v)$ 的特征（如权重、类型等）</td>
+            </tr>
+            <tr>
+                <td>$\bigoplus$</td>
+                <td>聚合操作（如求和 sum、平均 mean、最大 max）</td>
+            </tr>
+            <tr>
+                <td>$\phi$</td>
+                <td>更新函数，结合自己的旧特征和聚合后的邻居消息</td>
+            </tr>
+        </table>
+        <p><strong>🗣️ 用人话说：</strong>每个节点 $v$ 先向所有邻居 $u$ 收集"消息"（$\psi$ 函数根据双方特征和边信息生成），然后把所有消息聚合起来（$\bigoplus$），最后和自己的当前状态一起，用 $\phi$ 函数更新成新状态。</p>
+        <p><strong>🔍 类比：</strong>群聊消息。你看群里朋友们的发言（消息 $\psi$），把大家的观点综合一下（聚合 $\bigoplus$），再结合你自己之前的想法（$h_v^{(k)}$），形成新的看法（$h_v^{(k+1)}$）。</p>
+    </div>
+
+    <!-- 公式 3: GAT 注意力 -->
+    <div class="formula-explain">
+        <p>$$\alpha_{ij} = \text{softmax}_j\left(\text{LeakyReLU}\left(a^T[Wh_i \,\|\, Wh_j]\right)\right)$$</p>
+        <table>
+            <tr>
+                <td>$\alpha_{ij}$</td>
+                <td>节点 $j$ 对节点 $i$ 的注意力权重（归一化后的重要性分数）</td>
+            </tr>
+            <tr>
+                <td>$h_i, h_j$</td>
+                <td>节点 $i$ 和 $j$ 的特征向量</td>
+            </tr>
+            <tr>
+                <td>$W$</td>
+                <td>可学习的线性变换矩阵</td>
+            </tr>
+            <tr>
+                <td>$\|$</td>
+                <td>拼接操作（concatenation），把两个向量首尾相接</td>
+            </tr>
+            <tr>
+                <td>$a^T$</td>
+                <td>注意力向量，用于计算重要性得分</td>
+            </tr>
+            <tr>
+                <td>LeakyReLU</td>
+                <td>带"微小负值"的激活函数，避免梯度消失</td>
+            </tr>
+            <tr>
+                <td>softmax$_j$</td>
+                <td>对所有邻居 $j$ 的得分归一化，使权重和为 1</td>
+            </tr>
+        </table>
+        <p><strong>🗣️ 用人话说：</strong>先把自己（$i$）和邻居（$j$）的特征变换一下（$W$），拼在一起，用注意力向量 $a$ 打个分，再过激活函数，最后用 softmax 归一化，让所有邻居的权重加起来等于 1。</p>
+        <p><strong>🔍 类比：</strong>开会发言权重。你（节点 $i$）听同事们（邻居 $j$）的发言，根据他们的内容和你的关注点（$a$）给每个人打分，打分越高说明这个人说的对你越重要，最后把分数归一化成百分比。</p>
+    </div>
+
+    <!-- 公式 4: GIN 更新 -->
+    <div class="formula-explain">
+        <p>$$h_v^{(k+1)} = \text{MLP}\left((1+\epsilon)h_v^{(k)} + \sum_{u \in N(v)} h_u^{(k)}\right)$$</p>
+        <table>
+            <tr>
+                <td>$h_v^{(k)}$</td>
+                <td>节点 $v$ 在第 $k$ 步的特征</td>
+            </tr>
+            <tr>
+                <td>$h_u^{(k)}$</td>
+                <td>邻居 $u$ 在第 $k$ 步的特征</td>
+            </tr>
+            <tr>
+                <td>$\epsilon$</td>
+                <td>可学习的标量参数，控制"自己"的权重</td>
+            </tr>
+            <tr>
+                <td>$\sum_{u \in N(v)}$</td>
+                <td>对所有邻居的特征求和</td>
+            </tr>
+            <tr>
+                <td>MLP</td>
+                <td>多层感知机（几层全连接网络），做非线性变换</td>
+            </tr>
+        </table>
+        <p><strong>🗣️ 用人话说：</strong>节点 $v$ 先把自己的特征乘以 $(1+\epsilon)$ 加权，再加上所有邻居特征的和，最后用 MLP 做非线性变换。$\epsilon$ 可学习，让网络自己决定"自己"的重要性。</p>
+        <p><strong>🔍 类比：</strong>小组项目评分。你的总分 = 你自己的贡献 × $(1+\epsilon)$ + 队友们的贡献之和，再过一个"综合评估函数"（MLP）。$\epsilon$ 越大，说明你自己的贡献权重越高。</p>
+    </div>
+
+    <!-- 公式 5: GraphSAGE -->
+    <div class="formula-explain">
+        <p>$$h_v^{(k)} = \sigma\left(W \cdot \text{CONCAT}\left(h_v^{(k-1)}, \text{AGG}\left(\{h_u^{(k-1)}\}\right)\right)\right)$$</p>
+        <table>
+            <tr>
+                <td>$h_v^{(k-1)}$</td>
+                <td>节点 $v$ 在上一层（$k-1$）的特征</td>
+            </tr>
+            <tr>
+                <td>$\{h_u^{(k-1)}\}$</td>
+                <td>邻居 $u$ 们在上一层的特征集合</td>
+            </tr>
+            <tr>
+                <td>AGG</td>
+                <td>聚合函数（如 mean、max、LSTM 等）</td>
+            </tr>
+            <tr>
+                <td>CONCAT</td>
+                <td>拼接操作，把自己和聚合后的邻居特征合并</td>
+            </tr>
+            <tr>
+                <td>$W$</td>
+                <td>权重矩阵</td>
+            </tr>
+            <tr>
+                <td>$\sigma$</td>
+                <td>激活函数</td>
+            </tr>
+        </table>
+        <p><strong>🗣️ 用人话说：</strong>先聚合邻居的特征（AGG），再和自己的特征拼在一起（CONCAT），然后做线性变换（$W$）+ 激活函数（$\sigma$）。</p>
+        <p><strong>🔍 类比：</strong>团队汇报。你先总结队友们的工作（AGG），再和你自己的工作内容拼在一起，最后提交给老板审核（$W$ 和 $\sigma$）。</p>
+    </div>
+
+    <!-- 公式 6: Transformer 注意力 -->
+    <div class="formula-explain">
+        <p>$$\text{Attention}(Q,K,V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V$$</p>
+        <table>
+            <tr>
+                <td>$Q$</td>
+                <td>Query（查询矩阵），每一行是一个节点的"问题"</td>
+            </tr>
+            <tr>
+                <td>$K$</td>
+                <td>Key（键矩阵），每一行是一个节点的"标签"</td>
+            </tr>
+            <tr>
+                <td>$V$</td>
+                <td>Value（值矩阵），每一行是一个节点的"内容"</td>
+            </tr>
+            <tr>
+                <td>$QK^T$</td>
+                <td>计算 Query 和 Key 的相似度（内积）</td>
+            </tr>
+            <tr>
+                <td>$\sqrt{d_k}$</td>
+                <td>缩放因子（$d_k$ 是 Key 的维度），防止内积过大</td>
+            </tr>
+            <tr>
+                <td>softmax</td>
+                <td>归一化相似度，得到注意力权重</td>
+            </tr>
+        </table>
+        <p><strong>🗣️ 用人话说：</strong>每个节点（Query）去和所有节点（Key）算相似度（$QK^T$），除以 $\sqrt{d_k}$ 防止数值爆炸，再用 softmax 归一化，最后用这些权重加权所有节点的 Value，得到输出。</p>
+        <p><strong>🔍 类比：</strong>图书馆找书。你有个问题（Query），图书馆每本书有标签（Key）和内容（Value）。你先看标签和问题的匹配度（$QK^T$），匹配度高的书权重大，最后把这些书的内容按权重组合起来作为答案。</p>
+    </div>
+
+    <!-- 公式 7: EGNN 位置更新 -->
+    <div class="formula-explain">
+        <p>$$x_i^{l+1} = x_i^l + C \sum_{j \neq i} (x_i^l - x_j^l) \phi_x(m_{ij})$$</p>
+        <table>
+            <tr>
+                <td>$x_i^l$</td>
+                <td>节点 $i$ 在第 $l$ 层的空间坐标（3D 位置）</td>
+            </tr>
+            <tr>
+                <td>$x_i^{l+1}$</td>
+                <td>节点 $i$ 更新后的坐标</td>
+            </tr>
+            <tr>
+                <td>$x_i^l - x_j^l$</td>
+                <td>节点 $i$ 到 $j$ 的方向向量</td>
+            </tr>
+            <tr>
+                <td>$m_{ij}$</td>
+                <td>节点 $j$ 发给 $i$ 的消息（标量或向量）</td>
+            </tr>
+            <tr>
+                <td>$\phi_x$</td>
+                <td>可学习函数，根据消息计算"拉力/推力"大小</td>
+            </tr>
+            <tr>
+                <td>$C$</td>
+                <td>归一化常数</td>
+            </tr>
+        </table>
+        <p><strong>🗣️ 用人话说：</strong>节点 $i$ 的新位置 = 旧位置 + 所有邻居的"拉扯力"。每个邻居 $j$ 根据消息 $m_{ij}$ 和方向向量 $(x_i - x_j)$ 对 $i$ 施加一个力，$\phi_x$ 决定力的大小。</p>
+        <p><strong>🔍 类比：</strong>磁铁互相吸引/排斥。每个磁铁（节点）受到其他磁铁的力，力的方向是连线方向，力的大小由消息 $m_{ij}$ 和函数 $\phi_x$ 决定。最终位置是原位置加上所有力的叠加。</p>
+    </div>
+
+    <!-- 公式 8: EGNN 消息 -->
+    <div class="formula-explain">
+        <p>$$m_{ij} = \phi_e(h_i^l, h_j^l, \|x_i^l - x_j^l\|^2, a_{ij})$$</p>
+        <table>
+            <tr>
+                <td>$m_{ij}$</td>
+                <td>节点 $j$ 发给 $i$ 的消息</td>
+            </tr>
+            <tr>
+                <td>$h_i^l, h_j^l$</td>
+                <td>节点 $i$ 和 $j$ 的特征（不含坐标信息）</td>
+            </tr>
+            <tr>
+                <td>$\|x_i^l - x_j^l\|^2$</td>
+                <td>节点 $i$ 和 $j$ 的距离平方</td>
+            </tr>
+            <tr>
+                <td>$a_{ij}$</td>
+                <td>边 $(i,j)$ 的属性（可选）</td>
+            </tr>
+            <tr>
+                <td>$\phi_e$</td>
+                <td>消息函数（可学习的神经网络）</td>
+            </tr>
+        </table>
+        <p><strong>🗣️ 用人话说：</strong>消息 $m_{ij}$ 由节点 $i$ 和 $j$ 的特征、它们之间的距离平方、以及边属性共同决定。$\phi_e$ 是一个神经网络，学习如何从这些信息生成消息。</p>
+        <p><strong>🔍 类比：</strong>朋友间的建议。你朋友给你的建议（消息）取决于：你俩的性格（$h_i, h_j$）、你俩的"关系远近"（距离 $\|x_i - x_j\|^2$）、以及你俩之间的特殊关系（边属性 $a_{ij}$）。$\phi_e$ 就是"如何综合这些因素给建议"的规则。</p>
+    </div>
+
+    <!-- 公式 9: 群卷积 -->
+    <div class="formula-explain">
+        <p>$$(f * \psi)(g) = \int_G f(h)\psi(g^{-1}h)\,dh$$</p>
+        <table>
+            <tr>
+                <td>$f$</td>
+                <td>定义在群 $G$ 上的信号/函数</td>
+            </tr>
+            <tr>
+                <td>$\psi$</td>
+                <td>卷积核/滤波器</td>
+            </tr>
+            <tr>
+                <td>$g, h$</td>
+                <td>群 $G$ 中的元素（如旋转、平移等变换）</td>
+            </tr>
+            <tr>
+                <td>$g^{-1}h$</td>
+                <td>群运算，表示"先做 $h$ 再撤销 $g$"</td>
+            </tr>
+            <tr>
+                <td>$\int_G \, dh$</td>
+                <td>对群 $G$ 上的所有元素积分（离散时是求和）</td>
+            </tr>
+        </table>
+        <p><strong>🗣️ 用人话说：</strong>在群 $G$ 上做卷积，就是把信号 $f$ 和滤波器 $\psi$ 在所有群元素 $h$ 上"匹配"，然后累加。$g^{-1}h$ 保证了滤波器在不同位置/角度上"对齐"信号。</p>
+        <p><strong>🔍 类比：</strong>图像旋转识别。你有一张旋转了的猫图片（信号 $f$），用一个"猫模板"（$\psi$）去匹配。你把模板也旋转到各个角度（$h$），看哪个角度匹配度最高（积分），$g^{-1}h$ 确保模板和图片的旋转角度对齐。</p>
+    </div>
+
+    <!-- 公式 10: Deep Sets -->
+    <div class="formula-explain">
+        <p>$$f(\{x_1, \ldots, x_n\}) = \rho\left(\sum_i \phi(x_i)\right)$$</p>
+        <table>
+            <tr>
+                <td>$\{x_1, \ldots, x_n\}$</td>
+                <td>一个无序集合，包含 $n$ 个元素</td>
+            </tr>
+            <tr>
+                <td>$\phi$</td>
+                <td>对每个元素单独作用的函数（如小型神经网络）</td>
+            </tr>
+            <tr>
+                <td>$\sum_i$</td>
+                <td>对所有元素的变换结果求和（也可以是 max、mean）</td>
+            </tr>
+            <tr>
+                <td>$\rho$</td>
+                <td>对聚合结果做最终变换的函数</td>
+            </tr>
+        </table>
+        <p><strong>🗣️ 用人话说：</strong>处理无序集合的万能公式！先用函数 $\phi$ 单独处理每个元素，再把处理结果加起来（$\sum$），最后用函数 $\rho$ 得到最终结果。因为求和顺序无关，所以整个过程对集合的顺序不敏感。</p>
+        <p><strong>🔍 类比：</strong>班级平均分。每个学生的成绩先标准化（$\phi$），再求和（$\sum$），最后除以人数并做调整（$\rho$）。无论学生名单怎么排列，平均分都一样！</p>
+    </div>
+
+    <hr style="margin: 2rem 0; border: none; border-top: 2px solid #8b5cf6;">
+    <p style="text-align: center; color: #666; font-size: 0.9em;">
+        <strong>提示：</strong>这些公式是 Geometric Deep Learning 的核心积木。理解它们，就能理解几乎所有图神经网络架构！
+    </p>
+</div>

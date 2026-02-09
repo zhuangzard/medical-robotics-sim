@@ -1,0 +1,116 @@
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：为什么分子"天然"是图？</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：书上说"分子天然地表示为图"，但为什么一定要用图？能不能直接用字符串（SMILES）或者3D点云？</p>
+      <div class="answer">
+        <p>💡 专家：这是一个很好的问题！确实有三种表示方式：</p>
+        <ul>
+          <li><strong>字符串（SMILES）</strong>：C1=CC=CC=C1 表示苯环 → 问题：丢失了空间结构，很难捕捉"两个原子之间有没有键"这种关系</li>
+          <li><strong>3D点云</strong>：每个原子一个坐标 → 问题：旋转分子后坐标全变了，网络要从零学习"旋转不变性"</li>
+          <li><strong>图表示</strong>：原子=节点，化学键=边 → 优势：<strong>自动满足置换不变性</strong>（原子编号顺序不重要）+ <strong>显式表达连接关系</strong></li>
+        </ul>
+        <p>用 GNN 处理图的核心优势：<strong>对称性自动编码</strong>。分子的 HOMO（最高占据分子轨道）能量这种性质，和你给原子编号1,2,3还是3,2,1无关 → GNN通过置换等变的消息传递自然满足这一点。</p>
+        <p><strong>更高级</strong>：SchNet、EGNN等模型同时用图拓扑+3D坐标，既保留连接关系又利用几何信息，还能做到 <strong>SE(3)-等变</strong>（旋转平移不变）。</p>
+      </div>
+    </div>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：Halicin 的发现为什么是"里程碑"？之前药物筛选不用 AI 吗？</p>
+      <div class="answer">
+        <p>💡 专家：传统虚拟筛选（virtual screening）用的是<strong>对接打分</strong>（docking score）——模拟分子和蛋白质结合，计算结合能。问题：</p>
+        <ol>
+          <li><strong>计算贵</strong>：每个分子要跑分子动力学模拟，筛选10万分子可能要几个月</li>
+          <li><strong>泛化差</strong>：针对一个靶点训练的打分函数，换个靶点就不准了</li>
+          <li><strong>只看结构</strong>：忽略了分子的其他性质（溶解度、毒性、合成难度）</li>
+        </ol>
+        <p><strong>Halicin 的突破</strong>：</p>
+        <ul>
+          <li>GNN 从 <strong>2335 个已知抗菌分子</strong> 学习，<strong>跨化学空间</strong> 筛选了 <strong>610万候选</strong>，只用了 <strong>4天</strong></li>
+          <li>发现的 Halicin 原本是糖尿病药，传统筛选不会测它（因为"不像抗生素"）</li>
+          <li>实验验证：对<strong>耐药性鲍曼不动杆菌</strong>（多重耐药）有效 → 解决了抗生素耐药性的紧迫问题</li>
+        </ul>
+        <p>里程碑意义：<strong>第一次</strong> 用 GNN "从零发现"（而非改进已知化合物）一种真正的新药，且通过了体内（小鼠）实验。</p>
+      </div>
+    </div>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：EGNN 的 "SE(3)-等变" 到底是什么意思？能不能用人话解释？</p>
+      <div class="answer">
+        <p>💡 专家：想象你拍了一张分子的 3D 照片（原子坐标）。现在你：</p>
+        <ul>
+          <li><strong>旋转</strong>这张照片（比如转 45°）</li>
+          <li><strong>平移</strong>这张照片（整体往右移 5 厘米）</li>
+        </ul>
+        <p>问：分子的<strong>性质</strong>（比如能量、偶极矩方向）变了吗？</p>
+        <ul>
+          <li><strong>能量</strong>（标量）：<strong>不变</strong> → 这叫 <strong>不变性</strong>（invariance）</li>
+          <li><strong>偶极矩方向</strong>（矢量）：<strong>跟着旋转</strong> → 这叫 <strong>等变性</strong>（equivariance）</li>
+        </ul>
+        <p><strong>SE(3)</strong> = "Special Euclidean group in 3D" = 所有旋转+平移的组合</p>
+        <p><strong>SE(3)-等变网络</strong> 的保证：</p>
+        <div class="math-block">
+          旋转输入 → 网络 → 输出也旋转（如果输出是矢量/张量）<br>
+          旋转输入 → 网络 → 输出不变（如果输出是标量/能量）
+        </div>
+        <p>为什么重要？分子的能量不应该取决于你把它放在哪个方向！SE(3)-等变保证网络<strong>自动满足物理定律</strong>，不需要数据增强。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解：分子图 = 社交网络</h4>
+    <p><strong>类比</strong>：分子筛选就像 LinkedIn 推荐工作：</p>
+    <ul>
+      <li><strong>节点</strong>（你）= 原子，<strong>节点特征</strong>（技能、学历）= 原子类型、电荷</li>
+      <li><strong>边</strong>（朋友关系）= 化学键，<strong>边特征</strong>（关系强度）= 单键/双键/三键</li>
+      <li><strong>GNN 消息传递</strong> = "你的朋友的技能会影响对你的评价"（碳原子旁边有个氧，性质就变了）</li>
+      <li><strong>全局池化</strong> = "LinkedIn 算出你的总体匹配度" → 输出：这个分子能不能抑菌？</li>
+    </ul>
+    <p><strong>关键差异</strong>：社交网络的边可以随便连（加好友），分子的边受<strong>化学规则</strong>约束（碳只能4个键，氢只能1个）。</p>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用：药物-组织交互仿真</h4>
+    <p><strong>场景</strong>：手术中局部给药（比如肿瘤局部化疗），需要预测药物在组织中的扩散和代谢。</p>
+    <p><strong>GDL 框架</strong>：</p>
+    <ol>
+      <li><strong>药物分子</strong>：用 GNN 预测其<strong>亲脂性</strong>（能否穿透细胞膜）、<strong>代谢速率</strong></li>
+      <li><strong>组织网格</strong>：用流体动力学 GNN 仿真扩散（每个网格点=节点，药物浓度=节点特征）</li>
+      <li><strong>耦合</strong>：药物分子图 → 计算扩散系数 → 输入组织仿真</li>
+    </ol>
+    <p><strong>优势</strong>：传统 PK/PD 模型（药代动力学）假设均匀扩散，GNN 能考虑<strong>异质组织</strong>（肿瘤中心缺氧、血管分布不均）。</p>
+    <p><strong>PhysRobot 连接</strong>：这和软组织仿真是同一套技术——都是"在网格/图上做物理仿真"。</p>
+  </div>
+
+  <div class="enrichment-qa">
+    <h4>🔍 补充：这里用了哪个 "G"？</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：书上说 GDL 是关于 "Geometry" 的，化学应用里的 "几何" 在哪？</p>
+      <div class="answer">
+        <p>💡 专家：化学应用里其实<strong>三个 G 都用到了</strong>：</p>
+        <table>
+          <thead>
+            <tr><th>G</th><th>含义</th><th>化学中的体现</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Graphs</strong></td>
+              <td>图结构</td>
+              <td>分子键连接 → 图拓扑</td>
+            </tr>
+            <tr>
+              <td><strong>Groups</strong></td>
+              <td>对称群</td>
+              <td>$\Sigma_n$（原子置换）+ SE(3)（旋转平移）</td>
+            </tr>
+            <tr>
+              <td><strong>Geodesics</strong></td>
+              <td>几何/流形</td>
+              <td>构象空间（分子能量面）是高维流形，最低能量路径是测地线</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>更深的几何</strong>：蛋白质折叠问题中，氨基酸序列空间 → 3D结构空间的映射，是一个<strong>极高维的非线性流形</strong>。AlphaFold 本质上是在这个流形上学习测地距离。</p>
+      </div>
+    </div>
+  </div>
+</div>

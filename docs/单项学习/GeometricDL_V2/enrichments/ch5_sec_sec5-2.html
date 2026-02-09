@@ -1,0 +1,266 @@
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：什么是"群卷积"？</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：普通卷积我能理解（滑动窗口），但"群卷积" $(\mathbf{x} \star \theta)(g) = \sum_{u \in \Omega} x_u \, \rho(g)\theta_u$ 这个公式看不懂...什么是 $g$？什么是 $\rho(g)$？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>先从生活例子理解</strong>：假设你有一张照片，想检测里面的"箭头"（→）。普通 CNN 只能检测<strong>水平向右</strong>的箭头。如果箭头旋转了 90°（变成 ↑），CNN 就认不出来了——除非你在训练集里放了大量旋转的箭头。</p>
+        
+        <p><strong>群卷积的解决方案</strong>：不仅滑动滤波器（平移），还要<strong>旋转</strong>滤波器！对于 p4 群（平移 + 4 个 90° 旋转），一个滤波器会被旋转成 4 个副本：→, ↑, ←, ↓，然后分别与图像卷积。</p>
+        
+        <p><strong>符号解释</strong>：</p>
+        <ul>
+          <li>$g \in G$：群元素，代表一种变换。例如 $g = (t, r)$ 表示"先平移 $t$，再旋转 $r$"</li>
+          <li>$\rho(g)$：群表示（representation），把抽象的群元素 $g$ 变成具体的操作。对图像：$\rho(g)\mathbf{x}$ = 对图像做变换 $g$</li>
+          <li>$\rho(g)\theta_u = \theta_{g^{-1}u}$：滤波器在位置 $u$ 的值，经过变换 $g$ 后，应该取原始滤波器在 $g^{-1}u$ 处的值</li>
+        </ul>
+        
+        <p><strong>为什么写成 $g^{-1}u$ 而不是 $gu$？</strong>因为我们要保持<strong>等变性</strong>：如果输入旋转了 $g$，输出也应该旋转 $g$。数学上需要用<strong>逆变换</strong>来正确组合。</p>
+        
+        <p><strong>具体例子</strong>（p4 群）：</p>
+        <ul>
+          <li>原始滤波器 $\theta$：检测 → 箭头（3×3 矩阵）</li>
+          <li>$\rho(90°)\theta$：将 $\theta$ 旋转 90° → 检测 ↑ 箭头</li>
+          <li>$\rho(180°)\theta$：旋转 180° → 检测 ← 箭头</li>
+          <li>$\rho(270°)\theta$：旋转 270° → 检测 ↓ 箭头</li>
+          <li>输出有 <strong>4 个通道</strong>，每个通道对应一个方向的激活强度</li>
+        </ul>
+        
+        <p><strong>与标准卷积的对比</strong>：</p>
+        <ul>
+          <li>标准 CNN：输出 $(x, y)$ 只记录"在位置 $(x,y)$ 检测到特征"</li>
+          <li>G-CNN：输出 $(x, y, \theta)$ 记录"在位置 $(x,y)$、方向 $\theta$ 检测到特征"</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：为什么需要 G-CNN？旋转等变有什么用？</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：数据增强（Data Augmentation）不就能解决旋转问题吗？为什么还要设计专门的群等变网络？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>数据增强 vs 等变网络</strong>是两种不同的策略：</p>
+        
+        <table>
+          <thead><tr><th>方法</th><th>原理</th><th>优点</th><th>缺点</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>数据增强</strong></td>
+              <td>训练时随机旋转图像，让网络"见过"各种角度</td>
+              <td>简单易用，适用于任何模型</td>
+              <td>需要更多训练数据；网络仍然要学习"同一物体的不同旋转版本是相同的"</td>
+            </tr>
+            <tr>
+              <td><strong>G-CNN</strong></td>
+              <td>网络结构本身保证旋转等变性</td>
+              <td>样本效率高（少量数据就能泛化）；理论保证</td>
+              <td>实现复杂；计算量稍大（需处理多个方向通道）</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <p><strong>关键区别</strong>：</p>
+        <ul>
+          <li>数据增强：网络通过<strong>经验</strong>学习到旋转不变性（"我见过很多旋转的猫，所以知道旋转后还是猫"）</li>
+          <li>G-CNN：旋转等变性是<strong>硬编码</strong>在网络结构中的（"根据定义，旋转输入必然导致输出旋转"）</li>
+        </ul>
+        
+        <p><strong>数学上的差异</strong>：</p>
+        <ul>
+          <li>标准 CNN + 数据增强：$F(R_\theta \mathbf{x}) \stackrel{\text{hope}}{\approx} F(\mathbf{x})$（希望学到近似不变性）</li>
+          <li>G-CNN：$F(R_\theta \mathbf{x}) \stackrel{\text{guarantee}}{=} R_\theta F(\mathbf{x})$（严格等变性）</li>
+        </ul>
+        
+        <p><strong>实验证据</strong>：在医学影像（如视网膜图像、细胞显微照片）上，G-CNN 用 <strong>10% 的训练数据</strong>就能达到标准 CNN + 数据增强用 100% 数据的性能（Bekkers et al., 2018）。</p>
+        
+        <p><strong>什么时候用 G-CNN？</strong></p>
+        <ul>
+          <li>✅ 数据稀缺（医学影像、天文学）</li>
+          <li>✅ 物理旋转对称明确存在（分子、晶体、星系）</li>
+          <li>✅ 需要解释性（等变性是可证明的先验知识）</li>
+          <li>❌ 数据充足且旋转对称不重要（ImageNet 自然图像）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：正则表示（Regular Representation）是什么？</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：文章提到"群在自身上的正则表示"，这是什么意思？跟 G-CNN 有什么关系？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>正则表示</strong>是群论中的一个核心概念。简单说：让群元素自己对自己作用。</p>
+        
+        <p><strong>定义</strong>：对群 $G$，正则表示 $\rho_{\text{reg}}$ 定义为：</p>
+        $$\rho_{\text{reg}}(g): G \to G, \quad \rho_{\text{reg}}(g)[h] = gh$$
+        <p>即：用 $g$ 左乘所有群元素。</p>
+        
+        <p><strong>生活类比</strong>：想象一个旋转立方体的对称群 $G$（24 个元素）。正则表示就是：</p>
+        <ul>
+          <li>把 24 个群元素排成一排：$[e, r_1, r_2, \ldots, r_{23}]$</li>
+          <li>当你应用变换 $g$（比如"绕 z 轴旋转 90°"）时，这 24 个元素会<strong>重新排列</strong>：$[g, gr_1, gr_2, \ldots, gr_{23}]$</li>
+          <li>这个"排列"就是正则表示</li>
+        </ul>
+        
+        <p><strong>在 G-CNN 中的体现</strong>：</p>
+        <ul>
+          <li>第一层：输入是图像（在平凡群表示下），输出是"图像 × 群元素"（如 8 个方向通道）</li>
+          <li>后续层：输入和输出都在正则表示下 — 每个通道对应一个群元素</li>
+          <li>当输入旋转 $g$ 时，<strong>通道之间发生置换</strong>（对应正则表示的作用）</li>
+        </ul>
+        
+        <p><strong>例子</strong>（p4 群，4 个旋转）：</p>
+        <ul>
+          <li>假设第二层有 4 个方向通道：$[f_0, f_{90}, f_{180}, f_{270}]$</li>
+          <li>当输入旋转 90° 时，通道置换为：$[f_{90}, f_{180}, f_{270}, f_0]$</li>
+          <li>这就是正则表示 $\rho_{\text{reg}}(90°)$ 的作用：每个元素"旋转到下一个位置"</li>
+        </ul>
+        
+        <p><strong>为什么重要？</strong>正则表示是<strong>最通用</strong>的表示——任何其他表示都可以看作正则表示的子空间。在 G-CNN 中使用正则表示保证了<strong>最大的表达力</strong>。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：如何实现群卷积？</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：代码里看到 <code>torch.rot90(w, k, dims=[-2, -1])</code>，这就是在做群卷积吗？为什么旋转滤波器就能保证等变性？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>实现策略</strong>（"Transform & Convolve"）：</p>
+        <ol>
+          <li><strong>预计算变换后的滤波器</strong>：对群 $H$ 的每个元素 $h$（如 4 个旋转），生成 $\theta_h = \rho(h)\theta$</li>
+          <li><strong>标准卷积</strong>：对每个 $\theta_h$ 做普通的平移卷积</li>
+          <li><strong>堆叠输出</strong>：得到 $|H|$ 个方向通道</li>
+        </ol>
+        
+        <p><strong>代码解析</strong>：</p>
+        <pre><code>def forward(self, x):
+    outputs = []
+    for k in range(4):  # 4 个旋转: 0°, 90°, 180°, 270°
+        w_rot = torch.rot90(self.weight, k, dims=[-2, -1])  # 旋转滤波器
+        out = F.conv2d(x, w_rot, padding=...)  # 标准卷积
+        outputs.append(out)
+    return torch.cat(outputs, dim=1)  # 拼接为 4 个方向通道</code></pre>
+        
+        <p><strong>为什么这保证等变性？</strong></p>
+        <ul>
+          <li>假设输入旋转了 $r$ 度：$\mathbf{x}' = R_r[\mathbf{x}]$</li>
+          <li>第 $k$ 个输出：$y_k = \mathbf{x}' \star \theta_k = R_r[\mathbf{x}] \star \theta_k$</li>
+          <li>根据卷积的旋转性质：$R_r[\mathbf{x}] \star \theta_k = (\mathbf{x} \star R_{-r}[\theta_k])$ 旋转后</li>
+          <li>$R_{-r}[\theta_k] = \theta_{k-r}$（滤波器反向旋转对应于切换到另一个方向通道）</li>
+          <li>所以输出的变化是<strong>通道置换</strong>：$[y_0, y_1, y_2, y_3] \to [y_1, y_2, y_3, y_0]$（正则表示！）</li>
+        </ul>
+        
+        <p><strong>内存优化</strong>：实际实现中可以：</p>
+        <ul>
+          <li>只存储<strong>一个基础滤波器</strong> $\theta$（参数量不增加）</li>
+          <li>在前向传播时<strong>动态旋转</strong>生成 $\theta_h$</li>
+          <li>或者预计算并缓存（用空间换时间）</li>
+        </ul>
+        
+        <p><strong>高阶群（如 SE(2)）</strong>：对于连续旋转群，需要：</p>
+        <ul>
+          <li>离散化角度（如每 15° 一个采样点，共 24 个方向）</li>
+          <li>或使用<strong>球谐函数</strong>作为滤波器基（见 Tensor Field Networks）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解：G-CNN 的"超能力"</h4>
+    <p><strong>传统 CNN</strong>：</p>
+    <ul>
+      <li>滤波器：检测"向右的箭头 →"</li>
+      <li>如果箭头旋转成 ↑，需要<strong>额外的滤波器</strong>来检测</li>
+      <li>或者通过<strong>大量训练数据</strong>让网络"记住"旋转版本</li>
+    </ul>
+    
+    <p><strong>G-CNN</strong>：</p>
+    <ul>
+      <li>滤波器：检测"箭头"（不指定方向）</li>
+      <li>网络<strong>自动旋转滤波器</strong>到所有方向（→ ↑ ← ↓）</li>
+      <li>输出告诉你："在 $(x,y)$ 位置有一个 ↑ 方向的箭头"（位置 + 方向）</li>
+    </ul>
+    
+    <p><strong>类比</strong>：</p>
+    <ul>
+      <li>传统 CNN = 只会认"正着写的字"，看到倒着写的字就不认识</li>
+      <li>G-CNN = 会自动把纸旋转到各个角度去识别，天然处理旋转</li>
+    </ul>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用：旋转等变性的价值</h4>
+    <p><strong>场景 1：显微镜下的细胞检测</strong></p>
+    <ul>
+      <li>细胞在显微镜下的<strong>方向是随机的</strong>（没有"正确朝向"）</li>
+      <li>G-CNN 可以用<strong>更少的标注数据</strong>学习细胞形态（旋转不变性是先验知识）</li>
+      <li>实验：p4m-CNN（平移 + 旋转 + 镜像）在 ISBI 细胞分割任务上比标准 CNN 提升 5% IoU</li>
+    </ul>
+    
+    <p><strong>场景 2：术中 X 光/CT 图像配准</strong></p>
+    <ul>
+      <li>手术中需要将<strong>术前 CT</strong> 与<strong>术中 X 光</strong>对齐</li>
+      <li>患者体位可能旋转 → 需要旋转等变特征提取</li>
+      <li>SE(2)-等变网络可以更鲁棒地匹配特征点</li>
+    </ul>
+    
+    <p><strong>PhysRobot 项目关联</strong>：</p>
+    <ul>
+      <li>我们的粒子系统本身是 <strong>E(3) 等变</strong>的（3D 旋转 + 平移）</li>
+      <li>如果要从<strong>RGB 图像</strong>估计粒子状态，可以用 SE(2)-CNN 提取旋转不变特征</li>
+      <li>如果要学习<strong>刚体抓取</strong>（gripper orientation），SO(3)-等变网络可以预测最佳抓取姿态</li>
+    </ul>
+  </div>
+</div>
+
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：不同群的选择</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：为什么有 p4, p4m, SO(2), SE(2) 这么多群？怎么选择适合任务的群？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>群的选择</strong>取决于<strong>数据的物理对称性</strong>。原则：用最小但足够的群。</p>
+        
+        <table>
+          <thead><tr><th>群</th><th>对称性</th><th>|G|</th><th>适用场景</th></tr></thead>
+          <tbody>
+            <tr><td>$(\mathbb{Z}^2, +)$</td><td>只有平移</td><td>∞</td><td>标准 CNN</td></tr>
+            <tr><td>$p4$</td><td>平移 + 90°旋转</td><td>∞</td><td>正方形晶格、棋盘</td></tr>
+            <tr><td>$p4m$</td><td>$p4$ + 镜像</td><td>∞</td><td>织物纹理、对称图案</td></tr>
+            <tr><td>$SO(2)$</td><td>平移 + 连续旋转</td><td>∞</td><td>圆形对称（车轮、细胞）</td></tr>
+            <tr><td>$SE(2)$</td><td>2D 刚体运动</td><td>∞</td><td>机器人导航、俯视图</td></tr>
+            <tr><td>$SE(3)$</td><td>3D 刚体运动</td><td>∞</td><td>分子、3D 点云</td></tr>
+            <tr><td>$O(3)$</td><td>3D 旋转 + 反射</td><td>∞</td><td>球形对称（原子、星球）</td></tr>
+          </tbody>
+        </table>
+        
+        <p><strong>选择原则</strong>：</p>
+        <ol>
+          <li><strong>匹配物理先验</strong>：如果数据在旋转下确实保持不变，用旋转群</li>
+          <li><strong>不要过度设计</strong>：如果数据没有镜像对称，不要用 $p4m$（会浪费参数）</li>
+          <li><strong>计算成本</strong>：群越大，方向通道越多，计算量越大</li>
+        </ol>
+        
+        <p><strong>实验技巧</strong>：如果不确定，可以：</p>
+        <ul>
+          <li>先用<strong>数据增强</strong>测试对称性（如随机旋转后准确率是否下降）</li>
+          <li>从小群开始（如 $p4$），逐步扩展到大群（如 $p4m$），对比性能</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解：方向通道 = "眼睛的不同角度"</h4>
+    <p>想象你是个侦探，要从不同角度检查犯罪现场：</p>
+    <ul>
+      <li><strong>标准 CNN</strong>：只能从正面看（0° 视角），错过侧面的线索</li>
+      <li><strong>p4-CNN</strong>：同时从 4 个角度看（0°, 90°, 180°, 270°），每个角度都记录发现</li>
+      <li><strong>SE(2)-CNN</strong>：可以从<strong>任意角度</strong>看（360° 连续），像个全方位摄像头</li>
+    </ul>
+    <p>方向通道就是"多个观察者"的报告汇总！</p>
+  </div>
+</div>

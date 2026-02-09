@@ -1,0 +1,122 @@
+<div class="enrichment-block">
+        <h3>❓ 傅里叶变换和"对称性"有什么关系？</h3>
+        <div class="answer">
+            <p><strong>傅里叶变换的本质：</strong></p>
+            <p>把任意信号分解成不同频率的<strong>正弦波</strong>（$e^{i\omega t}$）的叠加。</p>
+            
+            <p>$$f(t) = \int_{-\infty}^{\infty} \hat{f}(\omega) e^{i\omega t} d\omega$$</p>
+            
+            <p><strong>🔑 对称性视角：</strong></p>
+            <ul>
+                <li>正弦波 $e^{i\omega t}$ 是<span class="highlight">平移不变</span>的"本征函数"</li>
+                <li>如果信号 $f(t)$ 平移 $\tau$，频谱只是相位变化：$\hat{f}(\omega) \to \hat{f}(\omega) e^{-i\omega\tau}$</li>
+                <li>傅里叶变换把"平移"变成"相位旋转"，这是<strong>群表示</strong>的体现</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>音乐是声音的"时间信号"，傅里叶变换把它拆成不同音高（频率）的叠加。无论你从哪一秒开始听（平移），音高不变，只是相位变了。</p>
+            
+            <p><strong>🌟 深刻之处：</strong></p>
+            <p>傅里叶变换利用了<strong>时间平移对称性</strong>，把信号处理从"时域"转到"频域"，简化了很多问题（如卷积变成乘法）。</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 小波变换（Wavelet）解决了什么问题？</h3>
+        <div class="answer">
+            <p><strong>傅里叶变换的局限：</strong></p>
+            <ul>
+                <li>只能告诉你信号<strong>有哪些频率</strong>，但不知道<strong>这些频率出现在什么时间</strong></li>
+                <li>对于"突发事件"（如心电图的尖峰），傅里叶变换会"糊掉"</li>
+            </ul>
+            
+            <p><strong>🔑 小波变换的改进：</strong></p>
+            <p>用<strong>局部化的小波函数</strong>（wavelet）代替全局的正弦波，既能看到频率，又能看到时间。</p>
+            
+            <p>$$W(a,b) = \int_{-\infty}^{\infty} f(t) \psi\left(\frac{t-b}{a}\right) dt$$</p>
+            
+            <ul>
+                <li>$a$：尺度（scale），控制小波的"宽度"（频率）</li>
+                <li>$b$：位置（shift），控制小波的"中心"（时间）</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>傅里叶变换像"全局放大镜"，只能看清整体；小波变换像"局部放大镜"，可以移动 + 缩放，哪里不清楚照哪里。</p>
+            
+            <p><strong>🌟 应用：</strong></p>
+            <ul>
+                <li><strong>图像压缩</strong>（JPEG 2000）：小波变换能更好地捕捉边缘和纹理</li>
+                <li><strong>信号去噪</strong>：把噪声（高频小波）过滤掉</li>
+                <li><strong>CNN 的启发</strong>：多尺度特征提取（不同卷积核 ≈ 不同小波）</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 什么是 Scattering Transform？和 CNN 有什么关系？</h3>
+        <div class="answer">
+            <p><strong>Scattering Transform（Mallat, 2012）：</strong></p>
+            <p>一种<span class="highlight">不需要训练的"深度学习"</span>架构，基于小波变换的级联。</p>
+            
+            <p><strong>🔑 核心思想：</strong></p>
+            <ol>
+                <li>对信号做小波变换（多尺度分解）</li>
+                <li>取模（相当于 ReLU）</li>
+                <li>再做小波变换（第二层）</li>
+                <li>重复若干次，最后平均池化</li>
+            </ol>
+            
+            <p><strong>🌟 性质：</strong></p>
+            <ul>
+                <li><strong>平移不变</strong>：信号平移，输出几乎不变</li>
+                <li><strong>形变稳定</strong>：信号微小形变（如拉伸），输出变化可控</li>
+                <li><strong>类似 CNN</strong>：小波 ≈ 卷积核，取模 ≈ ReLU，平均 ≈ 池化</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>Scattering Transform 是"手工设计的 CNN"，用数学保证了不变性和稳定性。虽然性能不如可训练的 CNN，但理论上更清晰，帮助理解 CNN 为什么有效。</p>
+            
+            <p><strong>🔍 和 CNN 的对比：</strong></p>
+            <ul>
+                <li><strong>Scattering</strong>：滤波器固定（小波），数学保证</li>
+                <li><strong>CNN</strong>：滤波器可学习，性能更好但理论较弱</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 图信号处理（Graph Signal Processing）是怎么来的？</h3>
+        <div class="answer">
+            <p><strong>经典信号处理 → 图信号处理</strong></p>
+            
+            <p><strong>经典情况（网格）：</strong></p>
+            <ul>
+                <li>信号定义在<strong>规则网格</strong>上（如时间轴、像素网格）</li>
+                <li>傅里叶变换基于<strong>平移不变性</strong></li>
+            </ul>
+            
+            <p><strong>图的情况（非欧几里得）：</strong></p>
+            <ul>
+                <li>信号定义在<strong>不规则图</strong>上（如社交网络、分子）</li>
+                <li>没有"平移"，但有<strong>图拉普拉斯</strong> $L = D - A$</li>
+            </ul>
+            
+            <p><strong>🔑 关键突破（2000s-2010s）：</strong></p>
+            <ul>
+                <li><strong>Shuman et al. (2013)</strong>：提出"图傅里叶变换"，用<strong>拉普拉斯特征向量</strong>作为"基"</li>
+                <li>$$\hat{f}(\lambda_k) = \langle f, u_k \rangle$$</li>
+                <li>$u_k$ 是拉普拉斯 $L$ 的特征向量，$\lambda_k$ 是特征值（类比"频率"）</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>在图上，虽然没有"平移"，但可以用拉普拉斯的特征向量作为"广义正弦波"，做"图傅里叶变换"。这样就能在图上定义滤波、去噪等操作！</p>
+            
+            <p><strong>🌟 影响：</strong></p>
+            <p>图信号处理是<strong>谱方法 GNN</strong>（如 Bruna et al. 2013, Kipf & Welling 2016）的理论基础，把信号处理的思想带到了深度学习。</p>
+        </div>
+    </div>
+
+    <hr style="margin: 2rem 0; border: none; border-top: 2px solid #10b981;">
+    <p style="text-align: center; color: #666; font-size: 0.9em;">
+        <strong>总结：</strong>从傅里叶到小波，从 Scattering 到图信号处理，调和分析一直在为深度学习提供数学工具！
+    </p>

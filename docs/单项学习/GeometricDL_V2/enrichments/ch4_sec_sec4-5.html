@@ -1,0 +1,667 @@
+<div class="enrichment-block">
+  <h3>🔍 深化理解：规范和纤维丛（Gauges & Bundles）⭐⭐⭐</h3>
+  <p style="color: #d97706; font-weight: bold;">⚠️ 这是整本书最抽象的部分！需要耐心理解。</p>
+  
+  <div class="enrichment-qa">
+    <h4>💬 核心问答</h4>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q1：什么是纤维丛？为什么说它是"在每个点附着一个向量空间"？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>纤维丛的直观定义</strong>：</p>
+        <p>想象一个空间 $\Omega$（底空间），在每个点 $u \in \Omega$ 上"附着"一个向量空间 $V_u$（纤维）。整个构造叫做<strong>纤维丛</strong>。</p>
+        
+        <p><strong>毛毛虫的类比</strong>：</p>
+        <ul>
+          <li>毛毛虫的身体 = 底空间 $\Omega$（一维曲线）</li>
+          <li>每一节长的毛 = 纤维 $V_u$（向量空间）</li>
+          <li>整只毛毛虫 = 纤维丛 $E$</li>
+        </ul>
+        <p>关键：每个点的"毛"是独立的向量空间，不能直接比较！</p>
+        
+        <p><strong>切丛（Tangent Bundle）</strong>：</p>
+        <p>流形最重要的纤维丛：</p>
+        $$T\Omega = \bigcup_{u \in \Omega} \{u\} \times T_u\Omega$$
+        <ul>
+          <li>底空间：流形 $\Omega$</li>
+          <li>纤维：切空间 $T_u\Omega$</li>
+          <li>例子：球面 $S^2$ 的切丛 = "每个点附着一个平面"</li>
+        </ul>
+        
+        <p><strong>地球上的指南针类比</strong>：</p>
+        <ul>
+          <li>地球表面 = 底空间 $S^2$</li>
+          <li>每个地点都有"东南西北"四个方向 = 切空间 $T_u S^2$</li>
+          <li>但北京的"东"和上海的"东"指向天空中<strong>不同的方向</strong></li>
+          <li>这就是为什么不同点的切空间是"不同的"向量空间</li>
+        </ul>
+        
+        <p><strong>特征向量丛（Feature Vector Bundle）</strong>：</p>
+        <p>在深度学习中，网格上的特征可以看作纤维丛：</p>
+        <ul>
+          <li>底空间：网格 $\Omega$</li>
+          <li>纤维：特征通道 $\mathbb{R}^c$（如 RGB 颜色、卷积特征）</li>
+          <li>问题：特征如何在网格上"传递"？→ 需要规范！</li>
+        </ul>
+        
+        <p><strong>局部 vs 全局</strong>：</p>
+        <ul>
+          <li><strong>局部平凡</strong>：在小区域内，丛看起来像 $U \times V$（直积）</li>
+          <li><strong>全局扭曲</strong>：可能无法用一个坐标卡覆盖整个丛（如莫比乌斯带）</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q2：什么是规范（Gauge）？为什么坐标选择是"任意的"？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>规范 = 每个点上纤维的坐标系（基）</strong>：</p>
+        <p>在点 $u$ 的纤维 $V_u$ 中，选择一组基 $\{\mathbf{e}_1, \ldots, \mathbf{e}_d\}$，这个选择叫做<strong>规范</strong> $\omega_u$。</p>
+        
+        <p><strong>指南针的类比</strong>：</p>
+        <ul>
+          <li>你在地球上某个位置，想描述一个方向（切向量）</li>
+          <li>你可以用"磁北"作为参考（一种规范）</li>
+          <li>也可以用"真北"作为参考（另一种规范）</li>
+          <li>还可以用"我面朝的方向"作为参考（第三种规范）</li>
+          <li>同一个方向在不同规范下有<strong>不同的坐标</strong>！</li>
+        </ul>
+        
+        <p><strong>数学表达</strong>：</p>
+        <p>抽象向量 $X(u) \in V_u$ 在规范 $\omega$ 下表示为坐标 $\mathbf{x}(u) \in \mathbb{R}^d$：</p>
+        $$X(u) = \omega_u(\mathbf{x}(u)) = \sum_{i=1}^d x^i(u) \mathbf{e}_i(u)$$
+        
+        <p><strong>为什么坐标是任意的</strong>：</p>
+        <ol>
+          <li><strong>物理定律不依赖坐标</strong>：
+            <ul>
+              <li>牛顿第二定律 $F = ma$ 在任何坐标系下都成立</li>
+              <li>但力和加速度的<strong>坐标表示</strong>会改变</li>
+            </ul>
+          </li>
+          <li><strong>几何对象是抽象的</strong>：
+            <ul>
+              <li>向量本身不依赖基的选择</li>
+              <li>只有当我们"测量"它时，才需要坐标</li>
+            </ul>
+          </li>
+          <li><strong>深度学习的启示</strong>：
+            <ul>
+              <li>网格上的特征也应该"坐标无关"</li>
+              <li>卷积应该对局部基的选择保持等变性</li>
+            </ul>
+          </li>
+        </ol>
+        
+        <p><strong>温度场 vs 风场的区别</strong>：</p>
+        <table>
+          <tr>
+            <th>类型</th>
+            <th>数学对象</th>
+            <th>规范依赖</th>
+          </tr>
+          <tr>
+            <td>温度场</td>
+            <td>标量场 $T : \Omega \to \mathbb{R}$</td>
+            <td>❌ 不依赖规范（30°C 就是 30°C）</td>
+          </tr>
+          <tr>
+            <td>风场</td>
+            <td>向量场 $V : \Omega \to T\Omega$</td>
+            <td>✅ 依赖规范（"向东 5 m/s"取决于"东"的定义）</td>
+          </tr>
+          <tr>
+            <td>RGB 图像</td>
+            <td>截面 $x : \Omega \to \mathbb{R}^3$</td>
+            <td>❌ 不依赖（颜色是绝对的）</td>
+          </tr>
+          <tr>
+            <td>CNN 特征</td>
+            <td>截面 $x : \Omega \to \mathbb{R}^c$</td>
+            <td>✅ 可能依赖（通道的顺序可以重排）</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q3：什么是规范变换？为什么说它是"更换参考框架"？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>规范变换 = 在每个点独立地改变坐标系</strong>：</p>
+        <p>给定规范 $\omega$，选择变换 $g : \Omega \to G$（$G$ 是结构群），新规范为：</p>
+        $$\omega'_u = \omega_u \circ g_u$$
+        
+        <p><strong>坐标的变换规则</strong>：</p>
+        $$\mathbf{x}'(u) = g_u^{-1} \mathbf{x}(u)$$
+        <p>关键：抽象向量 $X(u)$ 不变，只是坐标表示改变了。</p>
+        
+        <p><strong>旋转仪表盘的类比</strong>：</p>
+        <ul>
+          <li>你在车里，速度向量是"向前 60 km/h"</li>
+          <li>如果你把仪表盘旋转 90°（规范变换）</li>
+          <li>速度向量本身没变（车还是那样开）</li>
+          <li>但在新仪表盘上显示为"向右 60 km/h"（坐标变了）</li>
+        </ul>
+        
+        <p><strong>结构群（Structure Group）</strong>：</p>
+        <p>允许的规范变换类型：</p>
+        <table>
+          <tr>
+            <th>纤维丛</th>
+            <th>结构群 $G$</th>
+            <th>意义</th>
+          </tr>
+          <tr>
+            <td>切丛 $T\Omega$</td>
+            <td>$\text{SO}(s)$</td>
+            <td>旋转（保持度量）</td>
+          </tr>
+          <tr>
+            <td>主丛</td>
+            <td>$\text{GL}(d)$</td>
+            <td>一般线性变换</td>
+          </tr>
+          <tr>
+            <td>Spin 丛</td>
+            <td>$\text{Spin}(s)$</td>
+            <td>旋量表示</td>
+          </tr>
+          <tr>
+            <td>特征丛</td>
+            <td>$\mathbb{Z}_2$ 或 $S_c$</td>
+            <td>通道翻转/置换</td>
+          </tr>
+        </table>
+        
+        <p><strong>杨-Mills 理论的启示</strong>：</p>
+        <ul>
+          <li>电磁场理论：规范群 = $U(1)$（复数相位）</li>
+          <li>弱相互作用：规范群 = $SU(2)$</li>
+          <li>强相互作用：规范群 = $SU(3)$</li>
+          <li>物理定律对规范变换<strong>不变</strong> → 导出力的形式</li>
+        </ul>
+        
+        <p><strong>深度学习中的规范变换</strong>：</p>
+        <ul>
+          <li>在网格的每个节点独立旋转特征通道</li>
+          <li>如果网络输出依赖这种旋转 → 网络"看到了幽灵模式"</li>
+          <li>规范等变网络自动消除这种依赖性</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q4：什么是规范等变性？为什么它比旋转等变性更根本？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>规范等变性的定义</strong>：</p>
+        <p>函数 $f$ 是<strong>规范等变</strong>的，如果改变输入的规范会导致输出的规范<strong>以相同方式</strong>改变：</p>
+        $$f(\rho_g x, \Omega) = \rho'_g f(x, \Omega)$$
+        <ul>
+          <li>$\rho_g$：输入空间的规范变换（如旋转特征）</li>
+          <li>$\rho'_g$：输出空间的规范变换</li>
+        </ul>
+        
+        <p><strong>GPS 导航的类比</strong>：</p>
+        <ul>
+          <li><strong>输入</strong>：当前位置 + 目标位置（在某个坐标系下）</li>
+          <li><strong>输出</strong>："向东北走 500 米"（方向向量）</li>
+          <li><strong>规范变换</strong>：把地图旋转 90°</li>
+          <li><strong>规范等变</strong>：输出方向也旋转 90°（"向西北走 500 米"）</li>
+          <li>关键：<strong>建议本身的几何含义不变</strong>（最短路径还是那条）</li>
+        </ul>
+        
+        <p><strong>规范等变 vs 其他等变性</strong>：</p>
+        <table>
+          <tr>
+            <th>等变类型</th>
+            <th>群</th>
+            <th>作用方式</th>
+            <th>深度</th>
+          </tr>
+          <tr>
+            <td>平移等变</td>
+            <td>$\mathbb{R}^n$</td>
+            <td>全局移动整个域</td>
+            <td>基础</td>
+          </tr>
+          <tr>
+            <td>旋转等变</td>
+            <td>SO(n)</td>
+            <td>全局旋转整个域</td>
+            <td>中级</td>
+          </tr>
+          <tr>
+            <td>置换等变</td>
+            <td>$S_n$</td>
+            <td>重排节点</td>
+            <td>中级</td>
+          </tr>
+          <tr>
+            <td>规范等变</td>
+            <td>$G^\Omega$</td>
+            <td><strong>在每个点独立变换</strong></td>
+            <td><strong>最深！</strong></td>
+          </tr>
+        </table>
+        
+        <p><strong>为什么规范等变更根本</strong>：</p>
+        <ol>
+          <li><strong>局部性</strong>：不要求全局对称，只要求局部一致性</li>
+          <li><strong>自由度</strong>：规范群 $G^\Omega$ 是无穷维的（每个点独立选择）</li>
+          <li><strong>包含关系</strong>：旋转等变是规范等变的特例（所有点用同一个旋转）</li>
+        </ol>
+        
+        <p><strong>物理类比</strong>：</p>
+        <ul>
+          <li><strong>刚体旋转</strong>（SE(3) 等变）：整个系统一起转</li>
+          <li><strong>电磁场</strong>（U(1) 规范等变）：每个点的相位独立选择</li>
+          <li>规范等变 → 力是"最小耦合"形式 $\nabla \to \nabla + A$</li>
+        </ul>
+        
+        <p><strong>实现规范等变的方法</strong>：</p>
+        <ul>
+          <li><strong>只用规范不变量</strong>：如范数 $\|X\|$、内积 $\langle X, Y \rangle$</li>
+          <li><strong>使用联络</strong>：定义"协变导数"来比较不同点的特征</li>
+          <li><strong>隐式规范</strong>：自动学习规范（如 Vector Neurons）</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q5：什么是联络（Connection）？为什么说它"教你怎么在弯曲空间上搬运东西"？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>联络 = 定义"平行移动"的规则</strong>：</p>
+        <p>在流形上，不同点的切空间是不同的向量空间。<strong>联络</strong>告诉我们如何沿曲线"传输"向量，使得在局部看来"不旋转不拉伸"。</p>
+        
+        <p><strong>传送带的类比</strong>：</p>
+        <ul>
+          <li>想象在山坡（流形）上铺了一条传送带（曲线）</li>
+          <li>你在起点放一个箭头（切向量）</li>
+          <li>箭头沿传送带移动，如何保持"方向不变"？</li>
+          <li><strong>欧几里得规则</strong>："平移"箭头（但可能不再贴着地面！）</li>
+          <li><strong>联络规则</strong>：箭头始终"贴着山坡"，保持与传送带的夹角</li>
+        </ul>
+        
+        <p><strong>协变导数（Covariant Derivative）</strong>：</p>
+        <p>联络用协变导数 $\nabla$ 表示，作用于向量场 $X$：</p>
+        $$\nabla_Y X$$
+        <ul>
+          <li>$Y$：方向（沿哪个方向求导）</li>
+          <li>$X$：被求导的向量场</li>
+          <li>结果：$X$ 沿 $Y$ 方向的"变化率"</li>
+        </ul>
+        
+        <p><strong>与普通导数的区别</strong>：</p>
+        <table>
+          <tr>
+            <th>性质</th>
+            <th>普通导数 $\partial$</th>
+            <th>协变导数 $\nabla$</th>
+          </tr>
+          <tr>
+            <td>坐标依赖</td>
+            <td>❌ 依赖坐标选择</td>
+            <td>✅ 坐标无关（几何量）</td>
+          </tr>
+          <tr>
+            <td>结果是张量</td>
+            <td>❌ 不一定</td>
+            <td>✅ 总是张量</td>
+          </tr>
+          <tr>
+            <td>Leibniz 律</td>
+            <td>✅</td>
+            <td>✅</td>
+          </tr>
+          <tr>
+            <td>适用范围</td>
+            <td>欧几里得空间</td>
+            <td>任意流形</td>
+          </tr>
+        </table>
+        
+        <p><strong>Levi-Civita 联络</strong>：</p>
+        <p>给定黎曼度量 $g$，存在<strong>唯一</strong>的联络满足：</p>
+        <ol>
+          <li><strong>度量兼容</strong>：$\nabla g = 0$（平行移动保持长度和角度）</li>
+          <li><strong>无挠率</strong>：$\nabla_X Y - \nabla_Y X = [X, Y]$（李括号）</li>
+        </ol>
+        <p>这就是<strong>自然的</strong>联络——不需要额外选择。</p>
+        
+        <p><strong>Christoffel 符号</strong>：</p>
+        <p>在局部坐标下，联络用 Christoffel 符号 $\Gamma^k_{ij}$ 表示：</p>
+        $$\nabla_{\partial_i} \partial_j = \Gamma^k_{ij} \partial_k$$
+        <p>这些符号编码了"坐标基如何沿曲线旋转"。</p>
+        
+        <p><strong>深度学习中的应用</strong>：</p>
+        <ul>
+          <li><strong>特征传递</strong>：从节点 $i$ 到节点 $j$ 的消息需要"对齐规范"</li>
+          <li><strong>边上的平行移动</strong>：$X_j = \Gamma_{i \to j} X_i$（$\Gamma$ 是旋转矩阵）</li>
+          <li><strong>规范 CNN</strong>：卷积核定义在切空间，通过联络"滑动"</li>
+        </ul>
+        
+        <p><strong>曲率 = 联络的"不可交换性"</strong>：</p>
+        <p>如果先沿 $X$ 平行移动再沿 $Y$，与反过来的结果不同，差异就是<strong>曲率张量</strong>：</p>
+        $$R(X, Y)Z = \nabla_X \nabla_Y Z - \nabla_Y \nabla_X Z - \nabla_{[X,Y]} Z$$
+        <p>曲率为零 $\Leftrightarrow$ 空间局部是平坦的。</p>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q6：为什么流形上的卷积需要规范？"滤波器怎么在弯曲表面上滑动"？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>欧几里得卷积的回顾</strong>：</p>
+        <p>在平面上，卷积核"平移"到每个位置：</p>
+        $$(x \star \psi)(u) = \int_{\mathbb{R}^2} x(v) \psi(u - v) \, dv$$
+        <p>关键：$u - v$ 有意义（平移向量）。</p>
+        
+        <p><strong>流形上的问题</strong>：</p>
+        <ul>
+          <li>流形上<strong>没有减法</strong>！$u - v$ 不在流形上</li>
+          <li>不同点的切空间是不同的 → 滤波器 $\psi_u \in T_u\Omega$ 无法直接比较</li>
+        </ul>
+        
+        <p><strong>解决方案 1：谱卷积</strong>：</p>
+        <p>在频域定义（见 Q7 of 4.4）：</p>
+        $$(x \star \psi) = \Phi \text{diag}(\hat{\theta}) \Phi^\top x$$
+        <p>问题：各向同性、对扰动敏感、无法跨域泛化。</p>
+        
+        <p><strong>解决方案 2：空间卷积 + 规范</strong>：</p>
+        <p>步骤：</p>
+        <ol>
+          <li><strong>局部化</strong>：在点 $u$ 的邻域 $\mathcal{N}(u)$ 内操作</li>
+          <li><strong>映射到切空间</strong>：用对数映射 $\log_u(v) \in T_u\Omega$</li>
+          <li><strong>定义滤波器</strong>：$\psi_u : T_u\Omega \to \mathbb{R}$（在切空间中）</li>
+          <li><strong>对齐规范</strong>：邻居 $v$ 的特征 $x(v)$ 在<strong>不同的切空间</strong> $T_v\Omega$ 中
+            <ul>
+              <li>需要平行移动到 $T_u\Omega$：$x'(v) = \Gamma_{v \to u} x(v)$</li>
+            </ul>
+          </li>
+          <li><strong>卷积</strong>：
+            $$(x \star \psi)(u) = \sum_{v \in \mathcal{N}(u)} x'(v) \psi_u(\log_u(v))$$
+          </li>
+        </ol>
+        
+        <p><strong>规范的选择</strong>：</p>
+        <table>
+          <tr>
+            <th>方法</th>
+            <th>规范选择</th>
+            <th>优缺点</th>
+          </tr>
+          <tr>
+            <td>MoNet</td>
+            <td>极坐标（角度 + 距离）</td>
+            <td>简单，但依赖参考方向</td>
+          </tr>
+          <tr>
+            <td>FeaStNet</td>
+            <td>主曲率方向</td>
+            <td>几何自适应，但不稳定</td>
+          </tr>
+          <tr>
+            <td>Gauge CNN</td>
+            <td>平行移动（联络）</td>
+            <td>规范等变！但计算复杂</td>
+          </tr>
+          <tr>
+            <td>Vector Neurons</td>
+            <td>隐式学习</td>
+            <td>端到端，但解释性差</td>
+          </tr>
+        </table>
+        
+        <p><strong>AnisotropicCNN 的核心思想</strong>：</p>
+        <p>使用<strong>各向异性</strong>滤波器（有方向性）：</p>
+        <ul>
+          <li>沿主曲率方向定义不同的权重</li>
+          <li>自动适应局部几何（褶皱、边缘、平滑区域）</li>
+        </ul>
+        
+        <p><strong>为什么规范等变重要</strong>：</p>
+        <ul>
+          <li>如果滤波器依赖规范选择 → 网格的"重新三角化"会改变结果</li>
+          <li>规范等变 → 结果只依赖几何，不依赖网格表示</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q7：规范 CNN（Gauge-Equivariant CNN）是怎么工作的？为什么比普通网格 CNN 更强大？</强>
+      </div>
+      <div class="answer">
+        <p><strong>标准网格 CNN 的问题</strong>：</p>
+        <ul>
+          <li>特征定义在切空间（或其他纤维）中</li>
+          <li>每个点的基（规范）是<strong>任意选择的</strong></li>
+          <li>如果改变规范 → 特征坐标改变 → 网络输出改变</li>
+          <li>但几何本身没变！</li>
+        </ul>
+        
+        <p><strong>Gauge CNN 的核心机制</strong>：</p>
+        <ol>
+          <li><strong>输入</strong>：网格上的向量场 $x : \Omega \to T\Omega$（或更一般的截面）</li>
+          <li><strong>平行移动</strong>：从节点 $j$ 到节点 $i$ 的边上，平行移动特征：
+            $$x_j \to \Gamma_{j \to i} x_j$$
+            其中 $\Gamma_{j \to i} \in \text{SO}(s)$ 是平行移动算子
+          </li>
+          <li><strong>卷积</strong>：聚合对齐后的特征：
+            $$(x \star \psi)_i = \sum_{j \in \mathcal{N}(i)} \psi_{ij} \Gamma_{j \to i} x_j$$
+          </li>
+          <li><strong>输出</strong>：新的向量场（或标量场，如果最后投影）</li>
+        </ol>
+        
+        <p><strong>平行移动算子的构造</strong>：</p>
+        <p>在网格上，联络不是给定的，需要<strong>选择</strong>：</p>
+        <ul>
+          <li><strong>旋转对齐</strong>：将 $T_j\Omega$ 旋转到与 $T_i\Omega$ "对齐"</li>
+          <li>常用方法：最小旋转（Rodrigues 公式）</li>
+          $$\Gamma_{j \to i} = I + \frac{\sin\theta}{\theta}K + \frac{1-\cos\theta}{\theta^2}K^2$$
+          其中 $K$ 是法向量 $\mathbf{n}_j$ 到 $\mathbf{n}_i$ 的叉乘矩阵
+        </ul>
+        
+        <p><strong>与标准图卷积的对比</strong>：</p>
+        <table>
+          <tr>
+            <th>方法</th>
+            <th>特征类型</th>
+            <th>等变性</th>
+            <th>表达力</th>
+          </tr>
+          <tr>
+            <td>GCN</td>
+            <td>标量</td>
+            <td>置换等变</td>
+            <td>基线</td>
+          </tr>
+          <tr>
+            <td>MoNet</td>
+            <td>标量</td>
+            <td>置换等变</td>
+            <td>+空间权重</td>
+          </tr>
+          <tr>
+            <td>Gauge CNN</td>
+            <td>向量</td>
+            <td>置换 + 规范等变</td>
+            <td>++方向信息</td>
+          </tr>
+          <tr>
+            <td>Vector Neurons</td>
+            <td>向量</td>
+            <td>SE(3) 等变</td>
+            <td>++旋转等变</td>
+          </tr>
+        </table>
+        
+        <p><strong>优势</strong>：</p>
+        <ul>
+          <li>自动学习<strong>方向敏感</strong>的特征（如流体中的涡旋方向）</li>
+          <li>对网格的重三角化（remeshing）鲁棒</li>
+          <li>减少数据需求（不需要旋转增强）</li>
+        </ul>
+        
+        <p><strong>挑战</strong>：</p>
+        <ul>
+          <li>计算复杂度高（每条边需要旋转矩阵）</li>
+          <li>平行移动的选择不唯一（不同联络 → 不同结果）</li>
+          <li>实现复杂（需要微分几何库）</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q8：纤维丛理论在深度学习中为什么重要？它解决了什么问题？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>核心问题：如何在不规则域上定义特征</strong>：</p>
+        <ul>
+          <li>CNN：特征定义在规则网格上，通道顺序无关紧要</li>
+          <li>网格/点云：没有"全局坐标系"，每个点的"参考方向"是任意的</li>
+          <li>纤维丛：提供了统一的数学框架来处理这种任意性</li>
+        </ul>
+        
+        <p><strong>三个层次的等变性</strong>：</p>
+        <ol>
+          <li><strong>底空间等变</strong>：
+            <ul>
+              <li>对域的重排/变形不敏感</li>
+              <li>例子：置换等变、等距不变</li>
+            </ul>
+          </li>
+          <li><strong>纤维等变</strong>：
+            <ul>
+              <li>对特征通道的旋转/置换不敏感</li>
+              <li>例子：SO(3) 等变、通道置换不变</li>
+            </ul>
+          </li>
+          <li><strong>规范等变</strong>：
+            <ul>
+              <li>对<strong>局部参考框架</strong>的选择不敏感</li>
+              <li>纤维丛的核心！</li>
+            </ul>
+          </li>
+        </ol>
+        
+        <p><strong>实际应用中的例子</strong>：</p>
+        <div style="background: #f0f4f8; padding: 12px; border-radius: 6px; margin: 12px 0;">
+          <strong>天气预报</strong>：
+          <ul>
+            <li>底空间：地球表面 $S^2$</li>
+            <li>纤维：风速向量（切向量场）</li>
+            <li>问题：北京和上海的"向东"指向天空中不同方向</li>
+            <li>解决：用规范等变网络，风速向量自动对齐</li>
+          </ul>
+        </div>
+        
+        <div style="background: #f0f4f8; padding: 12px; border-radius: 6px; margin: 12px 0;">
+          <strong>分子动力学</strong>：
+          <ul>
+            <li>底空间：原子位置（点云）</li>
+            <li>纤维：力向量 $\mathbb{R}^3$</li>
+            <li>问题：旋转整个分子，力也应该旋转</li>
+            <li>解决：SE(3) 等变网络（特殊的纤维丛）</li>
+          </ul>
+        </div>
+        
+        <div style="background: #f0f4f8; padding: 12px; border-radius: 6px; margin: 12px 0;">
+          <strong>医学图像分割</strong>：
+          <ul>
+            <li>底空间：器官表面网格</li>
+            <li>纤维：法向量（指示"内外"）</li>
+            <li>问题：不同扫描的网格三角化不同</li>
+            <li>解决：规范等变 CNN，结果只依赖几何形状</li>
+          </ul>
+        </div>
+        
+        <p><strong>与经典几何深度学习的关系</strong>：</p>
+        <ul>
+          <li><strong>图神经网络</strong>：标量场上的置换等变（最简单的纤维丛：平凡丛）</li>
+          <li><strong>SE(3) 网络</strong>：向量场上的旋转等变（向量丛 + 全局规范）</li>
+          <li><strong>规范 CNN</strong>：向量场上的规范等变（向量丛 + 局部规范）</li>
+        </ul>
+        
+        <p><strong>理论意义</strong>：</p>
+        <ul>
+          <li>纤维丛是 GDL 蓝图的<strong>最一般形式</strong></li>
+          <li>所有几何等变网络都可以用纤维丛语言统一表述</li>
+          <li>物理启发：杨-Mills 理论 → 规范场论 → 几何深度学习</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <div class="enrichment-intuition">
+    <h4>🎯 核心直觉</h4>
+    <div class="intuition-item">
+      <strong>纤维丛 = "毛毛虫"：在每个点附着向量空间</strong>
+      <p>不同点的"毛"（纤维）是独立的向量空间。要比较它们，需要"对齐"——这就是规范和联络的作用。</p>
+    </div>
+    <div class="intuition-item">
+      <strong>规范 = 选择坐标系 = 选择指南针方向</strong>
+      <p>同一个几何对象（向量），在不同坐标系下有不同的数值表示。物理定律/神经网络应该对这种选择不敏感。</p>
+    </div>
+    <div class="intuition-item">
+      <strong>规范变换 = 在每个点独立旋转仪表盘</strong>
+      <p>不是全局转动整个世界（旋转等变），而是每个地方独立重新定义"东南西北"（规范等变）——自由度无穷大！</p>
+    </div>
+    <div class="intuition-item">
+      <strong>联络 = 平行移动的规则 = 如何搬运箭头</strong>
+      <p>在弯曲空间中，"保持方向不变"需要定义。Levi-Civita 联络是自然选择（保持长度和角度），但不是唯一选择。</p>
+    </div>
+    <div class="intuition-item">
+      <strong>曲率 = 平行移动的路径依赖性</strong>
+      <p>在平面上绕一圈，箭头方向不变。在球面上绕一圈，箭头旋转了——旋转角正比于曲率积分（高斯-博内定理）。</p>
+    </div>
+    <div class="intuition-item">
+      <strong>规范等变 = 物理定律的数学化</strong>
+      <p>电磁学、量子力学、广义相对论——最深刻的物理理论都基于规范对称性。深度学习也应该如此：结果不依赖人为选择的坐标。</p>
+    </div>
+  </div>
+  
+  <div class="enrichment-application">
+    <h4>🚀 应用场景</h4>
+    <div class="application-item">
+      <strong>全球天气预报（风场预测）</strong>
+      <p>球面上的风速向量场。Gauge-Equivariant Mesh CNN 可以学习涡旋、急流的传播规律，且对球面的三角化方式不敏感。</p>
+    </div>
+    <div class="application-item">
+      <strong>蛋白质结构预测</strong>
+      <p>氨基酸链的构象是 SE(3) 流形。AlphaFold 使用旋转等变注意力机制，隐式处理了规范自由度（每个残基的局部坐标系）。</p>
+    </div>
+    <div class="application-item">
+      <strong>流体动力学仿真</strong>
+      <p>速度场、压力场定义在网格上。Gauge CNN 可以学习 Navier-Stokes 方程的离散版本，自动满足 Galilean 不变性。</p>
+    </div>
+    <div class="application-item">
+      <strong>3D 形状对应</strong>
+      <p>两个非刚性形状（如不同姿态的人体）之间的点对应。函数映射方法利用拉普拉斯的谱（规范不变量）建立对应。</p>
+    </div>
+    <div class="application-item">
+      <strong>医学图像配准</strong>
+      <p>对齐不同时间/模态的器官扫描。基于测地距离的配准比欧几里得距离更鲁棒（内蕴几何 vs 外在嵌入）。</p>
+    </div>
+    <div class="application-item">
+      <strong>粒子物理（夸克场）</strong>
+      <p>量子色动力学（QCD）的规范群是 SU(3)。虽然不是直接用深度学习，但规范场论的思想启发了 Equivariant GNN 的设计。</p>
+    </div>
+    <div class="application-item">
+      <strong>机器人触觉（力觉传感）</strong>
+      <p>机器人手指表面的力分布是切向量场。Gauge-Equivariant CNN 可以识别物体的形状和材质，且不受手指姿态影响。</p>
+    </div>
+  </div>
+</div>

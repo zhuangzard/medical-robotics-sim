@@ -1,0 +1,193 @@
+<div class="enrichment-block">
+        <h3>❓ GNN 的"史前时代"（1990s-2000s）：谁最早提出在图上做神经网络？</h3>
+        <div class="answer">
+            <p><strong>🔑 早期先驱（1990s）：</strong></p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>1994 — Labeling RAAM（Sperduti）</strong>：在树结构上递归应用神经网络
+                </div>
+                <div class="timeline-item">
+                    <strong>1996 — Backpropagation through structure（Goller & Kuchler）</strong>：对有向无环图（DAG）做反向传播
+                </div>
+                <div class="timeline-item">
+                    <strong>1997 — Adaptive processing（Sperduti & Starita）</strong>：处理任意图结构，但限于小图
+                </div>
+            </div>
+            
+            <p><strong>⚠️ 核心问题：</strong></p>
+            <ul>
+                <li>这些方法主要处理<strong>树或 DAG</strong>，对通用图（有环）效果不好</li>
+                <li>计算复杂度高，难以扩展</li>
+                <li>缺乏理论保证（如收敛性）</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>1990s 的研究者意识到"图 + 神经网络"很有用，但当时的方法像"在泥泞路上开车"——能走，但慢且不稳定。</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 第一个真正的 GNN（2005-2009）：Gori 和 Scarselli 做了什么？</h3>
+        <div class="answer">
+            <p><strong>Scarselli et al. (2005, 2009) — Graph Neural Network：</strong></p>
+            
+            <p><strong>🔑 核心思想：</strong></p>
+            <ul>
+                <li>节点表示通过<strong>递归更新</strong>达到<strong>不动点</strong>（fixed point）</li>
+                <li>$$h_v = f(x_v, \{h_u \mid u \in N(v)\}, \{e_{uv}\})$$</li>
+                <li>迭代直到 $h_v$ 不再变化（收敛到不动点）</li>
+            </ul>
+            
+            <p><strong>⚠️ 限制：</strong></p>
+            <ul>
+                <li>需要保证<strong>收缩映射</strong>（contraction mapping）才能收敛</li>
+                <li>不使用节点特征（$x_v$ 只是标签）</li>
+                <li>需要特殊的反向传播算法（Almeida-Pineda 算法）</li>
+            </ul>
+            
+            <p><strong>🌟 重要性：</strong></p>
+            <p>首次正式定义"GNN"这个名字，并提出了<strong>消息传递</strong>的核心思想！</p>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>Scarselli 的 GNN 像"传话游戏"：每个人（节点）不断和邻居交流，直到大家的观点稳定下来（不动点）。但这个过程需要精心设计才能保证"收敛"。</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ GNN 的"文艺复兴"（2013-2016）：谁点燃了第二波浪潮？</h3>
+        <div class="answer">
+            <p><strong>关键突破：</strong></p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>2013 — Spectral GNN（Bruna et al.）</strong>：用图拉普拉斯的<span class="highlight">谱分解</span>定义卷积，引入"图信号处理"视角
+                </div>
+                <div class="timeline-item">
+                    <strong>2015 — Gated GNN（Li et al.）</strong>：用<span class="highlight">GRU 门控机制</span>代替不动点迭代，用标准 BP 训练
+                </div>
+                <div class="timeline-item">
+                    <strong>2016 — GCN（Kipf & Welling）</strong>：简化谱方法，提出<span class="highlight">局部卷积</span>公式，易于实现和扩展
+                </div>
+            </div>
+            
+            <p><strong>🔑 GCN 的革命性：</strong></p>
+            <p>$$H^{(l+1)} = \sigma(\tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}H^{(l)}W^{(l)})$$</p>
+            
+            <ul>
+                <li>公式<strong>简洁优雅</strong>，易于理解和实现</li>
+                <li>计算<strong>高效</strong>，利用稀疏矩阵</li>
+                <li>理论上是<strong>一阶 Chebyshev 多项式滤波器</strong>的特例</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>Kipf & Welling 的 GCN 是 GNN 的"iPhone 时刻"——不一定是技术最先进的，但足够简单、好用，让大家都能上手！</p>
+            
+            <p><strong>🌟 影响：</strong></p>
+            <p>GCN 论文（2016）是 GNN 领域<strong>引用最多</strong>的论文之一，引爆了 2017-2020 年的 GNN 热潮。</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 2017-2020 的 GNN"百花齐放"：都有哪些重要变种？</h3>
+        <div class="answer">
+            <p><strong>核心架构的演化：</strong></p>
+            
+            <table>
+                <tr>
+                    <th>年份</th>
+                    <th>模型</th>
+                    <th>核心创新</th>
+                </tr>
+                <tr>
+                    <td>2017</td>
+                    <td><strong>GraphSAGE</strong></td>
+                    <td>邻居<strong>采样</strong>，支持大图和归纳学习</td>
+                </tr>
+                <tr>
+                    <td>2017</td>
+                    <td><strong>MPNN</strong></td>
+                    <td>统一<strong>消息传递</strong>框架，提出边特征</td>
+                </tr>
+                <tr>
+                    <td>2017</td>
+                    <td><strong>MoNet</strong></td>
+                    <td>网格/流形上的 GNN，<strong>注意力聚合</strong></td>
+                </tr>
+                <tr>
+                    <td>2018</td>
+                    <td><strong>GAT</strong></td>
+                    <td><strong>自注意力</strong>机制，动态加权邻居</td>
+                </tr>
+                <tr>
+                    <td>2018</td>
+                    <td><strong>GIN</strong></td>
+                    <td>理论最优表达力（与 <strong>WL 测试</strong>等价）</td>
+                </tr>
+            </table>
+            
+            <p><strong>🔑 三大派系：</strong></p>
+            <ul>
+                <li><strong>谱方法</strong>（Spectral）：GCN, ChebNet — 基于图傅里叶变换</li>
+                <li><strong>空间方法</strong>（Spatial）：GraphSAGE, GAT — 基于局部邻居聚合</li>
+                <li><strong>消息传递</strong>（Message Passing）：MPNN, EGNN — 基于边消息</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>2017-2020 年的 GNN 研究像"军备竞赛"：每个月都有新模型，大家比谁的架构更强、理论更深、应用更广！</p>
+            
+            <p><strong>🌟 重要应用突破：</strong></p>
+            <ul>
+                <li><strong>药物发现</strong>：分子性质预测（Gilmer et al. 2017）</li>
+                <li><strong>推荐系统</strong>：图协同过滤（Pinterest, Alibaba）</li>
+                <li><strong>物理模拟</strong>：粒子系统、流体力学（DeepMind）</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ GNN 的"表达力危机"（2018-2019）：WL 测试揭示了什么？</h3>
+        <div class="answer">
+            <p><strong>问题：GNN 能区分哪些图？</strong></p>
+            
+            <p><strong>🔑 关键发现（Xu et al. 2018, Morris et al. 2019）：</strong></p>
+            <p>大多数 GNN（包括 GCN、GraphSAGE、GAT）的表达力<strong>不超过 1-WL 测试</strong>！</p>
+            
+            <p><strong>什么是 WL 测试？</strong></p>
+            <ul>
+                <li><strong>Weisfeiler-Lehman（1968）</strong>：一个经典的图同构测试算法</li>
+                <li>迭代更新节点标签：$\text{hash}(v) = \text{hash}(\text{hash}(v), \{\text{hash}(u) \mid u \in N(v)\})$</li>
+                <li>如果两个图的节点标签最终相同 → 可能同构；否则一定不同构</li>
+            </ul>
+            
+            <p><strong>⚠️ 1-WL 的局限：</strong></p>
+            <ul>
+                <li>无法区分很多简单的图结构（如<strong>三角形</strong> vs <strong>3-星图</strong>）</li>
+                <li>无法计数<strong>环</strong>的数量</li>
+            </ul>
+            
+            <p><strong>🌟 解决方案：</strong></p>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>GIN（Xu et al. 2018）</strong>：用 MLP + sum 聚合，达到 1-WL 的<span class="highlight">最大表达力</span>
+                </div>
+                <div class="timeline-item">
+                    <strong>k-GNN（Morris et al. 2019）</strong>：在 k-元组上做消息传递，超越 1-WL
+                </div>
+                <div class="timeline-item">
+                    <strong>子图 GNN（Bouritsas et al. 2020）</strong>：计数子结构（如三角形），增强表达力
+                </div>
+            </div>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>2018 年大家发现：很多 GNN 虽然实用，但理论上有"盲区"——有些简单的图结构它们根本分不清！这引发了"表达力军备竞赛"，大家开始设计更强的架构。</p>
+            
+            <p><strong>🔍 深刻启示：</strong></p>
+            <p><strong>实践 vs 理论</strong>：大多数真实任务不需要完美的表达力（因为有丰富的节点特征），但理论分析能指导架构设计，避免"盲目试错"！</p>
+        </div>
+    </div>
+
+    <hr style="margin: 2rem 0; border: none; border-top: 2px solid #ef4444;">
+    <p style="text-align: center; color: #666; font-size: 0.9em;">
+        <strong>总结：</strong>从 1990s 的树递归到 2020s 的 Transformer-GNN，GNN 经历了"探索→沉寂→爆发→深化"的完整周期，现在已成为几何深度学习的核心支柱！
+    </p>

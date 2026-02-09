@@ -1,0 +1,214 @@
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：为什么 CNN 能在 ImageNet 上"碾压"传统方法？</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：2012 年之前大家都在用什么方法做图像分类？AlexNet 到底做对了什么？</p>
+      <div class="answer">
+        <p>💡 专家：pre-AlexNet 时代的主流方法是 <strong>SIFT + Bag-of-Words + SVM</strong>：</p>
+        <ol>
+          <li><strong>手工特征</strong>：提取 SIFT（尺度不变特征变换）描述子 → 捕捉局部边缘、角点</li>
+          <li><strong>特征编码</strong>：把图像表示为"视觉单词袋"（类比文本的词频）→ 忽略空间位置</li>
+          <li><strong>分类器</strong>：SVM 或随机森林</li>
+        </ol>
+        <p><strong>问题</strong>：</p>
+        <ul>
+          <li>特征是<strong>固定的</strong>（SIFT 是人设计的，不能从数据学习）</li>
+          <li>丢失<strong>空间信息</strong>（Bag-of-Words 不管特征在哪）</li>
+          <li><strong>浅层模型</strong>（SVM 只有一层决策边界）</li>
+        </ul>
+        <p><strong>AlexNet 的三大突破</strong>：</p>
+        <ol>
+          <li><strong>深度</strong>：8 层（5 卷积 + 3 全连接）→ 能学习<strong>层级化特征</strong>：
+            <ul>
+              <li>第 1 层：边缘、颜色</li>
+              <li>第 2-3 层：纹理、简单形状</li>
+              <li>第 4-5 层：物体部件（眼睛、轮子）</li>
+              <li>全连接层：整体物体</li>
+            </ul>
+          </li>
+          <li><strong>卷积</strong>：平移等变 → 同一个"猫耳朵探测器"可以在图像任意位置工作</li>
+          <li><strong>GPU 训练</strong>：120 万训练图像 × 90 个 epoch ≈ 6 天（双 GPU）→ 之前的方法根本训练不了这么大数据</li>
+        </ol>
+        <p><strong>结果</strong>：ILSVRC 2012 top-5 错误率从 26% 降到 15%——<strong>绝对优势</strong>，让整个领域转向深度学习。</p>
+      </div>
+    </div>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：ResNet 的"残差连接"为什么这么重要？不就是加了个 skip connection 吗？</p>
+      <div class="answer">
+        <p>💡 专家：残差连接看起来简单，但解决了<strong>深度网络训练的根本问题</strong>：</p>
+        <p><strong>问题</strong>：深度越大性能应该越好（拟合能力更强），但实际上：</p>
+        <ul>
+          <li>20 层网络 &gt; 10 层网络（性能提升）</li>
+          <li>但 56 层网络 &lt; 20 层网络（退化！）</li>
+        </ul>
+        <p>这不是过拟合（训练误差也高），而是<strong>优化困难</strong>：梯度消失/爆炸。</p>
+        <p><strong>残差连接的洞察</strong>：</p>
+        <div class="math-block">
+          传统网络：$H(x) = F(x)$ → 难优化<br>
+          ResNet：$H(x) = F(x) + x$ → 学习<strong>残差</strong> $F(x) = H(x) - x$
+        </div>
+        <p><strong>为什么更好</strong>：</p>
+        <ul>
+          <li>如果某一层不需要做任何变换，$F(x) = 0$ 比 $F(x) = x$ <strong>更容易学</strong>（权重接近 0 vs 学习恒等映射）</li>
+          <li>梯度可以"直接跳过"多层传回来：
+            <div class="math-block">
+              $\frac{\partial L}{\partial x} = \frac{\partial L}{\partial H} \cdot \left(\frac{\partial F}{\partial x} + 1\right)$
+            </div>
+            即使 $\frac{\partial F}{\partial x} \to 0$（梯度消失），仍有 $+1$ 这一项保证梯度流动！
+          </li>
+        </ul>
+        <p><strong>结果</strong>：ResNet-152（152 层）超过所有浅层网络 → 开启"深度就是力量"时代。</p>
+        <p><strong>GDL 视角</strong>：残差连接保持了<strong>平移等变性</strong>（如果 $F$ 是平移等变的，$F + \text{id}$ 也是）。</p>
+      </div>
+    </div>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：ViT（Vision Transformer）是不是说 CNN 已经过时了？</p>
+      <div class="answer">
+        <p>💡 专家：不是"过时"，而是<strong>互补</strong>！ViT 和 CNN 的差异：</p>
+        <table>
+          <thead>
+            <tr><th>方面</th><th>CNN</th><th>ViT (Vision Transformer)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>归纳偏置</strong></td><td>强（局部性 + 平移等变）</td><td>弱（全局注意力，任意位置都能交互）</td></tr>
+            <tr><td><strong>数据需求</strong></td><td>少（ImageNet-1k 就够）</td><td>多（需要 ImageNet-21k 或更大）</td></tr>
+            <tr><td><strong>计算复杂度</strong></td><td>$O(HW)$（卷积核大小固定）</td><td>$O((HW)^2)$（注意力矩阵）</td></tr>
+            <tr><td><strong>长程依赖</strong></td><td>弱（需要很深才能看到全局）</td><td>强（第一层就能看全图）</td></tr>
+          </tbody>
+        </table>
+        <p><strong>ViT 的核心思路</strong>：</p>
+        <ol>
+          <li>把图像分成 16×16 的 patches（比如 224×224 图像 → 14×14 patches）</li>
+          <li>每个 patch 展平成一个 token（类比 NLP 的词）</li>
+          <li>用标准 Transformer 处理 token 序列</li>
+          <li>全局注意力 → 任意两个 patch 都能直接交互</li>
+        </ol>
+        <p><strong>什么时候用哪个</strong>：</p>
+        <ul>
+          <li><strong>数据少</strong>（&lt; 100万图像）→ CNN（归纳偏置帮助泛化）</li>
+          <li><strong>数据多</strong>（&gt; 1000万）→ ViT（学到的注意力模式超过手工设计的卷积）</li>
+          <li><strong>密集预测</strong>（分割、检测）→ CNN or 混合架构（CNN 提取特征 + Transformer 建模全局）</li>
+        </ul>
+        <p><strong>GDL 视角</strong>：</p>
+        <ul>
+          <li>CNN = 2D 网格上的<strong>局部</strong>等变操作</li>
+          <li>ViT = patch 集合上的<strong>全局</strong>等变操作（Transformer 是置换等变的）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解：CNN = 分层的模式识别器</h4>
+    <p><strong>类比</strong>：想象你在拼图：</p>
+    <ul>
+      <li><strong>第 1 层（边缘检测）</strong>：找直线、曲线、颜色边界 → 像"找所有蓝色和红色的交界"</li>
+      <li><strong>第 2 层（纹理）</strong>：组合边缘成纹理 → "这一片有条纹" "那一片有圆点"</li>
+      <li><strong>第 3 层（部件）</strong>：组合纹理成物体部件 → "这是一个轮子"（圆形 + 金属纹理 + 辐条）</li>
+      <li><strong>第 4-5 层（物体）</strong>：组合部件成完整物体 → "这是一辆自行车"（两个轮子 + 车架 + 车把）</li>
+    </ul>
+    <p><strong>为什么分层</strong>：</p>
+    <ul>
+      <li><strong>复用</strong>："轮子探测器"对自行车、汽车、摩托车都有用 → 不需要每个类别都重新学</li>
+      <li><strong>组合爆炸</strong>：如果直接从像素到"自行车"，可能的模式 ≈ $256^{224×224}$ → 不可学习；分层后每层只需学少量组合</li>
+      <li><strong>鲁棒性</strong>：低层特征（边缘）对光照、视角变化更鲁棒</li>
+    </ul>
+    <p><strong>平移等变的意义</strong>：</p>
+    <p>无论"猫"在图像左上角还是右下角，同一个卷积核都能检测到 → <strong>参数共享</strong>。如果用全连接网络，左上角的"猫探测器"和右下角的是<strong>不同的参数</strong> → 需要更多数据。</p>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用：腹腔镜视觉 = 计算机视觉的特殊挑战</h4>
+    <p><strong>场景</strong>：机器人手术中，腹腔镜摄像头提供视觉反馈，需要实时分割器官、血管、肿瘤。</p>
+    <p><strong>特殊挑战</strong>：</p>
+    <ul>
+      <li><strong>低照度</strong>：腹腔内光源有限 → 图像噪声大</li>
+      <li><strong>反光</strong>：器官表面湿润 → 高光、伪影</li>
+      <li><strong>形变</strong>：器官会动（呼吸、心跳）、被器械推动 → 不是刚体</li>
+      <li><strong>遮挡</strong>：器械、血液、烟雾遮挡视野</li>
+      <li><strong>罕见类别</strong>：肿瘤形态多样，训练数据少</li>
+    </ul>
+    <p><strong>GDL 解决方案</strong>：</p>
+    <ol>
+      <li><strong>U-Net 架构</strong>（语义分割标准）：
+        <ul>
+          <li>编码器（CNN）：提取多尺度特征</li>
+          <li>解码器：逐步上采样 + skip connection 恢复细节</li>
+          <li>输出：每个像素的类别（器官/血管/肿瘤/背景）</li>
+        </ul>
+      </li>
+      <li><strong>数据增强 + 等变性</strong>：
+        <ul>
+          <li>旋转、缩放增强（模拟不同角度）</li>
+          <li>用 SO(2)-等变 CNN（旋转等变）→ 减少数据需求</li>
+        </ul>
+      </li>
+      <li><strong>时序一致性</strong>：
+        <ul>
+          <li>视频序列 → 用 3D CNN 或 CNN+LSTM</li>
+          <li>当前帧分割 + 前一帧预测 → 光流对齐 → 减少抖动</li>
+        </ul>
+      </li>
+      <li><strong>主动学习</strong>：
+        <ul>
+          <li>模型不确定的帧 → 请外科医生标注</li>
+          <li>持续学习，适应新的器官形态</li>
+        </ul>
+      </li>
+    </ol>
+    <p><strong>PhysRobot 连接</strong>：</p>
+    <ul>
+      <li>视觉分割 → 获得器官网格表示 → 输入物理仿真</li>
+      <li>仿真预测的器官变形 → 反向指导视觉追踪（"下一帧器官大概在这"）</li>
+    </ul>
+  </div>
+
+  <div class="enrichment-qa">
+    <h4>🔍 补充：目标检测 vs 分类 vs 分割</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：这三个任务有什么区别？为什么都用 CNN？</p>
+      <div class="answer">
+        <p>💡 专家：都是从图像提取信息，但<strong>粒度</strong>不同：</p>
+        <table>
+          <thead>
+            <tr><th>任务</th><th>输入</th><th>输出</th><th>难点</th><th>代表架构</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>分类</strong></td>
+              <td>图像</td>
+              <td>类别标签（"猫"）</td>
+              <td>区分相似类别</td>
+              <td>ResNet, ViT</td>
+            </tr>
+            <tr>
+              <td><strong>检测</strong></td>
+              <td>图像</td>
+              <td>边界框 + 类别</td>
+              <td>定位 + 分类，多物体</td>
+              <td>YOLO, Faster R-CNN</td>
+            </tr>
+            <tr>
+              <td><strong>分割</strong></td>
+              <td>图像</td>
+              <td>每个像素的类别</td>
+              <td>精确边界，小物体</td>
+              <td>U-Net, DeepLab</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>为什么都用 CNN</strong>：都需要<strong>层级化特征</strong> + <strong>平移等变性</strong>。区别在于：</p>
+        <ul>
+          <li><strong>分类</strong>：全局池化 → 标量输出（不变）</li>
+          <li><strong>检测</strong>：区域特征 → 边界框回归（位置等变）</li>
+          <li><strong>分割</strong>：像素级输出 → 完全等变（保持空间分辨率）</li>
+        </ul>
+        <p><strong>等变性的层级</strong>：</p>
+        <div class="math-block">
+          分类 → 检测 → 分割<br>
+          （不变） （部分等变） （完全等变）
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

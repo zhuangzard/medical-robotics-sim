@@ -1,0 +1,154 @@
+<div class="enrichment-block">
+        <h3>❓ Neocognitron（1982）是怎么"发现"卷积和池化的？</h3>
+        <div class="answer">
+            <p><strong>Fukushima 的灵感来源：</strong></p>
+            <ul>
+                <li><strong>Hubel & Wiesel（1959，诺奖工作）</strong>：发现视觉皮层有"简单细胞"和"复杂细胞"</li>
+                <li><strong>简单细胞</strong>：对特定位置的边缘敏感（局部特征检测）</li>
+                <li><strong>复杂细胞</strong>：对位置不敏感，只要边缘在某个区域内就激活（位置不变性）</li>
+            </ul>
+            
+            <p><strong>🔑 Neocognitron 的设计：</strong></p>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>S-cells（简单细胞）</strong>：<span class="highlight">局部卷积</span>，提取边缘、角点等特征
+                </div>
+                <div class="timeline-item">
+                    <strong>C-cells（复杂细胞）</strong>：<span class="highlight">局部池化</span>（类似 max-pooling），获得位置不变性
+                </div>
+                <div class="timeline-item">
+                    <strong>层级结构</strong>：S → C → S → C ...，逐层抽象
+                </div>
+            </div>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>Fukushima 说："既然大脑视觉系统是这样工作的（局部感受野 + 池化），那神经网络也应该这样设计！"于是手工设计了卷积和池化，成为 CNN 的雏形。</p>
+            
+            <p><strong>🌟 重要性：</strong></p>
+            <ul>
+                <li>首次在神经网络中引入<strong>局部连接</strong>（local connectivity）</li>
+                <li>首次引入<strong>权重共享</strong>（weight sharing）→ 平移不变性</li>
+                <li>首次引入<strong>池化</strong>（pooling）→ 减少参数 + 位置鲁棒性</li>
+            </ul>
+            
+            <p><strong>⚠️ 局限：</strong></p>
+            <p>Neocognitron 的权重是<strong>手工设计</strong>的（无监督学习），没有反向传播。直到 LeCun 的 LeNet（1998）才用 BP 训练成功！</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ Minsky & Papert 的《Perceptrons》为什么"打击"了神经网络？</h3>
+        <div class="answer">
+            <p><strong>《Perceptrons》（1969）的核心论断：</strong></p>
+            <ul>
+                <li>单层感知机<strong>无法学习非线性可分</strong>的问题（如 XOR）</li>
+                <li>特别地，单层感知机<strong>无法高效学习对称性/不变性</strong></li>
+            </ul>
+            
+            <p><strong>🔑 Group Invariance Theorem（群不变性定理）：</strong></p>
+            <p>单层感知机要学习一个<strong>群不变函数</strong>（如旋转不变、平移不变），需要的参数量随输入大小<strong>指数增长</strong>，实际上不可行。</p>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>如果你想让单层神经网络识别"旋转后的数字"，它需要<strong>记住所有可能的旋转版本</strong>，参数量爆炸！这证明了单层网络的局限。</p>
+            
+            <p><strong>🌟 历史影响：</strong></p>
+            <ul>
+                <li>这本书导致神经网络研究进入"寒冬"（1970s-1980s）</li>
+                <li>但它也<strong>激励</strong>了多层网络的研究（Hinton、LeCun 等人）</li>
+                <li>多层网络 + 反向传播（1986）才解决了这个问题</li>
+            </ul>
+            
+            <p><strong>🔍 深刻教训：</strong></p>
+            <p><strong>不变性/对称性</strong>必须<strong>内置到架构</strong>中（如 CNN 的卷积），而不是让网络"死记硬背"！</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ LeCun 的 LeNet（1998）为什么成功？和 Neocognitron 的区别是什么？</h3>
+        <div class="answer">
+            <p><strong>LeNet-5（1998）的关键改进：</strong></p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>1. 反向传播</strong>：用梯度下降<strong>自动学习</strong>卷积核，不再手工设计
+                </div>
+                <div class="timeline-item">
+                    <strong>2. 端到端训练</strong>：从原始像素到分类标签，一次性优化
+                </div>
+                <div class="timeline-item">
+                    <strong>3. 应用场景</strong>：手写数字识别（MNIST），实际部署到邮政系统
+                </div>
+            </div>
+            
+            <p><strong>和 Neocognitron 的对比：</strong></p>
+            <table style="width: 100%; margin: 1rem 0; border-collapse: collapse;">
+                <tr style="background: rgba(245,158,11,0.1);">
+                    <th style="padding: 8px; border: 1px solid #ddd;">特性</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Neocognitron</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">LeNet</th>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">卷积核</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">手工设计</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">自动学习</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">训练方法</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">无监督</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">监督学习 + BP</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">性能</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">概念验证</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">工业级应用</td>
+                </tr>
+            </table>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>Neocognitron 是"手工艺品"，LeNet 是"工业产品"。核心区别是<strong>反向传播</strong>让网络自己学习最佳特征，而不是人类猜测。</p>
+            
+            <p><strong>🌟 历史地位：</strong></p>
+            <p>LeNet 是第一个<strong>工业部署</strong>的深度卷积网络，证明了 CNN 的实用性。但由于计算资源限制和 SVM 的竞争，直到 2012 年 AlexNet 才真正引爆深度学习！</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 为什么 CNN 在 1998-2012 年间"沉寂"了？</h3>
+        <div class="answer">
+            <p><strong>1998-2012 的"寒冬"原因：</strong></p>
+            
+            <ul>
+                <li><strong>1. 计算资源不足</strong>：训练 CNN 需要大量计算，CPU 太慢</li>
+                <li><strong>2. 数据不足</strong>：MNIST 太简单，复杂任务（如 ImageNet）数据量不够</li>
+                <li><strong>3. 理论不足</strong>：不知道如何初始化权重、如何防止梯度消失</li>
+                <li><strong>4. 竞争对手</strong>：SVM（支持向量机）+ 手工特征（SIFT, HOG）在 2000s 年代占主导</li>
+            </ul>
+            
+            <p><strong>🔑 2012 年的突破（AlexNet）：</strong></p>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>GPU 训练</strong>：利用 CUDA 加速，速度提升 10-50 倍
+                </div>
+                <div class="timeline-item">
+                    <strong>大数据</strong>：ImageNet（120万张图）提供充足训练样本
+                </div>
+                <div class="timeline-item">
+                    <strong>ReLU + Dropout</strong>：解决梯度消失 + 过拟合
+                </div>
+                <div class="timeline-item">
+                    <strong>数据增强</strong>：随机裁剪、翻转，增加不变性
+                </div>
+            </div>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>LeNet 就像"原型机"，AlexNet 是"量产版"。中间 14 年，CNN 等的是：<strong>更快的硬件</strong>（GPU）+ <strong>更多的数据</strong>（ImageNet）+ <strong>更好的技巧</strong>（ReLU/Dropout）。</p>
+            
+            <p><strong>🌟 启示：</strong></p>
+            <p>好的想法（CNN）可能领先时代，但需要<strong>技术生态</strong>（硬件 + 数据 + 算法）成熟才能爆发！</p>
+        </div>
+    </div>
+
+    <hr style="margin: 2rem 0; border: none; border-top: 2px solid #f59e0b;">
+    <p style="text-align: center; color: #666; font-size: 0.9em;">
+        <strong>总结：</strong>从 Neocognitron 到 LeNet 再到 AlexNet，CNN 的演化史就是"对称性思想 + 工程突破"的完美结合！
+    </p>

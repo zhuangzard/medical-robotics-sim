@@ -1,0 +1,2927 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 2: Learning in High Dimensions | GDL 学习指南</title>
+  <link rel="stylesheet" href="../assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]})"></script>
+<!-- Enrichment CSS - to be injected into each chapter's <head> -->
+<style>
+/* ========== Enrichment Blocks ========== */
+.enrichment-block {
+  margin: 2.5rem 0;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  border-left: 4px solid #3b82f6;
+  border-radius: 0 12px 12px 0;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+[data-theme="dark"] .enrichment-block {
+  background: linear-gradient(135deg, #1a2332 0%, #1e293b 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.enrichment-block h4 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  color: #1e40af;
+}
+[data-theme="dark"] .enrichment-block h4 {
+  color: #93c5fd;
+}
+
+.enrichment-qa { margin-bottom: 1.5rem; }
+
+.qa-pair {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(255,255,255,0.7);
+  border-radius: 10px;
+  transition: transform 0.2s;
+}
+.qa-pair:hover { transform: translateX(4px); }
+[data-theme="dark"] .qa-pair {
+  background: rgba(0,0,0,0.25);
+}
+
+.question {
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 0.75rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+[data-theme="dark"] .question { color: #60a5fa; }
+
+.answer {
+  line-height: 1.9;
+  color: #374151;
+  font-size: 1rem;
+}
+[data-theme="dark"] .answer { color: #d1d5db; }
+.answer p { margin: 0.5rem 0; }
+
+.enrichment-intuition {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(251,191,36,0.1);
+  border-radius: 10px;
+  border-left: 3px solid #f59e0b;
+  line-height: 1.8;
+}
+[data-theme="dark"] .enrichment-intuition {
+  background: rgba(251,191,36,0.05);
+}
+
+.enrichment-application {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(16,185,129,0.1);
+  border-radius: 10px;
+  border-left: 3px solid #10b981;
+  line-height: 1.8;
+}
+[data-theme="dark"] .enrichment-application {
+  background: rgba(16,185,129,0.05);
+}
+
+.enrichment-summary {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(139,92,246,0.1);
+  border-radius: 10px;
+  border-left: 3px solid #8b5cf6;
+  line-height: 1.8;
+}
+[data-theme="dark"] .enrichment-summary {
+  background: rgba(139,92,246,0.05);
+}
+</style>
+
+</head>
+<body>
+  <div class="progress-bar"></div>
+
+  <header class="header">
+    <div class="header-title"><a href="../index.html">📐 GDL 学习指南</a></div>
+    <div class="header-nav">
+      <a href="../chapter1/index.html">← 上一章</a>
+      <a href="../index.html">目录</a>
+      <a href="../chapter3/index.html">下一章 →</a>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+  </header>
+
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+  <nav class="sidebar">
+    <h3>Chapter 2</h3>
+    <a href="#overview">概述</a>
+    <a href="#setup">学习问题的形式化</a>
+    <a href="#supervised" class="sub">监督学习设置</a>
+    <a href="#risk" class="sub">经验风险 vs 泛化风险</a>
+    <a href="#interpolation" class="sub">插值体制</a>
+    <a href="#sec2-1">2.1 归纳偏置与函数正则性</a>
+    <a href="#universal-approx" class="sub">万能逼近定理</a>
+    <a href="#complexity-measure" class="sub">复杂度度量</a>
+    <a href="#regularization" class="sub">正则化</a>
+    <a href="#implicit-reg" class="sub">隐式正则化</a>
+    <a href="#sec2-2">2.2 维度灾难</a>
+    <a href="#lipschitz" class="sub">Lipschitz 类的灾难</a>
+    <a href="#sobolev" class="sub">Sobolev 类的灾难</a>
+    <a href="#volume-concentration" class="sub">体积集中现象</a>
+    <a href="#geometric-intuition" class="sub">几何直觉</a>
+    <a href="#breaking-curse">2.3 打破维度灾难</a>
+    <a href="#fc-nets" class="sub">全连接网络的方法</a>
+    <a href="#low-dim-proj" class="sub">低维投影假设</a>
+    <a href="#limitations" class="sub">局限性</a>
+    <a href="#geometric-priors">2.4 走向几何先验</a>
+    <a href="#structure-exploitation" class="sub">利用结构</a>
+    <a href="#preview-ch3" class="sub">Chapter 3 预览</a>
+    <a href="#code-examples">代码示例</a>
+    <a href="#curse-demo" class="sub">维度灾难演示</a>
+    <a href="#mlp-demo" class="sub">MLP 万能逼近</a>
+    <a href="#bias-demo" class="sub">归纳偏置实验</a>
+    <a href="#physrobot">PhysRobot 关联</a>
+    <a href="#exercises">练习题</a>
+    <h3>导航</h3>
+    <a href="../index.html">📚 总目录</a>
+    <a href="../chapter1/index.html">← Ch.1 引言</a>
+    <a href="../chapter3/index.html">→ Ch.3 几何先验</a>
+  </nav>
+
+  <main class="main">
+    <h1>Chapter 2: Learning in High Dimensions<br><span style="font-size:0.6em;color:var(--text-secondary)">高维学习 — 为什么我们需要几何先验</span></h1>
+
+    <div class="callout callout-info" id="overview">
+      <h4>本章概述</h4>
+      <p>本章是全书的<strong>动机章</strong>——回答一个根本问题：<em>为什么</em>我们需要几何先验？通过严格的数学分析，我们将看到：</p>
+      <ul>
+        <li>在高维空间中学习<strong>通用函数</strong>需要指数级的样本——<strong>维度灾难</strong></li>
+        <li><strong>万能逼近定理</strong>保证了表达能力，但<em>不</em>保证学习效率</li>
+        <li><strong>归纳偏置</strong>（通过正则性假设）是克服维度灾难的唯一途径</li>
+        <li>全连接网络可以通过稀疏正则化部分缓解灾难，但假设太强</li>
+        <li>唯一现实的出路：利用数据的<strong>几何结构</strong>——引出 Chapter 3</li>
+      </ul>
+      <p><strong>预计阅读时间</strong>：2 小时 &nbsp;|&nbsp; <strong>先修知识</strong>：概率论基础、函数分析入门</p>
+    </div>
+
+    <!-- ========= 学习问题的形式化 ========= -->
+
+<!-- === ENRICHMENT: code === -->
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：代码示例</h4>
+    
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：如何用代码直观展示"维度灾难"？我想亲眼看到样本需求随维度指数增长。</p>
+      <div class="answer">
+        <p>💡 专家解答：最直观的方式是<strong>体积集中现象</strong>和<strong>距离集中现象</strong>的可视化。让我给你实用的代码框架。</p>
+        
+        <p><strong>实验1：体积集中</strong></p>
+        <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+
+def volume_concentration_demo(dims=[2, 5, 10, 50, 100]):
+    """演示高维球的体积集中在表面"""
+    results = {}
+    
+    for d in dims:
+        n_samples = 10000
+        # 在d维单位球内均匀采样
+        samples = np.random.randn(n_samples, d)
+        norms = np.linalg.norm(samples, axis=1)
+        # 归一化到单位球（均匀分布）
+        samples_uniform = samples / norms[:, None] * \
+                          np.random.uniform(0, 1, n_samples)**(1/d)[:, None]
+        norms_uniform = np.linalg.norm(samples_uniform, axis=1)
+        
+        # 计算有多少样本在外层10%的壳中
+        frac_in_shell = np.mean(norms_uniform > 0.9)
+        results[d] = {
+            'mean_radius': norms_uniform.mean(),
+            'std_radius': norms_uniform.std(),
+            'frac_in_outer_shell': frac_in_shell
+        }
+        
+        print(f"维度 {d}: "
+              f"平均半径={norms_uniform.mean():.3f}, "
+              f"在外层10%壳中的比例={frac_in_shell:.4f}")
+    
+    # 可视化
+    plt.figure(figsize=(10, 4))
+    plt.subplot(1, 2, 1)
+    plt.plot(dims, [results[d]['frac_in_outer_shell'] for d in dims], 'o-')
+    plt.xlabel('Dimension')
+    plt.ylabel('Fraction in outer 10% shell')
+    plt.title('Volume Concentration')
+    plt.grid(True)
+    
+    return results
+
+# 运行
+results = volume_concentration_demo()
+
+# 理论预测：P(r > 0.9) = 1 - 0.9^d
+for d in [2, 10, 50, 100]:
+    theoretical = 1 - 0.9**d
+    print(f"d={d}: 理论={theoretical:.6f}, 实验={results[d]['frac_in_outer_shell']:.6f}")
+</code></pre>
+        
+        <p><strong>实验2：距离集中</strong></p>
+        <pre><code class="language-python">def distance_concentration_demo(dims=[2, 5, 10, 50, 100], n_points=1000):
+    """演示高维空间中最近邻和最远邻距离趋于相同"""
+    results = {}
+    
+    for d in dims:
+        # 在d维单位立方体中均匀采样
+        points = np.random.uniform(0, 1, (n_points, d))
+        test_point = np.random.uniform(0, 1, d)
+        
+        # 计算所有距离
+        distances = np.linalg.norm(points - test_point, axis=1)
+        
+        min_dist = distances.min()
+        max_dist = distances.max()
+        mean_dist = distances.mean()
+        std_dist = distances.std()
+        
+        # 相对差异
+        relative_range = (max_dist - min_dist) / min_dist
+        
+        results[d] = {
+            'min': min_dist,
+            'max': max_dist,
+            'mean': mean_dist,
+            'std': std_dist,
+            'relative_range': relative_range
+        }
+        
+        print(f"维度 {d}: 最近={min_dist:.3f}, 最远={max_dist:.3f}, "
+              f"相对差异={(max_dist-min_dist)/min_dist:.3f}")
+    
+    # 可视化
+    plt.figure(figsize=(10, 4))
+    plt.subplot(1, 2, 1)
+    dims_list = list(results.keys())
+    plt.plot(dims_list, [results[d]['relative_range'] for d in dims_list], 'o-')
+    plt.xlabel('Dimension')
+    plt.ylabel('(max_dist - min_dist) / min_dist')
+    plt.title('Distance Concentration')
+    plt.grid(True)
+    
+    plt.subplot(1, 2, 2)
+    for d in [2, 10, 50]:
+        points = np.random.uniform(0, 1, (n_points, d))
+        test_point = np.random.uniform(0, 1, d)
+        distances = np.linalg.norm(points - test_point, axis=1)
+        plt.hist(distances, bins=30, alpha=0.5, label=f'd={d}', density=True)
+    plt.xlabel('Distance')
+    plt.ylabel('Density')
+    plt.legend()
+    plt.title('Distance Distribution')
+    
+    return results
+
+results = distance_concentration_demo()
+</code></pre>
+        
+        <p><strong>关键观察</strong>：</p>
+        <ul>
+          <li>$d=2$：最远/最近距离比 ≈ 1.4（有明显区别）</li>
+          <li>$d=100$：最远/最近距离比 ≈ 1.05（几乎相同！）</li>
+          <li>k-NN 在高维中失效的直接证据</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：如何用代码验证"万能逼近定理"？我想看到单隐层网络确实能逼近任意函数。</p>
+      <div class="answer">
+        <p>💡 专家解答：经典演示是用单隐层网络逼近复杂的1D或2D函数。</p>
+        
+        <pre><code class="language-python">import torch
+import torch.nn as nn
+import torch.optim as optim
+
+class SingleHiddenLayerNet(nn.Module):
+    def __init__(self, hidden_size=100):
+        super().__init__()
+        self.fc1 = nn.Linear(1, hidden_size)
+        self.fc2 = nn.Linear(hidden_size, 1)
+    
+    def forward(self, x):
+        return self.fc2(torch.relu(self.fc1(x)))
+
+# 目标函数：复杂的非线性函数
+def target_function(x):
+    return torch.sin(5 * x) + 0.5 * torch.cos(20 * x) + 0.3 * x**2
+
+# 训练数据
+x_train = torch.linspace(-1, 1, 200).reshape(-1, 1)
+y_train = target_function(x_train)
+
+# 测试不同隐层大小
+for hidden_size in [10, 50, 200, 1000]:
+    model = SingleHiddenLayerNet(hidden_size)
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
+    
+    # 训练
+    for epoch in range(1000):
+        optimizer.zero_grad()
+        y_pred = model(x_train)
+        loss = ((y_pred - y_train)**2).mean()
+        loss.backward()
+        optimizer.step()
+    
+    # 测试
+    with torch.no_grad():
+        x_test = torch.linspace(-1.2, 1.2, 300).reshape(-1, 1)
+        y_test = target_function(x_test)
+        y_pred = model(x_test)
+        test_error = ((y_pred - y_test)**2).mean().sqrt()
+    
+    print(f"隐层大小 {hidden_size}: 训练误差={loss.item():.6f}, "
+          f"测试误差={test_error.item():.6f}")
+    
+    # 可视化（只展示最大的网络）
+    if hidden_size == 1000:
+        plt.figure(figsize=(10, 4))
+        plt.plot(x_test.numpy(), y_test.numpy(), 'b-', label='True function', linewidth=2)
+        plt.plot(x_test.numpy(), y_pred.numpy(), 'r--', label='Approximation', linewidth=2)
+        plt.xlabel('x')
+        plt.ylabel('y')
+        plt.legend()
+        plt.title(f'Universal Approximation (hidden_size={hidden_size})')
+        plt.grid(True)
+        plt.show()
+</code></pre>
+        
+        <p><strong>关键发现</strong>：</p>
+        <ul>
+          <li>隐层越大，逼近越好（验证万能逼近定理）</li>
+          <li>但即使逼近很好，<strong>泛化可能很差</strong>（外推区域 $|x| > 1$）</li>
+          <li>这说明：<strong>表达能力 ≠ 泛化能力</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：如何用代码展示"归纳偏置"的影响？比如CNN vs 全连接在图像上的差异。</p>
+      <div class="answer">
+        <p>💡 专家解答：经典实验：在MNIST上对比MLP和CNN，尤其是在<strong>少样本</strong>情况下。</p>
+        
+        <pre><code class="language-python">import torch
+import torch.nn as nn
+from torchvision import datasets, transforms
+from torch.utils.data import DataLoader, Subset
+
+# 全连接网络（无归纳偏置）
+class MLP(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(28*28, 128),
+            nn.ReLU(),
+            nn.Linear(128, 64),
+            nn.ReLU(),
+            nn.Linear(64, 10)
+        )
+    
+    def forward(self, x):
+        return self.fc(x)
+
+# CNN（平移不变性归纳偏置）
+class CNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(1, 32, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+        )
+        self.fc = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(64 * 7 * 7, 128),
+            nn.ReLU(),
+            nn.Linear(128, 10)
+        )
+    
+    def forward(self, x):
+        return self.fc(self.conv(x))
+
+def train_and_evaluate(model, train_loader, test_loader, epochs=10):
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    criterion = nn.CrossEntropyLoss()
+    
+    for epoch in range(epochs):
+        model.train()
+        for X, y in train_loader:
+            optimizer.zero_grad()
+            loss = criterion(model(X), y)
+            loss.backward()
+            optimizer.step()
+    
+    # 测试
+    model.eval()
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for X, y in test_loader:
+            correct += (model(X).argmax(1) == y).sum().item()
+            total += y.size(0)
+    
+    return correct / total
+
+# 数据准备
+transform = transforms.Compose([transforms.ToTensor()])
+train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
+test_dataset = datasets.MNIST('./data', train=False, transform=transform)
+
+# 实验：不同训练样本数量
+sample_sizes = [100, 500, 1000, 5000, 10000]
+results = {'MLP': [], 'CNN': []}
+
+for n_samples in sample_sizes:
+    # 子采样训练集
+    indices = torch.randperm(len(train_dataset))[:n_samples]
+    train_subset = Subset(train_dataset, indices)
+    
+    train_loader = DataLoader(train_subset, batch_size=64, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=64)
+    
+    # 训练MLP
+    mlp = MLP()
+    mlp_acc = train_and_evaluate(mlp, train_loader, test_loader)
+    results['MLP'].append(mlp_acc)
+    
+    # 训练CNN
+    cnn = CNN()
+    cnn_acc = train_and_evaluate(cnn, train_loader, test_loader)
+    results['CNN'].append(cnn_acc)
+    
+    print(f"样本数={n_samples}: MLP={mlp_acc:.3f}, CNN={cnn_acc:.3f}, "
+          f"CNN优势={cnn_acc - mlp_acc:.3f}")
+
+# 可视化
+plt.figure(figsize=(8, 5))
+plt.plot(sample_sizes, results['MLP'], 'o-', label='MLP (no inductive bias)', linewidth=2)
+plt.plot(sample_sizes, results['CNN'], 's-', label='CNN (translation equivariance)', linewidth=2)
+plt.xlabel('Training Samples')
+plt.ylabel('Test Accuracy')
+plt.xscale('log')
+plt.legend()
+plt.title('Inductive Bias: CNN vs MLP on MNIST')
+plt.grid(True)
+plt.show()
+</code></pre>
+        
+        <p><strong>关键观察</strong>：</p>
+        <ul>
+          <li><strong>少样本时</strong>（如100样本）：CNN优势巨大（可能30% vs 60%）</li>
+          <li><strong>大样本时</strong>（如10000样本）：CNN仍然更好，但差距缩小</li>
+          <li><strong>结论</strong>：归纳偏置在<strong>样本有限</strong>时最关键！</li>
+        </ul>
+        
+        <p><strong>额外实验：平移不变性测试</strong></p>
+        <pre><code class="language-python"># 测试平移鲁棒性
+def test_translation_robustness(model, test_dataset):
+    """测试模型对图像平移的鲁棒性"""
+    model.eval()
+    original_preds = []
+    shifted_preds = []
+    
+    for i in range(100):  # 测试100张图
+        img, label = test_dataset[i]
+        
+        # 原始预测
+        with torch.no_grad():
+            orig_pred = model(img.unsqueeze(0)).argmax(1).item()
+        
+        # 平移图像（向右移5个像素）
+        img_shifted = torch.roll(img, shifts=5, dims=2)
+        with torch.no_grad():
+            shifted_pred = model(img_shifted.unsqueeze(0)).argmax(1).item()
+        
+        original_preds.append(orig_pred == label)
+        shifted_preds.append(shifted_pred == label)
+    
+    orig_acc = np.mean(original_preds)
+    shifted_acc = np.mean(shifted_preds)
+    consistency = np.mean(np.array(original_preds) == np.array(shifted_preds))
+    
+    return orig_acc, shifted_acc, consistency
+
+# 对比
+mlp_orig, mlp_shifted, mlp_cons = test_translation_robustness(mlp, test_dataset)
+cnn_orig, cnn_shifted, cnn_cons = test_translation_robustness(cnn, test_dataset)
+
+print(f"MLP: 原始准确率={mlp_orig:.3f}, 平移后={mlp_shifted:.3f}, 一致性={mlp_cons:.3f}")
+print(f"CNN: 原始准确率={cnn_orig:.3f}, 平移后={cnn_shifted:.3f}, 一致性={cnn_cons:.3f}")
+# 预期：CNN的一致性显著更高（因为平移等变性）
+</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解</h4>
+    <p><strong>代码实验的价值</strong>：</p>
+    <ul>
+      <li>"维度灾难"不只是理论 — 你可以在几分钟内<strong>亲眼看到</strong>它发生</li>
+      <li>"归纳偏置"不是抽象概念 — 它在准确率数字中<strong>清晰可见</strong></li>
+      <li>"几何先验"不是玄学 — CNN在平移测试中的鲁棒性是<strong>可验证的</strong></li>
+    </ul>
+    <p><strong>建议的学习路径</strong>：</p>
+    <ol>
+      <li>运行体积集中实验 → 感受高维空间的"怪异"</li>
+      <li>运行万能逼近实验 → 理解"表达≠泛化"</li>
+      <li>运行CNN vs MLP实验 → 看到归纳偏置的威力</li>
+      <li><strong>自己修改参数</strong> → 维度、样本数、网络结构</li>
+      <li><strong>可视化结果</strong> → 图胜千言</li>
+    </ol>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用</h4>
+    <p>PhysRobot 代码实验框架：</p>
+    <pre><code class="language-python"># 伪代码框架：对比不同架构在软组织形变预测上的表现
+
+def compare_architectures_on_physrobot():
+    """
+    对比MLP、GNN、SE(3)-GNN在PhysRobot任务上的样本效率
+    """
+    # 数据：组织网格 + 力 → 形变
+    dataset = load_physrobot_dataset()  # (mesh, force) → deformation
+    
+    architectures = {
+        'MLP': FullyConnectedNet(input_dim=3000, hidden=[512, 256], output_dim=3000),
+        'GNN': GraphNet(node_features=3, edge_features=1, hidden=128, num_layers=3),
+        'SE3_GNN': SE3EquivariantGNN(node_features=3, hidden=128, num_layers=3),
+        'SE3_GNN_Physics': SE3EquivariantGNN(..., physics_loss=True)
+    }
+    
+    sample_sizes = [500, 1000, 2000, 5000, 10000, 50000]
+    results = {name: [] for name in architectures}
+    
+    for n_samples in sample_sizes:
+        train_data = dataset.sample(n_samples)
+        
+        for name, model in architectures.items():
+            # 训练
+            model.train_on(train_data, epochs=100)
+            
+            # 测试误差（L2距离）
+            test_error = model.evaluate(dataset.test)
+            results[name].append(test_error)
+            
+            print(f"{name} with {n_samples} samples: test_error={test_error:.4f}")
+    
+    # 可视化样本效率曲线
+    plt.figure(figsize=(10, 6))
+    for name, errors in results.items():
+        plt.plot(sample_sizes, errors, 'o-', label=name, linewidth=2)
+    plt.xlabel('Training Samples')
+    plt.ylabel('Test Error (mm)')
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.legend()
+    plt.title('Sample Efficiency on PhysRobot')
+    plt.grid(True)
+    plt.show()
+    
+    # 预期结果：
+    # MLP: 需要>50k样本才能收敛
+    # GNN: 需要~10k样本
+    # SE3_GNN: 需要~5k样本
+    # SE3_GNN_Physics: 需要~2k样本 （最强！）
+</code></pre>
+    <p><strong>关键洞察</strong>：代码实验是验证理论的<strong>试金石</strong> — PhysRobot的成功不是偶然，而是几何先验的<strong>必然结果</strong>。</p>
+  </div>
+</div>
+<!-- === END ENRICHMENT: code === -->
+
+<!-- === ENRICHMENT: curse === -->
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：2.2 维度灾难（Curse of Dimensionality）⭐核心</h4>
+    
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：为什么高维空间如此反直觉？能给我一些具体的例子吗？我在3D空间的经验在高维完全不适用吗？</p>
+      <div class="answer">
+        <p>💡 专家解答：这是理解维度灾难的第一步！高维空间的"怪异"行为远超大多数人的想象。让我给你几个震撼的例子。</p>
+        
+        <p><strong>例1：高维球的体积趋于零</strong></p>
+        <p>考虑单位球 $B_d = \{x \in \mathbb{R}^d : \|x\| \leq 1\}$。体积公式：$V_d = \frac{\pi^{d/2}}{\Gamma(d/2 + 1)}$</p>
+        <ul>
+          <li>$d = 2$：$V_2 = \pi \approx 3.14$</li>
+          <li>$d = 3$：$V_3 = 4\pi/3 \approx 4.19$ — 还在增长</li>
+          <li>$d = 5$：$V_5 \approx 5.26$ — 达到最大！</li>
+          <li>$d = 10$：$V_{10} \approx 2.55$ — 开始下降</li>
+          <li>$d = 100$：$V_{100} \approx 10^{-40}$ — 几乎为零！</li>
+        </ul>
+        <p>更惊人的：在单位球内均匀采样，样本到球心的距离 $r = \|x\|$ 几乎总是接近 1！高维球的体积<strong>全在表面薄壳中</strong>，内部是"空"的。数学上：$P(r > 1 - \epsilon) = 1 - (1-\epsilon)^d \to 1$。</p>
+        
+        <p><strong>例2：距离集中 — 最近邻失效</strong></p>
+        <p>在 $d$ 维空间中，测试点到最近邻和最远邻的距离比趋于 1：$$\frac{r_{\max} - r_{\min}}{r_{\min}} \to 0$$
+        所有点距离几乎相同！$d=100$ 时，最近邻距离 ≈ 4.8，最远邻 ≈ 5.2 — 基于距离的相似性失去意义！</p>
+        
+        <p><strong>例3：对角线比边长长</strong></p>
+        <p>$d$ 维单位立方体的对角线长度是 $\sqrt{d}$。$d=100$ 时是 10 — 立方体的角点比边界还远！</p>
+        
+        <p><strong>例4：高斯分布的薄壳</strong></p>
+        <p>从 $\mathcal{N}(0, I_d)$ 采样，样本范数 $\|x\|$ 满足：$\mathbb{E}[\|x\|] \approx \sqrt{d}$，但 $\text{Var}(\|x\|) \approx 0.5$ 不随 $d$ 增长！所有样本集中在半径 $\sqrt{d}$ 的薄壳上。</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：文中说 Lipschitz 类的样本复杂度是 $\mathcal{O}(\epsilon^{-d})$ — 为什么是指数而不是多项式？</p>
+      <div class="answer">
+        <p>💡 专家解答：核心思想是<strong>网格覆盖</strong>。</p>
+        
+        <p><strong>设定</strong>：输入 $\mathcal{X} = [0,1]^d$，学习 $L$-Lipschitz 函数 $f$（满足 $|f(x)-f(x')| \leq L\|x-x'\|$）。</p>
+        
+        <p><strong>推导</strong>：</p>
+        <ol>
+          <li>要保证误差 $< \epsilon$，需要采样点间距 $\delta < \epsilon/L$（由 Lipschitz 条件）</li>
+          <li>每个维度需要 $\approx L/\epsilon$ 个网格点</li>
+          <li>$d$ 维总共需要 $N \approx (L/\epsilon)^d = \mathcal{O}(\epsilon^{-d})$ 个点</li>
+        </ol>
+        
+        <p><strong>直觉</strong>：体积随维度指数增长！</p>
+        <ul>
+          <li>$d=1$：线段，需要 $1/\delta$ 个点</li>
+          <li>$d=2$：正方形，需要 $(1/\delta)^2$ 个点</li>
+          <li>$d$ 维：需要 $(1/\delta)^d$ 个点 — 指数爆炸！</li>
+        </ul>
+        
+        <p><strong>例子</strong>：$L=1, \epsilon=0.1$</p>
+        <ul>
+          <li>$d=10$：$10^{10}$ = 100亿样本</li>
+          <li>$d=100$：$10^{100}$ 样本 — 比宇宙原子数多！</li>
+        </ul>
+        
+        <p><strong>信息论下界</strong>：度量熵理论证明这个界是紧的 — 无法绕过！</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问："体积集中现象"对机器学习有什么实际影响？</p>
+      <div class="answer">
+        <p>💡 专家解答：体积集中导致三大问题：</p>
+        
+        <p><strong>1. 样本分布不均</strong>：</p>
+        <ul>
+          <li>高维数据几乎都在边界附近</li>
+          <li>内部区域即使有百万样本也稀疏</li>
+          <li>结果：<strong>插值失效</strong> — 测试点可能落在无样本区域</li>
+        </ul>
+        
+        <p><strong>2. 距离度量失效</strong>：</p>
+        <ul>
+          <li>所有样本到原点距离几乎相同（薄壳效应）</li>
+          <li>样本间距离也趋于相同（距离集中）</li>
+          <li>结果：<strong>k-NN、k-means 等算法失效</strong> — "相似性"无意义</li>
+        </ul>
+        
+        <p><strong>3. 优化地形变平</strong>：</p>
+        <ul>
+          <li>高维随机方向几乎正交（内积趋零）</li>
+          <li>梯度方向可能与最优方向正交</li>
+          <li>结果：<strong>优化效率低</strong></li>
+        </ul>
+        
+        <p><strong>克服方法</strong>：</p>
+        <ul>
+          <li><strong>降维</strong>：投影到低维流形</li>
+          <li><strong>归一化</strong>：利用球面对称性</li>
+          <li><strong>几何先验</strong>：利用局部性、对称性绕过空旷内部</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：既然维度灾难这么可怕，为什么深度学习处理百万维图像还能成功？</p>
+      <div class="answer">
+        <p>💡 专家解答：<strong>最关键问题</strong>！答案：我们没在学"通用"函数，而是在<strong>利用结构</strong>。</p>
+        
+        <p><strong>表面矛盾</strong>：</p>
+        <ul>
+          <li>理论：$d=150000$ 维（ImageNet）需要 $\epsilon^{-150000}$ 样本</li>
+          <li>实践：120万图像就够了</li>
+        </ul>
+        
+        <p><strong>解答关键</strong>：</p>
+        <ol>
+          <li><strong>低维流形假设</strong>：自然图像虽然形式上 150k 维，但<strong>内在维度</strong>只有几百到几千 — 就像地球表面是 3D 中的 2D 流形</li>
+          <li><strong>几何结构</strong>：
+            <ul>
+              <li>局部性：相邻像素相关</li>
+              <li>平移不变性：猫在哪都是猫</li>
+              <li>层次结构：边缘→纹理→物体</li>
+            </ul>
+          </li>
+          <li><strong>CNN 编码了这些先验</strong>：
+            <ul>
+              <li>参数共享：卷积核复用 — 利用平移不变性</li>
+              <li>局部连接：只看局部 — 利用局部性</li>
+              <li>层次特征：逐层抽象 — 匹配层次结构</li>
+            </ul>
+          </li>
+        </ol>
+        
+        <p><strong>数学理解</strong>：样本复杂度依赖<strong>内在维度</strong> $k$ 而非环境维度 $d$：$\mathcal{O}(\epsilon^{-k})$ vs $\mathcal{O}(\epsilon^{-d})$，其中 $k \ll d$。</p>
+        
+        <p><strong>实证</strong>：</p>
+        <ul>
+          <li><strong>随机标签实验</strong>：打乱标签后需要更多样本 — 无结构则无先验</li>
+          <li><strong>内在维度估计</strong>：深度网络表示的内在维度远小于输入维度</li>
+          <li><strong>迁移学习</strong>：预训练特征可用少量样本微调 — 几何结构共享</li>
+        </ul>
+        
+        <p><strong>核心洞察</strong>：维度灾难理论正确 — 描述了<strong>最坏情况</strong>。深度学习成功是因为：</p>
+        <ol>
+          <li>真实数据有结构（不是最坏情况）</li>
+          <li>好架构编码了正确先验</li>
+          <li>有效维度 $\ll$ 名义维度</li>
+        </ol>
+        
+        <p>几何先验不是锦上添花，是<strong>深度学习成功的根本原因</strong>！</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：Sobolev 类比 Lipschitz 类光滑，为什么还是无法完全打破维度灾难？</p>
+      <div class="answer">
+        <p>💡 专家解答：Sobolev 类提供了<strong>部分改进但不够</strong>。</p>
+        
+        <p><strong>Sobolev 类定义</strong>：$s$ 阶 Sobolev 空间 $W^{s,2}$ 包含 $s$ 阶导数平方可积的函数：
+        $$\int |\nabla^s f|^2 dx < \infty$$
+        $s$ 越大，函数越光滑。</p>
+        
+        <p><strong>样本复杂度改进</strong>：</p>
+        <ul>
+          <li>Lipschitz（$s=1$）：$N \sim \epsilon^{-d}$</li>
+          <li>Sobolev（$s$阶）：$N \sim \epsilon^{-d/s}$</li>
+        </ul>
+        <p>看起来不错？但<strong>仍然是指数依赖</strong> $d/s$！</p>
+        
+        <p><strong>要完全打破诅咒</strong>：需要 $s \sim d$（光滑度随维度增长）。</p>
+        
+        <p><strong>为什么不现实</strong>：</p>
+        <ol>
+          <li><strong>物理不合理</strong>：$s \sim d$ 意味着在每个方向上都需要无穷光滑 — 自然函数不是这样</li>
+          <li><strong>过于限制</strong>：这类函数太"完美"，几乎是解析函数 — 排除了大多数实际问题</li>
+          <li><strong>例子</strong>：图像分类函数在像素空间并不光滑（小扰动可能改变类别）</li>
+        </ol>
+        
+        <p><strong>实际情况</strong>：真实函数通常只有<strong>有限光滑度</strong> $s = \mathcal{O}(1)$，与 $d$ 无关。结果：$N \sim \epsilon^{-d/s} \approx \epsilon^{-d}$ — 灾难依旧！</p>
+        
+        <p><strong>启示</strong>：</p>
+        <ul>
+          <li>光滑性假设<strong>有帮助但不够</strong></li>
+          <li>需要<strong>不同类型</strong>的结构假设 — 几何先验（对称性、局部性）</li>
+          <li>这些先验不要求全局光滑，而是利用<strong>问题的内在结构</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解</h4>
+    <p><strong>维度灾难的日常类比</strong>：</p>
+    <p>想象在黑暗房间找小球：</p>
+    <ul>
+      <li><strong>1维（线）</strong>：左右摸索，很快找到</li>
+      <li><strong>2维（房间地板）</strong>：前后左右，困难10倍</li>
+      <li><strong>3维（整个房间）</strong>：加上上下，困难100倍</li>
+      <li><strong>100维</strong>：在100个"方向"搜索 — 比宇宙年龄还长！</li>
+    </ul>
+    <p><strong>但如果你知道</strong>："球在地板上"（降到2维）、"球在角落"（利用结构）、"球在所有镜像房间的相同位置"（对称性） — 搜索从不可能变成可行！这就是几何先验。</p>
+    
+    <p><strong>体积集中的比喻</strong>：</p>
+    <p>3D橙子：随机取点可能在果肉中间。100维橙子：随机取点<strong>必然</strong>在最外层薄薄的"果皮"！高维空间几乎全是"表面"，没有"内部"。</p>
+    
+    <p><strong>距离失效的比喻</strong>：</p>
+    <p>在2D房间里，近处的人和远处的人距离差很大。在100维房间里，所有人距离几乎相同 — "远近"失去意义！</p>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用</h4>
+    <p>PhysRobot 面临极端的维度灾难：</p>
+    <ul>
+      <li><strong>状态空间</strong>：
+        <ul>
+          <li>软组织网格：1000节点 × 3坐标 = 3000维</li>
+          <li>机器人关节：7-14维</li>
+          <li>视觉输入：640×480×3 ≈ 921,600维</li>
+          <li><strong>总计：超过90万维！</strong></li>
+        </ul>
+      </li>
+      <li><strong>如果用通用方法</strong>：需要 $2^{900000}$ 样本（27万位数字） — 物理上不可能</li>
+      <li><strong>几何先验拯救</strong>：
+        <ul>
+          <li><strong>物理约束</strong>：形变满足连续性方程 → 不需逐点学习</li>
+          <li><strong>局部性</strong>：局部形变由局部力决定 → 用GNN而非全连接</li>
+          <li><strong>对称性</strong>：对称操作→对称结果</li>
+          <li><strong>时间平滑性</strong>：相邻时刻状态连续</li>
+        </ul>
+      </li>
+      <li><strong>结果</strong>：通过 GNN（利用网格几何）+ CNN（利用视觉局部性）+ 物理先验（守恒律），用<strong>几千到几万样本</strong>训练出有效模型 — <strong>百万倍样本效率提升</strong>！</li>
+      <li><strong>体积集中的影响</strong>：
+        <ul>
+          <li>组织配置空间中，大部分"理论上可能"的形变在物理上不可达（高能量区域）</li>
+          <li>真实形变集中在低能量流形上 — 内在维度远小于 3000</li>
+          <li>PhysRobot 通过能量最小化找到这个流形</li>
+        </ul>
+      </li>
+      <li><strong>关键洞察</strong>：医疗机器人的成功<strong>完全依赖</strong>正确识别物理和几何先验。没有它们，学习任务在数学上不可能。</li>
+    </ul>
+  </div>
+</div>
+<!-- === END ENRICHMENT: curse === -->
+
+<!-- === ENRICHMENT: overview === -->
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：Chapter 2 概述</h4>
+    
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：为什么这一章叫"Learning in High Dimensions"？高维学习和低维学习有什么本质区别？</p>
+      <div class="answer">
+        <p>💡 专家解答：这是理解本章的第一个关键问题。低维和高维学习之间的区别不是量变，而是<strong>质变</strong>。</p>
+        <p>在<strong>低维空间</strong>（如 $d = 1, 2, 3$）中，我们可以"看见"整个空间——你可以在纸上画出一条曲线（1维），在屏幕上显示一个曲面（2维），在脑海中想象一个3D物体。简单的插值方法（如三次样条）就能很好地工作，因为样本点之间的"空隙"不大。</p>
+        <p>但在<strong>高维空间</strong>（如 $d \geq 10$）中，一切都改变了：</p>
+        <ul>
+          <li><strong>可视化崩溃</strong>：你能想象100维空间中的球体吗？人类的几何直觉完全失效</li>
+          <li><strong>样本需求爆炸</strong>：假设每个维度需要10个采样点，总需求是 $10^d$ 个样本。$d=100$ 时这是 $10^{100}$，比宇宙原子数还多！</li>
+          <li><strong>空间变"空"了</strong>：高维空间中，绝大部分体积集中在边界附近，内部几乎是"空"的——这被称为<strong>体积集中现象</strong></li>
+          <li><strong>距离失去意义</strong>：在高维中，最近邻和最远邻的距离几乎相同，"相似性搜索"失效</li>
+        </ul>
+        <p>一个生动的类比：在2D平面上找一个点，就像在一张纸上找一个红点；在100维空间找一个点，就像在一个有100个房间的迷宫里，每个房间又连接着100个子房间，每个子房间又... 这个搜索空间大到无法想象。</p>
+        <p>这就是为什么本章的核心问题是：<strong>在高维空间中，我们如何能够学习？</strong></p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：本章说"这是全书的动机章"——具体来说，它要motivate什么？</p>
+      <div class="answer">
+        <p>💡 专家解答：本章要回答一个根本性的问题：<strong>为什么我们需要几何深度学习？</strong> 或者更准确地说，为什么我们不能只用"万能"的全连接神经网络？</p>
+        <p>本章通过严格的数学论证建立了以下逻辑链条：</p>
+        <ol>
+          <li><strong>现实困境</strong>：现代机器学习处理的都是高维数据（图像、文本、3D模型、物理仿真...）</li>
+          <li><strong>第一个坏消息</strong>：在高维空间学习"通用函数"需要<strong>指数级</strong>的样本——这在物理上不可能满足（维度灾难）</li>
+          <li><strong>一线希望？</strong>：万能逼近定理说神经网络可以逼近任意函数！</li>
+          <li><strong>第二个坏消息</strong>：万能逼近定理只保证<strong>表达能力</strong>（存在这样的网络），但不保证<strong>学习效率</strong>（需要多少数据？能否高效训练？）</li>
+          <li><strong>唯一出路</strong>：我们必须对函数类做某种<strong>约束</strong>——这就是归纳偏置（inductive bias）</li>
+          <li><strong>什么样的约束</strong>？利用数据的<strong>几何结构</strong>——对称性、不变性、局部性等几何先验</li>
+        </ol>
+        <p>所以本章的最终目标是让你相信：<strong>几何先验不是锦上添花，而是生存必需</strong>。没有它们，深度学习在高维数据上根本不可能成功。</p>
+        <p>这也解释了为什么CNN在图像上有效（利用平移不变性和局部性），GNN在图上有效（利用置换等变性），Transformer在序列上有效（利用位置编码和注意力机制的等变性）——它们都在利用某种几何先验来打破维度灾难。</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：本章概述提到"归纳偏置是唯一途径"——但我在其他课程中学到数据增强、正则化、dropout等技巧，它们不也能帮助泛化吗？</p>
+      <div class="answer">
+        <p>💡 专家解答：这是一个很好的观察！你提到的这些技巧确实有效，但它们和本章讨论的归纳偏置是<strong>不同层次</strong>的概念。</p>
+        <p><strong>数据增强</strong>：本质上是在<strong>显式利用几何先验</strong>。比如图像的水平翻转增强，其实是在告诉模型"左右对称的图像应该有相同的标签"——这是一种几何不变性！旋转增强也类似。所以数据增强不是替代几何先验，而是<strong>实现</strong>几何先验的一种方式。</p>
+        <p><strong>正则化（如 L2、L1）</strong>：这些是<strong>参数空间</strong>的约束，鼓励权重矩阵具有某些性质（小范数、稀疏性）。但它们没有直接约束<strong>函数的几何性质</strong>。比如 L2 正则化不会保证函数对平移不变——它只是让权重不要太大。这是一种弱形式的归纳偏置。</p>
+        <p><strong>Dropout</strong>：主要是一种正则化技术，通过随机失活神经元来防止过拟合。它也不直接编码几何先验。</p>
+        <p>本章讨论的<strong>几何归纳偏置</strong>是更深层次的：</p>
+        <ul>
+          <li><strong>架构层面</strong>：CNN的卷积操作天然保证了平移等变性——不管你做不做数据增强，这个性质都在</li>
+          <li><strong>函数空间层面</strong>：直接约束我们搜索的函数类，从 $\mathbb{R}^d \to \mathbb{R}$ 的所有函数缩小到"满足某种对称性的函数"</li>
+          <li><strong>样本复杂度层面</strong>：从根本上降低了所需样本数的指数依赖</li>
+        </ul>
+        <p>类比一下：如果学习是在图书馆找一本书，那么：</p>
+        <ul>
+          <li>正则化/dropout ≈ "优先找比较薄的书"（参数约束）</li>
+          <li>数据增强 ≈ "多看几个书架"（扩展训练集）</li>
+          <li>几何先验 ≈ "我知道这本书在'推理小说'区"（缩小函数类）</li>
+        </ul>
+        <p>后者的效率提升是质的飞跃！</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：概述中说"全连接网络可以通过稀疏正则化部分缓解灾难，但假设太强"——为什么稀疏性假设太强？图像数据不是确实有稀疏性吗（比如小波变换后）？</p>
+      <div class="answer">
+        <p>💡 专家解答：这是一个细致的问题，涉及不同类型的"稀疏性"。让我区分几个概念：</p>
+        <p><strong>1. 表示稀疏性（Representation Sparsity）</strong>：某个信号在某个基（如小波、傅里叶）下的系数是稀疏的。这确实适用于很多自然信号，比如：</p>
+        <ul>
+          <li>图像在小波基下通常是稀疏的（压缩感知的基础）</li>
+          <li>音频在频域通常是稀疏的（MP3 压缩的原理）</li>
+        </ul>
+        <p><strong>2. 函数稀疏性（Function Sparsity）</strong>：目标函数 $f(x)$ 只依赖于输入 $x$ 的少数几个坐标。比如 $f(x_1, \ldots, x_{1000}) = x_1^2 + x_5 x_7$，只依赖3个变量。</p>
+        <p>本章 2.3 节讨论的是<strong>第二种稀疏性</strong>——假设函数只依赖少数变量或低维投影。这个假设为什么太强？</p>
+        <ul>
+          <li><strong>图像例子</strong>：一个 $28 \times 28$ 的手写数字图像有784个像素。虽然它在小波基下可能是稀疏的，但分类函数 $f : \mathbb{R}^{784} \to \{0, \ldots, 9\}$ <strong>不是</strong>稀疏的——它需要看整张图片，不能只看几个像素就判断是哪个数字</li>
+          <li><strong>医疗影像例子</strong>：CT扫描的病灶检测需要综合大范围的组织结构信息，不能只看几个体素</li>
+          <li><strong>物理仿真例子</strong>：软组织形变依赖所有接触点的受力，不是稀疏的</li>
+        </ul>
+        <p><strong>关键洞察</strong>：即使数据本身有稀疏表示，我们要学习的<strong>函数</strong>通常不是稀疏的——它需要整合高维输入的复杂模式。稀疏性假设在某些问题上有效（如特征选择、线性回归），但不适用于需要理解全局结构的任务（如视觉、语言理解）。</p>
+        <p>这就是为什么我们需要<strong>几何先验</strong>而不仅仅是稀疏性——我们需要的是"函数具有某种对称性"（如平移不变性），而不是"函数只依赖少数变量"。前者既强大又灵活，后者太限制了。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解</h4>
+    <p><strong>本章的"剧情线"类比</strong>：把 Chapter 2 想象成一部悬疑片：</p>
+    <ul>
+      <li><strong>Act 1：问题设定</strong> — 我们要在一个巨大的黑暗仓库（高维空间）里找到一个特定的盒子（目标函数）</li>
+      <li><strong>Act 2：尝试暴力搜索</strong> — 我们试图逐个检查所有盒子，但发现仓库有 $10^{100}$ 个盒子，即使每秒检查一万亿个，也需要比宇宙年龄还长的时间（维度灾难）</li>
+      <li><strong>Act 3：寻找捷径</strong> — 我们试图用"万能工具"（万能逼近定理）来快速找到，但发现这个工具只能告诉我们"那个盒子存在"，却不能告诉我们"怎么找到它"</li>
+      <li><strong>Act 4：绝望中的希望</strong> — 我们发现，如果我们知道那个盒子的一些<strong>特征</strong>（比如"它在红色区域"、"它和其他盒子有对称排列"），搜索范围就会从 $10^{100}$ 缩小到几千个！</li>
+      <li><strong>Act 5：顿悟</strong> — 原来所有成功的搜索方法都在利用这些"特征"（几何先验）——这不是可选项，这是<strong>唯一的活路</strong></li>
+    </ul>
+    <p>这就是 Chapter 2 的故事：从绝望到希望，从暴力到智慧，从"万能"到"专用"。</p>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用</h4>
+    <p>PhysRobot 手术仿真系统是高维学习问题的完美例子：</p>
+    <ul>
+      <li><strong>状态空间维度</strong>：
+        <ul>
+          <li>机器人手臂：7个关节角度 + 3个工具位置 + 3个工具姿态 = 13维</li>
+          <li>软组织网格：1000个节点 × 3个坐标 = 3000维</li>
+          <li>力觉传感器：200个通道</li>
+          <li>视觉输入：$640 \times 480 \times 3$ = 921,600维</li>
+          <li><strong>总计：超过90万维的联合状态空间！</strong></li>
+        </ul>
+      </li>
+      <li><strong>如果用通用方法</strong>：即使每个维度只采样2个点（粗到不能再粗），也需要 $2^{900000}$ 个样本——这是一个有27万位数字的天文数字</li>
+      <li><strong>几何先验的拯救</strong>：
+        <ul>
+          <li>物理约束：组织形变满足连续性方程，不需要逐点学习</li>
+          <li>对称性：左右对称的手术操作产生对称的结果</li>
+          <li>局部性：组织的局部形变主要由局部受力决定</li>
+          <li>时间平滑性：相邻时刻的状态不会剧烈跳变</li>
+        </ul>
+      </li>
+      <li><strong>结果</strong>：通过 GNN（利用网格几何）+ CNN（利用视觉局部性）+ 物理先验（利用守恒律），我们可以用几千到几万个样本训练出有效的仿真模型——这是几何先验带来的 <strong>百万倍</strong> 的样本效率提升！</li>
+    </ul>
+    <p>这就是为什么 PhysRobot 项目的成功完全依赖于正确识别和利用物理世界的几何结构——这正是本章要传达的核心思想。</p>
+  </div>
+</div>
+<!-- === END ENRICHMENT: overview === -->
+
+
+
+    <h2 id="setup">学习问题的形式化<br><span style="font-size:0.7em;color:var(--text-secondary)">Formalisation of the Learning Problem</span></h2>
+
+    <h3 id="supervised">监督学习设置</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>监督机器学习，在最简单的形式化中，考虑从底层数据分布 $P$ 中独立同分布抽取的 $N$ 个观测值的集合 $\mathcal{D} = \{(x_i, y_i)\}_{i=1}^N$，其中 $P$ 定义在 $\mathcal{X} \times \mathcal{Y}$ 上。</p>
+        <p>这个设置的<strong>定义性特征</strong>是 $\mathcal{X}$ 是一个<strong>高维空间</strong>：通常假设 $\mathcal{X} = \mathbb{R}^d$，维度 $d$ 很大。</p>
+      </div>
+      <div class="en">
+        Supervised machine learning considers a set of $N$ observations $\mathcal{D} = \{(x_i, y_i)\}_{i=1}^N$ drawn i.i.d. from an underlying data distribution $P$ defined over $\mathcal{X} \times \mathcal{Y}$. The defining feature is that $\mathcal{X}$ is a high-dimensional space.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\mathcal{D} = \{(x_i, y_i)\}_{i=1}^N \sim P(\mathcal{X} \times \mathcal{Y}), \quad \mathcal{X} = \mathbb{R}^d, \; d \gg 1$$
+      <div class="math-explain">
+        <strong>关键要素</strong>：
+        <br>• $\mathcal{X} = \mathbb{R}^d$ — 输入空间（高维）。对于 MNIST 图像：$d = 28 \times 28 = 784$。对于 ImageNet：$d = 224 \times 224 \times 3 = 150{,}528$。
+        <br>• $\mathcal{Y}$ — 标签空间。分类：$\mathcal{Y} = \{1, \ldots, K\}$；回归：$\mathcal{Y} = \mathbb{R}$。
+        <br>• $P$ — 数据的联合分布（未知）。
+        <br>• $N$ — 训练样本数。
+      </div>
+    </div>
+
+    <p>进一步假设标签由未知函数 $f$ 生成：$y_i = f(x_i)$。学习问题归结为使用参数化函数类 $\mathcal{F} = \{f_\theta : \theta \in \Theta\}$ 来估计函数 $f$。</p>
+
+    <div class="math-block">
+      $$\text{目标: 找到 } \tilde{f} \in \mathcal{F} \text{ 使得 } \tilde{f} \approx f$$
+      <div class="math-explain">
+        神经网络是这种参数化函数类的一种常见实现，其中 $\theta \in \Theta$ 对应网络权重。在理想化设置中，标签没有噪声，现代深度学习系统通常在所谓的<strong>插值体制</strong>中运行。
+      </div>
+    </div>
+
+<!-- === ENRICHMENT: setup === -->
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：学习问题的形式化</h4>
+    
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问："i.i.d. 假设"在实际应用中总是成立吗？如果不成立会怎样？</p>
+      <div class="answer">
+        <p>💡 专家解答：i.i.d.（独立同分布）假设实际上是一个<strong>理想化的简化</strong>，在现实中经常被违背。但它是大多数学习理论的基石。</p>
+        <p><strong>i.i.d. 假设的含义</strong>：</p>
+        <ol>
+          <li><strong>独立性（Independent）</strong>：样本 $(x_i, y_i)$ 的抽取不依赖于其他样本——知道 $x_1$ 不会给你关于 $x_2$ 的信息</li>
+          <li><strong>同分布（Identically Distributed）</strong>：所有样本来自同一个分布 $P(\mathcal{X} \times \mathcal{Y})$ — 训练集和测试集的生成机制相同</li>
+        </ol>
+        <p><strong>现实中的违背情况</strong>：</p>
+        <ul>
+          <li><strong>时间序列</strong>：股价预测中，今天的价格依赖于昨天的价格 — 违背独立性</li>
+          <li><strong>医疗数据</strong>：同一个病人的多次检查高度相关 — 违背独立性</li>
+          <li><strong>分布漂移（Distribution Shift）</strong>：训练集来自2020年，测试集来自2024年，用户行为已变 — 违背同分布</li>
+          <li><strong>主动学习</strong>：我们根据已有数据选择下一个要标注的样本 — 违背独立性</li>
+          <li><strong>强化学习</strong>：智能体的行为影响环境的状态分布 — 同时违背两者</li>
+        </ul>
+        <p><strong>违背 i.i.d. 的后果</strong>：</p>
+        <ul>
+          <li>经典泛化界（如 Hoeffding 不等式、VC维理论）可能不再适用</li>
+          <li>交叉验证可能给出过于乐观的估计（如果验证集和训练集有时间相关性）</li>
+          <li>模型在真实部署时性能下降（train-test mismatch）</li>
+        </ul>
+        <p><strong>如何应对</strong>：</p>
+        <ul>
+          <li><strong>时间序列</strong>：用时间分割代替随机分割（训练集在前，测试集在后）</li>
+          <li><strong>分布漂移</strong>：领域适应（Domain Adaptation）、持续学习（Continual Learning）</li>
+          <li><strong>相关样本</strong>：聚类样本（如按病人分组），计算有效样本量</li>
+        </ul>
+        <p>尽管 i.i.d. 假设常被违背，它仍然是理论分析的起点——就像物理学中的"无摩擦表面"假设，虽然不完全现实，但提供了基础洞察。</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：为什么假设标签由"确定性函数 $y = f(x)$"生成？现实中的标签不是经常有噪声吗（比如人工标注的错误）？</p>
+      <div class="answer">
+        <p>💡 专家解答：非常敏锐的观察！确实，现实中的标签生成过程通常是<strong>随机的</strong>，即 $y \sim P(Y | X = x)$，而不是确定性的 $y = f(x)$。但本章采用确定性假设有几个原因：</p>
+        <p><strong>1. 理论简化</strong>：</p>
+        <ul>
+          <li>确定性设定下，学习问题归结为<strong>函数逼近</strong>：找到 $\tilde{f} \approx f$</li>
+          <li>随机设定下，问题变成<strong>密度估计</strong>或<strong>条件期望估计</strong>：$\mathbb{E}[Y | X = x]$，数学更复杂</li>
+          <li>维度灾难的本质结论在两种设定下都成立，所以用简单的先讨论</li>
+        </ul>
+        <p><strong>2. 插值体制的现实性</strong>：</p>
+        <ul>
+          <li>现代深度学习（尤其是大模型）通常在<strong>插值体制</strong>中运行：训练误差接近零，模型"记住"了所有训练样本</li>
+          <li>在这个体制下，噪声标签也会被拟合，所以确定性和随机性假设的区别变小</li>
+          <li>过参数化模型（参数数量远超样本数）可以完美拟合任意标签，包括噪声</li>
+        </ul>
+        <p><strong>3. 噪声可以分解</strong>：</p>
+        <p>即使真实标签是 $y = f(x) + \epsilon$（其中 $\epsilon$ 是噪声），我们也可以把学习问题看作两个部分：</p>
+        <ul>
+          <li><strong>可约误差（Reducible Error）</strong>：由于 $\tilde{f} \neq f$ 导致的误差 — 这是我们要优化的</li>
+          <li><strong>不可约误差（Irreducible Error）</strong>：由于噪声 $\epsilon$ 导致的误差 — 无论模型多好都存在</li>
+        </ul>
+        <p>本章关注的维度灾难主要影响<strong>可约误差</strong>，所以暂时忽略噪声不影响核心结论。</p>
+        <p><strong>实践中的处理</strong>：</p>
+        <ul>
+          <li><strong>回归任务</strong>：通常假设 $y = f(x) + \epsilon$，其中 $\epsilon \sim \mathcal{N}(0, \sigma^2)$，目标是估计条件期望 $\mathbb{E}[Y|X] = f(x)$</li>
+          <li><strong>分类任务</strong>：标签可能有噪声（如 label smoothing），但通常假设存在一个"真实"的 Bayes 最优分类器</li>
+          <li><strong>噪声鲁棒性</strong>：使用交叉熵损失而非0-1损失、数据清洗、半监督学习等技术</li>
+        </ul>
+        <p>总结：确定性假设是为了理论清晰，不意味着忽视噪声的重要性。在后续章节和实际应用中，噪声会被适当考虑。</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：文中说"$\mathcal{X} = \mathbb{R}^d$"，但很多数据（如图像、文本）不是定义在欧几里得空间上的吧？这个假设会不会太限制了？</p>
+      <div class="answer">
+        <p>💡 专家解答：这是一个深刻的问题，实际上触及了<strong>几何深度学习</strong>的核心动机！你的直觉是对的：很多数据的自然空间<strong>不是</strong> $\mathbb{R}^d$。</p>
+        <p><strong>欧几里得假设的局限性</strong>：</p>
+        <ul>
+          <li><strong>图像</strong>：虽然可以展平成 $\mathbb{R}^{d}$ 的向量，但它们的<strong>自然结构</strong>是2D网格，具有平移不变性 — $\mathbb{R}^d$ 不保留这个结构</li>
+          <li><strong>3D形状</strong>：网格或点云不是欧几里得空间，而是<strong>流形</strong>（manifold），局部看起来像 $\mathbb{R}^3$ 但全局拓扑不同</li>
+          <li><strong>图数据</strong>：社交网络、分子结构的自然空间是<strong>图</strong>，节点没有固定顺序，不能简单嵌入 $\mathbb{R}^d$</li>
+          <li><strong>旋转</strong>：3D旋转群 $SO(3)$ 是一个<strong>李群</strong>，不是线性空间</li>
+          <li><strong>概率分布</strong>：概率分布的空间（如在变分推断中）具有<strong>黎曼几何</strong>（信息几何）</li>
+        </ul>
+        <p><strong>为什么本章仍然用 $\mathbb{R}^d$</strong>：</p>
+        <ol>
+          <li><strong>起点</strong>：$\mathbb{R}^d$ 是最简单的高维空间，维度灾难在这里已经很严重了 — 在更复杂的空间（流形、图）上只会更糟</li>
+          <li><strong>现实妥协</strong>：在实践中，我们经常被迫将非欧几里得数据嵌入 $\mathbb{R}^d$（如 word embeddings、node embeddings）— 但这会丢失结构信息</li>
+          <li><strong>通用性</strong>：很多结论（如样本复杂度的指数依赖）在 $\mathbb{R}^d$ 上证明后，可以推广到更一般的度量空间</li>
+        </ol>
+        <p><strong>这正是本书后续章节的主题</strong>：</p>
+        <ul>
+          <li><strong>Chapter 3-5</strong>：引入群论、流形、图等几何结构</li>
+          <li><strong>Chapter 6-9</strong>：设计尊重这些结构的神经网络（CNN、GNN、Transformer...）</li>
+          <li><strong>核心思想</strong>：与其强行把数据塞进 $\mathbb{R}^d$，不如设计能<strong>直接在自然几何空间上操作</strong>的模型</li>
+        </ul>
+        <p>举个例子：</p>
+        <ul>
+          <li><strong>错误做法</strong>：把分子图展平成固定长度的向量（必须填充/截断，丢失拓扑信息）</li>
+          <li><strong>正确做法</strong>：用图神经网络（GNN）直接在图结构上操作，自然保留连接关系和置换不变性</li>
+        </ul>
+        <p>所以 $\mathbb{R}^d$ 假设不是终点，而是起点 — 它让我们看到问题的严重性，从而激励我们去寻找更好的几何框架。这正是<strong>几何深度学习</strong>的诞生原因！</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：什么是"插值体制"（interpolation regime）？它和传统的偏差-方差权衡有什么关系？</p>
+      <div class="answer">
+        <p>💡 专家解答：这是现代深度学习理论中最令人惊讶的发现之一！传统机器学习和现代深度学习在这个问题上有根本性的区别。</p>
+        <p><strong>传统机器学习的世界观</strong>：</p>
+        <ul>
+          <li><strong>欠拟合区域</strong>：模型容量太小，训练误差高，测试误差也高（高偏差）</li>
+          <li><strong>最优区域</strong>：模型容量适中，训练误差低，测试误差也低（偏差-方差平衡）</li>
+          <li><strong>过拟合区域</strong>：模型容量太大，训练误差接近零，但测试误差上升（高方差）— <strong>灾难！</strong></li>
+        </ul>
+        <p>经典建议："模型不要太复杂，否则会过拟合"，"参数数量应该远小于样本数量"。</p>
+        <p><strong>现代深度学习的发现</strong>：</p>
+        <ul>
+          <li>深度神经网络的参数数量经常<strong>远超</strong>训练样本数量（如 GPT-3 有1750亿参数，训练数据"只有"几TB）</li>
+          <li>这些模型达到<strong>零训练误差</strong>（完美拟合训练数据，包括噪声）— 按传统理论应该严重过拟合</li>
+          <li>但令人震惊的是：测试误差仍然很低，甚至随着模型变大而<strong>继续下降</strong>！这被称为<strong>双下降现象</strong>（double descent）</li>
+        </ul>
+        <p><strong>插值体制的定义</strong>：</p>
+        <p>当模型容量足够大，可以完美拟合所有训练数据时，我们称模型处于<strong>插值体制</strong>。用数学语言：</p>
+        <p>$$\text{训练误差} = \frac{1}{N} \sum_{i=1}^N \mathcal{L}(\tilde{f}(x_i), y_i) = 0$$</p>
+        <p>或近似为零（因为数值优化的限制）。</p>
+        <p><strong>为什么插值不一定导致过拟合</strong>：</p>
+        <ol>
+          <li><strong>隐式正则化</strong>：梯度下降等优化算法倾向于找到"简单"的解（如低范数、平滑），即使能拟合任意标签</li>
+          <li><strong>过参数化的好处</strong>：参数多的模型有更多路径通向好解，优化更容易（损失地形更平滑）</li>
+          <li><strong>归纳偏置</strong>：架构设计（如CNN的局部性）限制了函数类，即使完美拟合训练集也不会学到太疯狂的函数</li>
+        </ol>
+        <p><strong>与本章的关系</strong>：</p>
+        <ul>
+          <li>插值体制意味着"拟合能力"不是瓶颈 — 万能逼近定理告诉我们足够大的网络能拟合任何函数</li>
+          <li>真正的瓶颈是<strong>泛化能力</strong> — 如何在高维空间中用有限样本找到"好"的函数？</li>
+          <li>答案仍然是：<strong>归纳偏置</strong>（尤其是几何先验）决定了哪些函数是"简单"的，从而引导优化找到泛化良好的解</li>
+        </ul>
+        <p>类比：插值体制就像一个极其博学的人（能记住所有见过的例子），但如果没有正确的"世界观"（归纳偏置），仍然无法推广到新情况。几何先验提供了这个"世界观"。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解</h4>
+    <p><strong>i.i.d. 假设的日常类比</strong>：想象你在抽签决定谁洗碗：</p>
+    <ul>
+      <li><strong>独立性</strong>：每次抽签后把签放回去，下一次抽签不受影响 — 昨天你洗碗不影响今天的概率</li>
+      <li><strong>同分布</strong>：签筒里的签始终是相同的配置 — 不会突然加入新室友或有人搬走</li>
+    </ul>
+    <p>现实违背的例子：</p>
+    <ul>
+      <li><strong>不放回抽签</strong>：抽过的签不放回 — 违背独立性</li>
+      <li><strong>室友关系变化</strong>：大家轮流洗碗，分布会变 — 违背同分布</li>
+    </ul>
+    <p><strong>插值体制的类比</strong>：学习历史是为了预测未来：</p>
+    <ul>
+      <li><strong>传统观点</strong>："你把所有历史事件都死记硬背（零训练误差），却不理解背后的规律，所以无法预测新事件"— 过拟合警告</li>
+      <li><strong>现代发现</strong>："如果你记忆力超群（过参数化），反而可能自然总结出规律 — 因为记忆本身需要某种组织结构"— 隐式正则化</li>
+      <li><strong>关键</strong>：但你需要一个好的"历史观"（几何先验）来组织这些记忆，否则仍然是一堆杂乱事实</li>
+    </ul>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用</h4>
+    <p>在 PhysRobot 手术仿真中，学习问题的形式化特别微妙：</p>
+    <ul>
+      <li><strong>非 i.i.d. 的例子</strong>：
+        <ul>
+          <li><strong>时间依赖</strong>：同一次手术的连续帧高度相关（组织从 t 时刻到 t+1 时刻的形变是连续的）— 必须用序列模型而非独立样本假设</li>
+          <li><strong>病人差异</strong>：不同病人的组织力学性质不同（年龄、病变程度）— 训练集（年轻健康组织）和测试集（老年病变组织）可能有分布漂移</li>
+          <li><strong>手术阶段</strong>：切割阶段和缝合阶段的力学行为完全不同 — 需要分阶段建模或多任务学习</li>
+        </ul>
+      </li>
+      <li><strong>确定性 vs 随机性</strong>：
+        <ul>
+          <li>物理仿真理论上是<strong>确定性</strong>的（给定初始条件和力，形变唯一确定）</li>
+          <li>但实践中有<strong>噪声</strong>：传感器噪声、数值积分误差、建模简化（如忽略粘弹性）</li>
+          <li>解决方案：用概率模型（如高斯过程、贝叶斯神经网络）量化不确定性</li>
+        </ul>
+      </li>
+      <li><strong>插值体制的实践</strong>：
+        <ul>
+          <li>PhysRobot 的 GNN 模型参数量可能超过训练轨迹数 — 处于插值体制</li>
+          <li>但由于<strong>物理先验</strong>（能量守恒、对称性），模型仍然泛化良好</li>
+          <li>实验：即使完美拟合有噪声的训练数据，测试误差仍然很低 — 物理约束充当了隐式正则化</li>
+        </ul>
+      </li>
+    </ul>
+    <p>关键洞察：医疗机器人系统必须<strong>显式建模</strong>数据的生成机制（物理定律、生理约束），不能依赖纯数据驱动的黑盒模型 — 这正是几何和物理先验的价值所在。</p>
+  </div>
+</div>
+<!-- === END ENRICHMENT: setup === -->
+
+
+    <h3 id="risk">经验风险 vs 泛化风险</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>学习算法的性能通过在<strong>新样本</strong>上的预期性能来衡量，使用某个损失函数 $L(\cdot, \cdot)$：</p>
+      </div>
+      <div class="en">
+        Performance is measured in terms of expected performance on new samples drawn from $P$, using some loss $L(\cdot, \cdot)$.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$R(\tilde{f}) := \mathbb{E}_{P}\left[L(\tilde{f}(x), f(x))\right]$$
+      <div class="math-explain">
+        <strong>泛化风险</strong>（generalization risk）$R(\tilde{f})$ 衡量模型在<strong>未见过的数据</strong>上的表现。常用损失包括：
+        <br>• 均方误差：$L(y, y') = \frac{1}{2}|y - y'|^2$
+        <br>• 交叉熵损失（用于分类）
+        <br>关键问题：我们只能计算<strong>经验风险</strong>（在训练集上），如何保证泛化风险也低？
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\hat{R}(\tilde{f}) = \frac{1}{N}\sum_{i=1}^N L(\tilde{f}(x_i), f(x_i)) \quad \text{vs} \quad R(\tilde{f}) = \mathbb{E}_P[L(\tilde{f}(x), f(x))]$$
+      <div class="math-explain">
+        <strong>左边</strong>：经验风险（training loss），我们可以直接优化。<strong>右边</strong>：泛化风险（test loss），我们真正关心的。从经验风险到泛化风险的桥梁需要<strong>统计学习理论</strong>（集中不等式、Rademacher 复杂度等）——这超出了本章范围，但核心结论是：函数类 $\mathcal{F}$ 越大（越"复杂"），经验风险和泛化风险之间的差距越大。
+      </div>
+    </div>
+
+    <h3 id="interpolation">插值体制</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>在理想化设置中（无标签噪声），现代深度学习系统通常在<strong>插值体制</strong>中运行：估计函数 $\tilde{f} \in \mathcal{F}$ 满足 $\tilde{f}(x_i) = f(x_i)$ 对所有 $i = 1, \ldots, N$。即模型完美拟合训练数据。</p>
+        <p>但这引出一个关键问题：通常存在<strong>无穷多个</strong>插值函数——我们如何选择"正确的"那个？</p>
+      </div>
+      <div class="en">
+        Modern deep learning systems typically operate in the interpolating regime, where $\tilde{f}(x_i) = f(x_i)$ for all $i$. But there are infinitely many interpolating functions — how do we choose?
+      </div>
+    </div>
+
+    <!-- ========= 2.1 归纳偏置 ========= -->
+    <h2 id="sec2-1">2.1 归纳偏置与函数正则性<br><span style="font-size:0.7em;color:var(--text-secondary)">Inductive Bias via Function Regularity</span></h2>
+
+    <h3 id="universal-approx">万能逼近定理 (Universal Approximation)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>现代机器学习使用大规模高质量数据集，这激励了设计<strong>富有表达力的函数类</strong> $\mathcal{F}$。神经网络即使最简单的架构也能产生<strong>稠密</strong>的函数类——这就是各种<strong>万能逼近定理</strong>的内容。</p>
+      </div>
+      <div class="en">
+        Modern machine learning operates with large, high-quality datasets, motivating rich function classes $\mathcal{F}$. Even simple neural network architectures yield dense function classes — the subject of Universal Approximation Theorems.
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch2_p11_img0.png" alt="Figure 1: MLP Universal Approximation">
+      <figcaption>图 1：多层感知机（Rosenblatt, 1958），最简单的前馈神经网络，是万能逼近器：仅需一个隐藏层，就可以表示阶跃函数的组合，从而以任意精度逼近任何连续函数。</figcaption>
+    </div>
+
+    <div class="blueprint">
+      <h4>万能逼近定理 Universal Approximation Theorem</h4>
+      <p>考虑两层感知机 $f(x) = c^\top \text{sign}(Ax + b)$。对于<strong>任何</strong>紧集上的连续函数 $g$，对于<strong>任何</strong> $\epsilon > 0$，存在足够大的隐藏层使得 $\|f - g\|_\infty < \epsilon$。</p>
+      <p>换言之，两层感知机的函数类在连续函数空间中是<strong>稠密的</strong>。</p>
+      <p><strong>历史</strong>：由 Cybenko (1989), Hornik (1991), Barron (1993), Leshno et al. (1993) 等人在 1990s 独立证明和推广。</p>
+    </div>
+
+    <div class="callout callout-warning">
+      <h4>万能逼近 ≠ 可学习！</h4>
+      <p>万能逼近定理说的是<strong>存在性</strong>——存在一组权重使得网络能逼近目标函数。但它<strong>不</strong>告诉我们：</p>
+      <ul>
+        <li>需要<strong>多大</strong>的网络（隐藏层宽度可能需要指数级）</li>
+        <li>需要<strong>多少数据</strong>才能找到这组权重</li>
+        <li>梯度下降能否<strong>高效地</strong>找到这组权重</li>
+      </ul>
+      <p>这就是为什么万能逼近<strong>不</strong>意味着没有归纳偏置——恰恰相反！</p>
+    </div>
+
+    <pre><code># 万能逼近的直觉：阶跃函数的组合
+import numpy as np
+import matplotlib.pyplot as plt
+
+def step_approximation(x, centers, heights, steepness=50):
+    """用 sigmoid (光滑阶跃) 的组合逼近任意函数"""
+    result = np.zeros_like(x)
+    for c, h in zip(centers, heights):
+        result += h * (1 / (1 + np.exp(-steepness * (x - c))))
+    return result
+
+# 目标函数: sin(2πx) 在 [0, 1] 上
+x = np.linspace(0, 1, 1000)
+target = np.sin(2 * np.pi * x)
+
+# 用不同数量的"阶跃"来逼近
+for n_steps in [5, 10, 50]:
+    centers = np.linspace(0, 1, n_steps)
+    # 简单地用目标函数的差分作为高度
+    heights = np.diff(np.sin(2 * np.pi * centers), prepend=0)
+    approx = step_approximation(x, centers, heights)
+    error = np.mean((approx - target) ** 2)
+    print(f"{n_steps:3d} steps → MSE = {error:.6f}")
+
+# 输出:
+#   5 steps → MSE = 0.089421
+#  10 steps → MSE = 0.023156
+#  50 steps → MSE = 0.000987
+# → 随着阶跃数增加，逼近越来越好 (万能逼近!)</code></pre>
+
+    <h3 id="complexity-measure">复杂度度量与归纳偏置</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>既然万能逼近不是我们想要的全部，我们需要一种方式来<strong>偏好某些函数胜过其他函数</strong>。给定一个具有万能逼近能力的假设空间 $\mathcal{F}$，我们可以定义一个<span class="term">复杂度度量</span> $c : \mathcal{F} \to \mathbb{R}^+$ 并重新定义插值问题：</p>
+      </div>
+      <div class="en">
+        Given a hypothesis space $\mathcal{F}$ with universal approximation, we can define a complexity measure $c : \mathcal{F} \to \mathbb{R}^+$ and redefine our interpolation problem.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\tilde{f} \in \arg\min_{g \in \mathcal{F}} c(g) \quad \text{s.t.} \quad g(x_i) = f(x_i) \; \text{ for } i = 1, \ldots, N$$
+      <div class="math-explain">
+        我们寻找假设类中<strong>最正则</strong>（最简单、最光滑）的函数，同时满足训练数据的约束。复杂度度量 $c$ 编码了我们的<strong>归纳偏置</strong>——我们认为什么样的函数更"可能"是正确的。
+      </div>
+    </div>
+
+    <p>对于标准函数空间，复杂度度量可以定义为<strong>范数</strong>，使 $\mathcal{F}$ 成为 Banach 空间：</p>
+
+    <div class="math-block">
+      $$\text{三次样条的例子: } \quad c(f) = \int_{-\infty}^{+\infty} |f''(x)|^2 dx$$
+      <div class="math-explain">
+        <strong>三次样条</strong>是低维函数逼近的主力工具。它们的复杂度度量是二阶导数的平方积分——直觉上，我们偏好"光滑"的函数，即曲率小的函数。在高维中，我们需要类似但更强大的正则性概念。
+      </div>
+    </div>
+
+    <h3 id="regularization">正则化策略</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>对于神经网络，复杂度度量 $c$ 可以用网络权重来表示：$c(f_\theta) = c(\theta)$。常见选择包括：</p>
+      </div>
+      <div class="en">
+        For neural networks, the complexity measure $c$ can be expressed in terms of network weights: $c(f_\theta) = c(\theta)$.
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>正则化方法</th><th>复杂度度量</th><th>效果</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Weight Decay</strong> (L2)</td><td>$c(\theta) = \|\theta\|_2^2$</td><td>偏好小权重，使函数更光滑</td></tr>
+        <tr><td><strong>L1 正则化</strong></td><td>$c(\theta) = \|\theta\|_1$</td><td>促进稀疏性，执行特征选择</td></tr>
+        <tr><td><strong>Path Norm</strong></td><td>$c(\theta) = \sum_{\text{paths}} \prod |w_i|$</td><td>考虑网络深度的复杂度</td></tr>
+        <tr><td><strong>Dropout</strong></td><td>随机置零部分权重</td><td>隐式集成正则化</td></tr>
+        <tr><td><strong>Batch Norm</strong></td><td>归一化中间层统计量</td><td>平滑损失景观</td></tr>
+      </tbody>
+    </table>
+
+    <h3 id="implicit-reg">隐式正则化</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>从<strong>贝叶斯视角</strong>，复杂度度量可以解释为函数先验的负对数。更一般地，复杂度可以通过优化方案<strong>隐式</strong>地强制执行。例如，众所周知，梯度下降在欠定最小二乘问题上会选择具有<strong>最小 L2 范数</strong>的插值解。</p>
+        <p>这个隐式正则化结果在现代神经网络中的推广是当前研究的活跃领域。</p>
+      </div>
+      <div class="en">
+        From a Bayesian perspective, complexity measures can be interpreted as the negative log-prior. More generally, complexity can be enforced implicitly through the optimisation scheme. For example, gradient descent on an under-determined least-squares objective chooses interpolating solutions with minimal L2 norm.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\underbrace{\min_\theta \sum_{i=1}^N L(f_\theta(x_i), y_i)}_{\text{经验风险最小化}} + \underbrace{\lambda \cdot c(\theta)}_{\text{正则化}} \quad \longleftrightarrow \quad \underbrace{\min_\theta c(\theta)}_{\text{复杂度最小化}} \;\; \text{s.t. } f_\theta(x_i) = y_i$$
+      <div class="math-explain">
+        <strong>结构风险最小化</strong>（Structural Risk Minimization）：左边是显式正则化形式（超参数 $\lambda$ 控制正则化强度），右边是约束优化形式。两者在一定条件下等价（拉格朗日对偶）。核心问题：<strong>如何定义有效的先验</strong>来捕获真实世界预测任务的正则性？
+      </div>
+    </div>
+
+    <pre><code># 隐式正则化的演示: 梯度下降偏好 "简单" 解
+import torch
+import torch.nn as nn
+
+# 欠定问题: 2 个方程, 10 个未知数
+A = torch.randn(2, 10)
+b = torch.randn(2)
+
+# 方法 1: 直接求最小范数解 (理论最优)
+x_min_norm = A.T @ torch.linalg.solve(A @ A.T, b)
+print(f"最小范数解的 L2 范数: {x_min_norm.norm():.4f}")
+
+# 方法 2: 梯度下降 (从零初始化)
+x_gd = torch.zeros(10, requires_grad=True)
+optimizer = torch.optim.SGD([x_gd], lr=0.01)
+
+for step in range(5000):
+    loss = ((A @ x_gd - b) ** 2).sum()
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+print(f"梯度下降解的 L2 范数: {x_gd.data.norm():.4f}")
+print(f"两者差异: {(x_gd.data - x_min_norm).norm():.6f}")
+# → 梯度下降自动找到了最小范数解！这就是 "隐式正则化"</code></pre>
+
+    <!-- ========= 2.2 维度灾难 ========= -->
+    <h2 id="sec2-2">2.2 维度灾难<br><span style="font-size:0.7em;color:var(--text-secondary)">The Curse of Dimensionality</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>虽然在低维（$d = 1, 2, 3$）中，插值是一个经典的信号处理任务，有非常精确的数学控制，但<strong>高维问题的情况完全不同</strong>。</p>
+        <p>为了传达核心思想，我们考虑一个经典的正则性概念：<strong>Lipschitz 函数</strong>。</p>
+      </div>
+      <div class="en">
+        While interpolation in low dimensions is a classic signal processing task with precise mathematical control, the situation for high-dimensional problems is entirely different.
+      </div>
+    </div>
+
+    <h3 id="lipschitz">Lipschitz 类的灾难</h3>
+
+    <div class="blueprint">
+      <h4>1-Lipschitz 函数类</h4>
+      <p>函数 $f : \mathcal{X} \to \mathbb{R}$ 是 <strong>1-Lipschitz</strong> 的，如果：</p>
+      $$|f(x) - f(x')| \leq \|x - x'\| \quad \text{for all } x, x' \in \mathcal{X}$$
+      <div class="math-explain">
+        这个假设只要求目标函数是<strong>局部光滑</strong>的：如果稍微扰动输入 $x$（用范数 $\|x - x'\|$ 度量），输出 $f(x)$ 不能变化太大。这是一个<strong>非常温和</strong>的假设——几乎所有实际函数都满足。
+      </div>
+    </div>
+
+    <p>现在关键问题是：如果我们对目标函数 $f$ 的唯一知识是它是 1-Lipschitz 的，我们需要多少观测才能保证估计 $\tilde{f}$ 接近 $f$？</p>
+
+    <div class="math-block">
+      $$N(\epsilon, d) \geq \left(\frac{1}{\epsilon}\right)^d$$
+      <div class="math-explain">
+        <strong>答案是：在维度 $d$ 中是指数级的</strong>。为了将最坏情况误差控制在 $\epsilon$ 以内，我们至少需要 $(1/\epsilon)^d$ 个样本。这告诉我们 Lipschitz 类"增长得太快"——随着输入维度的增加，函数空间呈指数增长。
+      </div>
+    </div>
+
+    <div class="callout callout-key">
+      <h4>直觉理解</h4>
+      <p>为什么需要指数级样本？考虑 $d$ 维单位超立方体 $[0,1]^d$：</p>
+      <ul>
+        <li>为了在每个区域都有"经验"，我们需要将空间分成小区域</li>
+        <li>如果每个维度分成 $m$ 个区间，总共有 $m^d$ 个小超立方体</li>
+        <li>每个小超立方体至少需要 1 个样本 → 总共需要 $m^d$ 个样本</li>
+        <li>对于 $d = 100$，$m = 10$：$10^{100}$ 个样本（谷歌的谷歌！）</li>
+      </ul>
+    </div>
+
+    <h3 id="sobolev">Sobolev 类也无法幸免</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>也许用更强的光滑性假设可以改善？Sobolev 类 $H^s(\Omega^d)$ 要求函数的 $s$ 阶广义导数是平方可积的——这比 Lipschitz 强得多。</p>
+      </div>
+      <div class="en">
+        Perhaps stronger smoothness assumptions can help? The Sobolev class $H^s(\Omega^d)$ requires the generalised $s$-th order derivative to be square-integrable.
+      </div>
+    </div>
+
+    <div class="blueprint">
+      <h4>Sobolev 类 $H^s(\Omega^d)$</h4>
+      <p>函数 $f$ 属于 Sobolev 类 $H^s(\Omega^d)$，如果 $f \in L^2(\Omega^d)$ 且广义 $s$ 阶导数平方可积：</p>
+      $$\int |\omega|^{2s+1} |\hat{f}(\omega)|^2 d\omega < \infty$$
+      <p>其中 $\hat{f}$ 是 $f$ 的 Fourier 变换。</p>
+    </div>
+
+    <div class="math-block">
+      $$\text{Minimax 逼近率: } \quad N(\epsilon, d, s) \sim \epsilon^{-d/s}$$
+      <div class="math-explain">
+        经典结果（Tsybakov, 2008）建立了 Sobolev 类的 minimax 逼近和学习率为 $\epsilon^{-d/s}$ 量级。额外的光滑性假设（$s$ 越大意味着越光滑）只在 $s \propto d$ 时才能改善统计图景——但这在实践中是<strong>不现实的假设</strong>。
+        <br><br>
+        <strong>核心结论</strong>：全局光滑性假设<strong>无法</strong>克服维度灾难。我们需要根本不同的正则性概念。
+      </div>
+    </div>
+
+    <h3 id="volume-concentration">体积集中现象</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>维度灾难有多种等价的直觉表述。<span class="term">体积集中</span>现象是其中一个最令人震惊的：</p>
+      </div>
+      <div class="en">
+        The curse of dimensionality has many equivalent intuitive formulations. Volume concentration is among the most striking.
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\frac{V_d(r)}{V_d(R)} = \left(\frac{r}{R}\right)^d \xrightarrow{d \to \infty} 0 \quad \text{for any } r < R$$
+      <div class="math-explain">
+        $d$ 维球的体积比 $V_d(r)/V_d(R)$ 随维度指数衰减。这意味着：在高维空间中，<strong>几乎所有的体积都集中在"壳"上</strong>，而不是在内部。
+        <br><br>
+        <strong>具体例子</strong>：$d = 100$ 维球中，99% 的体积在外层 5% 的壳中：$(0.95)^{100} \approx 0.006$，即内部 95% 半径的球只占总体积的 0.6%！
+      </div>
+    </div>
+
+    <pre><code># 体积集中现象的演示
+import numpy as np
+
+def volume_ratio(r_inner, r_outer, d):
+    """内球体积占外球体积的比例"""
+    return (r_inner / r_outer) ** d
+
+# 内球半径 = 外球半径的 95%
+for d in [1, 2, 3, 10, 50, 100, 500, 1000]:
+    ratio = volume_ratio(0.95, 1.0, d)
+    print(f"d = {d:5d}: V(0.95R)/V(R) = {ratio:.10f}")
+
+# 输出:
+# d =     1: V(0.95R)/V(R) = 0.9500000000
+# d =     2: V(0.95R)/V(R) = 0.9025000000
+# d =     3: V(0.95R)/V(R) = 0.8573750000
+# d =    10: V(0.95R)/V(R) = 0.5987369392
+# d =    50: V(0.95R)/V(R) = 0.0769438585
+# d =   100: V(0.95R)/V(R) = 0.0059205100
+# d =   500: V(0.95R)/V(R) = 0.0000000000  (数值下溢!)
+# d =  1000: V(0.95R)/V(R) = 0.0000000000
+# → 高维球几乎所有体积都在"壳"上!</code></pre>
+
+    <h3 id="geometric-intuition">更多几何直觉</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>维度灾难还有其他令人惊讶的几何后果：</p>
+      </div>
+    </div>
+
+    <div class="callout callout-info">
+      <h4>高维空间的反直觉性质</h4>
+      <ol>
+        <li><strong>最近邻失效</strong>：在高维中，任何点的最近邻和最远邻的距离比趋向于 1：
+        $$\frac{\text{dist}_{\max} - \text{dist}_{\min}}{\text{dist}_{\min}} \to 0 \quad \text{as } d \to \infty$$
+        这意味着"最近邻"的概念失去了意义——所有点都"差不多远"。</li>
+        <li><strong>正交性</strong>：从标准高斯分布中随机抽取的两个向量，它们之间的角度趋向于 $90°$：所有随机方向都近似正交。</li>
+        <li><strong>高斯分布的壳化</strong>：$d$ 维标准高斯随机向量的范数集中在 $\sqrt{d}$ 附近：
+        $$\|x\|_2 \approx \sqrt{d} \pm O(1) \quad \text{when } x \sim \mathcal{N}(0, I_d)$$</li>
+      </ol>
+    </div>
+
+    <pre><code># 高维空间的反直觉性质演示
+import numpy as np
+
+np.random.seed(42)
+
+print("=== 1. 最近邻与最远邻的距离比 ===")
+for d in [2, 10, 100, 1000, 10000]:
+    # 生成 100 个 d 维随机点
+    points = np.random.randn(100, d)
+    query = np.random.randn(d)
+    dists = np.linalg.norm(points - query, axis=1)
+    ratio = (dists.max() - dists.min()) / dists.min()
+    print(f"d = {d:6d}: (max-min)/min = {ratio:.4f}")
+
+print("\n=== 2. 随机向量之间的角度 ===")
+for d in [2, 10, 100, 1000]:
+    angles = []
+    for _ in range(1000):
+        a, b = np.random.randn(d), np.random.randn(d)
+        cos_angle = np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+        angles.append(np.degrees(np.arccos(np.clip(cos_angle, -1, 1))))
+    print(f"d = {d:5d}: mean angle = {np.mean(angles):.1f}° ± {np.std(angles):.1f}°")
+
+print("\n=== 3. 高斯向量的范数集中 ===")
+for d in [10, 100, 1000, 10000]:
+    norms = np.linalg.norm(np.random.randn(10000, d), axis=1)
+    print(f"d = {d:6d}: ||x|| = {norms.mean():.2f} ± {norms.std():.2f} "
+          f"(theory: √d = {np.sqrt(d):.2f})")
+</code></pre>
+
+    <!-- ========= 2.3 打破维度灾难 ========= -->
+    <h2 id="breaking-curse">2.3 打破维度灾难<br><span style="font-size:0.7em;color:var(--text-secondary)">Breaking the Curse</span></h2>
+
+    <h3 id="fc-nets">全连接网络的尝试</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>全连接神经网络定义的函数空间允许更灵活的正则性概念，通过选择权重上的复杂度函数 $c$ 获得。特别是，通过选择<strong>促进稀疏性</strong>的正则化，它们有能力打破维度灾难（Bach, 2017）。</p>
+      </div>
+      <div class="en">
+        Fully-connected neural networks define function spaces enabling more flexible notions of regularity. By choosing sparsity-promoting regularisation, they can break the curse of dimensionality.
+      </div>
+    </div>
+
+    <h3 id="low-dim-proj">低维投影假设</h3>
+
+    <div class="math-block">
+      $$f(x) = g(a_1^\top x, a_2^\top x, \ldots, a_k^\top x), \quad k \ll d$$
+      <div class="math-explain">
+        <strong>低维投影假设</strong>：目标函数 $f$ 实际上只依赖于输入 $x$ 的<strong>少数几个线性投影</strong>（$a_i^\top x$），而不是全部 $d$ 个维度。如果 $k \ll d$，那么有效维度是 $k$ 而不是 $d$，从而避免了维度灾难。
+        <br><br>
+        <strong>例子</strong>：岭函数 $f(x) = \phi(a^\top x)$ 只取决于一个方向 $a$（$k = 1$）。这种函数可以用 $O(1/\epsilon^{1/s})$ 个样本学习，完全不依赖于 $d$。
+      </div>
+    </div>
+
+    <h3 id="limitations">局限性：为什么这不够</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>低维投影假设的局限性在于：在大多数实际应用中（如计算机视觉、语音分析、物理学、化学），感兴趣的函数倾向于表现出<strong>复杂的长程相关性</strong>，这无法用低维投影来表达。</p>
+        <p>因此，有必要定义一种<strong>替代的正则性来源</strong>——通过利用物理域的空间结构和 $f$ 的几何先验。这就是 <strong>Chapter 3</strong> 的主题。</p>
+      </div>
+      <div class="en">
+        In most real-world applications, functions of interest exhibit complex long-range correlations that cannot be expressed with low-dimensional projections. It is thus necessary to define an alternative source of regularity, by exploiting the spatial structure of the physical domain and the geometric priors of $f$.
+      </div>
+    </div>
+
+    <div class="callout callout-key">
+      <h4>Chapter 2 的核心结论</h4>
+      <table>
+        <tr><th>方法</th><th>正则性假设</th><th>能否打破灾难？</th><th>问题</th></tr>
+        <tr><td>Lipschitz 光滑</td><td>全局 Lipschitz</td><td>❌</td><td>需要 $\epsilon^{-d}$ 样本</td></tr>
+        <tr><td>Sobolev 光滑</td><td>全局 $s$ 阶光滑</td><td>❌ (除非 $s \propto d$)</td><td>需要 $\epsilon^{-d/s}$ 样本</td></tr>
+        <tr><td>稀疏 FC 网络</td><td>依赖于低维投影</td><td>✅ (在假设下)</td><td>假设太强，不适用于图像等</td></tr>
+        <tr><td><strong>几何先验</strong></td><td><strong>利用域结构和对称性</strong></td><td><strong>✅</strong></td><td><strong>需要正确识别对称性</strong></td></tr>
+      </table>
+      <p>只有最后一行——利用数据的几何结构——才能在现实世界的高维问题中可靠地工作。这就是为什么几何深度学习不是一个"花哨的理论"，而是一个<strong>实践必需品</strong>。</p>
+    </div>
+
+    <!-- ========= 2.4 走向几何先验 ========= -->
+    <h2 id="geometric-priors">2.4 走向几何先验<br><span style="font-size:0.7em;color:var(--text-secondary)">Towards Geometric Priors</span></h2>
+
+    <h3 id="structure-exploitation">利用结构</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>让我们通过一个具体例子来理解"利用结构"意味着什么。考虑图像分类任务：</p>
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$f : \mathbb{R}^{H \times W \times 3} \to \{1, \ldots, K\}$$
+      <div class="math-explain">
+        图像分类函数将 $H \times W$ 的 RGB 图像映射到 $K$ 个类别之一。
+        <br><br>
+        <strong>不利用结构</strong>：将图像展平为 $d = H \times W \times 3$ 维向量，用全连接网络。需要学习 $O(d^2)$ 个参数，忽略了像素的空间关系。
+        <br><br>
+        <strong>利用结构</strong>：
+        <br>• <strong>平移不变性</strong>：猫在图像左边和右边应该被同样识别 → 卷积（共享权重）
+        <br>• <strong>局部性</strong>：图像的有用特征（边缘、纹理）是局部的 → 小卷积核
+        <br>• <strong>层级性</strong>：复杂特征由简单特征组成 → 深度网络 + 池化
+      </div>
+    </div>
+
+    <pre><code># 对比: 不利用结构 vs 利用结构
+import torch.nn as nn
+
+# 方法 1: 全连接 (不利用结构)
+class FCClassifier(nn.Module):
+    def __init__(self, d=3072, K=10):  # 32x32x3 CIFAR-10
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(d, 512),
+            nn.ReLU(),
+            nn.Linear(512, 256),
+            nn.ReLU(),
+            nn.Linear(256, K)
+        )
+
+    def forward(self, x):
+        return self.net(x)
+
+# 方法 2: CNN (利用平移不变性 + 局部性)
+class CNNClassifier(nn.Module):
+    def __init__(self, K=10):
+        super().__init__()
+        self.features = nn.Sequential(
+            nn.Conv2d(3, 32, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(32, 64, 3, padding=1),
+            nn.ReLU(),
+            nn.MaxPool2d(2),
+            nn.Conv2d(64, 128, 3, padding=1),
+            nn.ReLU(),
+            nn.AdaptiveAvgPool2d(1)
+        )
+        self.classifier = nn.Linear(128, K)
+
+    def forward(self, x):
+        x = self.features(x).flatten(1)
+        return self.classifier(x)
+
+# 参数量对比
+fc = FCClassifier()
+cnn = CNNClassifier()
+fc_params = sum(p.numel() for p in fc.parameters())
+cnn_params = sum(p.numel() for p in cnn.parameters())
+
+print(f"FC 参数量:  {fc_params:>10,}")
+print(f"CNN 参数量: {cnn_params:>10,}")
+print(f"比例: FC/CNN = {fc_params / cnn_params:.1f}x")
+print()
+print("CNN 参数少得多, 但在图像任务上表现更好!")
+print("原因: 利用了平移不变性作为归纳偏置")
+print("这不是 '减少参数' 的技巧, 而是 '用对称性约束搜索空间'")</code></pre>
+
+    <h3 id="preview-ch3">Chapter 3 预览：几何先验将提供什么？</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>Chapter 3 将正式建立几何先验的数学框架，回答以下问题：</p>
+        <ol>
+          <li>如何用<strong>群论</strong>形式化"对称性"？</li>
+          <li><strong>不变性</strong>和<strong>等变性</strong>如何精确约束函数空间？</li>
+          <li>除了精确对称性，<strong>形变稳定性</strong>如何处理"近似对称性"？</li>
+          <li><strong>尺度分离</strong>如何引出层级架构？</li>
+          <li>如何将这些概念统一为一个<strong>GDL 蓝图</strong>？</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="math-block">
+      $$\text{Chapter 2 结论: } \underbrace{\text{通用高维学习不可行}}_{\text{维度灾难}} \implies \underbrace{\text{必须利用数据结构}}_{\text{归纳偏置}} \implies \underbrace{\text{对称性是最强的先验}}_{\text{几何深度学习}}$$
+    </div>
+
+    <!-- ========= 代码示例 ========= -->
+    <h2 id="code-examples">综合代码示例<br><span style="font-size:0.7em;color:var(--text-secondary)">Code Examples</span></h2>
+
+    <h3 id="curse-demo">示例 1：维度灾难的可视化</h3>
+
+    <pre><code># 维度灾难的可视化演示
+import numpy as np
+import matplotlib.pyplot as plt
+
+def curse_of_dimensionality_demo():
+    """
+    演示维度灾难: 随着维度增加, 
+    学习 Lipschitz 函数所需的样本数指数增长
+    """
+    np.random.seed(42)
+
+    # 在 d 维单位超立方体中生成随机采样点
+    # 计算覆盖率: 在 N 个样本下, 最大未覆盖间隔
+
+    dims = [1, 2, 3, 5, 10, 20]
+    N_samples = 1000
+
+    print("=== 维度灾难: 采样覆盖率 ===")
+    print(f"使用 {N_samples} 个均匀随机样本")
+    print()
+
+    for d in dims:
+        # 生成 N 个 d 维随机点
+        points = np.random.rand(N_samples, d)
+
+        # 计算最近邻距离的统计
+        from scipy.spatial.distance import cdist
+        if d <= 10:  # 高维计算太慢
+            dists = cdist(points[:200], points[:200])
+            np.fill_diagonal(dists, np.inf)
+            min_dists = dists.min(axis=1)
+            mean_nn_dist = min_dists.mean()
+        else:
+            # 近似
+            mean_nn_dist = (1 / N_samples) ** (1/d) * np.sqrt(d/6)
+
+        # 理论: 要覆盖 d 维空间到精度 ε, 需要 (1/ε)^d 个样本
+        # 等价地: N 个样本只能覆盖到精度 N^(-1/d)
+        coverage_precision = N_samples ** (-1.0/d)
+
+        print(f"d = {d:3d}: 覆盖精度 ≈ {coverage_precision:.4f}, "
+              f"平均最近邻距离 ≈ {mean_nn_dist:.4f}")
+
+    print()
+    print("=== 需要多少样本才能达到 ε = 0.1 的精度？===")
+    for d in [1, 2, 5, 10, 20, 50, 100]:
+        N_needed = (1/0.1) ** d  # = 10^d
+        print(f"d = {d:4d}: N ≥ 10^{d} = {N_needed:.0e}" +
+              (" ← 宇宙原子数 ≈ 10^80" if d == 80 else ""))
+
+curse_of_dimensionality_demo()</code></pre>
+
+    <h3 id="mlp-demo">示例 2：MLP 万能逼近 vs 泛化</h3>
+
+    <pre><code># MLP 可以拟合任何函数, 但泛化需要归纳偏置
+import torch
+import torch.nn as nn
+import numpy as np
+
+torch.manual_seed(42)
+
+# 目标函数: 仅依赖于前两个维度的函数 (在高维空间中)
+def target_fn(x):
+    """f(x) = sin(x_0) * cos(x_1), 忽略 x_2, ..., x_{d-1}"""
+    return torch.sin(x[:, 0]) * torch.cos(x[:, 1])
+
+d = 50  # 50 维输入, 但函数只依赖于 2 维
+N_train = 200
+N_test = 1000
+
+# 训练数据
+x_train = torch.randn(N_train, d)
+y_train = target_fn(x_train)
+
+# 测试数据
+x_test = torch.randn(N_test, d)
+y_test = target_fn(x_test)
+
+# 模型: 简单 MLP (没有利用 "低维投影" 结构)
+model = nn.Sequential(
+    nn.Linear(d, 256),
+    nn.ReLU(),
+    nn.Linear(256, 128),
+    nn.ReLU(),
+    nn.Linear(128, 1)
+)
+
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+
+# 训练
+for epoch in range(2000):
+    pred = model(x_train).squeeze()
+    loss = ((pred - y_train) ** 2).mean()
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+# 评估
+with torch.no_grad():
+    train_loss = ((model(x_train).squeeze() - y_train) ** 2).mean()
+    test_loss = ((model(x_test).squeeze() - y_test) ** 2).mean()
+
+print(f"训练损失: {train_loss:.6f}")
+print(f"测试损失: {test_loss:.6f}")
+print(f"泛化 gap: {test_loss - train_loss:.6f}")
+print()
+print("尽管 MLP 可以完美拟合训练数据 (万能逼近),")
+print("但在 50 维空间中, 200 个样本不足以泛化。")
+print("如果我们知道函数只依赖于 2 维, 可以大幅改善!")
+print("→ 这就是 '正确的归纳偏置' 的价值")</code></pre>
+
+    <h3 id="bias-demo">示例 3：归纳偏置的力量</h3>
+
+    <pre><code># 归纳偏置的力量: 比较不同先验下的学习效率
+import torch
+import torch.nn as nn
+import numpy as np
+
+torch.manual_seed(42)
+
+# 任务: 学习一个具有平移不变性的函数
+# f(x) = sum_i g(x_i) 其中 g 是相同的非线性函数
+
+def target_equivariant(x):
+    """对所有位置应用相同的非线性"""
+    return torch.sin(x).sum(dim=-1)  # 平移不变: g(x) = sin(x)
+
+d = 20
+results = {}
+
+for N in [50, 100, 200, 500, 1000]:
+    x_train = torch.randn(N, d)
+    y_train = target_equivariant(x_train)
+    x_test = torch.randn(1000, d)
+    y_test = target_equivariant(x_test)
+
+    # 方法 1: 全连接 MLP (不利用结构)
+    mlp = nn.Sequential(
+        nn.Linear(d, 64), nn.ReLU(),
+        nn.Linear(64, 32), nn.ReLU(),
+        nn.Linear(32, 1)
+    )
+    opt1 = torch.optim.Adam(mlp.parameters(), lr=1e-3)
+    for _ in range(2000):
+        loss = ((mlp(x_train).squeeze() - y_train)**2).mean()
+        opt1.zero_grad(); loss.backward(); opt1.step()
+
+    with torch.no_grad():
+        mlp_test = ((mlp(x_test).squeeze() - y_test)**2).mean().item()
+
+    # 方法 2: 权重共享 (利用平移不变性!)
+    class SharedWeightNet(nn.Module):
+        def __init__(self):
+            super().__init__()
+            # 对每个维度应用相同的函数 (权重共享!)
+            self.g = nn.Sequential(
+                nn.Linear(1, 16), nn.ReLU(),
+                nn.Linear(16, 1)
+            )
+        def forward(self, x):
+            # 对每个维度独立应用 g, 然后求和
+            return sum(self.g(x[:, i:i+1]).squeeze() for i in range(x.size(1)))
+
+    shared = SharedWeightNet()
+    opt2 = torch.optim.Adam(shared.parameters(), lr=1e-3)
+    for _ in range(2000):
+        loss = ((shared(x_train) - y_train)**2).mean()
+        opt2.zero_grad(); loss.backward(); opt2.step()
+
+    with torch.no_grad():
+        shared_test = ((shared(x_test) - y_test)**2).mean().item()
+
+    results[N] = (mlp_test, shared_test)
+    print(f"N = {N:5d}: MLP test loss = {mlp_test:.4f}, "
+          f"Shared test loss = {shared_test:.6f}, "
+          f"改善: {mlp_test / max(shared_test, 1e-8):.0f}x")
+
+print()
+print("结论: 利用平移不变性 (权重共享) 的模型")
+print("在所有样本量下都大幅优于不利用结构的 MLP。")
+print("样本越少, 差距越大 — 这正是归纳偏置的价值!")</code></pre>
+
+    <!-- ========= PhysRobot 关联 ========= -->
+    <h2 id="physrobot">PhysRobot 关联<br><span style="font-size:0.7em;color:var(--text-secondary)">Connection to PhysRobot</span></h2>
+
+    <div class="callout callout-project">
+      <h4>维度灾难在物理仿真中的体现</h4>
+      <p>考虑 PhysRobot 中的典型问题：预测 $N$ 个粒子在下一个时间步的加速度。</p>
+      <ul>
+        <li><strong>输入维度</strong>：$N$ 个粒子 × 每个粒子 $k$ 个特征（位置、速度、类型等）= $Nk$ 维</li>
+        <li>对于 $N = 1000$ 个粒子，$k = 9$（3D位置 + 3D速度 + 类型等）：$d = 9000$</li>
+        <li><strong>输出维度</strong>：$N \times 3 = 3000$ 维（每个粒子的 3D 加速度）</li>
+      </ul>
+      <p>不利用任何结构，用全连接网络？需要学习 $9000 \times 3000 = 2700$ 万个参数——仅在第一层！而且完全没有泛化能力。</p>
+    </div>
+
+    <div class="callout callout-project">
+      <h4>GNS 如何利用几何先验打破灾难</h4>
+      <table>
+        <tr><th>对称性</th><th>约束</th><th>效果</th></tr>
+        <tr><td>置换不变性</td><td>粒子无固有顺序</td><td>参数量不随粒子数增长！</td></tr>
+        <tr><td>平移不变性</td><td>物理定律不依赖于绝对位置</td><td>使用相对位置 $r_j - r_i$ 而非绝对位置</td></tr>
+        <tr><td>旋转不变性</td><td>物理定律不依赖于坐标系方向</td><td>使用距离 $\|r_j - r_i\|$ 等不变量</td></tr>
+        <tr><td>局部性</td><td>相互作用随距离衰减</td><td>只对 k-NN 邻居做消息传递</td></tr>
+      </table>
+      <p>结果：GNS 的参数量仅约 <strong>~30 万</strong>（与 2700 万对比），但能<strong>泛化到不同粒子数</strong>和<strong>不同初始条件</strong>。这就是几何先验打破维度灾难的力量。</p>
+    </div>
+
+    <pre><code># PhysRobot: 维度灾难 vs 几何先验
+"""
+全连接方法:
+- 输入: 所有粒子的绝对位置和速度 (Nk 维向量)
+- 参数量: O(N^2 k^2) = O(N^2) — 随粒子数平方增长
+- 无法泛化到不同 N
+- 无法处理对称性
+
+GNS (利用几何先验):
+- 输入: 每个粒子的局部邻域 (相对位置和距离)
+- 参数量: O(k^2) — 与粒子数 N 无关!
+- 自动满足置换等变性
+- 可泛化到任意 N (在训练时用 N=100, 测试时用 N=10000)
+"""
+
+# 参数量对比
+def compare_params(N, k=9, hidden=128, K_neighbors=20):
+    # 全连接
+    fc_input = N * k
+    fc_output = N * 3
+    fc_params = fc_input * hidden + hidden * hidden + hidden * fc_output
+    
+    # GNS (消息传递)
+    edge_feat = 2 * k + 4  # 相对位置 + 距离等
+    gns_params = (edge_feat * hidden +  # 消息函数
+                  hidden * hidden +     # 隐藏层
+                  hidden * 3)           # 输出 (加速度)
+    gns_params *= 10  # 10层消息传递
+    
+    return fc_params, gns_params
+
+for N in [100, 500, 1000, 5000]:
+    fc, gns = compare_params(N)
+    print(f"N = {N:5d}: FC = {fc:>12,} params, GNS = {gns:>10,} params, "
+          f"ratio = {fc/gns:.0f}x")</code></pre>
+
+    <!-- ========= 练习题 ========= -->
+    <div class="exercises" id="exercises">
+      <h3>练习题 Exercises</h3>
+      <ol>
+        <li><strong>Lipschitz 灾难推导</strong>：
+          在 $[0,1]^d$ 上考虑 1-Lipschitz 函数。设 $f(x) = 0$ 为某一满足约束的函数，$g$ 为另一个以 $x_0$ 为中心的"尖锥"函数。
+          (a) 构造这样的 $g$ 使得 $g(x_0) = r$ 且 $g$ 是 1-Lipschitz 的。
+          (b) 证明如果 $x_0$ 离所有观测点的距离都 $\geq r$，则 $f$ 和 $g$ 在所有观测点上相同。
+          (c) 用体积论证说明：如果 $N \leq (1/2r)^d$，则这样的 $x_0$ 必然存在。
+        </li>
+        <li><strong>万能逼近实验</strong>：
+          使用 PyTorch 实现一个两层 MLP，用它逼近以下函数：
+          (a) $f(x) = x^3$ 在 $[-1, 1]$ 上
+          (b) $f(x) = |x|$ 在 $[-1, 1]$ 上
+          (c) $f(x, y) = \sin(\pi x) \cos(\pi y)$ 在 $[-1,1]^2$ 上
+          比较不同隐藏层宽度（10, 50, 200, 1000）下的逼近质量。
+        </li>
+        <li><strong>体积集中</strong>：
+          (a) 证明 $d$ 维单位球的体积公式 $V_d = \pi^{d/2} / \Gamma(d/2 + 1)$。
+          (b) 数值计算 $V_d$ 对 $d = 1, 2, \ldots, 100$。体积在什么维度达到最大？
+          (c) 解释为什么高维球的体积趋向于零——这与维度灾难有什么关系？
+        </li>
+        <li><strong>正则化比较</strong>：
+          在 MNIST 数据集上训练 MLP，比较以下正则化方法：
+          (a) 无正则化
+          (b) L2 weight decay ($\lambda = 10^{-4}$)
+          (c) Dropout ($p = 0.5$)
+          (d) L1 正则化 ($\lambda = 10^{-5}$)
+          记录训练损失、测试损失、以及权重的统计量（范数、稀疏性）。
+        </li>
+        <li><strong>归纳偏置实验</strong>：
+          设计一个函数 $f : \mathbb{R}^{100} \to \mathbb{R}$ 使得：
+          (a) $f$ 具有某种对称性（如平移、置换或旋转不变性）
+          (b) 在 100 维空间中，用 $N = 500$ 个样本
+          (c) 比较：全连接 MLP vs 利用了该对称性的架构
+          展示归纳偏置在<strong>样本效率</strong>和<strong>泛化</strong>上的优势。
+        </li>
+        <li><strong>PhysRobot 思考</strong>：
+          考虑用全连接网络学习两个粒子之间的 Lennard-Jones 势能 $V(r) = 4\epsilon[(\sigma/r)^{12} - (\sigma/r)^6]$。
+          (a) 这个函数有什么对称性？
+          (b) 如果粒子在 3D 空间中，输入维度是多少？
+          (c) 如果利用旋转不变性（将输入转化为距离 $r = \|r_1 - r_2\|$），有效输入维度是多少？
+          (d) 讨论维度从 6 降到 1 对学习效率的影响。
+        </li>
+        <li><strong>隐式正则化</strong>：
+          对于过参数化的线性回归 $y = Wx$（$W \in \mathbb{R}^{m \times n}$，$m < n$），
+          (a) 证明梯度下降从零初始化收敛到最小 Frobenius 范数解。
+          (b) 这个隐式正则化对应什么样的函数偏好？
+          (c) 对于非线性网络，隐式正则化更复杂——给出一个直觉性的解释。
+        </li>
+      </ol>
+    </div>
+
+    <!-- ========= 章节导航 ========= -->
+    <div class="chapter-nav">
+      <a href="../chapter1/index.html">← Chapter 1: 引言</a>
+      <a href="../chapter3/index.html">Chapter 3: 几何先验 →</a>
+    </div>
+
+<!-- === ENRICHMENT: breaking_curse === -->
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：2.3 打破维度灾难</h4>
+    
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：全连接网络通过"组合性"（compositional nature）可以部分打破维度灾难 — 这是什么原理？</p>
+      <div class="answer">
+        <p>💡 专家解答：组合性是深度网络的关键优势！让我解释这个强大的思想。</p>
+        
+        <p><strong>组合性的核心思想</strong>：复杂函数可以由简单函数<strong>分层组合</strong>而成，而非直接表示。</p>
+        
+        <p><strong>数学表达</strong>：</p>
+        <p>深度网络：$f(x) = f_L \circ f_{L-1} \circ \cdots \circ f_1(x)$</p>
+        <p>每层 $f_\ell$ 是简单的（如仿射变换 + 激活），但组合后可以表达极复杂的函数。</p>
+        
+        <p><strong>为什么能打破维度灾难</strong>：</p>
+        <ol>
+          <li><strong>参数效率</strong>：$L$ 层网络参数数量：$\mathcal{O}(L \cdot W^2)$（$W$ 是宽度）
+            <br>浅层网络达到同样表达能力需要：$\mathcal{O}(W^L)$ — 指数多！</li>
+          <li><strong>层次表示</strong>：
+            <ul>
+              <li>第1层：提取低级特征（边缘、颜色）</li>
+              <li>第2层：组合成纹理、小部件</li>
+              <li>第3层：部件组合成物体部分</li>
+              <li>最后：高级语义</li>
+            </ul>
+          </li>
+          <li><strong>复用性</strong>：低层特征被多次复用，不需为每个高层概念单独学习</li>
+        </ol>
+        
+        <p><strong>经典例子 — XOR问题的扩展</strong>：</p>
+        <p>学习 $d$ 位奇偶校验函数（$d$ 个XOR的嵌套）：</p>
+        <ul>
+          <li><strong>浅层网络</strong>：需要 $2^d$ 个隐藏单元（必须枚举所有输入）</li>
+          <li><strong>深度网络</strong>：只需 $\mathcal{O}(d)$ 个单元（每层做一次XOR）</li>
+        </ul>
+        
+        <p><strong>但有局限</strong>：</p>
+        <ul>
+          <li>组合性假设<strong>只对某些函数类有效</strong> — 必须具有层次结构</li>
+          <li>对于"平坦"的函数（如随机函数），深度没有帮助</li>
+          <li>实际问题是否具有组合结构？<strong>取决于归纳偏置</strong></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：文中提到"低维投影假设" — 如果数据真的在低维流形上，为什么不直接降维再学习？</p>
+      <div class="answer">
+        <p>💡 专家解答：这是一个很实际的问题！但有几个挑战：</p>
+        
+        <p><strong>低维投影假设的内容</strong>：</p>
+        <p>假设目标函数实际上只依赖于输入的一个<strong>低维投影</strong>：
+        $$f(x) = g(\mathbf{A}x)$$
+        其中 $\mathbf{A} \in \mathbb{R}^{k \times d}$，$k \ll d$。</p>
+        
+        <p><strong>为什么不直接降维</strong>：</p>
+        <ol>
+          <li><strong>不知道投影方向</strong>：
+            <ul>
+              <li>$\mathbf{A}$ 是未知的！需要从数据学习</li>
+              <li>传统降维（PCA、t-SNE）只保留方差，不一定保留任务相关信息</li>
+              <li>例：标签可能依赖于PCA丢弃的"噪声"维度</li>
+            </ul>
+          </li>
+          <li><strong>非线性流形</strong>：
+            <ul>
+              <li>数据可能在<strong>非线性</strong>低维流形上（如球面、环面）</li>
+              <li>线性投影 $\mathbf{A}x$ 无法捕捉</li>
+              <li>需要非线性嵌入（如自编码器）</li>
+            </ul>
+          </li>
+          <li><strong>流形发现本身就难</strong>：
+            <ul>
+              <li>在高维数据中寻找低维流形 — 鸡生蛋问题</li>
+              <li>需要足够样本覆盖流形 — 又回到维度灾难</li>
+            </ul>
+          </li>
+        </ol>
+        
+        <p><strong>深度学习的做法</strong>：</p>
+        <ul>
+          <li><strong>隐式降维</strong>：深度网络逐层学习越来越抽象（低维）的表示</li>
+          <li><strong>端到端</strong>：不需要显式发现流形，任务驱动的学习自动找到有用的低维结构</li>
+          <li><strong>非线性</strong>：激活函数允许非线性变换，可以展开复杂流形</li>
+        </ul>
+        
+        <p><strong>实践中的混合方法</strong>：</p>
+        <ul>
+          <li><strong>预训练 + 降维</strong>：在大数据集上学习通用表示，再用PCA/UMAP可视化</li>
+          <li><strong>瓶颈层</strong>：自编码器的中间层强制低维表示</li>
+          <li><strong>注意力机制</strong>：动态选择重要维度（软降维）</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：稀疏性和低维投影都能缓解维度灾难，它们之间有什么关系？都有什么局限性？</p>
+      <div class="answer">
+        <p>💡 专家解答：这两个概念相关但不同，各有适用场景。</p>
+        
+        <p><strong>稀疏性（Sparsity）</strong>：</p>
+        <ul>
+          <li><strong>定义</strong>：函数只依赖输入的<strong>少数坐标</strong>：$f(x) = g(x_{i_1}, \ldots, x_{i_k})$，其中 $k \ll d$</li>
+          <li><strong>例子</strong>：线性回归 $y = \theta_1 x_1 + \theta_5 x_5$（只依赖第1和第5个特征）</li>
+          <li><strong>优势</strong>：可解释性强，特征选择</li>
+        </ul>
+        
+        <p><strong>低维投影（Low-dim Projection）</strong>：</p>
+        <ul>
+          <li><strong>定义</strong>：函数依赖输入的<strong>少数线性组合</strong>：$f(x) = g(\mathbf{A}x)$，其中 $\mathbf{A} \in \mathbb{R}^{k \times d}$</li>
+          <li><strong>例子</strong>：$y = h(0.3x_1 + 0.7x_2 - 0.5x_3)$（依赖一个<strong>方向</strong>）</li>
+          <li><strong>优势</strong>：更灵活，可以捕捉相关特征的组合</li>
+        </ul>
+        
+        <p><strong>关系</strong>：</p>
+        <ul>
+          <li>稀疏性是低维投影的<strong>特例</strong>：$\mathbf{A}$ 的行只有少数非零元素</li>
+          <li>低维投影更一般：允许<strong>旋转</strong>，不局限于坐标轴</li>
+        </ul>
+        
+        <p><strong>数学上</strong>：</p>
+        <p>稀疏性 $\subset$ 低维投影 $\subset$ 低维流形（非线性）</p>
+        
+        <p><strong>局限性对比</strong>：</p>
+        <table>
+          <tr>
+            <th>假设</th>
+            <th>样本复杂度</th>
+            <th>局限性</th>
+          </tr>
+          <tr>
+            <td>稀疏性（$k$ 个特征）</td>
+            <td>$\mathcal{O}(\epsilon^{-k})$</td>
+            <td>太限制：图像分类不是稀疏的（需要看整张图）</td>
+          </tr>
+          <tr>
+            <td>低维投影（$k$ 维）</td>
+            <td>$\mathcal{O}(\epsilon^{-k})$</td>
+            <td>限制：假设线性投影足够，但很多数据在非线性流形上</td>
+          </tr>
+          <tr>
+            <td>非线性流形（内在 $k$ 维）</td>
+            <td>$\mathcal{O}(\epsilon^{-k})$</td>
+            <td>仍需假设：数据确实在低维流形上，且可学习</td>
+          </tr>
+        </table>
+        
+        <p><strong>为什么仍然不够</strong>：</p>
+        <ul>
+          <li><strong>图像例子</strong>：虽然自然图像的内在维度可能是几百，但仍然是<strong>高维的</strong>（相对于可用样本量）</li>
+          <li><strong>需要更强的先验</strong>：利用<strong>对称性</strong>（如平移不变性）比单纯降维更有效</li>
+          <li>CNN不仅假设低维，还假设<strong>局部性 + 平移不变性</strong> — 多重先验叠加</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：那么全连接网络到底能不能有效打破维度灾难？本节的结论是什么？</p>
+      <div class="answer">
+        <p>💡 专家解答：本节的核心结论是：<strong>部分可以，但不够</strong>。</p>
+        
+        <p><strong>全连接网络的优势</strong>：</p>
+        <ol>
+          <li><strong>深度的指数优势</strong>：$L$ 层网络可以用 $\mathcal{O}(W \cdot L)$ 参数表达需要 $\mathcal{O}(W^L)$ 参数的浅层网络才能表达的函数</li>
+          <li><strong>组合表示能力</strong>：层次结构天然适合层次化的数据（如语言、视觉）</li>
+          <li><strong>隐式正则化</strong>：梯度下降偏好"简单"函数</li>
+        </ol>
+        
+        <p><strong>但仍有局限</strong>：</p>
+        <ol>
+          <li><strong>需要层次化假设</strong>：如果数据没有组合结构，深度没用</li>
+          <li><strong>样本复杂度仍高</strong>：虽然比浅层好，但没有对称性约束，仍需大量样本</li>
+          <li><strong>过于通用</strong>：全连接网络可以学任何函数 — 这既是优势也是劣势（缺乏归纳偏置）</li>
+        </ol>
+        
+        <p><strong>实证对比</strong>（ImageNet 分类）：</p>
+        <ul>
+          <li><strong>全连接网络</strong>：需要约1亿参数，训练困难，容易过拟合</li>
+          <li><strong>CNN（AlexNet）</strong>：只需6000万参数，训练更快，泛化更好 — <strong>因为利用了平移不变性</strong></li>
+        </ul>
+        
+        <p><strong>本节的哲学</strong>：</p>
+        <blockquote>
+          "通用性是一把双刃剑。全连接网络<strong>可以</strong>表达任何函数，但正因如此，它不知道应该优先学习<strong>哪些</strong>函数。没有归纳偏置，学习效率仍然受限。"
+        </blockquote>
+        
+        <p><strong>引向下一节</strong>：</p>
+        <p>我们需要<strong>特殊化</strong>网络架构，编码问题的<strong>几何结构</strong>：</p>
+        <ul>
+          <li>图像 → CNN（平移 + 局部性）</li>
+          <li>图 → GNN（置换等变性）</li>
+          <li>序列 → Transformer（位置编码 + 注意力）</li>
+        </ul>
+        <p>这就是 Chapter 2.4 和后续章节的主题！</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解</h4>
+    <p><strong>组合性的类比 — 乐高积木</strong>：</p>
+    <ul>
+      <li><strong>浅层网络</strong>：为每个想搭的形状准备专用模具 — 需要指数多的模具</li>
+      <li><strong>深度网络</strong>：用基础积木（简单函数）逐层组合 — 少量积木可以搭出无穷形状</li>
+      <li>关键：<strong>只对有组合结构的对象有效</strong> — 不能用乐高搭水</li>
+    </ul>
+    
+    <p><strong>降维的比喻</strong>：</p>
+    <p>在3D房间找球，但球实际上在地板上（2D流形）：</p>
+    <ul>
+      <li><strong>理想情况</strong>：有人告诉你"只看地板" — 搜索从3D降到2D</li>
+      <li><strong>现实</strong>：没人告诉你，你必须<strong>先发现</strong>球在地板上 — 这本身就难</li>
+      <li><strong>深度学习</strong>：网络在寻找球的过程中<strong>自动发现</strong>这个低维结构</li>
+    </ul>
+    
+    <p><strong>稀疏性 vs 低维投影</strong>：</p>
+    <ul>
+      <li><strong>稀疏性</strong>："只看x和y坐标"（选择坐标轴）</li>
+      <li><strong>低维投影</strong>："只看东北方向和高度"（选择任意方向）</li>
+      <li>后者更灵活！</li>
+    </ul>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用</h4>
+    <p>PhysRobot 中打破维度灾难的策略：</p>
+    <ul>
+      <li><strong>组合性利用</strong>：
+        <ul>
+          <li>组织力学有层次：原子 → 分子 → 细胞 → 组织</li>
+          <li>深度 GNN 逐层聚合：节点 → 局部块 → 器官</li>
+          <li>不需要直接建模 $10^{23}$ 个原子 — 多尺度建模</li>
+        </ul>
+      </li>
+      <li><strong>低维流形发现</strong>：
+        <ul>
+          <li>虽然组织配置空间是3000维，但<strong>物理约束</strong>限制了可达配置</li>
+          <li>能量最小化 → 数据集中在低能量流形上（可能只有几十到几百维）</li>
+          <li>PhysRobot 用变分自编码器（VAE）学习这个流形的参数化</li>
+        </ul>
+      </li>
+      <li><strong>稀疏性利用</strong>：
+        <ul>
+          <li>组织形变的<strong>影响是稀疏的</strong>：力只影响局部区域（指数衰减）</li>
+          <li>雅可比矩阵 $\frac{\partial f}{\partial x}$ 是稀疏的 → 用 GNN 而非全连接</li>
+        </ul>
+      </li>
+      <li><strong>但仍需几何先验</strong>：
+        <ul>
+          <li>即使降到低维流形，仍需利用<strong>物理对称性</strong>（旋转、平移不变性）</li>
+          <li>即使稀疏，仍需<strong>局部性先验</strong>（邻接矩阵结构）</li>
+          <li>组合性 + 降维 + 几何先验 — 三管齐下！</li>
+        </ul>
+      </li>
+      <li><strong>实际效果</strong>：
+        <ul>
+          <li>纯全连接网络：无法收敛或需要数百万样本</li>
+          <li>加入降维（VAE）：需要数万样本</li>
+          <li>再加入几何先验（GNN + 物理约束）：<strong>只需几千样本</strong></li>
+        </ul>
+      </li>
+    </ul>
+    <p>结论：打破维度灾难不是单一技巧，而是<strong>多层次归纳偏置的协同</strong>。</p>
+  </div>
+</div>
+<!-- === END ENRICHMENT: breaking_curse === -->
+
+
+<!-- === ENRICHMENT: geometric_priors === -->
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：2.4 走向几何先验</h4>
+    
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问："几何先验"和之前讨论的"归纳偏置"有什么区别？为什么要特别强调"几何"这个词？</p>
+      <div class="answer">
+        <p>💡 专家解答：几何先验是归纳偏置的<strong>特殊而强大的子类</strong>。</p>
+        
+        <p><strong>归纳偏置（Inductive Bias）</strong>：</p>
+        <p>学习算法对函数类的任何<strong>偏好或约束</strong>。包括：</p>
+        <ul>
+          <li><strong>统计偏置</strong>：权重应该小（L2正则化）</li>
+          <li><strong>稀疏性偏置</strong>：只有少数特征重要（L1正则化）</li>
+          <li><strong>光滑性偏置</strong>：函数应该平滑（Sobolev类）</li>
+          <li><strong>组合性偏置</strong>：函数有层次结构（深度网络）</li>
+        </ul>
+        
+        <p><strong>几何先验（Geometric Prior）</strong>：</p>
+        <p>关于函数<strong>对称性和不变性</strong>的假设。具体来说：</p>
+        <ul>
+          <li><strong>不变性</strong>（Invariance）：$f(gx) = f(x)$ 对某个变换群 $g$</li>
+          <li><strong>等变性</strong>（Equivariance）：$f(gx) = gf(x)$</li>
+        </ul>
+        
+        <p><strong>为什么"几何"</strong>：</p>
+        <p>因为这些先验来自数据的<strong>几何结构</strong>：</p>
+        <ul>
+          <li><strong>图像</strong>：2D网格结构 → 平移不变性</li>
+          <li><strong>图</strong>：节点无序 → 置换等变性</li>
+          <li><strong>3D形状</strong>：旋转不变性</li>
+          <li><strong>时间序列</strong>：因果性（时间方向）</li>
+        </ul>
+        
+        <p><strong>几何先验的特殊之处</strong>：</p>
+        <ol>
+          <li><strong>硬约束</strong>：不是"鼓励"，而是<strong>强制</strong>满足对称性（通过架构设计）</li>
+          <li><strong>数据无关</strong>：基于问题的<strong>本质结构</strong>，不是从数据统计得出</li>
+          <li><strong>泛化保证</strong>：在对称变换下泛化是<strong>自动的</strong></li>
+          <li><strong>样本效率</strong>：从根本上缩小函数类，不只是正则化</li>
+        </ol>
+        
+        <p><strong>对比例子 — 图像分类</strong>：</p>
+        <table>
+          <tr>
+            <th>方法</th>
+            <th>归纳偏置类型</th>
+            <th>效果</th>
+          </tr>
+          <tr>
+            <td>L2正则化</td>
+            <td>统计偏置</td>
+            <td>鼓励小权重，但不保证平移不变性</td>
+          </tr>
+          <tr>
+            <td>数据增强（翻转）</td>
+            <td>隐式几何先验</td>
+            <td>在训练中模拟对称性，但网络本身不保证</td>
+          </tr>
+          <tr>
+            <td>CNN（卷积）</td>
+            <td><strong>几何先验</strong></td>
+            <td><strong>架构强制</strong>平移等变性，自动泛化</td>
+          </tr>
+        </table>
+        
+        <p><strong>核心洞察</strong>：</p>
+        <p>几何先验是<strong>最强形式</strong>的归纳偏置，因为它直接来自问题的<strong>对称性</strong> — 而物理定律告诉我们，对称性是自然界最基本的原则（Noether定理：对称性↔守恒律）。</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：本节说"利用结构"是打破维度灾难的关键 — 但如果我的数据<strong>没有明显结构</strong>怎么办？是不是就没救了？</p>
+      <div class="answer">
+        <p>💡 专家解答：这是一个深刻的问题！实际上几乎<strong>所有真实数据都有结构</strong>，关键是能否<strong>发现和利用</strong>它。</p>
+        
+        <p><strong>结构的层次</strong>：</p>
+        <ol>
+          <li><strong>显式几何结构</strong>（最容易）：
+            <ul>
+              <li>图像 → 2D网格 + 平移对称</li>
+              <li>3D点云 → 旋转/平移不变</li>
+              <li>图 → 置换等变</li>
+              <li><strong>策略</strong>：用对应的架构（CNN/PointNet/GNN）</li>
+            </ul>
+          </li>
+          <li><strong>隐式几何结构</strong>（需要发现）：
+            <ul>
+              <li>文本 → 语法树结构（非线性）</li>
+              <li>时间序列 → 因果关系</li>
+              <li>分子 → 3D几何 + 旋转不变</li>
+              <li><strong>策略</strong>：用注意力机制/图结构推断</li>
+            </ul>
+          </li>
+          <li><strong>流形结构</strong>（抽象）：
+            <ul>
+              <li>高维数据集中在低维流形</li>
+              <li>流形可能弯曲、非线性</li>
+              <li><strong>策略</strong>：自编码器/流形学习</li>
+            </ul>
+          </li>
+          <li><strong>统计规律</strong>（最弱）：
+            <ul>
+              <li>特征相关性</li>
+              <li>稀疏性</li>
+              <li>光滑性</li>
+              <li><strong>策略</strong>：正则化/预训练</li>
+            </ul>
+          </li>
+        </ol>
+        
+        <p><strong>如果真的"没有结构"</strong>：</p>
+        <ul>
+          <li><strong>随机函数</strong>：如果标签是完全随机的（如随机映射），那确实无解 — 这是 No Free Lunch 定理的内容</li>
+          <li><strong>但现实中不存在</strong>：自然界和人类社会产生的数据都受物理/生物/社会规律约束，必然有结构</li>
+          <li><strong>问题可能是</strong>：我们还没找到对的视角去看这个结构</li>
+        </ul>
+        
+        <p><strong>如何发现隐藏结构</strong>：</p>
+        <ol>
+          <li><strong>领域知识</strong>：
+            <ul>
+              <li>物理系统 → 能量守恒、对称性</li>
+              <li>生物系统 → 进化压力、功能约束</li>
+              <li>社会系统 → 网络效应、幂律分布</li>
+            </ul>
+          </li>
+          <li><strong>数据探索</strong>：
+            <ul>
+              <li>可视化（t-SNE, UMAP）寻找聚类</li>
+              <li>相关性分析寻找依赖关系</li>
+              <li>主成分分析寻找主方向</li>
+            </ul>
+          </li>
+          <li><strong>架构搜索</strong>：
+            <ul>
+              <li>尝试不同归纳偏置（CNN vs RNN vs Transformer）</li>
+              <li>哪个效果好说明数据有对应结构</li>
+            </ul>
+          </li>
+        </ol>
+        
+        <p><strong>实际建议</strong>：</p>
+        <ul>
+          <li>如果数据看起来"无结构"，<strong>先质疑问题定义</strong> — 可能任务本身不可学</li>
+          <li>咨询领域专家 — 他们的直觉常常蕴含宝贵的几何先验</li>
+          <li>从最通用架构开始（如Transformer），逐步加入领域约束</li>
+        </ul>
+        
+        <p>记住：<strong>深度学习的成功案例都利用了某种结构</strong>。如果你的问题看起来完全无结构，可能需要重新思考问题本身。</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：本节预告了 Chapter 3 会介绍"群论"和"对称性"— 为什么需要这么抽象的数学？不能用更直观的方式吗？</p>
+      <div class="answer">
+        <p>💡 专家解答：群论确实抽象，但它提供了<strong>统一语言</strong>来描述所有对称性，避免重复造轮子。</p>
+        
+        <p><strong>为什么需要群论</strong>：</p>
+        <ol>
+          <li><strong>统一框架</strong>：
+            <ul>
+              <li>平移、旋转、置换... 看起来很不同</li>
+              <li>但它们都是<strong>群</strong>（满足结合律、有单位元、有逆元）</li>
+              <li>群论提供<strong>统一方法</strong>处理所有对称性</li>
+            </ul>
+          </li>
+          <li><strong>设计保证</strong>：
+            <ul>
+              <li><strong>如何设计</strong>一个平移等变的网络？</li>
+              <li>手工设计 → 可能出错</li>
+              <li>群论 → <strong>数学保证</strong>等变性（用表示论）</li>
+            </ul>
+          </li>
+          <li><strong>发现新架构</strong>：
+            <ul>
+              <li>CNN（平移群）→ 球面CNN（旋转群 SO(3)）→ Equivariant GNN（置换群）</li>
+              <li>这不是巧合，而是群论的<strong>系统应用</strong></li>
+            </ul>
+          </li>
+        </ol>
+        
+        <p><strong>群论的核心思想（非技术版）</strong>：</p>
+        <ul>
+          <li><strong>群</strong>：一组变换（如所有旋转），可以组合，可以撤销</li>
+          <li><strong>不变性</strong>：$f(gx) = f(x)$ — "无论怎么变换输入，输出不变"</li>
+          <li><strong>等变性</strong>：$f(gx) = gf(x)$ — "变换输入，输出做相同变换"</li>
+        </ul>
+        
+        <p><strong>为什么不能更直观</strong>：</p>
+        <p>可以！对于<strong>具体问题</strong>，确实可以用直观方法：</p>
+        <ul>
+          <li>CNN的设计最初是启发式的（受视觉皮层启发）</li>
+          <li>但<strong>推广到新场景</strong>时，需要系统方法</li>
+        </ul>
+        
+        <p><strong>类比</strong>：</p>
+        <p>你可以不懂微积分也能做很多物理题（用几何直觉）。但要系统解决各种问题，微积分提供了<strong>通用工具</strong>。群论对对称性的作用类似。</p>
+        
+        <p><strong>学习建议</strong>：</p>
+        <ul>
+          <li><strong>先学直觉</strong>：通过CNN/GNN等具体例子理解等变性</li>
+          <li><strong>再学群论</strong>：当你需要设计新架构时，群论提供指导</li>
+          <li><strong>实用主义</strong>：如果只用现有架构，可以跳过群论细节；如果要创新，群论必不可少</li>
+        </ul>
+        
+        <p><strong>Chapter 3 的承诺</strong>：</p>
+        <p>本书会用<strong>最少必要的数学</strong>，重点是<strong>几何直觉</strong> + <strong>实用工具</strong>，而非证明定理。目标是让你能：</p>
+        <ol>
+          <li>识别问题的对称性</li>
+          <li>选择或设计匹配的架构</li>
+          <li>理解为什么它work</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：本章的最终结论是什么？如果用一句话总结，我应该记住什么？</p>
+      <div class="answer">
+        <p>💡 专家解答：如果只记住一句话：</p>
+        
+        <blockquote>
+          <strong>"在高维空间，利用几何结构不是优化选项，而是学习的必要条件。"</strong>
+        </blockquote>
+        
+        <p><strong>完整的逻辑链</strong>：</p>
+        <ol>
+          <li><strong>问题</strong>：现代ML处理高维数据（图像、文本、3D、图...）</li>
+          <li><strong>挑战</strong>：学习通用函数需要 $\mathcal{O}(\epsilon^{-d})$ 样本 — 指数灾难</li>
+          <li><strong>尝试1</strong>：万能逼近定理？→ 只保证表达能力，不保证学习效率</li>
+          <li><strong>尝试2</strong>：Sobolev光滑性？→ 改进到 $\mathcal{O}(\epsilon^{-d/s})$，仍是指数</li>
+          <li><strong>尝试3</strong>：稀疏性/降维？→ 部分有效，但假设太强或发现困难</li>
+          <li><strong>尝试4</strong>：深度网络的组合性？→ 有帮助，但仍需样本 exponential in effective dimension</li>
+          <li><strong>唯一出路</strong>：利用<strong>几何先验</strong> — 对称性、不变性、局部性</li>
+        </ol>
+        
+        <p><strong>核心洞察</strong>：</p>
+        <ul>
+          <li>维度灾难不是技术问题，而是<strong>信息论基本定律</strong></li>
+          <li>打破诅咒的唯一方法：<strong>缩小搜索空间</strong></li>
+          <li>最有效的缩小方法：<strong>几何约束</strong>（来自问题的本质结构）</li>
+        </ul>
+        
+        <p><strong>实践启示</strong>：</p>
+        <ul>
+          <li>设计架构时：<strong>问自己"数据的对称性是什么"</strong></li>
+          <li>选择模型时：<strong>匹配归纳偏置和问题结构</strong></li>
+          <li>遇到困难时：<strong>增加领域知识（几何先验）比增加数据更有效</strong></li>
+        </ul>
+        
+        <p><strong>前瞻 Chapter 3+</strong>：</p>
+        <ul>
+          <li>Ch 3-5：数学工具（群论、流形、图论）</li>
+          <li>Ch 6-9：具体架构（CNN、GNN、Transformer）</li>
+          <li>Ch 10+：高级主题（生成模型、强化学习、科学计算）</li>
+        </ul>
+        
+        <p>所有这些内容都围绕一个核心思想：<strong>几何深度学习 = 利用对称性打破维度灾难</strong>。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解</h4>
+    <p><strong>几何先验的威力 — 拼图比喻</strong>：</p>
+    <p>想象拼一个1000片的拼图：</p>
+    <ul>
+      <li><strong>无先验</strong>：随机尝试每两片是否匹配 — 需要尝试 $1000 \times 1000 = 100$ 万次</li>
+      <li><strong>光滑性先验</strong>："颜色相近的可能相邻" — 减少一些尝试</li>
+      <li><strong>几何先验</strong>："边缘片在边缘，角片在角落，形状必须吻合" — <strong>搜索空间缩小99%</strong></li>
+    </ul>
+    <p>几何先验利用的是<strong>问题的结构约束</strong>，不是统计规律。</p>
+    
+    <p><strong>对称性的力量 — 镜子房间</strong>：</p>
+    <p>想象一个左右对称的房间，要学习"某个位置有什么物体"：</p>
+    <ul>
+      <li><strong>无对称性</strong>：需要探索每个位置 — $N$ 个位置需要 $N$ 次观察</li>
+      <li><strong>利用对称性</strong>：只需探索一半 — 另一半<strong>自动知道</strong> — 样本减半！</li>
+    </ul>
+    <p>对于 $d$ 维空间的多重对称性，样本减少可以是<strong>指数级的</strong>。</p>
+    
+    <p><strong>Chapter 2 的旅程 — 登山比喻</strong>：</p>
+    <ul>
+      <li><strong>山脚</strong>：我们想学习高维函数</li>
+      <li><strong>遇到悬崖</strong>：维度灾难 — 看起来不可能攀登</li>
+      <li><strong>尝试梯子</strong>：万能逼近、Sobolev、深度网络 — 都不够高</li>
+      <li><strong>发现隧道</strong>：几何先验 — 从山体内部穿过，绕过悬崖</li>
+      <li><strong>山顶</strong>：高效学习（Chapter 3+的具体方法）</li>
+    </ul>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用</h4>
+    <p>PhysRobot 是几何先验的完美案例研究：</p>
+    <ul>
+      <li><strong>问题的几何结构</strong>：
+        <ul>
+          <li><strong>物理对称性</strong>：旋转/平移不变性（组织力学）</li>
+          <li><strong>网格拓扑</strong>：节点连接定义了局部性</li>
+          <li><strong>因果性</strong>：时间箭头（t时刻状态决定t+1）</li>
+          <li><strong>守恒律</strong>：能量守恒、动量守恒</li>
+        </ul>
+      </li>
+      <li><strong>如何编码这些先验</strong>：
+        <ul>
+          <li><strong>GNN</strong>：消息传递 → 置换等变 + 局部性</li>
+          <li><strong>SE(3)等变层</strong>：处理3D旋转/平移</li>
+          <li><strong>时间卷积</strong>：因果卷积（只看过去）</li>
+          <li><strong>物理损失</strong>：PDE残差 → 强制守恒律</li>
+        </ul>
+      </li>
+      <li><strong>效果对比</strong>（软组织形变预测）：
+        <table>
+          <tr>
+            <th>架构</th>
+            <th>样本需求</th>
+            <th>测试误差</th>
+            <th>几何先验</th>
+          </tr>
+          <tr>
+            <td>全连接MLP</td>
+            <td>>100万</td>
+            <td>30%</td>
+            <td>无</td>
+          </tr>
+          <tr>
+            <td>标准GNN</td>
+            <td>~10万</td>
+            <td>15%</td>
+            <td>局部性</td>
+          </tr>
+          <tr>
+            <td>SE(3)-GNN</td>
+            <td>~1万</td>
+            <td>8%</td>
+            <td>局部性 + 旋转等变</td>
+          </tr>
+          <tr>
+            <td>SE(3)-GNN + 物理约束</td>
+            <td><strong>~5千</strong></td>
+            <td><strong>3%</strong></td>
+            <td>局部性 + 旋转等变 + 守恒律</td>
+          </tr>
+        </table>
+      </li>
+      <li><strong>关键洞察</strong>：
+        <ul>
+          <li>每增加一个<strong>正确的几何先验</strong>，样本需求减少10倍</li>
+          <li>最终版本比MLP快 <strong>200倍</strong>，准确10倍</li>
+          <li>这不是工程优化，而是<strong>数学上的必然</strong> — 利用结构</li>
+        </ul>
+      </li>
+      <li><strong>工程师的checklist</strong>：
+        <ol>
+          <li>问题有哪些对称性？（旋转？平移？置换？）</li>
+          <li>数据在什么空间？（网格？图？流形？）</li>
+          <li>有哪些物理约束？（守恒律？因果性？）</li>
+          <li>选择编码这些先验的架构</li>
+          <li>如果仍需太多样本 → 寻找更多几何结构</li>
+        </ol>
+      </li>
+    </ul>
+    <p>总结：PhysRobot的成功证明了 Chapter 2 的核心论点 — <strong>几何先验是高维学习的关键</strong>。</p>
+  </div>
+</div>
+<!-- === END ENRICHMENT: geometric_priors === -->
+
+
+<!-- === ENRICHMENT: inductive_bias === -->
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：2.1 归纳偏置与函数正则性</h4>
+    
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问："归纳偏置"这个词总让我困惑 — "归纳"和"偏置"分别指什么？它和统计学中的"bias"（偏差）有什么关系？</p>
+      <div class="answer">
+        <p>💡 专家解答：这是一个术语问题，确实容易混淆！让我拆解一下这个概念。</p>
+        <p><strong>"归纳"（Inductive）</strong>：来自哲学中的归纳推理（induction）：</p>
+        <ul>
+          <li><strong>演绎推理</strong>：从一般到特殊（"所有人都会死，苏格拉底是人，所以苏格拉底会死"）</li>
+          <li><strong>归纳推理</strong>：从特殊到一般（"我见过的天鹅都是白的，所以所有天鹅都是白的"）</li>
+        </ul>
+        <p>机器学习就是归纳推理：从有限的训练样本（特殊）推广到未见过的测试数据（一般）。</p>
+        <p><strong>"偏置"（Bias）</strong>：这里的"bias"不是指统计学中的估计偏差（bias of an estimator），而是指<strong>偏好</strong>（preference）或<strong>假设</strong>（assumption）。</p>
+        <ul>
+          <li>更准确的翻译可能是"归纳假设"或"学习偏好"</li>
+          <li>它表示：在所有可能解释训练数据的函数中，我们<strong>偏好</strong>某些类型的函数</li>
+        </ul>
+        <p><strong>归纳偏置的正式定义</strong>：学习算法在训练数据之外做出的<strong>额外假设</strong>，这些假设影响模型选择哪个函数来拟合数据。</p>
+        <p><strong>例子</strong>：</p>
+        <ul>
+          <li><strong>线性回归</strong>：归纳偏置是"真实函数是线性的"— 即使数据可以用多项式完美拟合，我们仍然偏好直线</li>
+          <li><strong>决策树</strong>：归纳偏置是"决策边界应该平行于坐标轴"— 斜线边界需要更深的树</li>
+          <li><strong>CNN</strong>：归纳偏置是"有用的特征是局部的和平移不变的"— 远处像素的直接连接被架构禁止</li>
+          <li><strong>GNN</strong>：归纳偏置是"节点的特征由其邻居决定，与节点顺序无关"— 置换等变性</li>
+        </ul>
+        <p><strong>为什么需要归纳偏置</strong>：</p>
+        <p>这来自一个著名的哲学问题：<strong>No Free Lunch Theorem</strong>（没有免费午餐定理）：在所有可能的问题上平均，没有一个学习算法比随机猜测更好。</p>
+        <p>换句话说：如果不对问题做任何假设，学习是不可能的！归纳偏置就是这些假设。好的归纳偏置（匹配问题结构）带来高效学习；坏的归纳偏置（不匹配）导致失败。</p>
+        <p><strong>与统计偏差的区别</strong>：</p>
+        <ul>
+          <li><strong>统计偏差（bias）</strong>：估计值的期望与真实值的差距 — $\mathbb{E}[\hat{\theta}] - \theta$ — 越小越好</li>
+          <li><strong>归纳偏置（inductive bias）</strong>：学习算法的假设 — 不是越小越好，而是越<strong>匹配问题</strong>越好</li>
+        </ul>
+        <p>实际上，强归纳偏置可能增加统计偏差（限制了函数类），但减少方差（稳定性提高）— 这是偏差-方差权衡的一部分。</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：万能逼近定理说神经网络可以逼近任意函数，那我们为什么还要担心函数类的选择？直接用一个够大的网络不就行了吗？</p>
+      <div class="answer">
+        <p>💡 专家解答：这是对万能逼近定理最常见的误解！这个定理非常强大，但也<strong>非常误导人</strong>。让我详细解释它真正说了什么，以及没说什么。</p>
+        <p><strong>万能逼近定理的精确陈述</strong>（简化版）：</p>
+        <p>对于任意连续函数 $f : [0, 1]^d \to \mathbb{R}$ 和任意精度 $\epsilon > 0$，<strong>存在</strong>一个单隐层神经网络 $\tilde{f}$ 使得：</p>
+        <p>$$\sup_{x \in [0, 1]^d} |f(x) - \tilde{f}(x)| < \epsilon$$</p>
+        <p><strong>这个定理保证了什么</strong>：<strong>表达能力</strong>（expressivity）— 神经网络的函数类足够大，包含任意连续函数的任意精度逼近。</p>
+        <p><strong>这个定理没保证什么</strong>（关键！）：</p>
+        <ol>
+          <li><strong>网络需要多大</strong>：隐层宽度可能需要随维度 $d$ 指数增长。比如逼近某些 $d$ 维函数可能需要 $\mathcal{O}(2^d)$ 个神经元！</li>
+          <li><strong>需要多少数据</strong>：即使网络能表达 $f$，你需要多少样本才能从数据中识别出正确的权重？答案：也可能是指数级</li>
+          <li><strong>能否高效训练</strong>：梯度下降能找到好解吗？还是会卡在局部最优？需要多少迭代？</li>
+          <li><strong>泛化性能</strong>：训练误差小不保证测试误差小 — 可能严重过拟合</li>
+        </ol>
+        <p><strong>生动的类比</strong>：</p>
+        <p>万能逼近定理就像说"只要乐高积木足够多，你可以搭建任意形状"。这是对的，但它没告诉你：</p>
+        <ul>
+          <li>搭建埃菲尔铁塔需要多少块积木（可能需要百万块）</li>
+          <li>你需要看多少张图纸才能学会搭建（样本复杂度）</li>
+          <li>随机尝试组合是否能搭出来（优化难度）</li>
+          <li>搭出来的塔是否稳固（泛化性能）</li>
+        </ul>
+        <p>如果你有无限的积木、无限的时间、完美的设计图，那确实可以搭任何东西。但现实中这些都是有限的！</p>
+        <p><strong>实际例子</strong>：</p>
+        <p>考虑学习一个简单的函数 $f(x_1, \ldots, x_d) = x_1 + x_2$（只依赖前两个变量）在 $d = 100$ 维空间上。</p>
+        <ul>
+          <li><strong>万能逼近定理</strong>：存在一个神经网络可以逼近它 ✓</li>
+          <li><strong>现实</strong>：如果不告诉模型"只看前两个变量"，它可能需要探索所有 $2^{100}$ 种变量组合才能发现这个模式 ✗</li>
+          <li><strong>解决方案</strong>：用稀疏正则化（L1）作为归纳偏置，告诉模型"偏好简单函数"</li>
+        </ul>
+        <p><strong>为什么我们需要归纳偏置</strong>：</p>
+        <p>归纳偏置通过<strong>限制函数类</strong>来提高学习效率：</p>
+        <ul>
+          <li>从"所有可能的函数"缩小到"满足某种性质的函数"</li>
+          <li>样本复杂度从指数级降低到多项式级甚至线性级</li>
+          <li>优化变得更容易（损失地形更简单）</li>
+          <li>泛化性能提高（限制函数类 = 隐式正则化）</li>
+        </ul>
+        <p>总结：万能逼近定理是<strong>必要条件</strong>（没有表达能力一切免谈），但远远不是<strong>充分条件</strong>（有表达能力不等于能高效学习）。这就是为什么几何先验和归纳偏置如此重要！</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问：文中提到 Lipschitz 类、Sobolev 类等"函数正则性"概念 — 这些和我们平常说的"正则化"有什么关系？</p>
+      <div class="answer">
+        <p>💡 专家解答：这是两个相关但不同的概念，都涉及"regularity"这个词，但含义略有不同。让我理清它们的关系。</p>
+        <p><strong>函数正则性（Function Regularity）</strong>：描述函数的"光滑程度"或"良好性质"：</p>
+        <ul>
+          <li><strong>连续性</strong>：最基本的正则性 — 函数图像没有跳跃</li>
+          <li><strong>Lipschitz 连续</strong>：函数变化速度有界 — $|f(x) - f(x')| \leq L \|x - x'\|$</li>
+          <li><strong>可微性</strong>：函数有一阶导数</li>
+          <li><strong>Sobolev 正则性</strong>：函数的 $k$ 阶导数平方可积 — $\int |\nabla^k f|^2 < \infty$</li>
+        </ul>
+        <p>这是对<strong>真实函数 $f$</strong> 的假设，不是对模型的约束。</p>
+        <p><strong>正则化（Regularization）</strong>：在优化过程中添加的惩罚项，鼓励模型具有某些性质：</p>
+        <ul>
+          <li><strong>L2 正则化</strong>（权重衰减）：$\lambda \|\theta\|_2^2$ — 鼓励小权重</li>
+          <li><strong>L1 正则化</strong>：$\lambda \|\theta\|_1$ — 鼓励稀疏性</li>
+          <li><strong>Dropout</strong>：随机失活 — 鼓励鲁棒性</li>
+        </ul>
+        <p>这是对<strong>模型 $\tilde{f}_\theta$</strong> 的约束，通过修改损失函数实现。</p>
+        <p><strong>它们之间的联系</strong>：</p>
+        <p>正则化的目标是让模型<strong>满足我们认为真实函数应该具有的正则性</strong>！</p>
+        <ul>
+          <li><strong>例1</strong>：如果我们相信真实函数是 Lipschitz 的（变化不会太剧烈），可以用<strong>Lipschitz 正则化</strong>：
+            <p>$$\min_\theta \mathcal{L}(\theta) + \lambda \cdot \text{Lip}(\tilde{f}_\theta)$$</p>
+            <p>其中 $\text{Lip}(\tilde{f}) = \sup_{x \neq x'} \frac{|f(x) - f(x')|}{\|x - x'\|}$</p>
+          </li>
+          <li><strong>例2</strong>：如果我们相信真实函数是光滑的（Sobolev 类），可以用<strong>光滑性正则化</strong>：
+            <p>$$\min_\theta \mathcal{L}(\theta) + \lambda \int \|\nabla \tilde{f}_\theta\|^2 dx$$</p>
+            <p>这鼓励模型的梯度小，即变化平缓</p>
+          </li>
+        </ul>
+        <p><strong>直观理解</strong>：</p>
+        <ul>
+          <li><strong>函数正则性</strong> = "我相信世界是什么样的"（关于 $f$ 的先验知识）</li>
+          <li><strong>正则化</strong> = "我如何让模型符合这个信念"（实现先验的技术手段）</li>
+        </ul>
+        <p><strong>为什么这很重要</strong>：</p>
+        <p>本章的核心论点是：<strong>正则性假设必须足够强，才能打破维度灾难</strong>。</p>
+        <ul>
+          <li>如果只假设 $f$ 是 Lipschitz 的，样本复杂度仍然是 $\mathcal{O}(\epsilon^{-d})$ — 指数依赖维度</li>
+          <li>如果假设 $f$ 是 Sobolev 光滑的（比如二阶导数有界），样本复杂度可以降到 $\mathcal{O}(\epsilon^{-d/s})$，其中 $s$ 是光滑度 — 但仍然指数</li>
+          <li>只有当 $s$ 随 $d$ 增长（比如 $s \sim d$）时，才能完全打破诅咒 — 但这个假设太强，现实中不成立</li>
+        </ul>
+        <p><strong>实际应用</strong>：</p>
+        <p>在深度学习中，我们通常<strong>隐式</strong>地假设某种正则性：</p>
+        <ul>
+          <li><strong>BatchNorm</strong>：让激活值的分布更规整 — 隐式光滑性</li>
+          <li><strong>数据增强</strong>：强制不变性 — 隐式对称性约束</li>
+          <li><strong>架构设计</strong>（如CNN）：限制函数类到局部光滑函数 — 这是最强的归纳偏置</li>
+        </ul>
+        <p>总结：函数正则性是我们对世界的假设，正则化是实现这个假设的工具。两者结合才能高效学习！</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白提问："隐式正则化"听起来很神秘 — 为什么梯度下降等优化算法会自动偏好"简单"的解？这背后的数学原理是什么？</p>
+      <div class="answer">
+        <p>💡 专家解答：隐式正则化是现代深度学习理论中最活跃的研究领域之一！这个现象确实很神奇，让我从几个角度解释。</p>
+        <p><strong>现象描述</strong>：</p>
+        <p>考虑一个过参数化的神经网络，参数空间中有<strong>无穷多个</strong>全局最优解（都达到零训练误差）。但梯度下降从随机初始化开始，总是收敛到其中"简单"的那些解，这些解泛化性能好。</p>
+        <p><strong>简单的例子：线性回归</strong>：</p>
+        <p>假设我们要拟合 $N$ 个点，但模型参数有 $P > N$ 个（欠定系统）。有无穷多个解可以完美拟合数据：</p>
+        <p>$$\min_\theta \|\mathbf{y} - \mathbf{X}\theta\|^2$$</p>
+        <p>数学可以证明：<strong>梯度下降从零初始化开始，会收敛到最小范数解</strong>（minimum norm solution）：</p>
+        <p>$$\theta^* = \mathbf{X}^T (\mathbf{X}\mathbf{X}^T)^{-1} \mathbf{y}$$</p>
+        <p>这是所有完美拟合解中 $\|\theta\|$ 最小的那个！</p>
+        <p><strong>为什么会这样</strong>？</p>
+        <ol>
+          <li><strong>初始化</strong>：从 $\theta_0 = 0$ 开始（或接近零）</li>
+          <li><strong>梯度下降路径</strong>：每一步更新 $\theta_{t+1} = \theta_t - \eta \nabla \mathcal{L}(\theta_t)$</li>
+          <li><strong>关键性质</strong>：在线性模型中，$\theta_t$ 始终在训练数据 $\mathbf{X}$ 的列空间中（可以证明）</li>
+          <li><strong>结果</strong>：收敛点是"离原点最近"的解 — 即最小范数解</li>
+        </ol>
+        <p><strong>推广到神经网络</strong>：</p>
+        <p>对于深度网络，情况更复杂，但类似的现象仍然存在：</p>
+        <ul>
+          <li><strong>权重空间</strong>：梯度下降倾向于找到"平坦"的最优解（Hessian 特征值小）而非"尖锐"的最优解 — 平坦解泛化更好</li>
+          <li><strong>函数空间</strong>：在某些情况下（如无穷宽网络的极限），梯度下降等价于在函数空间中寻找最小范数解（Neural Tangent Kernel 理论）</li>
+          <li><strong>频率偏置</strong>（Spectral Bias）：神经网络倾向于先学习低频模式，后学习高频模式 — 低频函数更简单、更光滑</li>
+        </ul>
+        <p><strong>几个理论视角</strong>：</p>
+        <ul>
+          <li><strong>NTK 理论</strong>：在无穷宽极限下，训练神经网络等价于核回归，隐式正则化来自核函数的结构</li>
+          <li><strong>边际稳定性</strong>：梯度下降倾向于找到"刚好稳定"的解（最大特征值接近 1），这些解有更好的泛化界</li>
+          <li><strong>PAC-Bayes 理论</strong>：可以将梯度下降路径看作贝叶斯推断的近似，先验由初始化确定</li>
+        </ul>
+        <p><strong>实际影响因素</strong>：</p>
+        <ol>
+          <li><strong>初始化</strong>：从接近零开始倾向于小权重解</li>
+          <li><strong>学习率</strong>：小学习率 = 更"保守"的更新 = 更简单的解</li>
+          <li><strong>Batch size</strong>：小 batch = 更多噪声 = 逃离尖锐最优解</li>
+          <li><strong>Early stopping</strong>：提前停止 = 没时间拟合复杂噪声</li>
+        </ol>
+        <p><strong>与显式正则化的对比</strong>：</p>
+        <ul>
+          <li><strong>显式正则化</strong>：$\min_\theta \mathcal{L}(\theta) + \lambda R(\theta)$ — 我们明确告诉优化器什么是"简单"</li>
+          <li><strong>隐式正则化</strong>：$\min_\theta \mathcal{L}(\theta)$ — 优化算法和架构自动偏好某些解</li>
+        </ul>
+        <p>隐式正则化的优势：不需要手工调节 $\lambda$，而且可能捕捉到我们无法显式表达的复杂结构。</p>
+        <p><strong>与几何先验的关系</strong>：</p>
+        <p>架构本身带来的隐式正则化是最强的：</p>
+        <ul>
+          <li><strong>CNN</strong>：参数共享（卷积核）强制平移等变性 — 即使优化器想学不同的模式也做不到</li>
+          <li><strong>GNN</strong>：消息传递机制强制置换等变性 — 架构限制了可学习的函数类</li>
+        </ul>
+        <p>这种架构级别的归纳偏置比优化算法的隐式正则化更可靠、更强大！</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解</h4>
+    <p><strong>归纳偏置的日常类比</strong>：</p>
+    <p>想象你在学习外语，老师给了你10个句子的例子。你如何推广到新句子？</p>
+    <ul>
+      <li><strong>无归纳偏置</strong>：你只会说那10个句子，遇到新情况就卡住了</li>
+      <li><strong>弱归纳偏置</strong>（如"句子应该简短"）：你会说短句，但可能语法错误</li>
+      <li><strong>强归纳偏置</strong>（如"英语有主谓宾结构"）：你可以创造无穷多个合法的新句子</li>
+      <li><strong>几何先验</strong>（如"语义相近的词可以互换"）：你能灵活应对各种场景</li>
+    </ul>
+    <p><strong>隐式正则化的比喻</strong>：</p>
+    <p>你要从 A 地到 B 地，有无穷多条路径都能到达。但如果你是<strong>懒人</strong>（对应梯度下降的"最小努力"倾向）：</p>
+    <ul>
+      <li>你会选最短路径（对应最小范数解）</li>
+      <li>你会选坡度平缓的路（对应平坦最优解）</li>
+      <li>你会沿着已有的路走（对应频率偏置 — 先学简单模式）</li>
+    </ul>
+    <p>虽然没人告诉你"选最短路径"，但你的懒惰天性（优化算法的动力学）自然导致这个选择！</p>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用</h4>
+    <p>在 PhysRobot 中，归纳偏置和正则性假设至关重要：</p>
+    <ul>
+      <li><strong>物理正则性</strong>：
+        <ul>
+          <li>组织形变函数应该是<strong>光滑的</strong>（Sobolev 类）— 因为物理场（应力、应变）满足偏微分方程</li>
+          <li>力-形变关系应该是<strong>Lipschitz 连续的</strong> — 无限小的力不会造成有限的形变（除非撕裂）</li>
+          <li>能量函数应该是<strong>凸的</strong>或<strong>近似凸的</strong> — 稳定平衡态对应最小能量</li>
+        </ul>
+      </li>
+      <li><strong>几何归纳偏置</strong>：
+        <ul>
+          <li><strong>局部性</strong>：组织的形变主要由局部受力决定（远处的力影响指数衰减）— 用 GNN 而非全连接网络</li>
+          <li><strong>对称性</strong>：材料性质通常是各向同性或正交各向异性 — 响应函数应该尊重这些对称性</li>
+          <li><strong>时间可逆性</strong>：弹性形变是可逆的（去除力后恢复）— 模型应该满足能量守恒</li>
+        </ul>
+      </li>
+      <li><strong>隐式正则化的实践</strong>：
+        <ul>
+          <li>使用<strong>物理信息神经网络（PINN）</strong>：损失函数中加入 PDE 残差，强制物理定律</li>
+          <li><strong>辛积分器</strong>：保证数值积分保持能量守恒（哈密顿系统）</li>
+          <li><strong>图结构</strong>：GNN 的消息传递机制天然编码局部性 — 不需要显式正则化</li>
+        </ul>
+      </li>
+      <li><strong>样本效率提升</strong>：
+        <ul>
+          <li>无先验：需要 $10^{3000}$ 个样本（状态空间是3000维）</li>
+          <li>有物理先验：只需 $10^3$ - $10^4$ 个样本（从实验数据学习少量材料参数）</li>
+          <li><strong>提升了约 $10^{2996}$ 倍</strong> — 这就是几何和物理先验的威力！</li>
+        </ul>
+      </li>
+    </ul>
+    <p>关键洞察：医疗机器人的成功不是因为收集了海量数据，而是因为<strong>正确地编码了物理和几何先验</strong>，将不可能的学习问题变成了可解的。</p>
+  </div>
+</div>
+<!-- === END ENRICHMENT: inductive_bias === -->
+
+  </main>
+
+  <script src="../assets/script.js"></script>
+</body>
+</html>

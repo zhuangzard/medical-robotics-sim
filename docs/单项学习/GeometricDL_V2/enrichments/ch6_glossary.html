@@ -1,0 +1,379 @@
+<!-- 第6章：GDL 应用场景术语词典 -->
+
+<div class="enrichment-block" style="border-left-color: #ec4899;">
+  <h4>📖 第6章应用场景核心概念</h4>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">分子指纹 (Molecular Fingerprint) 🔑</h5>
+    <p><strong>一句话</strong>：分子指纹是把分子结构编码成固定长度的二进制向量，用于快速比较分子相似度——类似于人的指纹用于身份识别。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>传统化学信息学使用<strong>基于规则的方法</strong>生成分子指纹，常见类型包括：</p>
+    <ul>
+      <li><strong>ECFP (Extended Connectivity Fingerprints)</strong>：基于原子的局部环境（邻居的邻居…）哈希成二进制位</li>
+      <li><strong>MACCS keys</strong>：166 个预定义的子结构模式（如"苯环"、"羰基"）的存在/缺失</li>
+      <li><strong>Morgan 指纹</strong>：类似 ECFP，基于 Morgan 算法（与 WL 测试高度相关！）</li>
+    </ul>
+    
+    <p><strong>工作原理（ECFP 为例）</strong>：</p>
+    <ol>
+      <li>为每个原子生成初始"标识符"（基于原子类型、电荷等）</li>
+      <li>迭代 \( k \) 轮：每个原子的新标识符 = HASH(自身标识符 + 邻居标识符)</li>
+      <li>把所有原子的所有轮次标识符映射到固定长度的二进制向量（如 2048 位）</li>
+    </ol>
+    
+    <p><strong>GNN 时代的"可学习指纹"</strong>：</p>
+    <p>GNN 可以看作<strong>可学习的分子指纹生成器</strong>！传统指纹用固定的哈希函数，GNN 用<strong>可训练的神经网络</strong>：</p>
+    <ul>
+      <li>ECFP 的迭代 ≈ GNN 的消息传递</li>
+      <li>哈希函数 ≈ GNN 的更新函数</li>
+      <li>固定规则 ≈ 端到端学习</li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>分子指纹是 GNN 在药物发现领域的前身和基准。GNN 的成功部分归功于它学习到了<strong>比手工设计更优的"指纹"</strong>，这展示了数据驱动方法相对于规则驱动的优势。</p>
+    
+    <p><strong>🌍 生活类比</strong>：传统指纹像"人工总结一本书的关键词"（固定规则），GNN 像"AI 阅读后自动生成摘要"（从数据学习）。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">虚拟筛选 (Virtual Screening) 🔑</h5>
+    <p><strong>一句话</strong>：虚拟筛选是用计算机模拟快速筛选百万级分子库，预测哪些分子可能对特定靶点有活性，从而大幅降低实验成本。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>传统药物发现流程：合成数千种化合物 → 逐一实验测试 → 筛选出候选药物（耗时数年，成本数亿美元）。<strong>虚拟筛选</strong>则先用计算预测，只合成最有希望的候选物。</p>
+    
+    <p><strong>两种主流方法</strong>：</p>
+    <ol>
+      <li><strong>基于结构的虚拟筛选（SBVS）</strong>：
+        <ul>
+          <li>已知蛋白质靶点的 3D 结构</li>
+          <li>用<strong>分子对接</strong>（molecular docking）模拟小分子与靶点的结合</li>
+          <li>评估结合亲和力（binding affinity）</li>
+        </ul>
+      </li>
+      <li><strong>基于配体的虚拟筛选（LBVS）</strong>：
+        <ul>
+          <li>未知靶点结构，但已知一些有活性的分子</li>
+          <li>用相似性搜索（如分子指纹）找相似分子</li>
+          <li>假设"相似的分子有相似的性质"</li>
+        </ul>
+      </li>
+    </ol>
+    
+    <p><strong>GNN 的革命性作用</strong>：</p>
+    <ul>
+      <li><strong>端到端预测</strong>：直接从分子图预测活性，无需手工设计描述符</li>
+      <li><strong>多任务学习</strong>：同时预测多种性质（活性、毒性、溶解度）</li>
+      <li><strong>迁移学习</strong>：在大数据集上预训练，迁移到小数据任务</li>
+    </ul>
+    
+    <p><strong>实际应用案例</strong>：</p>
+    <ul>
+      <li><strong>COVID-19</strong>：用 GNN 筛选抗病毒药物候选物</li>
+      <li><strong>AlphaFold + 虚拟筛选</strong>：先预测蛋白质结构，再筛选小分子</li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>虚拟筛选是 GNN 的<strong>杀手级应用</strong>之一，展示了几何学习在<strong>加速科学发现</strong>中的价值。分子的置换不变性（原子编号任意）和几何等变性（3D 构象）都被 GNN 优雅地捕捉。</p>
+    
+    <p><strong>🌍 生活类比</strong>：在线约会平台用算法推荐匹配对象（虚拟筛选），而不是让你逐一见面（实验筛选）——省时省力，但需要好的预测模型。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">蛋白质折叠 (Protein Folding) 🔑</h5>
+    <p><strong>一句话</strong>：蛋白质折叠是预测氨基酸序列如何折叠成 3D 结构的问题——这是生物学的"圣杯"挑战，AlphaFold 2 用深度学习实现了突破。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>蛋白质是由 20 种氨基酸组成的链状分子，但它不是直线状的，而是折叠成复杂的 3D 结构（这决定了它的功能）。<strong>蛋白质折叠问题</strong>：给定氨基酸序列，预测其 3D 结构。</p>
+    
+    <p><strong>为什么困难？</strong></p>
+    <ul>
+      <li><strong>搜索空间巨大</strong>：一个 100 氨基酸的蛋白质，理论上有 \( 10^{100} \) 种可能构象</li>
+      <li><strong>物理建模复杂</strong>：涉及氢键、疏水作用、范德华力等多种相互作用</li>
+      <li><strong>实验困难</strong>：X 射线晶体学/冷冻电镜耗时数月到数年</li>
+    </ul>
+    
+    <p><strong>AlphaFold 2 的几何深度学习方法</strong>：</p>
+    <ol>
+      <li><strong>输入</strong>：氨基酸序列 + 进化信息（MSA，多序列比对）</li>
+      <li><strong>表示</strong>：
+        <ul>
+          <li>氨基酸对的关系建模为<strong>图</strong>（节点 = 氨基酸，边 = 潜在接触）</li>
+          <li>使用<strong>注意力机制</strong>推断接触图（类似 Transformer 的完全图）</li>
+        </ul>
+      </li>
+      <li><strong>等变性</strong>：
+        <ul>
+          <li>使用 <strong>SE(3) 等变网络</strong>（类似 EGNN）更新原子坐标</li>
+          <li>迭代优化结构（类似"精修"过程）</li>
+        </ul>
+      </li>
+    </ol>
+    
+    <p><strong>突破性成果</strong>：</p>
+    <p>CASP14 竞赛（2020）：AlphaFold 2 达到<strong>原子级精度</strong>（GDT 中位数 92.4），被《Science》评为 2021 年度科学突破。</p>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>蛋白质折叠是 Geometric Deep Learning 的<strong>巅峰应用</strong>，融合了多种对称性：</p>
+    <ul>
+      <li><strong>置换对称性</strong>：氨基酸序列的顺序是有意义的（RNN/Transformer）</li>
+      <li><strong>欧几里得对称性</strong>：3D 坐标的旋转/平移不变性（SE(3) 等变网络）</li>
+      <li><strong>接触图对称性</strong>：氨基酸间的接触关系（GNN）</li>
+    </ul>
+    
+    <p><strong>🌍 生活类比</strong>：给你一根绳子（氨基酸序列），预测它自然下垂后会形成什么形状——绳子会自动找到能量最低的构象（折叠）。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">接触图 (Contact Map) 🔑</h5>
+    <p><strong>一句话</strong>：接触图是蛋白质结构的图表示，节点是氨基酸残基，如果两个残基在 3D 空间中距离小于阈值（如 8Å）就连边——它捕捉了蛋白质的拓扑结构。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>蛋白质有两种表示方式：</p>
+    <ul>
+      <li><strong>序列表示</strong>：氨基酸的线性排列（1D）</li>
+      <li><strong>结构表示</strong>：原子的 3D 坐标（3D）</li>
+    </ul>
+    <p><strong>接触图</strong>是介于两者之间的<strong>2D 表示</strong>：</p>
+    <p style="text-align: center;">$$ A_{ij} = \begin{cases} 1, & \text{if } \|\mathbf{r}_i - \mathbf{r}_j\| < \text{threshold} \\ 0, & \text{otherwise} \end{cases} $$</p>
+    
+    <p><strong>为什么有用？</strong></p>
+    <ul>
+      <li><strong>降维</strong>：从 3D 坐标（\( N \times 3 \)）降到 2D 矩阵（\( N \times N \)）</li>
+      <li><strong>拓扑信息</strong>：保留了结构的核心信息（哪些残基"相互作用"）</li>
+      <li><strong>旋转不变</strong>：接触图不受旋转/平移影响</li>
+    </ul>
+    
+    <p><strong>在蛋白质折叠中的应用</strong>：</p>
+    <p>AlphaFold 的前身（如 RaptorX）采用<strong>两步策略</strong>：</p>
+    <ol>
+      <li><strong>预测接触图</strong>：用深度学习（CNN/GNN）从序列预测 \( A_{ij} \)</li>
+      <li><strong>从接触图重建 3D 结构</strong>：用约束优化/分子动力学模拟</li>
+    </ol>
+    <p>AlphaFold 2 则<strong>端到端</strong>直接预测 3D 坐标，但仍隐式学习接触图（注意力权重可视化类似接触图）。</p>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>接触图是<strong>几何图</strong>的典型例子——它既是图（邻接矩阵 \( A \)），又编码了几何信息（来自 3D 距离）。GNN 在接触图上做消息传递，本质上是在学习<strong>空间邻近性</strong>如何影响蛋白质性质。</p>
+    
+    <p><strong>🌍 生活类比</strong>：城市地图上的"邻居关系"——两个地点如果直线距离近就算"邻居"（接触图），而不管它们在道路上的实际距离（序列距离）。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">协同过滤 (Collaborative Filtering) 🔑</h5>
+    <p><strong>一句话</strong>：协同过滤是推荐系统的核心算法，通过"用户A和用户B都喜欢物品X，所以A可能也喜欢B喜欢的物品Y"的逻辑进行推荐——本质是在用户-物品二部图上做信息传播。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>推荐系统的输入：<strong>用户-物品交互矩阵</strong> \( R \in \mathbb{R}^{|U| \times |I|} \)，其中 \( R_{ui} \) 表示用户 \( u \) 对物品 \( i \) 的评分（大部分元素缺失）。</p>
+    
+    <p><strong>两种经典方法</strong>：</p>
+    <ol>
+      <li><strong>基于记忆的协同过滤</strong>：
+        <ul>
+          <li>找到与用户 \( u \) 相似的用户集合 \( \mathcal{U}_u \)</li>
+          <li>推荐 \( \mathcal{U}_u \) 喜欢但 \( u \) 未见过的物品</li>
+          <li>相似度计算：余弦相似度、皮尔逊相关系数</li>
+        </ul>
+      </li>
+      <li><strong>基于模型的协同过滤（矩阵分解）</strong>：
+        <ul>
+          <li>假设 \( R \approx U V^\top \)，其中 \( U \in \mathbb{R}^{|U| \times k} \)，\( V \in \mathbb{R}^{|I| \times k} \)</li>
+          <li>\( U \) 是用户嵌入，\( V \) 是物品嵌入</li>
+          <li>预测：\( \hat{R}_{ui} = \mathbf{u}_u^\top \mathbf{v}_i \)</li>
+        </ul>
+      </li>
+    </ol>
+    
+    <p><strong>GNN 视角：用户-物品二部图</strong>：</p>
+    <p>把协同过滤建模为<strong>图神经网络</strong>：</p>
+    <ul>
+      <li><strong>节点</strong>：用户 + 物品</li>
+      <li><strong>边</strong>：用户与其交互过的物品之间连边</li>
+      <li><strong>消息传递</strong>：
+        <ul>
+          <li>用户聚合其喜欢的物品的特征</li>
+          <li>物品聚合喜欢它的用户的特征</li>
+        </ul>
+      </li>
+    </ul>
+    <p>代表性模型：<strong>PinSage</strong>（Pinterest），<strong>LightGCN</strong>（去掉非线性，只保留聚合）。</p>
+    
+    <p><strong>优势</strong>：</p>
+    <ul>
+      <li><strong>高阶连接</strong>：捕捉"朋友的朋友喜欢的物品"（多跳传播）</li>
+      <li><strong>端到端</strong>：嵌入学习和推荐预测联合优化</li>
+      <li><strong>可扩展</strong>：图采样技术（如邻居采样）处理大规模图</li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>协同过滤展示了 GNN 在<strong>关系数据</strong>上的威力——即使节点没有显式特征（如新用户/物品），GNN 也能通过拓扑结构学习嵌入。这是<strong>归纳式学习</strong>（inductive learning）的经典案例。</p>
+    
+    <p><strong>🌍 生活类比</strong>：你的朋友推荐餐厅（协同过滤）——你相信朋友的品味，因为你们过去喜欢相同的餐厅（相似度）。GNN 则是"朋友的朋友"也能影响你（多跳传播）。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">时空图 (Spatiotemporal Graph) 🔑</h5>
+    <p><strong>一句话</strong>：时空图是节点和边都随时间变化的动态图，用于建模交通流量、流行病传播、气候模式等时空数据——结合了 GNN（空间）和 RNN（时间）的优势。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>很多现实系统同时具有<strong>空间结构</strong>（图）和<strong>时间动态</strong>（序列）：</p>
+    <ul>
+      <li><strong>交通网络</strong>：路口（节点）通过道路（边）连接，流量随时间变化</li>
+      <li><strong>传感器网络</strong>：传感器位置固定（图），读数随时间变化</li>
+      <li><strong>社交网络</strong>：用户关系（图），活跃度随时间变化</li>
+    </ul>
+    
+    <p><strong>数学表示</strong>：</p>
+    <p>时空信号：\( \mathbf{X}(t) \in \mathbb{R}^{N \times d} \)，其中：</p>
+    <ul>
+      <li>\( N \)：节点数（空间）</li>
+      <li>\( d \)：特征维度</li>
+      <li>\( t \)：时间步</li>
+    </ul>
+    <p>目标：预测未来的信号 \( \mathbf{X}(t+1), \ldots, \mathbf{X}(t+H) \)</p>
+    
+    <p><strong>经典架构：GNN + RNN</strong>：</p>
+    <ol>
+      <li><strong>空间编码（GNN）</strong>：在每个时刻 \( t \)，用 GNN 聚合空间邻居：
+        <p style="text-align: center;">$$ \mathbf{Z}(t) = \text{GNN}(\mathbf{X}(t), \mathbf{A}) $$</p>
+      </li>
+      <li><strong>时间建模（RNN/LSTM）</strong>：用 RNN 捕捉时间依赖：
+        <p style="text-align: center;">$$ \mathbf{H}(t) = \text{LSTM}(\mathbf{Z}(t), \mathbf{H}(t-1)) $$</p>
+      </li>
+      <li><strong>预测</strong>：解码器输出未来状态</li>
+    </ol>
+    
+    <p><strong>变体架构</strong>：</p>
+    <ul>
+      <li><strong>STGCN</strong>：用时间卷积（TCN）替代 RNN，提高并行性</li>
+      <li><strong>Graph WaveNet</strong>：自适应邻接矩阵（学习潜在的图结构）</li>
+      <li><strong>MTGNN</strong>：混合多尺度时间建模</li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>时空图是<strong>多对称性融合</strong>的典范：</p>
+    <ul>
+      <li><strong>空间置换对称性</strong>：节点标号无关紧要（GNN）</li>
+      <li><strong>时间平移对称性</strong>：序列整体平移不影响模式（RNN）</li>
+    </ul>
+    <p>这展示了 Geometric Deep Learning 的<strong>模块化</strong>优势——不同对称性可以独立处理再组合。</p>
+    
+    <p><strong>🌍 生活类比</strong>：预测城市交通——需要知道路网结构（空间图），也要知道历史流量模式（时间序列）。时空图网络同时利用两种信息。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">目标检测 (Object Detection) 🔑</h5>
+    <p><strong>一句话</strong>：目标检测是同时识别图像中的物体类别和位置（用边界框标注），是计算机视觉的核心任务——CNN 提取特征，后续网络预测"在哪里"和"是什么"。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>与<strong>图像分类</strong>（只预测整张图的标签）不同，目标检测需要：</p>
+    <ul>
+      <li><strong>定位（Localization）</strong>：预测边界框 \( (x, y, w, h) \)（中心坐标 + 宽高）</li>
+      <li><strong>分类（Classification）</strong>：预测边界框内物体的类别</li>
+    </ul>
+    
+    <p><strong>经典方法演进</strong>：</p>
+    <ol>
+      <li><strong>R-CNN 系列</strong>（两阶段检测器）：
+        <ul>
+          <li>第一阶段：生成候选区域（Region Proposals）</li>
+          <li>第二阶段：对每个候选区域分类 + 边界框回归</li>
+          <li>代表：R-CNN → Fast R-CNN → Faster R-CNN → Mask R-CNN</li>
+        </ul>
+      </li>
+      <li><strong>YOLO 系列</strong>（单阶段检测器）：
+        <ul>
+          <li>把图像划分为网格，每个网格预测边界框 + 类别</li>
+          <li>速度快（实时检测），但精度略低</li>
+          <li>代表：YOLOv1 → YOLOv8（持续演进）</li>
+        </ul>
+      </li>
+      <li><strong>Transformer 时代</strong>：
+        <ul>
+          <li><strong>DETR</strong>：用 Transformer 替代 CNN 后端，端到端检测</li>
+          <li>把检测建模为<strong>集合预测</strong>问题（匈牙利匹配）</li>
+        </ul>
+      </li>
+    </ol>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>目标检测展示了 CNN（平移等变性）在视觉任务中的基础地位。DETR 的出现进一步引入了<strong>置换不变性</strong>（目标顺序无关），这是 GDL 在计算机视觉中的新应用方向。</p>
+    
+    <p><strong>🌍 生活类比</strong>：在"找找看"游戏中，不仅要找到目标物体（分类），还要用框圈出它（定位）——这就是目标检测的任务。</p>
+  </div>
+  
+  <div class="concept-card" style="margin: 1.5rem 0; padding: 1.2rem; background: rgba(236,72,153,0.06); border-radius: 10px; border: 1px solid rgba(236,72,153,0.2);">
+    <h5 style="margin-top: 0; color: #db2777;">语义分割 (Semantic Segmentation) 🔑</h5>
+    <p><strong>一句话</strong>：语义分割是为图像中的每个像素分配类别标签（如"天空"、"道路"、"行人"），实现像素级的场景理解——比目标检测更精细。</p>
+    
+    <p><strong>详细解释</strong>：</p>
+    <p>语义分割的输出是<strong>分割图</strong>（segmentation map）：\( S \in \{1, 2, \ldots, C\}^{H \times W} \)，其中每个像素 \( S_{ij} \) 是一个类别标签。</p>
+    
+    <p><strong>与相关任务的区别</strong>：</p>
+    <table style="width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.95em;">
+      <thead>
+        <tr style="background: rgba(236,72,153,0.1);">
+          <th style="padding: 0.5rem; border: 1px solid #f9a8d4;">任务</th>
+          <th style="padding: 0.5rem; border: 1px solid #f9a8d4;">粒度</th>
+          <th style="padding: 0.5rem; border: 1px solid #f9a8d4;">区分实例</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">图像分类</td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">整张图</td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">—</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">目标检测</td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">边界框级</td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">✅（不同框）</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">语义分割</td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">像素级</td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">❌（同类合并）</td>
+        </tr>
+        <tr>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">实例分割</td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">像素级</td>
+          <td style="padding: 0.5rem; border: 1px solid #fce7f3;">✅（每个实例独立）</td>
+        </tr>
+      </tbody>
+    </table>
+    
+    <p><strong>经典架构</strong>：</p>
+    <ul>
+      <li><strong>FCN (Fully Convolutional Network)</strong>：
+        <ul>
+          <li>去掉全连接层，全部用卷积（保持空间信息）</li>
+          <li>上采样恢复原图分辨率</li>
+        </ul>
+      </li>
+      <li><strong>U-Net</strong>：
+        <ul>
+          <li>编码器-解码器结构 + 跳跃连接</li>
+          <li>广泛用于医学图像分割</li>
+        </ul>
+      </li>
+      <li><strong>DeepLab 系列</strong>：
+        <ul>
+          <li>空洞卷积（Atrous Convolution）扩大感受野</li>
+          <li>ASPP（Atrous Spatial Pyramid Pooling）多尺度特征</li>
+        </ul>
+      </li>
+      <li><strong>Transformer 时代</strong>：
+        <ul>
+          <li><strong>SegFormer</strong>：用 Transformer 替代 CNN 编码器</li>
+          <li><strong>Mask2Former</strong>：统一的掩码分类框架</li>
+        </ul>
+      </li>
+    </ul>
+    
+    <p><strong>在 GDL 中的角色</strong>：</p>
+    <p>语义分割是 CNN <strong>平移等变性</strong>的完美应用——每个像素的分类依赖于局部感受野，而卷积的等变性确保了整个图像的一致处理。U-Net 的跳跃连接则是<strong>多尺度几何信息融合</strong>的典范。</p>
+    
+    <p><strong>🌍 生活类比</strong>：给一张风景照"涂色"——把天空涂成蓝色，树涂成绿色，道路涂成灰色——每个像素都要分类，这就是语义分割。</p>
+  </div>
+  
+</div>

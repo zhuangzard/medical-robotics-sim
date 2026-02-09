@@ -1,0 +1,557 @@
+<div class="enrichment-block">
+  <h3>🔍 深化理解：测地线和流形（Geodesics & Manifolds）⭐⭐</h3>
+  
+  <div class="enrichment-qa">
+    <h4>💬 核心问答</h4>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q1：什么是流形？为什么说"局部像平面，全局可以弯曲"？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>流形的直观定义</strong>：</p>
+        <p>一个<strong>弯曲的空间</strong>，但如果你足够"放大"，每个小区域看起来都像平坦的欧几里得空间。</p>
+        
+        <p><strong>地球表面的类比</strong>：</p>
+        <ul>
+          <li><strong>全局</strong>：地球是一个球面（明显是弯曲的）</li>
+          <li><strong>局部</strong>：站在操场上看，地面几乎是平的</li>
+          <li>操场的平面地图（局部坐标）可以很好地导航</li>
+          <li>但用一张平面地图覆盖整个地球会严重失真（如墨卡托投影在极地扭曲）</li>
+        </ul>
+        
+        <p><strong>数学定义（简化版）</strong>：</p>
+        <p>$s$ 维流形 $\Omega$ 的每个点 $u$ 都有一个<strong>邻域</strong>同胚于 $\mathbb{R}^s$（通过坐标卡 chart）。</p>
+        <ul>
+          <li><strong>1 维流形</strong>：圆周 $S^1$，直线 $\mathbb{R}$</li>
+          <li><strong>2 维流形</strong>：球面 $S^2$，环面（甜甜圈），双曲面</li>
+          <li><strong>3 维流形</strong>：三维球面 $S^3$（难以可视化！）</li>
+        </ul>
+        
+        <p><strong>为什么流形在深度学习中重要</strong>：</p>
+        <ol>
+          <li><strong>数据流形假设</strong>：高维数据（如图像）实际上集中在低维流形附近
+            <ul>
+              <li>人脸图像看似在 $\mathbb{R}^{256 \times 256 \times 3}$ 中，实际上只占很小的子空间</li>
+              <li>这个子空间是弯曲的流形（人脸的朝向、表情、光照变化）</li>
+            </ul>
+          </li>
+          <li><strong>网格和点云</strong>：3D 物体的表面是 2 维流形（嵌入在 $\mathbb{R}^3$ 中）</li>
+          <li><strong>变换空间</strong>：旋转群 SO(3)、刚体运动群 SE(3) 都是流形</li>
+        </ol>
+        
+        <p><strong>流形 vs 欧几里得空间</strong>：</p>
+        <table>
+          <tr>
+            <th>性质</th>
+            <th>欧几里得空间</th>
+            <th>流形</th>
+          </tr>
+          <tr>
+            <td>全局坐标</td>
+            <td>✅ 笛卡尔坐标</td>
+            <td>❌ 需要多个局部坐标卡</td>
+          </tr>
+          <tr>
+            <td>直线</td>
+            <td>存在且唯一</td>
+            <td>用测地线代替</td>
+          </tr>
+          <tr>
+            <td>距离</td>
+            <td>欧几里得距离</td>
+            <td>测地距离（沿曲面的最短路径）</td>
+          </tr>
+          <tr>
+            <td>平行线</td>
+            <td>永不相交</td>
+            <td>可能相交（如球面上的大圆）</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q2：什么是切空间？为什么在弯曲空间上做微积分需要它？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>切空间 = 流形在某点的"线性近似"</strong>：</p>
+        <p>在流形 $\Omega$ 的点 $u$ 处，切空间 $T_u\Omega$ 是一个<strong>向量空间</strong>，表示"从 $u$ 出发可以走的所有方向"。</p>
+        
+        <p><strong>山顶的类比</strong>：</p>
+        <ul>
+          <li>你站在山顶（流形上的点 $u$）</li>
+          <li>脚下是弯曲的山坡（流形）</li>
+          <li>但如果你放一块木板在脚下，木板是<strong>平的</strong>（切平面 $T_u\Omega$）</li>
+          <li>木板的方向代表你可以"迈步"的所有可能方向（切向量）</li>
+        </ul>
+        
+        <p><strong>球面的例子</strong>：</p>
+        <p>球面 $S^2 = \{\mathbf{u} \in \mathbb{R}^3 : \|\mathbf{u}\| = 1\}$</p>
+        <p>在北极点 $\mathbf{u}_N = (0, 0, 1)$，切空间是：</p>
+        $$T_{\mathbf{u}_N} S^2 = \{(x, y, 0) \in \mathbb{R}^3\} = \mathbb{R}^2$$
+        <p>即<strong>水平面</strong>（垂直于地轴）。</p>
+        
+        <p><strong>为什么需要切空间</strong>：</p>
+        <ol>
+          <li><strong>微积分的基础</strong>：
+            <ul>
+              <li>欧几里得空间中，导数 = 向量</li>
+              <li>流形上，导数 = <strong>切向量</strong>（不能直接在流形中相减！）</li>
+            </ul>
+          </li>
+          <li><strong>梯度下降</strong>：
+            <ul>
+              <li>在流形上优化参数（如旋转矩阵）</li>
+              <li>梯度是切向量，更新后需要"投影回流形"</li>
+            </ul>
+          </li>
+          <li><strong>向量场</strong>：
+            <ul>
+              <li>流形上的"箭头场"（如速度场、力场）</li>
+              <li>每个点的箭头必须在对应的切空间中</li>
+            </ul>
+          </li>
+        </ol>
+        
+        <p><strong>切空间的维度</strong>：</p>
+        <ul>
+          <li>$s$ 维流形 → 切空间是 $s$ 维向量空间</li>
+          <li>球面 $S^2$ → 切空间是 2 维平面</li>
+          <li>旋转群 SO(3) → 切空间（李代数）是 3 维</li>
+        </ul>
+        
+        <p><strong>GPS 导航的类比</strong>：</p>
+        <ul>
+          <li>你在地球表面（流形）的某个位置</li>
+          <li>GPS 告诉你"向东走 100 米"（切向量）</li>
+          <li>"东"这个方向只在当前位置有意义（局部坐标）</li>
+          <li>走到另一个地方，"东"的绝对方向已经改变了</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q3：什么是测地线？为什么飞机航线不是直线？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>测地线 = 流形上的"最短路径"</strong>：</p>
+        <p>连接两点的曲线中，<strong>长度最短</strong>的那条。</p>
+        
+        <p><strong>飞机航线的例子</strong>：</p>
+        <ul>
+          <li>从北京飞往纽约，最短路径不是二维地图上的"直线"</li>
+          <li>而是<strong>大圆弧</strong>（球面上的测地线）</li>
+          <li>在地图上看起来是弯的，但在球面上是"最直"的路径</li>
+        </ul>
+        <p>例如：北京 → 北极附近 → 纽约（经过北冰洋上空）比"沿纬线飞"要短！</p>
+        
+        <p><strong>不同空间的测地线</strong>：</p>
+        <table>
+          <tr>
+            <th>空间</th>
+            <th>测地线</th>
+            <th>直觉</th>
+          </tr>
+          <tr>
+            <td>平面 $\mathbb{R}^2$</td>
+            <td>直线</td>
+            <td>常规的直线</td>
+          </tr>
+          <tr>
+            <td>球面 $S^2$</td>
+            <td>大圆弧</td>
+            <td>飞机航线</td>
+          </tr>
+          <tr>
+            <td>圆柱面</td>
+            <td>螺旋线或直线</td>
+            <td>绕圆柱走 vs 沿母线走</td>
+          </tr>
+          <tr>
+            <td>双曲面</td>
+            <td>双曲线</td>
+            <td>马鞍面上的最短路</td>
+          </tr>
+        </table>
+        
+        <p><strong>测地线的数学定义</strong>：</p>
+        <p>曲线 $\gamma(t)$ 是测地线，如果它满足<strong>测地线方程</strong>（类似牛顿第二定律）：</p>
+        $$\nabla_{\gamma'(t)} \gamma'(t) = 0$$
+        <p>意思：速度向量<strong>平行移动</strong>自己（不加速、不转弯，沿"惯性"前进）。</p>
+        
+        <p><strong>球面测地线的解析解</strong>：</p>
+        <p>从点 $\mathbf{u}$ 沿方向 $\mathbf{x} \in T_\mathbf{u} S^2$ 出发，走距离 $t$：</p>
+        $$\gamma(t) = \cos(t) \mathbf{u} + \sin(t) \frac{\mathbf{x}}{\|\mathbf{x}\|}$$
+        
+        <p><strong>为什么不能"直线穿过地球内部"</strong>：</p>
+        <p>因为测地线必须<strong>留在流形上</strong>！我们只考虑"沿表面走"的路径，不允许"挖隧道"。这就是<strong>内蕴几何</strong>（intrinsic geometry）的核心思想——只用流形自身的度量，不依赖嵌入空间。</p>
+        
+        <p><strong>医学影像的应用</strong>：</p>
+        <ul>
+          <li>大脑皮层是弯曲的 2D 表面（嵌入在 3D 头骨内）</li>
+          <li>测量"两个脑区之间的距离"应该用<strong>沿皮层表面的测地距离</strong>，而非欧几里得直线距离</li>
+          <li>用于脑区分割、功能连接分析</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q4：什么是平行移动？为什么在球面上搬运箭头会"自动旋转"？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>平行移动 = 在弯曲空间中"搬运向量"的规则</strong>：</p>
+        <p>不同点的切空间是<strong>不同的向量空间</strong>，不能直接比较。平行移动提供了"沿路径传输向量"的机制。</p>
+        
+        <p><strong>指南针的类比</strong>：</p>
+        <ul>
+          <li>你在北京，指南针指向北</li>
+          <li>你带着指南针沿经线走到赤道</li>
+          <li>如果"欧几里得搬运"：箭头保持指向天空中固定的方向（北极星）</li>
+          <li>如果"平行移动"：箭头始终<strong>贴着地面</strong>，保持与路径的夹角不变</li>
+        </ul>
+        <p>结果：到达赤道时，箭头不再指向正北，而是指向东/西（取决于你走的路径）！</p>
+        
+        <p><strong>平行移动的定义</strong>：</p>
+        <p>沿曲线 $\gamma(t)$ 移动切向量 $X(t)$，满足：</p>
+        <ol>
+          <li><strong>保持长度</strong>：$\|X(t)\| = \text{const}$</li>
+          <li><strong>保持夹角</strong>：$X(t)$ 与 $\gamma'(t)$ 的夹角不变</li>
+          <li><strong>协变导数为零</strong>：$\nabla_{\gamma'(t)} X(t) = 0$</li>
+        </ol>
+        
+        <p><strong>三角形实验（高斯-博内定理）</strong>：</p>
+        <ol>
+          <li>在球面上画一个三角形（三条测地线）</li>
+          <li>从顶点 A 开始，拿一个切向量</li>
+          <li>沿三角形边界 $A \to B \to C \to A$ 平行移动一圈</li>
+          <li>回到 A 时，向量旋转了角度 $\theta$</li>
+        </ol>
+        <p><strong>神奇结论</strong>：旋转角 $\theta$ = 三角形的<strong>面积</strong>！（对于单位球面）</p>
+        <p>这就是<strong>曲率</strong>的体现：平行移动的路径依赖性正是因为空间弯曲。</p>
+        
+        <p><strong>为什么路径依赖</strong>：</p>
+        <ul>
+          <li>从北京到上海有无数条路径</li>
+          <li>沿不同路径平行移动同一个向量，到达上海时向量的方向不同</li>
+          <li>差异 = 路径包围的区域的<strong>曲率积分</strong></li>
+        </ul>
+        
+        <p><strong>平面上的对比</strong>：</p>
+        <p>在平面上，平行移动<strong>不依赖路径</strong>——曲率为零。</p>
+        <ul>
+          <li>从 A 到 B，无论走直线还是绕圈，向量的方向不变</li>
+          <li>这就是为什么欧几里得几何简单：可以"自由移动"向量</li>
+        </ul>
+        
+        <p><strong>深度学习中的应用</strong>：</p>
+        <ul>
+          <li><strong>规范等变网络</strong>：特征向量需要在流形上"传递"，平行移动定义了正确的传递方式</li>
+          <li><strong>流形优化</strong>：梯度下降的每一步都是在切空间中计算，然后"平行移动"到新位置</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q5：什么是指数映射和对数映射？为什么说它们是"切空间与流形之间的桥梁"？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>指数映射 = 从切空间"投射"到流形</strong>：</p>
+        $$\exp_u : T_u\Omega \to \Omega$$
+        <p>给定基点 $u$ 和切向量 $X \in T_u\Omega$，指数映射返回"从 $u$ 沿 $X$ 方向走单位时间到达的点"。</p>
+        
+        <p><strong>GPS 导航的类比</strong>：</p>
+        <ul>
+          <li>你在位置 $u$（比如天安门广场）</li>
+          <li>GPS 说"向东北方向走 500 米"（切向量 $X$）</li>
+          <li>指数映射 $\exp_u(X)$ = 你最终到达的位置</li>
+        </ul>
+        
+        <p><strong>对数映射 = 指数映射的逆</strong>：</p>
+        $$\log_u : \Omega \to T_u\Omega$$
+        <p>给定两点 $u, v \in \Omega$，对数映射返回"从 $u$ 到 $v$ 的切向量"（测地线的初速度）。</p>
+        <p>类比：已知起点和终点，计算"应该朝哪个方向走多远"。</p>
+        
+        <p><strong>球面上的解析表达式</strong>：</p>
+        <p>指数映射：</p>
+        $$\exp_\mathbf{u}(\mathbf{x}) = \cos(\|\mathbf{x}\|)\,\mathbf{u} + \frac{\sin(\|\mathbf{x}\|)}{\|\mathbf{x}\|}\,\mathbf{x}$$
+        <p>对数映射：</p>
+        $$\log_\mathbf{u}(\mathbf{v}) = \frac{\arccos(\mathbf{u}^\top \mathbf{v})}{\|\mathbf{v} - (\mathbf{u}^\top \mathbf{v})\mathbf{u}\|} (\mathbf{v} - (\mathbf{u}^\top \mathbf{v})\mathbf{u})$$
+        
+        <p><strong>为什么重要</strong>：</p>
+        <ol>
+          <li><strong>流形上的算术</strong>：
+            <ul>
+              <li>流形中的点<strong>不能直接相加</strong>（$u + v$ 可能不在流形上）</li>
+              <li>但切空间是向量空间，可以自由运算</li>
+              <li>策略：$\log \to$ 切空间运算 $\to \exp$ 回流形</li>
+            </ul>
+          </li>
+          <li><strong>黎曼优化</strong>：
+            <ul>
+              <li>计算梯度 $\nabla f(u) \in T_u\Omega$</li>
+              <li>更新：$u_{\text{new}} = \exp_u(-\eta \nabla f(u))$</li>
+              <li>自动保证 $u_{\text{new}}$ 在流形上</li>
+            </ul>
+          </li>
+          <li><strong>插值</strong>：
+            <ul>
+              <li>两点之间的"线性插值"应该用测地线</li>
+              <li>$\gamma(t) = \exp_u(t \log_u(v))$，$t \in [0, 1]$</li>
+            </ul>
+          </li>
+        </ol>
+        
+        <p><strong>旋转矩阵的例子（SO(3)）</strong>：</p>
+        <ul>
+          <li>李群 SO(3)：旋转矩阵</li>
+          <li>李代数 $\mathfrak{so}(3)$：反对称矩阵（角速度）</li>
+          <li>指数映射：矩阵指数（Rodrigues 公式）</li>
+          $$R = \exp(\omega) = I + \frac{\sin\theta}{\theta}\omega + \frac{1-\cos\theta}{\theta^2}\omega^2$$
+          <li>对数映射：矩阵对数（从旋转矩阵提取旋转轴和角度）</li>
+        </ul>
+        
+        <p><strong>局部性的限制</strong>：</p>
+        <p>指数映射只在<strong>局部</strong>是一一对应的（在"测地球"内）。</p>
+        <ul>
+          <li>球面上：从北极出发，走距离 $> \pi$（半周）会绕过赤道到达南半球</li>
+          <li>不同的切向量可能映射到同一个点（如沿相反方向走一整圈）</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q6：什么是黎曼度量？为什么说它是"在弯曲空间中测量距离和角度"的工具？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>黎曼度量 = 切空间上的内积</strong>：</p>
+        <p>在流形的每个点 $u$，给切空间 $T_u\Omega$ 配备一个内积 $g_u(\cdot, \cdot)$，使得可以测量：</p>
+        <ul>
+          <li><strong>长度</strong>：$\|X\|_u = \sqrt{g_u(X, X)}$</li>
+          <li><strong>角度</strong>：$\cos\theta = \frac{g_u(X, Y)}{\|X\|_u \|Y\|_u}$</li>
+        </ul>
+        
+        <p><strong>拉伸的橡皮膜类比</strong>：</p>
+        <ul>
+          <li>平坦的橡皮膜 = 欧几里得空间（度量处处相同）</li>
+          <li>拉伸后的橡皮膜 = 黎曼流形（度量随位置变化）</li>
+          <li>在拉伸区域，"单位长度"变长了 → 度量系数变大</li>
+        </ul>
+        
+        <p><strong>球面的度量</strong>：</p>
+        <p>嵌入 $\mathbb{R}^3$ 中的单位球面，度量就是<strong>限制在切平面上的欧几里得内积</strong>：</p>
+        $$g_\mathbf{u}(\mathbf{x}, \mathbf{y}) = \mathbf{x}^\top \mathbf{y}, \quad \mathbf{x}, \mathbf{y} \in T_\mathbf{u} S^2$$
+        <p>因为切向量已经垂直于法向量 $\mathbf{u}$，可以直接用点积。</p>
+        
+        <p><strong>曲线的长度</strong>：</p>
+        <p>曲线 $\gamma : [a, b] \to \Omega$ 的长度定义为：</p>
+        $$\text{Length}(\gamma) = \int_a^b \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))} \, dt = \int_a^b \|\gamma'(t)\|_{\gamma(t)} \, dt$$
+        <p>这就是"速度的积分"——在欧几里得空间中退化为熟悉的弧长公式。</p>
+        
+        <p><strong>测地距离</strong>：</p>
+        <p>两点 $u, v$ 之间的<strong>测地距离</strong>是所有连接它们的曲线中，长度最短的：</p>
+        $$d_g(u, v) = \inf_{\gamma : u \to v} \text{Length}(\gamma)$$
+        
+        <p><strong>为什么度量"可以不同"</strong>：</p>
+        <p>同一个拓扑空间可以配备不同的度量，导致不同的几何：</p>
+        <ul>
+          <li>平面用<strong>欧几里得度量</strong>：$ds^2 = dx^2 + dy^2$</li>
+          <li>平面用<strong>双曲度量</strong>：$ds^2 = \frac{dx^2 + dy^2}{y^2}$（庞加莱半平面）</li>
+          <li>结果：测地线、曲率完全不同</li>
+        </ul>
+        
+        <p><strong>度量张量的坐标表示</strong>：</p>
+        <p>选定局部坐标 $(x^1, \ldots, x^s)$，度量可以写成矩阵：</p>
+        $$g_{ij} = g\left(\frac{\partial}{\partial x^i}, \frac{\partial}{\partial x^j}\right)$$
+        <p>例如，球坐标 $(\theta, \phi)$ 下的球面度量：</p>
+        $$ds^2 = d\theta^2 + \sin^2\theta \, d\phi^2$$
+        <p>注意：纬度越高（$\theta \to 0$ 或 $\pi$），经度方向的"单位长度"越短（极点附近的纬线很短）。</p>
+        
+        <p><strong>医学影像的应用</strong>：</p>
+        <ul>
+          <li>器官表面（如心脏、肝脏）是嵌入 3D 空间的 2D 流形</li>
+          <li>用黎曼度量可以定义"沿表面的最短路径"（测地线）</li>
+          <li>形状匹配、表面配准依赖度量的选择</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q7：什么是拉普拉斯-贝尔特拉米算子？为什么说它是"流形上的傅里叶变换"？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>拉普拉斯算子 = 散度的梯度</strong>：</p>
+        $$\Delta = \nabla^* \nabla$$
+        <ul>
+          <li>$\nabla$：梯度（标量 → 向量场）</li>
+          <li>$\nabla^*$：散度（向量场 → 标量）</li>
+          <li>$\Delta$：拉普拉斯（标量 → 标量）</li>
+        </ul>
+        
+        <p><strong>温度扩散的类比</strong>：</p>
+        <ul>
+          <li>想象一个金属板（流形），初始温度分布 $u_0(x)$</li>
+          <li>热量从高温区流向低温区 → 扩散方程：$\frac{\partial u}{\partial t} = \Delta u$</li>
+          <li>拉普拉斯 $(\Delta u)(x)$ 衡量"点 $x$ 的温度与周围平均温度的差异"</li>
+          <li>如果 $(\Delta u)(x) < 0$：$x$ 比周围冷 → 会吸热（温度上升）</li>
+          <li>如果 $(\Delta u)(x) > 0$：$x$ 比周围热 → 会散热（温度下降）</li>
+          <li>如果 $(\Delta u)(x) = 0$：$x$ 处于局部平衡</li>
+        </ul>
+        
+        <p><strong>特征分解 = 流形上的傅里叶级数</strong>：</p>
+        <p>在紧致流形上，拉普拉斯算子有可数的特征值和特征函数：</p>
+        $$\Delta \phi_k = \lambda_k \phi_k, \quad 0 = \lambda_0 \leq \lambda_1 \leq \lambda_2 \leq \cdots$$
+        <ul>
+          <li>$\phi_k$：特征函数（类比：正弦波 $\sin(kx)$）</li>
+          <li>$\lambda_k$：特征值（类比：频率 $k^2$）</li>
+          <li>$\{\phi_k\}$ 构成 $L^2(\Omega)$ 的正交基</li>
+        </ul>
+        
+        <p><strong>任意信号可以分解</strong>：</p>
+        $$x(u) = \sum_{k=0}^\infty \hat{x}_k \phi_k(u), \quad \hat{x}_k = \langle x, \phi_k \rangle = \int_\Omega x(u) \phi_k(u) \, du$$
+        <p>这就是<strong>广义傅里叶变换</strong>！</p>
+        
+        <p><strong>低频 vs 高频</strong>：</p>
+        <ul>
+          <li><strong>$\lambda_0 = 0$</strong>：$\phi_0 =$ 常函数（全局平均）</li>
+          <li><strong>$\lambda_k$ 小</strong>：$\phi_k$ 缓慢变化（低频 = 平滑）</li>
+          <li><strong>$\lambda_k$ 大</strong>：$\phi_k$ 剧烈振荡（高频 = 细节/噪声）</li>
+        </ul>
+        
+        <p><strong>为什么拉普拉斯是"内蕴的"</strong>：</p>
+        <p>拉普拉斯算子只依赖<strong>黎曼度量</strong>，不依赖流形如何嵌入外部空间。</p>
+        <ul>
+          <li>把一张纸卷成圆柱 → 度量不变 → 拉普拉斯不变</li>
+          <li>把纸揉皱 → 度量改变 → 拉普拼斯改变</li>
+        </ul>
+        
+        <p><strong>谱卷积的定义</strong>：</p>
+        <p>利用卷积定理（时域卷积 = 频域乘积）：</p>
+        $$(x \star \theta)(u) = \sum_{k=0}^\infty (\hat{x}_k \cdot \hat{\theta}_k) \phi_k(u)$$
+        <p>优点：等距不变（因为拉普拉斯是等距不变的）</p>
+        <p>缺点：</p>
+        <ul>
+          <li>特征基对网格扰动极其敏感（高频特征函数不稳定）</li>
+          <li>各向同性（无方向偏好，因为拉普拉斯是各向同性的）</li>
+          <li>无法跨域泛化（不同网格有不同的特征基）</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="qa-pair">
+      <div class="question">
+        <strong>Q8：什么是等距变换？为什么说"折纸"是等距但"吹气球"不是？</strong>
+      </div>
+      <div class="answer">
+        <p><strong>等距变换 = 保持距离的变换</strong>：</p>
+        <p>映射 $\eta : \Omega \to \tilde{\Omega}$ 是等距的，如果：</p>
+        $$d_g(u, v) = d_h(\eta(u), \eta(v)), \quad \forall u, v \in \Omega$$
+        <p>即：任意两点之间的测地距离在变换前后不变。</p>
+        
+        <p><strong>折纸 vs 吹气球</strong>：</p>
+        <table>
+          <tr>
+            <th>操作</th>
+            <th>是否等距</th>
+            <th>原因</th>
+          </tr>
+          <tr>
+            <td>折纸</td>
+            <td>✅ 是</td>
+            <td>只是弯折，不拉伸不撕裂</td>
+          </tr>
+          <tr>
+            <td>卷纸成圆柱</td>
+            <td>✅ 是</td>
+            <td>纸上任意两点的距离不变</td>
+          </tr>
+          <tr>
+            <td>吹气球</td>
+            <td>❌ 否</td>
+            <td>橡皮膜被拉伸，距离增大</td>
+          </tr>
+          <tr>
+            <td>揉皱纸</td>
+            <td>❌ 否（通常）</td>
+            <td>折痕处可能产生畸变</td>
+          </tr>
+        </table>
+        
+        <p><strong>Nash 嵌入定理</strong>：</p>
+        <p>任何光滑黎曼流形都可以<strong>等距嵌入</strong>到足够高维的欧几里得空间中。</p>
+        <p>例如：平面可以卷成圆柱，也可以折成复杂的折纸艺术——这些都是平面到 3D 空间的等距嵌入。</p>
+        
+        <p><strong>GDL 的核心要求</strong>：</p>
+        <p>对于<strong>近似等距</strong>的变换 $\eta$（度量畸变 $\text{dis}(\eta)$ 小），网络输出应该稳定：</p>
+        $$\|f(x, \Omega) - f(x \circ \eta^{-1}, \tilde{\Omega})\| \leq C \|x\| \cdot \text{dis}(\eta)$$
+        <p>意思：如果两个网格"几何上接近"（等距），网络应该给出相似的预测。</p>
+        
+        <p><strong>人脸识别的例子</strong>：</p>
+        <ul>
+          <li>3D 人脸扫描得到网格</li>
+          <li>同一个人的不同扫描：网格节点数量、连接方式可能不同</li>
+          <li>但<strong>几何形状近似等距</strong>（都是同一个人脸的表面）</li>
+          <li>好的网络应该识别为同一个人（等距不变/稳定）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  
+  <div class="enrichment-intuition">
+    <h4>🎯 核心直觉</h4>
+    <div class="intuition-item">
+      <strong>流形 = 弯曲但局部平坦</strong>
+      <p>地球是圆的，但你的邻居看起来是平的。这种"局部 vs 全局"的双重性是流形的核心。深度学习中，高维数据流形局部可以用线性模型近似（局部 PCA），全局需要非线性模型。</p>
+    </div>
+    <div class="intuition-item">
+      <strong>切空间 = 做微积分的舞台</strong>
+      <p>流形上的点不能相减，但切向量可以。梯度、速度、力——所有需要"方向"的概念都活在切空间里。</p>
+    </div>
+    <div class="intuition-item">
+      <strong>测地线 = 弯曲空间中的"直线"</strong>
+      <p>飞机航线、光线轨迹、最优路径——都是测地线。它们是"局部最直"的路径，遵循"惯性原理"（不加速不转弯）。</p>
+    </div>
+    <div class="intuition-item">
+      <strong>平行移动 = 曲率的指纹</strong>
+      <p>在平面上搬箭头，方向不变。在球面上搬箭头，绕一圈会旋转。旋转角度正比于曲率——这就是高斯-博内定理的直觉。</p>
+    </div>
+    <div class="intuition-item">
+      <strong>拉普拉斯 = 流形的"心跳"</strong>
+      <p>拉普拉斯的特征函数是流形的"固有频率"——就像鼓面的振动模式。它们编码了流形的形状信息，是谱几何的核心。</p>
+    </div>
+  </div>
+  
+  <div class="enrichment-application">
+    <h4>🚀 应用场景</h4>
+    <div class="application-item">
+      <strong>3D 形状分析</strong>
+      <p>物体的表面是 2D 流形。拉普拉斯特征向量可以用于形状描述、形状匹配、形状检索。热核签名（Heat Kernel Signature）是常用的形状特征。</p>
+    </div>
+    <div class="application-item">
+      <strong>大脑皮层分析</strong>
+      <p>大脑皮层是高度褶皱的 2D 流形。测地距离比欧几里得距离更能反映功能连接。拉普拉斯用于皮层分割、功能区定位。</p>
+    </div>
+    <div class="application-item">
+      <strong>网格卷积神经网络</strong>
+      <p>MoNet、FeaStNet 等方法用指数映射在切空间中定义局部坐标，然后做"伪卷积"。这比谱方法更稳定，且保持空间局部性。</p>
+    </div>
+    <div class="application-item">
+      <strong>黎曼优化</strong>
+      <p>当参数空间是流形时（如旋转矩阵、正交矩阵、低秩矩阵），梯度下降需要用指数映射投影回流形。应用于矩阵补全、主成分分析、神经网络压缩。</p>
+    </div>
+    <div class="application-item">
+      <strong>机器人路径规划</strong>
+      <p>机器人的配置空间（configuration space）是流形（如多关节机械臂的 SO(3)^n）。规划最短路径 = 计算测地线，避开障碍物。</p>
+    </div>
+    <div class="application-item">
+      <strong>计算机图形学（网格处理）</strong>
+      <p>网格平滑、网格参数化、网格简化都依赖拉普拉斯算子。余切拉普拉斯是离散微分几何的基础工具。</p>
+    </div>
+  </div>
+</div>

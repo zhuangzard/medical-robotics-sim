@@ -1,0 +1,419 @@
+<div class="enrichment-block" style="border-left-color: #ff6b6b;">
+  <h4>📐 Ch4 公式详解：几何域（5G）</h4>
+  
+  <!-- 公式 1: 邻域定义 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\mathcal{N}_u = \{v : (u,v) \in E \text{ or } (v,u) \in E\}$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\mathcal{N}_u$</td>
+        <td style="padding: 6px 12px;">节点 $u$ 的邻域 — 与 $u$ 直接相连的所有节点的集合</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$v$</td>
+        <td style="padding: 6px 12px;">邻居节点 — 满足条件的节点（与 $u$ 有边相连）</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$(u,v) \in E$</td>
+        <td style="padding: 6px 12px;">边的存在性 — 从 $u$ 到 $v$ 存在边</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\{...\}$</td>
+        <td style="padding: 6px 12px;">集合符号 — 所有满足条件的节点</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>一个节点的邻域，就是它的"朋友圈"——所有与它直接相连的节点。</p>
+    <p><strong>🔍 类比：</strong>社交网络中，你的邻域就是你的直接好友列表，不包括"朋友的朋友"。</p>
+  </div>
+
+  <!-- 公式 2: 图上的置换等变函数 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$F(\mathbf{PX}, \mathbf{PAP}^\top) = \mathbf{P}F(\mathbf{X}, \mathbf{A})$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\mathbf{P}$</td>
+        <td style="padding: 6px 12px;">置换矩阵 — 交换节点顺序的矩阵（每行每列恰有一个 1）</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\mathbf{X}$</td>
+        <td style="padding: 6px 12px;">节点特征矩阵 — 每一行是一个节点的特征向量</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\mathbf{A}$</td>
+        <td style="padding: 6px 12px;">邻接矩阵 — $a_{uv}=1$ 表示节点 $u$ 和 $v$ 之间有边</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\mathbf{PAP}^\top$</td>
+        <td style="padding: 6px 12px;">置换后的邻接矩阵 — 同时置换行和列</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$F$</td>
+        <td style="padding: 6px 12px;">置换等变函数 — 图神经网络层</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>打乱节点顺序（置换输入），输出也跟着打乱（相同的置换）——这是图神经网络的核心性质。</p>
+    <p><strong>🔍 类比：</strong>给学生编号1-10，重新排序后，他们的成绩排名也应该跟着重新排序，但相对关系不变。</p>
+    <p><strong>💡 为什么重要：</strong>图的节点没有固定顺序，GNN 必须对任意节点排序给出一致的结果。</p>
+  </div>
+
+  <!-- 公式 3: 局部聚合函数 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\mathbf{F}(\mathbf{X}, \mathbf{A}) = \begin{bmatrix} \varphi(x_1, \mathcal{X}_{\mathcal{N}_1}) \\ \varphi(x_2, \mathcal{X}_{\mathcal{N}_2}) \\ \vdots \\ \varphi(x_n, \mathcal{X}_{\mathcal{N}_n}) \end{bmatrix}$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\varphi$</td>
+        <td style="padding: 6px 12px;">局部函数 — 对单个节点及其邻域的处理函数</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$x_i$</td>
+        <td style="padding: 6px 12px;">中心节点特征 — 节点 $i$ 自己的特征</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\mathcal{X}_{\mathcal{N}_i}$</td>
+        <td style="padding: 6px 12px;">邻域特征集 — 节点 $i$ 所有邻居的特征的多重集</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">矩阵形式</td>
+        <td style="padding: 6px 12px;">对每个节点独立应用 $\varphi$，堆叠成输出矩阵</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>每个节点把自己和邻居的信息喂给函数 $\varphi$，得到新的特征——这是图神经网络的标准操作。</p>
+    <p><strong>🔍 类比：</strong>每个人根据自己和朋友的意见，更新自己的观点——类似"民意调查"。</p>
+    <p><strong>💡 为什么用多重集：</strong>邻居的特征可能重复（不同节点可能有相同特征），且顺序不重要。</p>
+  </div>
+
+  <!-- 公式 4: 循环矩阵与卷积 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\mathbf{C}(\theta)\mathbf{x} = \mathbf{x} \star \theta$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\mathbf{C}(\theta)$</td>
+        <td style="padding: 6px 12px;">循环矩阵 — 每一行是上一行循环右移的结果</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\theta$</td>
+        <td style="padding: 6px 12px;">卷积核（滤波器）— 定义卷积操作的权重向量</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\mathbf{x}$</td>
+        <td style="padding: 6px 12px;">输入信号 — 网格上的信号（如图像的一行）</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\star$</td>
+        <td style="padding: 6px 12px;">卷积操作 — 等价于循环矩阵乘法</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>在网格（如图像）上的卷积操作，可以表示成特殊的矩阵乘法——这个矩阵叫循环矩阵。</p>
+    <p><strong>🔍 类比：</strong>用一个滤镜在照片上滑动，等价于用一个特殊矩阵乘以照片像素向量。</p>
+    <p><strong>💡 为什么循环：</strong>因为网格有周期性（边界条件），卷积核在不同位置做相同操作，体现在矩阵上就是每行循环移位。</p>
+  </div>
+
+  <!-- 公式 5: 离散傅里叶变换（DFT）-->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\hat{x}_\xi = \sum_{u=0}^{n-1} x_u e^{-i\xi u}$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\hat{x}_\xi$</td>
+        <td style="padding: 6px 12px;">傅里叶系数 — 信号在频率 $\xi$ 处的"强度"</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$x_u$</td>
+        <td style="padding: 6px 12px;">时域/空域信号 — 位置 $u$ 处的信号值</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$e^{-i\xi u}$</td>
+        <td style="padding: 6px 12px;">复数基函数 — 频率 $\xi$ 的振荡波（$i$ 是虚数单位）</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\sum_{u=0}^{n-1}$</td>
+        <td style="padding: 6px 12px;">求和 — 把信号与基函数在所有位置上相乘后累加</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\xi$</td>
+        <td style="padding: 6px 12px;">频率索引 — 取值 $0, 1, ..., n-1$</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>傅里叶变换把信号分解成不同频率的振荡波，$\hat{x}_\xi$ 告诉你频率 $\xi$ 的波有多强。</p>
+    <p><strong>🔍 类比：</strong>把一首歌分解成不同音高的音符：低频是低音，高频是高音，傅里叶系数是每个音符的音量。</p>
+    <p><strong>💡 为什么重要：</strong>卷积在频域是简单乘法，CNN 的卷积核可以理解为频率选择器。</p>
+  </div>
+
+  <!-- 公式 6: 群卷积 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$(x \star \theta)(g) = \langle x, \rho(g)\theta \rangle = \int_\Omega x(u)\theta(g^{-1}u) \, du$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$x \star \theta$</td>
+        <td style="padding: 6px 12px;">群卷积 — 信号 $x$ 与滤波器 $\theta$ 在群 $G$ 上的卷积</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$g$</td>
+        <td style="padding: 6px 12px;">群元素 — 如旋转、平移等对称变换</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\rho(g)$</td>
+        <td style="padding: 6px 12px;">群表示 — 群元素 $g$ 对信号的作用</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\langle x, \rho(g)\theta \rangle$</td>
+        <td style="padding: 6px 12px;">内积 — 信号与变换后的滤波器的相似度</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$g^{-1}u$</td>
+        <td style="padding: 6px 12px;">逆变换位置 — 把位置 $u$ "反向"变换</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\int_\Omega$</td>
+        <td style="padding: 6px 12px;">在域上积分 — 把所有位置的贡献加起来</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>群卷积是经典卷积的推广：不只是平移滤波器，还可以旋转、翻转等任意对称变换。</p>
+    <p><strong>🔍 类比：</strong>不只是用滤镜在照片上左右滑动，还可以旋转滤镜、翻转滤镜，匹配各种角度的特征。</p>
+    <p><strong>💡 输出是什么：</strong>$(x \star \theta)(g)$ 是定义在群 $G$ 上的函数，不是原始域 $\Omega$ 上！下一层要处理群上的信号。</p>
+  </div>
+
+  <!-- 公式 7: 切空间与黎曼度量 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\langle X, Y \rangle_u = g_u(X, Y)$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$T_u\Omega$</td>
+        <td style="padding: 6px 12px;">切空间 — 点 $u$ 处的"局部平面"，包含所有可能的移动方向</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$X, Y$</td>
+        <td style="padding: 6px 12px;">切向量 — 切空间中的向量，表示局部位移方向</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$g_u$</td>
+        <td style="padding: 6px 12px;">黎曼度量 — 在点 $u$ 处定义切向量的内积，衡量长度和角度</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\langle X, Y \rangle_u$</td>
+        <td style="padding: 6px 12px;">内积 — 两个切向量的"相似度"，依赖于度量 $g_u$</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>流形是弯曲的，但在每一点都能"贴"一个平面（切空间），黎曼度量告诉你这个平面上怎么量长度和角度。</p>
+    <p><strong>🔍 类比：</strong>地球表面是弯的，但在你站的地方看起来是平的——这个"局部平面"就是切空间，黎曼度量告诉你地图上1厘米对应实际多少米。</p>
+    <p><strong>💡 为什么重要：</strong>流形没有全局坐标系，所有几何量（距离、角度）都通过黎曼度量定义，这是内蕴几何的基础。</p>
+  </div>
+
+  <!-- 公式 8: 测地线长度 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\ell(\gamma) = \int_0^T \|\gamma'(t)\|_{\gamma(t)} \, dt = \int_0^T \sqrt{g_{\gamma(t)}(\gamma'(t), \gamma'(t))} \, dt$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\gamma(t)$</td>
+        <td style="padding: 6px 12px;">曲线 — 流形上连接两点的路径，参数 $t \in [0, T]$</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\gamma'(t)$</td>
+        <td style="padding: 6px 12px;">速度向量 — 曲线在 $t$ 时刻的切向量，表示运动方向</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\|\gamma'(t)\|_{\gamma(t)}$</td>
+        <td style="padding: 6px 12px;">速度的范数 — 在 $\gamma(t)$ 点用度量 $g$ 度量的速度大小</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\ell(\gamma)$</td>
+        <td style="padding: 6px 12px;">曲线长度 — 沿曲线积分速度，累计总路程</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">测地线</td>
+        <td style="padding: 6px 12px;">使 $\ell(\gamma)$ 最小的曲线 — 流形上的"直线"</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>测地线是流形上两点间的最短路径，长度是沿路径积分速度大小。</p>
+    <p><strong>🔍 类比：</strong>地球上两个城市间的最短路径不是直线（三维空间），而是大圆弧（球面上的测地线），长度用黎曼度量算。</p>
+    <p><strong>💡 内蕴性：</strong>测地线只依赖黎曼度量 $g$，不依赖流形怎么嵌入到外部空间——这是等距不变性的基础。</p>
+  </div>
+
+  <!-- 公式 9: 内蕴梯度 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$dx_u(X) = g_u(\nabla x(u), X)$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$dx_u$</td>
+        <td style="padding: 6px 12px;">微分（Differential）— 标量场 $x$ 在点 $u$ 的变化率</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$X$</td>
+        <td style="padding: 6px 12px;">切向量 — 表示移动方向</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\nabla x(u)$</td>
+        <td style="padding: 6px 12px;">内蕴梯度 — 点 $u$ 处 $x$ 增长最快的方向（切向量）</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$g_u(\nabla x, X)$</td>
+        <td style="padding: 6px 12px;">内积 — 梯度与方向 $X$ 的内积，给出方向导数</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>梯度是函数增长最快的方向，微分 $dx_u(X)$ 告诉你沿方向 $X$ 移动时函数变化多快。</p>
+    <p><strong>🔍 类比：</strong>爬山时，梯度指向最陡的上坡方向；微分是"如果我朝 $X$ 方向走一小步，海拔升高多少"。</p>
+    <p><strong>💡 Riesz表示定理：</strong>微分是对偶向量（线性泛函），通过黎曼度量可以表示成与梯度的内积——这就是为什么有了度量才能定义梯度。</p>
+  </div>
+
+  <!-- 公式 10: 拉普拉斯算子 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\Delta = \nabla^* \nabla$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\Delta$</td>
+        <td style="padding: 6px 12px;">拉普拉斯算子 — 最重要的微分算子，衡量函数的"平滑度"</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\nabla$</td>
+        <td style="padding: 6px 12px;">梯度算子 — 把标量场变成向量场（方向）</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\nabla^*$</td>
+        <td style="padding: 6px 12px;">散度算子 — 梯度的伴随算子，把向量场变回标量场</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\nabla^* \nabla$</td>
+        <td style="padding: 6px 12px;">复合算子 — 先求梯度，再求散度</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>拉普拉斯算子衡量一个点的函数值与周围平均值的差——差越大越"不平滑"。</p>
+    <p><strong>🔍 类比：</strong>热传导：热的地方向冷的地方扩散，拉普拉斯算子算"这一点比周围热多少"，决定热流速度。</p>
+    <p><strong>💡 为什么重要：</strong>拉普拉斯是内蕴算子（只依赖度量），其特征函数是流形上的"傅里叶基"，用于定义谱卷积。</p>
+  </div>
+
+  <!-- 公式 11: 拉普拉斯特征分解 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\Delta \varphi_k = \lambda_k \varphi_k, \quad k = 0, 1, 2, ...$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\varphi_k$</td>
+        <td style="padding: 6px 12px;">拉普拉斯特征函数 — 流形上的"振动模式"，第 $k$ 个基函数</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\lambda_k$</td>
+        <td style="padding: 6px 12px;">特征值 — 对应"频率"，$\lambda_k$ 越大振荡越快</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\langle \varphi_k, \varphi_l \rangle$</td>
+        <td style="padding: 6px 12px;">正交性 — $\langle \varphi_k, \varphi_l \rangle = \delta_{kl}$（$k \neq l$ 时为0）</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$0 = \lambda_0 \leq \lambda_1 \leq ...$</td>
+        <td style="padding: 6px 12px;">特征值排序 — 从低频到高频（$\lambda_0=0$ 对应常函数）</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>拉普拉斯特征函数是流形的"自然振动模式"，特征值是"频率"——类似鼓面的泛音。</p>
+    <p><strong>🔍 类比：</strong>敲鼓时，鼓面以不同频率振动（基音+泛音）；$\varphi_k$ 是第 $k$ 个泛音的形状，$\lambda_k$ 是它的频率。</p>
+    <p><strong>💡 "你能听出鼓的形状吗？"</strong>著名数学问题：两个形状不同的鼓可能有相同的频率谱，但特征函数形状一定不同。</p>
+  </div>
+
+  <!-- 公式 12: 谱卷积 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$(x \star \theta)(u) = \sum_{k \geq 0} (\hat{x}_k \cdot \hat{\theta}_k) \varphi_k(u)$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\hat{x}_k$</td>
+        <td style="padding: 6px 12px;">信号的傅里叶系数 — $\hat{x}_k = \langle x, \varphi_k \rangle$，信号在第 $k$ 个基上的"分量"</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\hat{\theta}_k$</td>
+        <td style="padding: 6px 12px;">滤波器的频率响应 — 对第 $k$ 个频率的"增益"</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\hat{x}_k \cdot \hat{\theta}_k$</td>
+        <td style="padding: 6px 12px;">频域相乘 — 每个频率独立处理</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\sum ... \varphi_k(u)$</td>
+        <td style="padding: 6px 12px;">逆变换 — 把频域结果变回空域</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>谱卷积在频域做乘法：把信号和滤波器都分解成频率成分，逐频率相乘，再合成回去。</p>
+    <p><strong>🔍 类比：</strong>音频均衡器：低音、中音、高音分别调节增益，再混合——这就是频域滤波。</p>
+    <p><strong>⚠️ 局限性：</strong>不同流形的拉普拉斯特征函数不同，无法跨形状泛化；且高频特征函数对微小形变敏感，不稳定。</p>
+  </div>
+
+  <!-- 公式 13: 多项式谱滤波器 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$(\hat{p}(\Delta)x)(u) = \sum_{k \geq 0} \hat{p}(\lambda_k) \langle x, \varphi_k \rangle \varphi_k(u)$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\hat{p}(\lambda)$</td>
+        <td style="padding: 6px 12px;">传递函数 — 把特征值 $\lambda_k$ 映射到频率响应，如 $\hat{p}(\lambda) = \sum_j \alpha_j \lambda^j$</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\hat{p}(\Delta)$</td>
+        <td style="padding: 6px 12px;">算子多项式 — 把标量函数 $\hat{p}$ 作用在算子 $\Delta$ 上</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\hat{p}(\lambda_k)$</td>
+        <td style="padding: 6px 12px;">第 $k$ 个频率的增益 — 用参数 $\{\alpha_j\}$ 控制</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">空域等价</td>
+        <td style="padding: 6px 12px;">$\hat{p}(\Delta)x = \sum_j \alpha_j \Delta^j x$ — 拉普拉斯的多项式，局部操作</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>用拉普拉斯的多项式 $\hat{p}(\Delta)$ 代替直接指定每个频率的增益，参数更少且空域局部化。</p>
+    <p><strong>🔍 类比：</strong>用简单的公式（如线性、二次）拟合复杂的频率响应曲线，参数从 $O(n)$ 降到 $O(k)$（多项式次数）。</p>
+    <p><strong>💡 为什么更好：</strong>
+      <ul style="margin-left: 1.5rem; font-size: 0.95em; margin-top: 0.5rem;">
+        <li>参数少：$K$ 阶多项式只需 $K+1$ 个参数，不依赖流形大小</li>
+        <li>局部性：$\Delta^K$ 的感受野是 $K$-hop 邻域</li>
+        <li>更稳定：对流形微小形变的敏感度降低</li>
+      </ul>
+    </p>
+  </div>
+
+  <!-- 公式 14: 指数映射 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\exp_u : T_u\Omega \to \Omega$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\exp_u$</td>
+        <td style="padding: 6px 12px;">指数映射 — 从切空间到流形的映射</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$X \in T_u\Omega$</td>
+        <td style="padding: 6px 12px;">切向量 — 点 $u$ 处的方向和"步长"</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\exp_u(X)$</td>
+        <td style="padding: 6px 12px;">目标点 — 从 $u$ 沿方向 $X$ 走测地线到达的点</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">逆映射 $\log_u$</td>
+        <td style="padding: 6px 12px;">对数映射 — 从流形点 $v$ 找到连接 $u, v$ 的测地线方向</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>指数映射是"从 $u$ 点按指定方向 $X$ 走直线（测地线）"的操作，把切空间的向量变成流形上的点。</p>
+    <p><strong>🔍 类比：</strong>在地球上，给定起点和方向（如"向东北走 100 公里"），指数映射告诉你终点在哪。</p>
+    <p><strong>💡 为什么重要：</strong>指数映射建立了"局部坐标系"（切空间）与流形的双向对应，可以在切空间做欧式几何运算，再映射回流形。</p>
+  </div>
+
+  <!-- 公式 15: 等距映射 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(255,107,107,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$d_g(u, v) = d_h(\eta(u), \eta(v)) \quad \forall u, v \in \Omega$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\eta : \Omega \to \tilde{\Omega}$</td>
+        <td style="padding: 6px 12px;">等距映射 — 保持距离的流形间映射（不拉伸、不压缩）</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$d_g$</td>
+        <td style="padding: 6px 12px;">测地距离 — 流形 $\Omega$ 上用度量 $g$ 定义的距离</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$d_h$</td>
+        <td style="padding: 6px 12px;">目标流形距离 — 流形 $\tilde{\Omega}$ 上用度量 $h$ 定义的距离</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">等式</td>
+        <td style="padding: 6px 12px;">任意两点的距离在映射前后保持不变</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>等距映射是"不改变距离"的变形——折叠、弯曲可以，但拉伸、压缩不行。</p>
+    <p><strong>🔍 类比：</strong>把一张纸折成各种形状（飞机、帽子），纸上任意两点的距离不变——这是等距变形；但把纸拉长就不是。</p>
+    <p><strong>💡 为什么重要：</strong>内蕴几何量（如拉普拉斯特征）在等距变换下不变，所以基于内蕴量的 GDL 模型天然具有等距不变性——这是处理可变形3D物体的关键。</p>
+  </div>
+
+</div>

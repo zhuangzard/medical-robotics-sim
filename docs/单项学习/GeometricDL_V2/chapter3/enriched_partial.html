@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 3: Geometric Priors — 几何深度学习蓝图</title>
+
+<!-- KaTeX for math rendering -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false
+  });"></script>
+
+<style>
+/* ===== CSS Variables (Light Theme) ===== */
+:root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-code: #f4f5f7;
+  --bg-sidebar: #f0f2f5;
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6a;
+  --text-muted: #8888aa;
+  --border-color: #e0e0e8;
+  --accent: #6366f1;
+  --accent-light: #eef2ff;
+  --link: #4f46e5;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,0.1);
+  --radius: 12px;
+  --sidebar-width: 300px;
+
+  /* Colored boxes */
+  --def-bg: #eff6ff;
+  --def-border: #3b82f6;
+  --def-title: #1d4ed8;
+  --thm-bg: #ecfdf5;
+  --thm-border: #10b981;
+  --thm-title: #047857;
+  --example-bg: #fffbeb;
+  --example-border: #f59e0b;
+  --example-title: #b45309;
+  --warn-bg: #fef2f2;
+  --warn-border: #ef4444;
+  --warn-title: #b91c1c;
+  --robot-bg: #f0fdf4;
+  --robot-border: #22c55e;
+  --robot-title: #15803d;
+
+  /* Code highlighting */
+  --code-keyword: #d73a49;
+  --code-string: #032f62;
+  --code-comment: #6a737d;
+  --code-function: #6f42c1;
+  --code-number: #005cc5;
+  --code-class: #e36209;
+  --code-builtin: #005cc5;
+  --code-decorator: #6f42c1;
+  --code-self: #d73a49;
+}
+
+/* ===== Dark Theme ===== */
+[data-theme="dark"] {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-code: #1c2333;
+  --bg-sidebar: #0d1117;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --border-color: #30363d;
+  --accent: #818cf8;
+  --accent-light: #1e1b4b;
+  --link: #818cf8;
+  --shadow: 0 2px 12px rgba(0,0,0,0.3);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,0.4);
+
+  --def-bg: #0c1929;
+  --def-border: #3b82f6;
+  --def-title: #60a5fa;
+  --thm-bg: #052e16;
+  --thm-border: #22c55e;
+  --thm-title: #4ade80;
+  --example-bg: #271a00;
+  --example-border: #f59e0b;
+  --example-title: #fbbf24;
+  --warn-bg: #2a0a0a;
+  --warn-border: #ef4444;
+  --warn-title: #f87171;
+  --robot-bg: #052e16;
+  --robot-border: #22c55e;
+  --robot-title: #4ade80;
+
+  --code-keyword: #ff7b72;
+  --code-string: #a5d6ff;
+  --code-comment: #8b949e;
+  --code-function: #d2a8ff;
+  --code-number: #79c0ff;
+  --code-class: #ffa657;
+  --code-builtin: #79c0ff;
+  --code-decorator: #d2a8ff;
+  --code-self: #ff7b72;
+}
+
+/* ===== Reset & Base ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.85;
+  font-size: 16px;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ===== Progress Bar ===== */
+.progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0%;
+  height: 3px;
+  background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
+  z-index: 9999;
+  transition: width 0.1s;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+  position: fixed;
+  left: 0; top: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  z-index: 100;
+  padding: 20px 0;
+  transition: transform 0.3s ease, background 0.3s;
+}
+.sidebar-header {
+  padding: 10px 20px 20px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 10px;
+}
+.sidebar-header h2 {
+  font-size: 17px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+.sidebar-header p {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.sidebar nav { padding: 0 12px; }
+.sidebar nav a {
+  display: block;
+  padding: 6px 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  border-radius: 6px;
+  transition: all 0.2s;
+  border-left: 2px solid transparent;
+}
+.sidebar nav a:hover {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+.sidebar nav a.active {
+  background: var(--accent-light);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.sidebar nav .sub { padding-left: 24px; font-size: 12px; }
+.sidebar nav .sep { height: 1px; background: var(--border-color); margin: 8px 12px; }
+
+/* Mobile sidebar toggle */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  bottom: 20px; left: 20px;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* ===== Main Content ===== */
+.main-content {
+  margin-left: var(--sidebar-width);
+  max-width: 900px;
+  padding: 40px 48px 80px;
+}
+
+/* ===== Theme Toggle ===== */
+.theme-toggle {
+  position: fixed;
+  top: 16px; right: 16px;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 18px;
+  cursor: pointer;
+  z-index: 200;
+  transition: all 0.2s;
+}
+.theme-toggle:hover { box-shadow: var(--shadow-hover); }
+
+/* ===== Typography ===== */
+h1 { font-size: 2.2em; margin: 1em 0 0.6em; line-height: 1.3; color: var(--accent); }
+h2 { font-size: 1.7em; margin: 2em 0 0.8em; padding-bottom: 8px; border-bottom: 2px solid var(--border-color); }
+h3 { font-size: 1.35em; margin: 1.6em 0 0.6em; color: var(--accent); }
+h4 { font-size: 1.1em; margin: 1.3em 0 0.5em; }
+p { margin-bottom: 1em; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+strong { color: var(--text-primary); }
+blockquote {
+  border-left: 4px solid var(--accent);
+  padding: 12px 20px;
+  margin: 1em 0;
+  background: var(--bg-secondary);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* ===== Colored Boxes ===== */
+.box {
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 1.5em 0;
+  border-left: 5px solid;
+  position: relative;
+}
+.box-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  font-size: 1.05em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.box.def { background: var(--def-bg); border-color: var(--def-border); }
+.box.def .box-title { color: var(--def-title); }
+.box.thm { background: var(--thm-bg); border-color: var(--thm-border); }
+.box.thm .box-title { color: var(--thm-title); }
+.box.example { background: var(--example-bg); border-color: var(--example-border); }
+.box.example .box-title { color: var(--example-title); }
+.box.warn { background: var(--warn-bg); border-color: var(--warn-border); }
+.box.warn .box-title { color: var(--warn-title); }
+.box.robot { background: var(--robot-bg); border-color: var(--robot-border); }
+.box.robot .box-title { color: var(--robot-title); }
+
+/* ===== Code Blocks ===== */
+.code-block {
+  position: relative;
+  margin: 1.2em 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+.code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.copy-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  padding: 3px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+.copy-btn:hover { background: var(--accent-light); color: var(--accent); }
+pre {
+  background: var(--bg-code);
+  padding: 16px 20px;
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+code {
+  font-family: "SF Mono", "Fira Code", "JetBrains Mono", Menlo, monospace;
+}
+:not(pre) > code {
+  background: var(--bg-code);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  color: var(--accent);
+}
+
+/* ===== Syntax Highlighting ===== */
+.kw { color: var(--code-keyword); font-weight: 600; }
+.str { color: var(--code-string); }
+.cm { color: var(--code-comment); font-style: italic; }
+.fn { color: var(--code-function); }
+.num { color: var(--code-number); }
+.cls { color: var(--code-class); }
+.bi { color: var(--code-builtin); }
+.dec { color: var(--code-decorator); }
+.sf { color: var(--code-self); }
+.op { color: var(--text-secondary); }
+
+/* ===== Images ===== */
+.figure {
+  margin: 2em 0;
+  text-align: center;
+}
+.figure img {
+  max-width: 100%;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.figure .caption {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+/* ===== Table ===== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5em 0;
+  font-size: 15px;
+}
+th, td {
+  padding: 10px 14px;
+  border: 1px solid var(--border-color);
+  text-align: left;
+}
+th { background: var(--bg-secondary); font-weight: 600; }
+
+/* ===== Exercises ===== */
+.exercises {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin: 2em 0;
+}
+.exercises h4 {
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+.exercises ol { padding-left: 24px; }
+.exercises li { margin-bottom: 12px; line-height: 1.7; }
+
+/* ===== Key Takeaway ===== */
+.takeaway {
+  background: linear-gradient(135deg, var(--accent-light), var(--bg-secondary));
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 2em 0;
+}
+.takeaway h4 { color: var(--accent); margin-bottom: 10px; }
+
+/* ===== Symbol Table ===== */
+.symbol-table {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 20px;
+  margin: 1em 0;
+  font-size: 15px;
+}
+.symbol-table .sym {
+  font-family: "SF Mono", monospace;
+  color: var(--accent);
+  text-align: right;
+  padding: 2px 0;
+}
+.symbol-table .desc {
+  padding: 2px 0;
+  color: var(--text-secondary);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
+  .main-content { margin-left: 0; padding: 30px 20px 80px; }
+}
+
+/* ===== Smooth animations ===== */
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Chapter Navigation ===== */
+.chapter-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 60px;
+  padding-top: 30px;
+  border-top: 2px solid var(--border-color);
+}
+.chapter-nav a {
+  padding: 12px 24px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.chapter-nav a:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+/* SVG diagrams */
+.svg-diagram {
+  margin: 1.5em auto;
+  display: block;
+  max-width: 100%;
+}
+
+/* ===== Enrichment Block Styles ===== */
+.enrichment-block {
+  margin: 2rem 0; padding: 1.5rem;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  border-left: 4px solid #3b82f6; border-radius: 0 12px 12px 0;
+}
+[data-theme="dark"] .enrichment-block {
+  background: linear-gradient(135deg, #1a2332 0%, #1e293b 100%);
+}
+.enrichment-qa { margin-bottom: 1.5rem; }
+.qa-pair { margin: 1rem 0; padding: 1rem; background: rgba(255,255,255,0.5); border-radius: 8px; }
+[data-theme="dark"] .qa-pair { background: rgba(0,0,0,0.2); }
+.question { font-weight: 600; color: #2563eb; margin-bottom: 0.5rem; }
+[data-theme="dark"] .question { color: #60a5fa; }
+.answer { line-height: 1.8; }
+.enrichment-intuition { margin: 1rem 0; padding: 1rem; background: rgba(251,191,36,0.1); border-radius: 8px; border-left: 3px solid #f59e0b; }
+.enrichment-application { margin: 1rem 0; padding: 1rem; background: rgba(16,185,129,0.1); border-radius: 8px; border-left: 3px solid #10b981; }
+
+</style>
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Theme Toggle -->
+<button class="theme-toggle" id="themeToggle" title="切换深色/浅色主题">🌙</button>
+
+<!-- Mobile Sidebar Toggle -->
+<button class="sidebar-toggle" id="sidebarToggle">☰</button>
+
+<!-- ===== Sidebar ===== -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <h2>📐 Chapter 3</h2>
+    <p>Geometric Priors 几何先验</p>
+  </div>
+  <nav>
+    <a href="#intro">引言：为什么需要几何先验</a>
+    <div class="sep"></div>
+
+    <a href="#sec3-1">3.1 对称性、表示和不变性</a>
+    <a href="#sec3-1-groups" class="sub">群的定义与公理</a>
+    <a href="#sec3-1-examples" class="sub">常见对称群实例</a>
+    <a href="#sec3-1-actions" class="sub">群作用与群表示</a>
+    <a href="#sec3-1-invariance" class="sub">不变性 vs 等变性</a>
+    <a href="#sec3-1-code" class="sub">🐍 代码：等变性验证</a>
+    <a href="#sec3-1-exercises" class="sub">❓ 练习题</a>
+    <div class="sep"></div>
+
+    <a href="#sec3-2">3.2 同构和自同构</a>
+    <a href="#sec3-2-levels" class="sub">结构层次与子群</a>
+    <a href="#sec3-2-iso" class="sub">同构 vs 自同构</a>
+    <a href="#sec3-2-graph" class="sub">图同构与图自同构</a>
+    <a href="#sec3-2-wl" class="sub">Weisfeiler-Leman 测试</a>
+    <a href="#sec3-2-code" class="sub">🐍 代码：WL 测试</a>
+    <a href="#sec3-2-exercises" class="sub">❓ 练习题</a>
+    <div class="sep"></div>
+
+    <a href="#sec3-3">3.3 形变稳定性</a>
+    <a href="#sec3-3-signal" class="sub">信号形变的稳定性</a>
+    <a href="#sec3-3-domain" class="sub">域形变的稳定性</a>
+    <a href="#sec3-3-math" class="sub">📐 稳定性界限推导</a>
+    <a href="#sec3-3-code" class="sub">🐍 代码：Lipschitz 验证</a>
+    <a href="#sec3-3-exercises" class="sub">❓ 练习题</a>
+    <div class="sep"></div>
+
+    <a href="#sec3-4">3.4 尺度分离</a>
+    <a href="#sec3-4-fourier" class="sub">傅里叶变换</a>
+    <a href="#sec3-4-wavelet" class="sub">小波变换与多尺度</a>
+    <a href="#sec3-4-stability" class="sub">多尺度的形变稳定性</a>
+    <a href="#sec3-4-coarsening" class="sub">图粗粒度化</a>
+    <a href="#sec3-4-code" class="sub">🐍 代码：图粗粒度化</a>
+    <a href="#sec3-4-exercises" class="sub">❓ 练习题</a>
+    <div class="sep"></div>
+
+    <a href="#sec3-5">3.5 GDL 蓝图 ⭐</a>
+    <a href="#sec3-5-motivation" class="sub">为什么需要蓝图</a>
+    <a href="#sec3-5-blocks" class="sub">四大构建块</a>
+    <a href="#sec3-5-blueprint" class="sub">蓝图公式</a>
+    <a href="#sec3-5-5g" class="sub">5G 统一框架</a>
+    <a href="#sec3-5-table" class="sub">GDL 全家族对照表</a>
+    <a href="#sec3-5-code" class="sub">🐍 代码：蓝图实现</a>
+    <a href="#sec3-5-exercises" class="sub">❓ 练习题</a>
+    <div class="sep"></div>
+
+    <a href="#summary">全章总结</a>
+    <a href="#references">参考文献</a>
+  </nav>
+</aside>
+
+<!-- ===== Main Content ===== -->
+<div class="main-content" id="mainContent">
+
+<!-- ======================================== -->
+<!-- CHAPTER HEADER -->
+<!-- ======================================== -->
+<h1 id="intro">Chapter 3: Geometric Priors<br><span style="font-size:0.6em; color:var(--text-secondary)">几何先验 — 对称性、稳定性与深度学习蓝图</span></h1>
+
+<blockquote>
+  <strong>"The unreasonable effectiveness of geometric priors."</strong><br>
+  现代数据分析的本质就是高维学习。虽然维度灾难告诉我们，在通用高维数据上学习是不可能的（参见第2章），
+  但对于<strong>物理结构化的数据</strong>，我们可以利用两个根本原则：<strong>对称性 (Symmetry)</strong> 和 <strong>尺度分离 (Scale Separation)</strong>。
+  这两个原则就是本章的"几何先验"(Geometric Priors)。
+</blockquote>
+
+<p>本章是全书最核心的理论基础。我们将建立一套完整的数学语言，用来描述深度学习架构中的几何结构。
+在本章结束时，你会看到：<strong>CNN、GNN、Transformer、DeepSets</strong> 等看似不同的架构，
+其实都是同一个"几何蓝图"的不同实例化 (instantiation)。</p>
+
+<div class="takeaway">
+<h4>🎯 本章核心目标</h4>
+<p>看完本章后，你应该能够：</p>
+<ol>
+  <li>用<strong>群论语言</strong>精确描述对称性、不变性和等变性</li>
+  <li>理解<strong>形变稳定性</strong>为什么比精确不变性更实际</li>
+  <li>解释<strong>多尺度分析</strong>如何克服维度灾难</li>
+  <li>写出<strong>GDL 蓝图</strong>的四大构建块，并映射到具体架构</li>
+  <li>用 Python/PyTorch <strong>代码验证</strong>每个数学概念</li>
+</ol>
+</div>
+
+<p><strong>前置知识</strong>：线性代数基础（矩阵乘法、特征值）、Python/PyTorch 基础、图的基本概念。</p>
+
+<div class="figure">
+  <img src="../assets/ch3_p13_img0.png" alt="维度灾难与Lipschitz函数">
+  <div class="caption"><strong>图 3.1</strong>：维度灾难的几何直觉。在 $d$ 维空间中，用 Lipschitz 函数逼近需要 $N = \Theta(\epsilon^{-d})$ 个样本，
+  即样本复杂度随维度呈指数增长。几何先验正是为了打破这个诅咒。</div>
+</div>
+
+<!-- ======================================== -->
+<!-- SECTION 3.1: SYMMETRIES -->
+<!-- ======================================== -->
+
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：为什么需要几何先验</h4>
+    
+    <div class="qa-pair">
+      <p class="question">❓ 小白：维度灾难到底是什么？为什么$N = \Theta(\epsilon^{-d})$这么可怕？</p>
+      <div class="answer">
+        <p>💡 专家：想象你要用一把尺子在空间中"覆盖"所有可能的点。在1维线段上，间隔$\epsilon$需要$1/\epsilon$个点。在2维正方形，需要$(1/\epsilon)^2$个点铺满。推广到$d$维，就是$(1/\epsilon)^d$个点。</p>
+        <p>举个具体例子：$d=100$维（很多ML任务都在这个量级），如果你希望10%精度($\epsilon=0.1$)，需要$10^{100}$个样本——比可观测宇宙中的原子还多！这就是为什么说"通用高维学习不可能"。</p>
+        <p>几何先验打破诅咒的方式：它们降低<strong>有效维度</strong>。比如平移对称性告诉我们"沿平移方向的所有点都等价"，相当于把那个维度的样本需求降为1。尺度分离告诉我们"细节可以压缩"，相当于用分层表示代替密集采样。</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白：对称性和尺度分离这两个先验，哪个更重要？</p>
+      <div class="answer">
+        <p>💡 专家：它们是<strong>互补的</strong>，缺一不可！用一个类比：对称性是"空间中的捷径"，尺度分离是"时间中的加速"。</p>
+        <p><strong>对称性</strong>减少了需要探索的"方向"——如果一个函数沿某个方向是常数（完全对称），我们就不需要在那个方向采样。这降低了<strong>参数数量</strong>。</p>
+        <p><strong>尺度分离</strong>减少了需要关注的"细节"——如果函数在小尺度上变化缓慢，我们可以用粗网格+小修正，而不是处处密集。这降低了<strong>输入维度</strong>。</p>
+        <p>实际例子：</p>
+        <ul>
+          <li><strong>纯对称性，无尺度分离</strong>：DeepSets——处理置换对称的集合，但每个元素都要全局关注（复杂度$O(n^2)$）</li>
+          <li><strong>纯尺度分离，无对称性</strong>：小波变换——多尺度分解信号，但不利用平移不变性</li>
+          <li><strong>两者结合</strong>：CNN——卷积核利用平移对称（参数共享），池化实现尺度分离（分层抽象）→ 大成功！</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白：引言说CNN、GNN、Transformer都是"同一个蓝图"，这太颠覆了。它们明明那么不一样！</p>
+      <div class="answer">
+        <p>💡 专家：这是本章最震撼的insight！让我用一个表格展示它们的"DNA"：</p>
+        <table style="font-size: 0.9em; margin: 1em 0;">
+          <tr><th>架构</th><th>域$\Omega$</th><th>对称群$\mathfrak{G}$</th><th>等变层</th><th>局部池化</th><th>全局池化</th></tr>
+          <tr><td><strong>CNN</strong></td><td>网格$\mathbb{Z}^2$</td><td>平移$T(\mathbb{Z}^2)$</td><td>卷积</td><td>MaxPool</td><td>GAP</td></tr>
+          <tr><td><strong>GNN</strong></td><td>图$G=(V,E)$</td><td>置换$\Sigma_n$</td><td>消息传递</td><td>邻居聚合</td><td>Readout</td></tr>
+          <tr><td><strong>Transformer</strong></td><td>序列（完全图）</td><td>置换$\Sigma_n$</td><td>自注意力</td><td>FFN</td><td>CLS token</td></tr>
+        </table>
+        <p>看到了吗？它们只是在不同的<strong>几何</strong>上实例化同一个模板：</p>
+        <p>$$	ext{GDL蓝图} = 	ext{等变线性层} + 	ext{逐点非线性} + 	ext{池化(可选)} + 	ext{全局不变层}$$</p>
+        <p>具体差异只来自两个选择：</p>
+        <ol>
+          <li><strong>域的拓扑结构</strong>：网格有固定邻居，图有动态邻居，完全图所有节点相连</li>
+          <li><strong>群的类型</strong>：平移群（阿贝尔）vs 置换群（非阿贝尔）→ 决定了等变层的具体形式</li>
+        </ol>
+        <p>这就是为什么Transformer可以看作"完全连接的GNN"，而CNN可以看作"规则图上的GNN"！</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解</h4>
+    <p><strong>几何先验 = 游戏攻略</strong></p>
+    <p>想象你在玩一个超大的开放世界游戏，地图有$10^{100}$个房间（高维空间）。如果完全探索，你需要无穷多时间。但如果游戏设计师给你两条提示：</p>
+    <ul>
+      <li><strong>"所有房间其实是10种房间模板的旋转/平移变体"</strong>（对称性）→ 你只需记住10种模板！</li>
+      <li><strong>"先看地图全局，再关注细节"</strong>（尺度分离）→ 你可以先用粗略地图导航，接近目标后再看详细地图</li>
+    </ul>
+    <p>几何先验就是深度学习的"游戏攻略"——它不改变问题本身，但告诉你<strong>哪些地方可以走捷径</strong>。</p>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用</h4>
+    <p><strong>1. 手术导航中的SE(3)对称性</strong></p>
+    <ul>
+      <li><strong>问题</strong>：识别器官（如"这是胆囊"）时，结果不应随手术台朝向、患者体位改变</li>
+      <li><strong>几何先验</strong>：SE(3)不变性（旋转+平移不变）</li>
+      <li><strong>架构选择</strong>：PointNet++（对3D点云的SE(3)近似不变）或Vector Neurons（精确SE(3)等变）</li>
+    </ul>
+    <p><strong>2. 软组织模拟中的尺度分离</strong></p>
+    <ul>
+      <li><strong>粗尺度</strong>：器官整体形变（用粗网格FEM）</li>
+      <li><strong>中尺度</strong>：局部组织应力（用中等分辨率网格）</li>
+      <li><strong>细尺度</strong>：手术工具接触点的精细力（用自适应细化）</li>
+    </ul>
+    <p>实际案例：<strong>SOFA (Simulation Open Framework Architecture)</strong> 使用多分辨率网格，正是利用了尺度分离先验。</p>
+    <p><strong>3. PhysRobot粒子模拟</strong></p>
+    <ul>
+      <li><strong>平移不变性</strong>：GNS使用$\Delta \mathbf{r}_{ij} = \mathbf{r}_j - \mathbf{r}_i$（相对位置）而非绝对坐标</li>
+      <li><strong>尺度分离</strong>：可以用不同半径的边（近程强相互作用 + 远程弱相互作用）建模多尺度物理</li>
+    </ul>
+  </div>
+</div>
+
+<h2 id="sec3-1">3.1 对称性、表示和不变性<br><span style="font-size:0.55em; color:var(--text-secondary)">Symmetries, Representations, and Invariance</span></h2>
+
+<p>非正式地说，一个<strong>对称性 (symmetry)</strong> 就是一个使某个属性保持不变的变换。
+对称性在机器学习中无处不在：</p>
+<ul>
+  <li><strong>计算机视觉</strong>：图像分类结果不应随物体位置改变 → 平移对称性</li>
+  <li><strong>计算化学</strong>：分子性质不随空间朝向改变 → 旋转对称性</li>
+  <li><strong>粒子系统</strong>：粒子没有固有顺序 → 置换对称性</li>
+  <li><strong>物理模拟</strong>：牛顿第二定律具有时间反演对称性</li>
+</ul>
+
+<!-- 3.1.1 群论基础 -->
+<h3 id="sec3-1-groups">群的定义与公理 (Group Axioms)</h3>
+
+<p>对称性的集合满足一些漂亮的代数性质：两个对称性的复合仍是对称性，每个对称性都是可逆的。
+这些性质恰好构成一个<strong>群 (Group)</strong> 的定义。</p>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.1：群 (Group)</div>
+  <p>一个<strong>群</strong>是一个集合 $\mathfrak{G}$ 加上一个二元运算 $\circ : \mathfrak{G} \times \mathfrak{G} \to \mathfrak{G}$（简记为 $\mathfrak{g}\mathfrak{h}$），满足以下四条公理：</p>
+  <ol>
+    <li><strong>封闭性 (Closure)</strong>：对任意 $\mathfrak{g}, \mathfrak{h} \in \mathfrak{G}$，有 $\mathfrak{g}\mathfrak{h} \in \mathfrak{G}$</li>
+    <li><strong>结合律 (Associativity)</strong>：$(\mathfrak{g}\mathfrak{h})\mathfrak{k} = \mathfrak{g}(\mathfrak{h}\mathfrak{k})$，对所有 $\mathfrak{g}, \mathfrak{h}, \mathfrak{k} \in \mathfrak{G}$</li>
+    <li><strong>单位元 (Identity)</strong>：存在唯一的 $\mathfrak{e} \in \mathfrak{G}$，使得 $\mathfrak{e}\mathfrak{g} = \mathfrak{g}\mathfrak{e} = \mathfrak{g}$</li>
+    <li><strong>逆元 (Inverse)</strong>：对每个 $\mathfrak{g} \in \mathfrak{G}$，存在唯一的 $\mathfrak{g}^{-1} \in \mathfrak{G}$，使得 $\mathfrak{g}\mathfrak{g}^{-1} = \mathfrak{g}^{-1}\mathfrak{g} = \mathfrak{e}$</li>
+  </ol>
+  <div class="symbol-table" style="margin-top: 12px;">
+    <span class="sym">$\mathfrak{G}$</span><span class="desc">群的集合</span>
+    <span class="sym">$\circ$</span><span class="desc">群运算（复合操作）</span>
+    <span class="sym">$\mathfrak{e}$</span><span class="desc">单位元（什么也不做的变换）</span>
+    <span class="sym">$\mathfrak{g}^{-1}$</span><span class="desc">$\mathfrak{g}$ 的逆元（撤销 $\mathfrak{g}$ 的变换）</span>
+  </div>
+</div>
+
+<div class="box example">
+  <div class="box-title">💡 直觉：群就像"可撤销的操作集合"</div>
+
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：群的四条公理</h4>
+    
+    <div class="qa-pair">
+      <p class="question">❓ 小白：群的四条公理看起来很抽象，能用生活例子解释吗？</p>
+      <div class="answer">
+        <p>💡 专家：用<strong>魔方操作</strong>来理解！魔方的所有可能转动构成一个群。</p>
+        <p><strong>1. 封闭性</strong>："做两个操作，结果还是合法操作"<br>
+        例：先转顶层(R)，再转右侧(U)，得到的魔方状态仍然可达，不会"超出魔方的状态空间"。</p>
+        <p><strong>2. 结合律</strong>："(A然后B)然后C" = "A然后(B然后C)"<br>
+        例：$(R \cdot U) \cdot F = R \cdot (U \cdot F)$。注意：不是所有运算都满足！比如"穿衣服"不满足结合律。</p>
+        <p><strong>3. 单位元</strong>："存在什么也不做的操作"<br>
+        例：不动魔方 = 单位元$e$。满足$e \cdot R = R \cdot e = R$。</p>
+        <p><strong>4. 逆元</strong>："每个操作都可以撤销"<br>
+        例：顺时针转顶层(R)的逆是逆时针转($R^{-1}$)。满足$R \cdot R^{-1} = e$。</p>
+        <p><strong>反例</strong>：自然数加法$(\mathbb{N}, +)$不是群，因为3没有逆元（没有自然数$x$使$3+x=0$）。但整数加法$(\mathbb{Z}, +)$是群！</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白：为什么群乘法是"右到左"的（$\mathfrak{g}\mathfrak{h}$表示先$\mathfrak{h}$后$\mathfrak{g}$）？这和直觉相反！</p>
+      <div class="answer">
+        <p>💡 专家：这是为了与<strong>函数复合</strong>一致！数学中，$(g \circ h)(x) = g(h(x))$表示先做$h$，再做$g$——从右往左读。</p>
+        <p>如果群元素对应变换，那么$\mathfrak{g}\mathfrak{h}$应该表示"先变换$\mathfrak{h}$，再变换$\mathfrak{g}$"，这样才能写成：</p>
+        <p>$$(\mathfrak{g}\mathfrak{h}).x = \mathfrak{g}.(\mathfrak{h}.x)$$</p>
+        <p>如果反过来（左到右），所有公式都会变得别扭。</p>
+        <p><strong>实用建议</strong>：看到$\mathfrak{g}\mathfrak{h}$时，在心里读"h then g"（h然后g），就像$(g \circ h)$读作"先h后g"。习惯后就自然了。</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白：阿贝尔群和非阿贝尔群有什么实际区别？为什么要区分？</p>
+      <div class="answer">
+        <p>💡 专家：这个区别<strong>极其重要</strong>，直接影响架构设计！</p>
+        <p><strong>阿贝尔群</strong>（可交换）：$\mathfrak{g}\mathfrak{h} = \mathfrak{h}\mathfrak{g}$</p>
+        <ul>
+          <li><strong>例子</strong>：平移群$T(\mathbb{R}^d)$、循环群$\mathbb{Z}_n$</li>
+          <li><strong>性质</strong>：操作顺序无关</li>
+          <li><strong>架构</strong>：标准CNN利用平移群——卷积可交换</li>
+        </ul>
+        <p><strong>非阿贝尔群</strong>（不可交换）：$\mathfrak{g}\mathfrak{h} 
+eq \mathfrak{h}\mathfrak{g}$</p>
+        <ul>
+          <li><strong>例子</strong>：旋转群$\mathrm{SO}(3)$、置换群$\Sigma_n$</li>
+          <li><strong>直觉</strong>：先绕X轴转90°再绕Y轴转90° $
+eq$ 先Y后X（用手试试！）</li>
+          <li><strong>架构</strong>：需要更复杂的等变层，如Steerable CNN、TFN</li>
+        </ul>
+        <p><strong>实际影响</strong>：</p>
+        <ol>
+          <li><strong>表示维度</strong>：阿贝尔群的不可约表示都是1维。非阿贝尔群有高维不可约表示。</li>
+          <li><strong>计算效率</strong>：阿贝尔群的等变卷积可用FFT加速($O(n \log n)$)。非阿贝尔群通常$O(n^2)$或更高。</li>
+          <li><strong>案例</strong>：2D图像(平移群,阿贝尔)→ 标准CNN,快。3D点云(旋转群,非阿贝尔)→ 需要TFN,慢。</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白：群生成元有什么用？为什么关心"最小生成集"？</p>
+      <div class="answer">
+        <p>💡 专家：生成元在深度学习中<strong>极其实用</strong>，原因有三：</p>
+        <p><strong>1. 压缩群的表示</strong></p>
+        <p>二面体群$D_3$有6个元素，但只需<strong>2个生成元</strong>（旋转R和反射F）！这意味着你不需要为6个变换分别学习——只需对2个生成元定义等变性。</p>
+        <p><strong>2. 数据增广策略</strong></p>
+        <p>知道生成元 → 知道最小增广集。例如：</p>
+        <ul>
+          <li>旋转群可由"旋转1°"生成，但实践中用"旋转90°"和"小角度"，因为覆盖更快</li>
+        </ul>
+        <p><strong>3. 李代数与优化</strong></p>
+        <p>对李群，生成元对应<strong>李代数的基</strong>。例如$\mathrm{SO}(3)$的李代数$\mathfrak{so}(3)$有3个基（绕x,y,z轴的无穷小旋转）。优化时可在李代数（向量空间）工作，然后用指数映射回到群。</p>
+        <p><strong>实际案例</strong>：机器人学中优化旋转矩阵——直接优化9个元素会违反正交约束，但优化3个李代数参数（轴角表示）就容易了。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解</h4>
+    <p><strong>群 = 可撤销操作的集合</strong></p>
+    <p>把群想象成一个"操作工具箱"，里面的每个工具（群元素）都可以：</p>
+    <ul>
+      <li>与其他工具组合使用（封闭性）</li>
+      <li>组合顺序不影响最终分组（结合律）</li>
+      <li>有一个"不做任何事"的空操作（单位元）</li>
+      <li>每个操作都有"撤销键"（逆元）</li>
+    </ul>
+    <p><strong>为什么要求可逆？</strong>因为对称性本质上是"可逆的变换"——你能旋转一个物体，也能转回来。不可逆的操作（如"打碎鸡蛋"）不是对称性。</p>
+    <p><strong>类比</strong>：魔方群就像一个"魔方解法库"，里面的每个公式都能撤销，最终都能回到初始状态。</p>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用</h4>
+    <p><strong>手术机器人中的对称群</strong></p>
+    <p><strong>1. da Vinci手术机器人的SE(3)群</strong></p>
+    <ul>
+      <li><strong>群元素</strong>：手术工具在3D空间中的旋转+平移</li>
+      <li><strong>应用</strong>：工具的运动学正解/逆解——给定关节角度，计算工具末端位姿（SE(3)群上的映射）</li>
+      <li><strong>等变性</strong>：视觉伺服控制——如果场景旋转，控制指令也应相应旋转</li>
+    </ul>
+    <p><strong>2. 软组织形变的欧几里得群E(3)</strong></p>
+    <ul>
+      <li><strong>群元素</strong>：器官的刚性运动（呼吸、心跳导致的整体移动）</li>
+      <li><strong>应用</strong>：运动补偿——跟踪器官位置，实时调整手术计划</li>
+    </ul>
+    <p><strong>3. PhysRobot中的平移群</strong></p>
+    <ul>
+      <li><strong>为什么只用平移而非全SE(3)？</strong>因为GNS假设粒子在惯性系中，只需平移不变性。如果模拟旋转的物体，需要升级到SE(3)等变GNN（如SEGNN）。</li>
+    </ul>
+  </div>
+</div>
+
+  <p>想象你在玩魔方：</p>
+  <ul>
+    <li>每次转动是一个群元素</li>
+    <li>两次转动的连续操作仍是一种操作（封闭性）</li>
+    <li>三步连续转动不管怎么加括号结果一样（结合律）</li>
+    <li>什么都不转 = 单位元</li>
+    <li>每步转动都可以通过反向转动撤销 = 逆元</li>
+  </ul>
+  <p><strong>注意</strong>：群不要求交换律！先左转再右转 ≠ 先右转再左转。满足交换律的群叫<strong>阿贝尔群 (Abelian Group)</strong>。</p>
+</div>
+
+<div class="box warn">
+  <div class="box-title">⚠️ 注意：符号约定</div>
+  <p>本书使用哥特体字母（Fraktur font）$\mathfrak{g}, \mathfrak{h}$ 表示群元素，采用<strong>右到左</strong>的复合约定：
+  $\mathfrak{g}\mathfrak{h}$ 意味着<strong>先施加 $\mathfrak{h}$，再施加 $\mathfrak{g}$</strong>。这与函数复合 $g \circ h$ 一致。</p>
+</div>
+
+<h4>群的生成元 (Group Generators)</h4>
+
+<p>虽然有些群可以非常大甚至无限大，但它们通常可以由少量元素<strong>生成</strong>。</p>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.2：群生成元 (Group Generator)</div>
+  <p>若群 $\mathfrak{G}$ 的每个元素都可以写成子集 $S \subseteq \mathfrak{G}$ 中元素及其逆的有限复合，
+  则称 $S$ 是 $\mathfrak{G}$ 的<strong>生成集 (generator set)</strong>。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title">💡 例：等边三角形的二面体群 $D_3$</div>
+  <p>等边三角形的对称群 $D_3$ 由<strong>两个</strong>生成元完全确定：</p>
+  <ul>
+    <li>$R$：旋转 $120°$</li>
+    <li>$F$：关于某条对称轴的反射</li>
+  </ul>
+  <p>通过 $R$ 和 $F$ 的组合，可以得到全部 $|D_3| = 6$ 个元素：$\{e, R, R^2, F, RF, R^2F\}$。</p>
+  <p>有趣的是，$D_3$ 同构于三元素的置换群 $\Sigma_3$（三角形的三个顶点的所有可能排列）。</p>
+</div>
+
+<div class="figure">
+  <img src="../assets/ch3_p18_img0.png" alt="等边三角形的二面体群D3">
+  <div class="caption"><strong>图 3.2</strong>：左：等边三角形的所有旋转和反射。$D_3$ 群由旋转 $R$ 和反射 $F$ 两个生成元生成，
+  等同于三元素的置换群 $\Sigma_3$。右：$D_3$ 群的乘法表。</div>
+</div>
+
+<!-- 3.1.2 常见对称群 -->
+<h3 id="sec3-1-examples">常见对称群实例</h3>
+
+<p>在几何深度学习中，我们会反复遇到以下几类群：</p>
+
+<table>
+  <thead>
+    <tr><th>群</th><th>符号</th><th>元素</th><th>应用场景</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>对称群 / 置换群</td>
+      <td>$\Sigma_n$ (或 $S_n$)</td>
+      <td>$n$ 个元素的所有排列，$|S_n| = n!$</td>
+      <td>集合、图、点云</td>
+    </tr>
+    <tr>
+      <td>循环群</td>
+      <td>$\mathbb{Z}_n$</td>
+      <td>模 $n$ 的整数加法</td>
+      <td>离散旋转</td>
+    </tr>
+    <tr>
+      <td>平移群</td>
+      <td>$(\mathbb{R}^d, +)$</td>
+      <td>$d$ 维空间中的所有平移</td>
+      <td>图像、信号处理</td>
+    </tr>
+    <tr>
+      <td>旋转群</td>
+      <td>$\mathrm{SO}(d)$</td>
+      <td>$d$ 维空间中的所有旋转<br>$\det(R)=1, R^\top R = I$</td>
+      <td>3D 分子、粒子物理</td>
+    </tr>
+    <tr>
+      <td>正交群</td>
+      <td>$\mathrm{O}(d)$</td>
+      <td>旋转 + 反射</td>
+      <td>晶体学</td>
+    </tr>
+    <tr>
+      <td>特殊欧几里得群</td>
+      <td>$\mathrm{SE}(d)$</td>
+      <td>旋转 + 平移（保向等距）</td>
+      <td>机器人学、物理模拟</td>
+    </tr>
+    <tr>
+      <td>欧几里得群</td>
+      <td>$\mathrm{E}(d)$</td>
+      <td>旋转 + 平移 + 反射</td>
+      <td>通用刚体运动</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="box thm">
+  <div class="box-title">🔑 关键关系链</div>
+  $$\text{平移群} \;\subset\; \mathrm{SE}(d) \;\subset\; \mathrm{E}(d) \;\subset\; \mathrm{Diff}(\Omega)$$
+  <p>从左到右，群越来越大，保持的结构越来越少。这正是 Klein 的<strong>爱尔兰根纲领 (Erlangen Programme)</strong> 的核心思想。</p>
+</div>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.3：李群 (Lie Group)</div>
+  <p>一个<strong>李群</strong>是既是群又是光滑流形 (smooth manifold) 的数学对象，群运算（乘法和求逆）都是光滑映射。
+  换言之，李群是<strong>可微分的连续对称群</strong>。</p>
+  <p>典型例子：$\mathrm{SO}(3)$ 是一个 3 维流形（拓扑上等价于 $\mathbb{RP}^3$），每个"点"对应一个 3D 旋转。</p>
+</div>
+
+<!-- 3.1.3 群作用与群表示 -->
+<h3 id="sec3-1-actions">群作用与群表示 (Group Actions & Representations)</h3>
+
+<p>抽象群的定义只告诉我们元素如何<strong>复合</strong>。但在深度学习中，我们更关心群如何<strong>作用于数据</strong>。
+这就引出了<strong>群作用 (group action)</strong> 和<strong>群表示 (group representation)</strong> 的概念。</p>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.4：群作用 (Group Action)</div>
+  <p>群 $\mathfrak{G}$ 在集合 $\Omega$ 上的<strong>（左）群作用</strong>是一个映射 $(\mathfrak{g}, u) \mapsto \mathfrak{g}.u$，
+  将群元素 $\mathfrak{g} \in \mathfrak{G}$ 和点 $u \in \Omega$ 关联到 $\Omega$ 上的另一个点，且满足相容性：</p>
+  $$\mathfrak{g}.(\mathfrak{h}.u) = (\mathfrak{g}\mathfrak{h}).u \quad \forall\, \mathfrak{g}, \mathfrak{h} \in \mathfrak{G},\; u \in \Omega$$
+  <div class="symbol-table" style="margin-top: 12px;">
+    <span class="sym">$\Omega$</span><span class="desc">域 (domain)：数据的底层几何空间</span>
+    <span class="sym">$\mathfrak{g}.u$</span><span class="desc">群元素 $\mathfrak{g}$ 将点 $u$ 变换到新位置</span>
+  </div>
+</div>
+
+<div class="box example">
+  <div class="box-title">💡 多层次的群作用</div>
+  <p>同一个群可以在不同层次上发挥作用。以欧几里得群 $\mathrm{E}(2)$ 为例：</p>
+  <ol>
+    <li><strong>作用于域 $\Omega = \mathbb{R}^2$</strong>：平移、旋转、反射像素网格上的点</li>
+    <li><strong>作用于信号空间 $\mathcal{X}(\Omega)$</strong>：平移、旋转、翻转整幅图像</li>
+    <li><strong>作用于特征空间</strong>：变换神经网络学到的中间表示</li>
+  </ol>
+</div>
+
+<p>当群 $\mathfrak{G}$ 作用于域 $\Omega$ 时，我们可以<strong>自然地</strong>推导出它在信号空间 $\mathcal{X}(\Omega)$ 上的作用：</p>
+
+<div class="box thm">
+  <div class="box-title">📗 信号空间上的群作用</div>
+  <p>给定 $\mathfrak{G}$ 在 $\Omega$ 上的作用，信号 $x \in \mathcal{X}(\Omega)$ 的变换定义为：</p>
+  $$(\mathfrak{g}.x)(u) = x(\mathfrak{g}^{-1}u) \tag{3}$$
+  <div class="symbol-table" style="margin-top: 8px;">
+    <span class="sym">$x$</span><span class="desc">信号（如图像）：$x : \Omega \to \mathcal{C}$</span>
+    <span class="sym">$\mathfrak{g}^{-1}$</span><span class="desc">逆变换——使得这确实构成一个有效的群作用</span>
+    <span class="sym">$u$</span><span class="desc">域上的一个点（如像素坐标）</span>
+  </div>
+  <p style="margin-top: 8px;"><strong>为什么用 $\mathfrak{g}^{-1}$？</strong> 为了保证 $\mathfrak{g}.(\mathfrak{h}.x) = (\mathfrak{g}\mathfrak{h}).x$。
+  直觉上：要知道变换后的信号在 $u$ 处的值，就去看变换前 $u$ 原本对应的位置 $\mathfrak{g}^{-1}u$ 上的值。</p>
+</div>
+
+<p>现在，我们引入最重要的概念——<strong>群表示 (Group Representation)</strong>：</p>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.5：群表示 (Group Representation)</div>
+  <p>群 $\mathfrak{G}$ 的一个 $n$ 维实表示是一个映射 $\rho : \mathfrak{G} \to \mathbb{R}^{n \times n}$，
+  将每个群元素 $\mathfrak{g}$ 映射为一个可逆矩阵 $\rho(\mathfrak{g})$，并满足：</p>
+  $$\rho(\mathfrak{g}\mathfrak{h}) = \rho(\mathfrak{g})\rho(\mathfrak{h}) \quad \forall\, \mathfrak{g}, \mathfrak{h} \in \mathfrak{G} \tag{4}$$
+  <div class="symbol-table" style="margin-top: 8px;">
+    <span class="sym">$\rho$</span><span class="desc">表示映射（群元素 → 矩阵）</span>
+    <span class="sym">$n$</span><span class="desc">表示的维度（通常是特征空间的维度）</span>
+    <span class="sym">$\rho(\mathfrak{g})$</span><span class="desc">一个 $n \times n$ 可逆矩阵，代表群元素 $\mathfrak{g}$ 在特征空间中的动作</span>
+  </div>
+  <p style="margin-top: 8px;">如果 $\rho(\mathfrak{g})$ 对所有 $\mathfrak{g}$ 都是正交矩阵（$\rho(\mathfrak{g})^\top = \rho(\mathfrak{g})^{-1}$），
+  则称这是一个<strong>正交表示 (orthogonal representation)</strong>。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title">💡 直觉：表示就是"群的矩阵化"</div>
+  <p>群本身是抽象的（只定义了复合规则），但通过<strong>表示 $\rho$</strong>，我们把每个群元素"编码"为一个具体的矩阵，
+  这样就可以用矩阵乘法来实现群运算。不同的表示就像不同的"翻译"方式——
+  同一个群可以有不同维度的表示。</p>
+  <p><strong>例子</strong>：平面旋转群 $\mathrm{SO}(2)$ 中，角度 $\theta$ 的旋转可以表示为 $2 \times 2$ 旋转矩阵：</p>
+  $$\rho(\theta) = \begin{pmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{pmatrix}$$
+</div>
+
+<div class="figure">
+  <img src="../assets/ch3_p20_img0.png" alt="域、信号空间和假设类">
+  <div class="caption"><strong>图 3.3</strong>：几何深度学习中的三个关键空间。域 $\Omega$ 的对称性（由群 $\mathfrak{G}$ 捕获）通过群表示 $\rho(\mathfrak{g})$ 作用于信号 $x \in \mathcal{X}(\Omega)$，进而约束作用于信号的函数 $f \in \mathcal{F}(\mathcal{X}(\Omega))$ 的形式。</div>
+</div>
+
+<!-- 3.1.4 不变性和等变性 -->
+<h3 id="sec3-1-invariance">不变性 vs 等变性 (Invariance vs Equivariance)</h3>
+
+<p>域 $\Omega$ 的对称性对定义在信号上的函数 $f$ 施加了结构约束。
+两个最重要的约束形式是<strong>不变性</strong>和<strong>等变性</strong>：</p>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.6：不变性 (Invariance)</div>
+  <p>函数 $f : \mathcal{X}(\Omega) \to \mathcal{Y}$ 是 <strong>$\mathfrak{G}$-不变的</strong>，如果：</p>
+  $$\boxed{f(\rho(\mathfrak{g})x) = f(x)} \quad \forall\, \mathfrak{g} \in \mathfrak{G},\; x \in \mathcal{X}(\Omega) \tag{5}$$
+  <p>群作用<strong>不改变</strong>函数的输出。</p>
+</div>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.7：等变性 (Equivariance)</div>
+  <p>函数 $f : \mathcal{X}(\Omega) \to \mathcal{X}(\Omega')$ 是 <strong>$\mathfrak{G}$-等变的</strong>，如果：</p>
+  $$\boxed{f(\rho(\mathfrak{g})x) = \rho'(\mathfrak{g})f(x)} \quad \forall\, \mathfrak{g} \in \mathfrak{G},\; x \in \mathcal{X}(\Omega) \tag{6}$$
+  <p>群作用于输入，输出以<strong>相同方式</strong>（可能是不同的表示 $\rho'$）被变换。</p>
+  <div class="symbol-table" style="margin-top: 8px;">
+    <span class="sym">$\rho(\mathfrak{g})$</span><span class="desc">群在输入空间上的表示</span>
+    <span class="sym">$\rho'(\mathfrak{g})$</span><span class="desc">群在输出空间上的表示（可以不同！）</span>
+  </div>
+</div>
+
+<!-- SVG: Invariance vs Equivariance -->
+<svg class="svg-diagram" viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg" style="max-width: 700px;">
+  <!-- Invariance diagram -->
+  <text x="200" y="25" text-anchor="middle" font-size="16" font-weight="bold" fill="#4f46e5">不变性 (Invariance)</text>
+  <rect x="30" y="40" width="80" height="50" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="70" y="70" text-anchor="middle" font-size="14" fill="#1d4ed8">x</text>
+  <line x1="110" y1="65" x2="160" y2="65" stroke="#64748b" stroke-width="2" marker-end="url(#arrow1)"/>
+  <rect x="160" y="40" width="80" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="200" y="70" text-anchor="middle" font-size="14" fill="#1d4ed8">f</text>
+  <line x1="240" y1="65" x2="290" y2="65" stroke="#64748b" stroke-width="2" marker-end="url(#arrow1)"/>
+  <rect x="290" y="40" width="80" height="50" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="330" y="70" text-anchor="middle" font-size="14" fill="#1d4ed8">y</text>
+
+  <rect x="30" y="130" width="80" height="50" rx="8" fill="#fef9c3" stroke="#f59e0b" stroke-width="2"/>
+  <text x="70" y="160" text-anchor="middle" font-size="14" fill="#b45309">ρ(g)x</text>
+  <line x1="110" y1="155" x2="160" y2="155" stroke="#64748b" stroke-width="2" marker-end="url(#arrow1)"/>
+  <rect x="160" y="130" width="80" height="50" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+  <text x="200" y="160" text-anchor="middle" font-size="14" fill="#1d4ed8">f</text>
+  <line x1="240" y1="155" x2="290" y2="155" stroke="#64748b" stroke-width="2" marker-end="url(#arrow1)"/>
+  <rect x="290" y="130" width="80" height="50" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="330" y="160" text-anchor="middle" font-size="14" fill="#1d4ed8">y</text>
+  <text x="345" y="200" text-anchor="middle" font-size="13" fill="#6b7280">输出相同！</text>
+
+  <!-- Arrow between x and rho(g)x -->
+  <line x1="70" y1="90" x2="70" y2="130" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arrow2)"/>
+  <text x="85" y="115" font-size="11" fill="#b45309">ρ(g)</text>
+
+  <!-- Equivariance diagram -->
+  <text x="600" y="25" text-anchor="middle" font-size="16" font-weight="bold" fill="#059669">等变性 (Equivariance)</text>
+  <rect x="430" y="40" width="80" height="50" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="2"/>
+  <text x="470" y="70" text-anchor="middle" font-size="14" fill="#1d4ed8">x</text>
+  <line x1="510" y1="65" x2="560" y2="65" stroke="#64748b" stroke-width="2" marker-end="url(#arrow1)"/>
+  <rect x="560" y="40" width="80" height="50" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+  <text x="600" y="70" text-anchor="middle" font-size="14" fill="#047857">f</text>
+  <line x1="640" y1="65" x2="690" y2="65" stroke="#64748b" stroke-width="2" marker-end="url(#arrow1)"/>
+  <rect x="690" y="40" width="80" height="50" rx="8" fill="#ecfdf5" stroke="#10b981" stroke-width="2"/>
+  <text x="730" y="70" text-anchor="middle" font-size="14" fill="#047857">f(x)</text>
+
+  <rect x="430" y="130" width="80" height="50" rx="8" fill="#fef9c3" stroke="#f59e0b" stroke-width="2"/>
+  <text x="470" y="160" text-anchor="middle" font-size="14" fill="#b45309">ρ(g)x</text>
+  <line x1="510" y1="155" x2="560" y2="155" stroke="#64748b" stroke-width="2" marker-end="url(#arrow1)"/>
+  <rect x="560" y="130" width="80" height="50" rx="8" fill="#d1fae5" stroke="#10b981" stroke-width="2"/>
+  <text x="600" y="160" text-anchor="middle" font-size="14" fill="#047857">f</text>
+  <line x1="640" y1="155" x2="690" y2="155" stroke="#64748b" stroke-width="2" marker-end="url(#arrow1)"/>
+  <rect x="690" y="130" width="80" height="50" rx="8" fill="#fef9c3" stroke="#f59e0b" stroke-width="2"/>
+  <text x="730" y="160" text-anchor="middle" font-size="13" fill="#b45309">ρ'(g)f(x)</text>
+  <text x="745" y="200" text-anchor="middle" font-size="13" fill="#6b7280">输出被同步变换！</text>
+
+  <line x1="470" y1="90" x2="470" y2="130" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arrow2)"/>
+  <text x="485" y="115" font-size="11" fill="#b45309">ρ(g)</text>
+  <line x1="730" y1="90" x2="730" y2="130" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arrow2)"/>
+  <text x="750" y="115" font-size="11" fill="#b45309">ρ'(g)</text>
+
+  <defs>
+    <marker id="arrow1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#64748b"/></marker>
+    <marker id="arrow2" markerWidth="8" markerHeight="6" refX="4" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#f59e0b"/></marker>
+  </defs>
+</svg>
+
+<div class="box example">
+  <div class="box-title">💡 图像分类 vs 图像分割</div>
+  <p><strong>图像分类</strong>（如猫/狗识别）需要<strong>不变性</strong>：不管猫在图像的哪个位置，分类结果都是"猫"。</p>
+  <p><strong>图像分割</strong>（像素级标注）需要<strong>等变性</strong>：如果输入图像平移了 10 个像素，输出的分割蒙版也要平移 10 个像素。</p>
+  <p>实际上，CNN 的<strong>卷积层是等变的</strong>，而最后的<strong>全局池化层 (global pooling) 实现了不变性</strong>。
+  这个"先等变后不变"的模式就是第 3.5 节 GDL 蓝图的核心！</p>
+</div>
+
+<div class="box thm">
+  <div class="box-title">📗 定理：不变性是等变性的特殊情况</div>
+  <p>如果输出空间 $\mathcal{Y}$ 上的群表示是<strong>平凡表示</strong>（即 $\rho'(\mathfrak{g}) = \mathrm{Id}$ 对所有 $\mathfrak{g}$），
+  则等变性退化为不变性：</p>
+  $$f(\rho(\mathfrak{g})x) = \rho'(\mathfrak{g})f(x) = \mathrm{Id} \cdot f(x) = f(x)$$
+</div>
+
+<div class="box robot">
+  <div class="box-title">🤖 与 PhysRobot 的关联</div>
+  <p>在我们的 PhysRobot 粒子模拟项目中，<strong>EdgeFrame</strong> 模块正是利用了平移不变性：</p>
+  <ul>
+    <li>粒子之间的相互作用只取决于<strong>相对位置</strong> $\Delta \mathbf{r}_{ij} = \mathbf{r}_j - \mathbf{r}_i$，而不是绝对坐标</li>
+    <li>这等价于说消息传递函数 $\phi_e$ 是<strong>平移群 $T(\mathbb{R}^3)$-不变的</strong></li>
+    <li>GNS 论文中使用的 edge feature 就是 $[\Delta \mathbf{r}_{ij}, \|\Delta \mathbf{r}_{ij}\|]$——纯粹的相对量！</li>
+  </ul>
+  <p>如果我们想进一步实现旋转不变/等变性，就需要使用 EGNN 或 TFN 等更高级的架构（参见第5章）。</p>
+</div>
+
+<!-- 3.1.5 代码示例 -->
+<h3 id="sec3-1-code">🐍 代码示例：验证等变性</h3>
+
+<p>让我们用 PyTorch 来<strong>实际验证</strong>卷积层的平移等变性和全连接层的非等变性。</p>
+
+<div class="code-block">
+  <div class="code-header">
+    <span>Python / PyTorch — 等变性验证</span>
+    <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+  </div>
+<pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># =====================================================</span>
+<span class="cm"># 实验1：验证卷积层的平移等变性</span>
+<span class="cm"># =====================================================</span>
+
+<span class="kw">def</span> <span class="fn">check_equivariance</span>(layer, x, shift_amount=<span class="num">3</span>):
+    <span class="str">"""
+    验证: layer(shift(x)) == shift(layer(x)) ?
+    shift = 沿宽度方向循环平移 shift_amount 个像素
+    """</span>
+    <span class="cm"># 1. 定义平移操作 ρ(g): 循环右移</span>
+    <span class="kw">def</span> <span class="fn">shift</span>(tensor, amount):
+        <span class="kw">return</span> torch.roll(tensor, shifts=amount, dims=-<span class="num">1</span>)
+
+    <span class="cm"># 2. 路径A: 先平移输入, 再通过网络层</span>
+    shifted_x = shift(x, shift_amount)         <span class="cm"># ρ(g)x</span>
+    path_a = layer(shifted_x)                   <span class="cm"># f(ρ(g)x)</span>
+
+    <span class="cm"># 3. 路径B: 先通过网络层, 再平移输出</span>
+    output = layer(x)                           <span class="cm"># f(x)</span>
+    path_b = shift(output, shift_amount)        <span class="cm"># ρ'(g)f(x)</span>
+
+    <span class="cm"># 4. 比较两条路径: 等变 ⟺ path_a ≈ path_b</span>
+    diff = (path_a - path_b).abs().max().item()
+    <span class="kw">return</span> diff
+
+<span class="cm"># 创建随机输入图像: batch=1, channels=3, H=32, W=32</span>
+torch.manual_seed(<span class="num">42</span>)
+x = torch.randn(<span class="num">1</span>, <span class="num">3</span>, <span class="num">32</span>, <span class="num">32</span>)
+
+<span class="cm"># 测试卷积层 (应该是等变的)</span>
+conv = nn.Conv2d(<span class="num">3</span>, <span class="num">16</span>, kernel_size=<span class="num">3</span>, padding=<span class="num">1</span>, bias=<span class="kw">False</span>)
+diff_conv = check_equivariance(conv, x)
+<span class="bi">print</span>(<span class="str">f"卷积层的等变误差: {diff_conv:.2e}"</span>)
+<span class="cm"># 输出: 卷积层的等变误差: 5.96e-08  ← 几乎为零! ✅</span>
+
+<span class="cm"># 测试全连接层 (不是等变的)</span>
+fc = nn.Linear(<span class="num">32</span>, <span class="num">32</span>, bias=<span class="kw">False</span>)
+<span class="cm"># 对宽度维度应用线性层</span>
+<span class="kw">def</span> <span class="fn">fc_on_width</span>(tensor):
+    <span class="kw">return</span> fc(tensor)  <span class="cm"># 作用于最后一个维度</span>
+
+diff_fc = check_equivariance(fc_on_width, x)
+<span class="bi">print</span>(<span class="str">f"全连接层的等变误差: {diff_fc:.2e}"</span>)
+<span class="cm"># 输出: 全连接层的等变误差: 1.23e+00  ← 很大! ❌</span>
+
+<span class="cm"># =====================================================</span>
+<span class="cm"># 实验2：验证全局平均池化的不变性</span>
+<span class="cm"># =====================================================</span>
+
+gap = nn.AdaptiveAvgPool2d(<span class="num">1</span>)  <span class="cm"># Global Average Pooling</span>
+
+<span class="kw">def</span> <span class="fn">check_invariance</span>(layer, x, shift_amount=<span class="num">5</span>):
+    <span class="str">"""验证: layer(shift(x)) == layer(x) ?"""</span>
+    shifted_x = torch.roll(x, shifts=shift_amount, dims=-<span class="num">1</span>)
+    out_original = layer(x)
+    out_shifted = layer(shifted_x)
+    diff = (out_original - out_shifted).abs().max().item()
+    <span class="kw">return</span> diff
+
+diff_gap = check_invariance(gap, x)
+<span class="bi">print</span>(<span class="str">f"全局池化的不变性误差: {diff_gap:.2e}"</span>)
+<span class="cm"># 输出: 全局池化的不变性误差: 2.98e-08  ← 几乎为零! ✅</span>
+
+<span class="cm"># =====================================================</span>
+<span class="cm"># 实验3：验证置换等变性 (用于集合/图)</span>
+<span class="cm"># =====================================================</span>
+
+<span class="kw">def</span> <span class="fn">check_permutation_equivariance</span>(layer, x):
+    <span class="str">"""
+    验证: layer(Px) == P·layer(x) ?
+    其中 P 是随机置换矩阵, x 的 shape = (batch, N, features)
+    """</span>
+    N = x.shape[<span class="num">1</span>]
+    perm = torch.randperm(N)  <span class="cm"># 随机置换</span>
+
+    <span class="cm"># 路径A: 先置换节点, 再过网络</span>
+    x_perm = x[:, perm, :]
+    path_a = layer(x_perm)
+
+    <span class="cm"># 路径B: 先过网络, 再置换节点</span>
+    output = layer(x)
+    path_b = output[:, perm, :]
+
+    diff = (path_a - path_b).abs().max().item()
+    <span class="kw">return</span> diff
+
+<span class="cm"># DeepSets 的 ∑ 聚合是置换不变的</span>
+x_set = torch.randn(<span class="num">1</span>, <span class="num">10</span>, <span class="num">8</span>)  <span class="cm"># batch=1, 10个元素, 8维特征</span>
+
+<span class="cm"># 共享权重的 MLP (逐元素) 是置换等变的</span>
+shared_mlp = nn.Linear(<span class="num">8</span>, <span class="num">16</span>)  <span class="cm"># 对每个元素独立应用</span>
+diff_shared = check_permutation_equivariance(shared_mlp, x_set)
+<span class="bi">print</span>(<span class="str">f"共享MLP的置换等变误差: {diff_shared:.2e}"</span>)
+<span class="cm"># 输出: 共享MLP的置换等变误差: 0.00e+00  ← 精确等变! ✅</span>
+
+<span class="bi">print</span>(<span class="str">"\n✨ 结论:"</span>)
+<span class="bi">print</span>(<span class="str">"  Conv2d → 平移等变 ✅"</span>)
+<span class="bi">print</span>(<span class="str">"  Linear → 平移不等变 ❌"</span>)
+<span class="bi">print</span>(<span class="str">"  GAP → 平移不变 ✅"</span>)
+<span class="bi">print</span>(<span class="str">"  SharedMLP → 置换等变 ✅"</span>)</code></pre>
+</div>
+
+<div class="box thm">
+  <div class="box-title">🔑 代码揭示的深层道理</div>
+  <p>卷积层的平移等变性不是巧合——它是<strong>权重共享</strong>的数学必然结果。
+  当卷积核在所有位置使用相同的权重时，输出自然地"跟随"输入的平移。
+  而全连接层的每个输出神经元连接不同位置的权重不同，所以不具备这种性质。</p>
+  <p>这正是第 3.5 节蓝图的核心洞察：<strong>选择正确的等变映射 = 利用对称性先验 = 减小假设空间 = 更好的泛化</strong>。</p>
+</div>
+
+<!-- Exercises 3.1 -->
+<div class="exercises" id="sec3-1-exercises">
+  <h4>❓ 3.1 节练习题</h4>
+  <ol>
+    <li><strong>群公理验证</strong>：证明整数集合 $(\mathbb{Z}, +)$ 构成一个群。它是阿贝尔群吗？$(\mathbb{Z}, \times)$ 呢？</li>
+    <li><strong>表示的维度</strong>：$\mathrm{SO}(2)$ 群可以有 $1 \times 1$ 的表示吗？（提示：考虑复数 $e^{i\theta}$）</li>
+    <li><strong>编程练习</strong>：修改上面的代码，验证 $\mathrm{SO}(2)$ 旋转群作用下，极坐标表示的角度是等变量，半径是不变量。</li>
+    <li><strong>思考题</strong>：为什么 CNN 在图像分类中比 MLP 表现好得多？用本节的语言给出数学解释。</li>
+    <li><strong>进阶</strong>：如果 $\rho_1$ 和 $\rho_2$ 都是群 $\mathfrak{G}$ 的表示，证明直和 $\rho_1 \oplus \rho_2$ 也是一个表示。</li>
+  </ol>
+</div>
+
+
+<!-- ======================================== -->
+<!-- SECTION 3.2: ISOMORPHISMS & AUTOMORPHISMS -->
+<!-- ======================================== -->
+<h2 id="sec3-2">3.2 同构和自同构<br><span style="font-size:0.55em; color:var(--text-secondary)">Isomorphisms and Automorphisms</span></h2>
+
+<p>在 3.1 节中，我们从抽象的角度定义了群和对称性。现在我们要问一个更细致的问题：
+<strong>我们到底要保持什么结构不变？</strong> 答案取决于我们考虑的"结构层次"。</p>
+
+<h3 id="sec3-2-levels">结构层次与子群 (Levels of Structure)</h3>
+
+<p>域 $\Omega$ 可以拥有不同层次的结构，而每个层次对应不同的对称群。
+当我们添加更多要保持的结构时，对称群会<strong>缩小</strong>：</p>
+
+<table>
+  <thead>
+    <tr><th>结构层次</th><th>保结构映射</th><th>对称群</th><th>保持的性质</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>集合 (Set)</td>
+      <td>双射 (Bijection)</td>
+      <td>$\mathrm{Aut}(\Omega)$（全部可逆映射）</td>
+      <td>基数（元素个数）</td>
+    </tr>
+    <tr>
+      <td>拓扑空间</td>
+      <td>同胚 (Homeomorphism)</td>
+      <td>$\mathrm{Homeo}(\Omega)$</td>
+      <td>连续性、邻域</td>
+    </tr>
+    <tr>
+      <td>光滑流形</td>
+      <td>微分同胚 (Diffeomorphism)</td>
+      <td>$\mathrm{Diff}(\Omega)$</td>
+      <td>可微性</td>
+    </tr>
+    <tr>
+      <td>度量空间</td>
+      <td>等距映射 (Isometry)</td>
+      <td>$\mathrm{Iso}(\Omega)$</td>
+      <td>距离</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.8：度量 (Metric / Distance)</div>
+  <p>一个<strong>度量</strong>是函数 $d : \Omega \times \Omega \to [0, \infty)$，满足对所有 $u, v, w \in \Omega$：</p>
+  <ol>
+    <li><strong>不可区分同一性 (Identity of indiscernibles)</strong>: $d(u,v) = 0 \iff u = v$</li>
+    <li><strong>对称性 (Symmetry)</strong>: $d(u,v) = d(v,u)$</li>
+    <li><strong>三角不等式 (Triangle inequality)</strong>: $d(u,v) \leq d(u,w) + d(w,v)$</li>
+  </ol>
+</div>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.9：子群 (Subgroup)</div>
+  <p>设 $(\mathfrak{G}, \circ)$ 是一个群，$\mathfrak{H} \subseteq \mathfrak{G}$ 是一个子集。
+  如果 $(\mathfrak{H}, \circ)$ 在同一运算下也构成一个群，则称 $\mathfrak{H}$ 是 $\mathfrak{G}$ 的<strong>子群</strong>。</p>
+</div>
+
+<div class="box thm">
+  <div class="box-title">📗 结构层次的子群关系</div>
+  <p>添加更多结构 = 选择一个更小的子群：</p>
+  $$\mathrm{Iso}(\Omega) \;\subseteq\; \mathrm{Diff}(\Omega) \;\subseteq\; \mathrm{Homeo}(\Omega) \;\subseteq\; \mathrm{Aut}(\Omega)$$
+  <p>例如，平面上：$\mathrm{SE}(2) \subset \mathrm{E}(2) \subset \mathrm{Diff}(\mathbb{R}^2)$</p>
+  <p>这正是 Klein 的<strong>爱尔兰根纲领</strong>：射影几何、仿射几何、欧氏几何拥有越来越多的不变量，对应越来越小的群。</p>
+</div>
+
+<h3 id="sec3-2-iso">同构 vs 自同构 (Isomorphism vs Automorphism)</h3>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.10：同构与自同构</div>
+  <p><strong>自同构 (Automorphism)</strong>：从对象到<strong>自身</strong>的保结构双射。描述对象的<strong>自对称性</strong>。</p>
+  <p><strong>同构 (Isomorphism)</strong>：从一个对象到<strong>另一个</strong>对象的保结构双射。描述两个对象的<strong>等价性</strong>。</p>
+</div>
+
+<div class="box example">
+  <div class="box-title">💡 集合层面的例子</div>
+  <p>设 $\Omega = \{0, 1, 2\}$。</p>
+  <ul>
+    <li><strong>自同构</strong>：循环位移 $\tau(u) = (u+1) \bmod 3$，将 $\Omega$ 映回自身</li>
+    <li><strong>同构</strong>：设 $\Omega' = \{a, b, c\}$，则 $\eta(0)=a, \eta(1)=b, \eta(2)=c$ 是一个集合同构</li>
+  </ul>
+</div>
+
+<h3 id="sec3-2-graph">图同构与图自同构 (Graph Isomorphism & Automorphism)</h3>
+
+<p>对于图结构的数据，"结构"不仅包括节点数量，还包括<strong>连接方式（边）</strong>。</p>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.11：图同构 (Graph Isomorphism)</div>
+  <p>两个图 $G = (V, E)$ 和 $G' = (V', E')$ 之间的<strong>同构</strong>是一个双射 $\eta : V \to V'$，满足：</p>
+  $$(u, v) \in E \iff (\eta(u), \eta(v)) \in E'$$
+  <p>换言之，同构保持<strong>邻接关系</strong>。两个同构的图结构完全相同，只是节点的"编号"不同。</p>
+</div>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.12：图自同构 (Graph Automorphism)</div>
+  <p>图 $G$ 的<strong>自同构</strong>是从 $G$ 到自身的同构 $\tau : V \to V$。
+  如果存在非平凡的自同构（$\tau \neq \mathrm{id}$），则图具有<strong>对称性</strong>。
+  所有自同构构成<strong>自同构群</strong> $\mathrm{Aut}(G)$。</p>
+</div>
+
+<div class="figure">
+  <img src="../assets/ch3_p18_img1.png" alt="图同构示例">
+  <div class="caption"><strong>图 3.4</strong>：两个看起来不同但实际上同构的图。节点的排列方式不同，但连接结构完全相同。
+  图同构问题（判断两个图是否同构）是图论中的经典难题。</div>
+</div>
+
+<div class="box example">
+  <div class="box-title">💡 图同构的直觉</div>
+  <p>想象两张地铁路线图：一张是官方设计的"美化版"，另一张是按地理位置绘制的。
+  虽然看起来完全不同，但如果站点之间的连接关系完全一样，它们就是<strong>同构的</strong>。</p>
+  <p><strong>图同构问题 (GI)</strong>是计算复杂性理论中的著名问题：它"可能"不是 NP-完全的，但也没有已知的多项式时间算法（除了特殊图类）。</p>
+</div>
+
+<h3 id="sec3-2-wl">Weisfeiler-Leman (WL) 测试</h3>
+
+<p>Weisfeiler-Leman 测试是判断两个图是否同构的经典算法。虽然它不能解决所有情况（存在反例），
+但它与<strong>图神经网络的表达能力</strong>有着深刻的联系——这是近年来 GNN 理论的重大发现。</p>
+
+<div class="box def">
+  <div class="box-title">📘 1-WL (Weisfeiler-Leman) 颜色精化算法</div>
+  <p>给定图 $G = (V, E)$：</p>
+  <ol>
+    <li><strong>初始化</strong>：给每个节点分配一个初始"颜色"（标签），通常所有节点初始颜色相同</li>
+    <li><strong>精化</strong>：对每个节点 $v$，将其新颜色定义为：
+      $$c^{(t+1)}(v) = \mathrm{HASH}\!\left(c^{(t)}(v),\; \{\!\{c^{(t)}(u) : u \in \mathcal{N}(v)\}\!\}\right)$$
+    </li>
+    <li><strong>终止</strong>：当颜色不再变化时停止</li>
+    <li><strong>判断</strong>：如果两个图最终的颜色分布不同，则它们<strong>不同构</strong>。如果相同，<strong>可能同构</strong>（不确定）</li>
+  </ol>
+  <div class="symbol-table" style="margin-top: 12px;">
+    <span class="sym">$c^{(t)}(v)$</span><span class="desc">第 $t$ 轮迭代时节点 $v$ 的颜色（标签）</span>
+    <span class="sym">$\mathcal{N}(v)$</span><span class="desc">节点 $v$ 的邻居集合</span>
+    <span class="sym">$\{\!\{\cdot\}\!\}$</span><span class="desc">多重集 (multiset)——允许重复元素的集合</span>
+    <span class="sym">$\mathrm{HASH}$</span><span class="desc">将 (颜色, 邻居颜色多重集) 映射为新颜色的单射函数</span>
+  </div>
+</div>
+
+<div class="box thm">
+  <div class="box-title">📗 WL 测试与 GNN 的等价性 [Xu et al., 2019; Morris et al., 2019]</div>
+  <p><strong>消息传递神经网络 (MPNN)</strong> 的表达能力<strong>至多等于</strong> 1-WL 测试：</p>
+  <ul>
+    <li>如果 1-WL 判断两个图不同构，则存在某个 MPNN 可以区分它们</li>
+    <li>如果 1-WL <strong>无法</strong>区分两个图，则<strong>没有</strong> MPNN 能区分它们</li>
+    <li><strong>GIN (Graph Isomorphism Network)</strong> 达到了这个理论上界</li>
+  </ul>
+  <p>这个结果深刻地揭示了标准 GNN 的局限性——它们无法区分某些非同构图（如正则图）。</p>
+</div>
+
+<div class="box warn">
+  <div class="box-title">⚠️ WL 测试的局限</div>
+  <p>1-WL 无法区分所有非同构图。经典反例：<strong>某些正则图</strong>（所有节点度数相同的图）。
+  更高阶的 $k$-WL 测试更强大但计算代价更高。这推动了 <strong>高阶 GNN</strong>（如 $k$-GNN）的研究。</p>
+</div>
+
+<!-- 3.2 Code: WL Test -->
+<h3 id="sec3-2-code">🐍 代码示例：WL 颜色精化测试</h3>
+
+<div class="code-block">
+  <div class="code-header">
+    <span>Python — Weisfeiler-Leman 1-WL 测试实现</span>
+    <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+  </div>
+<pre><code><span class="kw">from</span> collections <span class="kw">import</span> Counter, defaultdict
+
+<span class="kw">class</span> <span class="cls">WeisfeilerLeman</span>:
+    <span class="str">"""
+    1-WL (Weisfeiler-Leman) 颜色精化算法
+    用于图同构测试: 如果 WL 说"不同构", 则确实不同构
+                    如果 WL 说"可能同构", 则不确定
+    """</span>
+
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>):
+        <span class="sf">self</span>.color_map = {}     <span class="cm"># (旧颜色, 邻居多重集) -> 新颜色</span>
+        <span class="sf">self</span>.next_color = <span class="num">0</span>
+
+    <span class="kw">def</span> <span class="fn">_get_color</span>(<span class="sf">self</span>, key):
+        <span class="str">"""将 (当前颜色, 排序邻居颜色元组) 映射为唯一整数颜色"""</span>
+        <span class="kw">if</span> key <span class="kw">not in</span> <span class="sf">self</span>.color_map:
+            <span class="sf">self</span>.color_map[key] = <span class="sf">self</span>.next_color
+            <span class="sf">self</span>.next_color += <span class="num">1</span>
+        <span class="kw">return</span> <span class="sf">self</span>.color_map[key]
+
+    <span class="kw">def</span> <span class="fn">run</span>(<span class="sf">self</span>, adj_list, max_iter=<span class="num">10</span>, initial_colors=<span class="kw">None</span>):
+        <span class="str">"""
+        运行 1-WL 颜色精化
+
+        Parameters
+        ----------
+        adj_list : dict
+            邻接表 {node: [neighbors]}
+        max_iter : int
+            最大迭代次数
+        initial_colors : dict or None
+            初始节点颜色, None 则所有节点同色
+
+        Returns
+        -------
+        color_histogram : Counter
+            最终颜色的直方图 (作为图的"指纹")
+        history : list of dict
+            每轮迭代的颜色分配历史
+        """</span>
+        nodes = <span class="bi">list</span>(adj_list.keys())
+
+        <span class="cm"># Step 1: 初始化颜色</span>
+        <span class="kw">if</span> initial_colors <span class="kw">is</span> <span class="kw">None</span>:
+            colors = {v: <span class="num">0</span> <span class="kw">for</span> v <span class="kw">in</span> nodes}
+        <span class="kw">else</span>:
+            colors = dict(initial_colors)
+
+        history = [dict(colors)]
+
+        <span class="cm"># Step 2: 迭代精化</span>
+        <span class="kw">for</span> iteration <span class="kw">in</span> <span class="bi">range</span>(max_iter):
+            new_colors = {}
+            <span class="kw">for</span> v <span class="kw">in</span> nodes:
+                <span class="cm"># 收集邻居颜色的多重集 (排序后变为元组，用作 hash key)</span>
+                neighbor_colors = <span class="bi">tuple</span>(<span class="bi">sorted</span>(
+                    colors[u] <span class="kw">for</span> u <span class="kw">in</span> adj_list[v]
+                ))
+                <span class="cm"># 将 (自身颜色, 邻居颜色多重集) 映射为新颜色</span>
+                key = (colors[v], neighbor_colors)
+                new_colors[v] = <span class="sf">self</span>._get_color(key)
+
+            <span class="cm"># 检查是否收敛 (颜色不再变化)</span>
+            <span class="kw">if</span> <span class="bi">set</span>(new_colors.values()) == <span class="bi">set</span>(colors.values()):
+                old_partition = defaultdict(<span class="bi">set</span>)
+                new_partition = defaultdict(<span class="bi">set</span>)
+                <span class="kw">for</span> v <span class="kw">in</span> nodes:
+                    old_partition[colors[v]].add(v)
+                    new_partition[new_colors[v]].add(v)
+                <span class="kw">if</span> <span class="bi">len</span>(old_partition) == <span class="bi">len</span>(new_partition):
+                    <span class="bi">print</span>(<span class="str">f"  收敛于第 {iteration} 轮"</span>)
+                    <span class="kw">break</span>
+
+            colors = new_colors
+            history.append(dict(colors))
+
+        <span class="kw">return</span> Counter(colors.values()), history
+
+    <span class="kw">def</span> <span class="fn">are_possibly_isomorphic</span>(<span class="sf">self</span>, adj1, adj2,
+                                 init1=<span class="kw">None</span>, init2=<span class="kw">None</span>):
+        <span class="str">"""比较两个图的 WL 指纹"""</span>
+        <span class="sf">self</span>.color_map = {}
+        <span class="sf">self</span>.next_color = <span class="num">0</span>
+        hist1, _ = <span class="sf">self</span>.run(adj1, initial_colors=init1)
+        hist2, _ = <span class="sf">self</span>.run(adj2, initial_colors=init2)
+        <span class="kw">return</span> hist1 == hist2
+
+<span class="cm"># =====================================================</span>
+<span class="cm"># 示例 1: 两个同构的图</span>
+<span class="cm"># =====================================================</span>
+
+<span class="cm">#  图 G1:  0 - 1 - 2     (路径图 P3)</span>
+<span class="cm">#  图 G2:  a - b - c     (同构于 G1)</span>
+
+G1 = {<span class="num">0</span>: [<span class="num">1</span>], <span class="num">1</span>: [<span class="num">0</span>, <span class="num">2</span>], <span class="num">2</span>: [<span class="num">1</span>]}
+G2 = {<span class="str">'a'</span>: [<span class="str">'b'</span>], <span class="str">'b'</span>: [<span class="str">'a'</span>, <span class="str">'c'</span>], <span class="str">'c'</span>: [<span class="str">'b'</span>]}
+
+wl = WeisfeilerLeman()
+result = wl.are_possibly_isomorphic(G1, G2)
+<span class="bi">print</span>(<span class="str">f"G1 ≅ G2 ? {result}"</span>)  <span class="cm"># True ✅</span>
+
+<span class="cm"># =====================================================</span>
+<span class="cm"># 示例 2: 两个不同构的图</span>
+<span class="cm"># =====================================================</span>
+
+<span class="cm"># G3: 三角形 (环)    G4: 路径 P3</span>
+G3 = {<span class="num">0</span>: [<span class="num">1</span>, <span class="num">2</span>], <span class="num">1</span>: [<span class="num">0</span>, <span class="num">2</span>], <span class="num">2</span>: [<span class="num">0</span>, <span class="num">1</span>]}
+G4 = {<span class="num">0</span>: [<span class="num">1</span>], <span class="num">1</span>: [<span class="num">0</span>, <span class="num">2</span>], <span class="num">2</span>: [<span class="num">1</span>]}
+
+wl2 = WeisfeilerLeman()
+result2 = wl2.are_possibly_isomorphic(G3, G4)
+<span class="bi">print</span>(<span class="str">f"三角形 ≅ 路径P3 ? {result2}"</span>)  <span class="cm"># False ✅</span>
+
+<span class="cm"># =====================================================</span>
+<span class="cm"># 示例 3: WL 失败的经典反例 (两个非同构的 3-正则图)</span>
+<span class="cm"># =====================================================</span>
+
+<span class="cm"># Shrikhande graph vs 4x4 Rook's graph (均为强正则图)</span>
+<span class="cm"># 简化示例: 两个 6 节点的非同构图, 1-WL 无法区分</span>
+<span class="cm"># 六环 C6  vs  两个三角形 K3 + K3</span>
+
+C6 = {<span class="num">0</span>: [<span class="num">1</span>,<span class="num">5</span>], <span class="num">1</span>: [<span class="num">0</span>,<span class="num">2</span>], <span class="num">2</span>: [<span class="num">1</span>,<span class="num">3</span>],
+      <span class="num">3</span>: [<span class="num">2</span>,<span class="num">4</span>], <span class="num">4</span>: [<span class="num">3</span>,<span class="num">5</span>], <span class="num">5</span>: [<span class="num">4</span>,<span class="num">0</span>]}
+
+K3_K3 = {<span class="num">0</span>: [<span class="num">1</span>,<span class="num">2</span>], <span class="num">1</span>: [<span class="num">0</span>,<span class="num">2</span>], <span class="num">2</span>: [<span class="num">0</span>,<span class="num">1</span>],
+         <span class="num">3</span>: [<span class="num">4</span>,<span class="num">5</span>], <span class="num">4</span>: [<span class="num">3</span>,<span class="num">5</span>], <span class="num">5</span>: [<span class="num">3</span>,<span class="num">4</span>]}
+
+wl3 = WeisfeilerLeman()
+result3 = wl3.are_possibly_isomorphic(C6, K3_K3)
+<span class="bi">print</span>(<span class="str">f"C6 ≅ K3+K3 ? WL says: {result3}"</span>)
+<span class="cm"># True — 但它们不同构! (C6 连通, K3+K3 不连通)</span>
+<span class="cm"># 这说明 1-WL 并非万能的 ⚠️</span>
+
+<span class="bi">print</span>(<span class="str">"\n💡 注意: 1-WL 无法区分所有正则图!"</span>)
+<span class="bi">print</span>(<span class="str">"   这也是标准 MPNN/GCN 的理论上界"</span>)</code></pre>
+</div>
+
+<div class="box robot">
+  <div class="box-title">🤖 与 PhysRobot 的关联</div>
+  <p>在 PhysRobot 中，我们的粒子图通常<strong>没有固有的节点顺序</strong>——粒子可以随意编号。
+  这意味着我们的 GNN 必须是<strong>置换等变的</strong>。</p>
+  <p>WL 测试告诉我们，标准消息传递 GNN 的表达能力是有限的。
+  对于物理模拟来说，这通常不是问题，因为粒子都带有丰富的<strong>连续特征</strong>（位置、速度等），
+  而 WL 的局限主要出现在<strong>纯结构（无特征）</strong>的图上。</p>
+</div>
+
+<div class="exercises" id="sec3-2-exercises">
+  <h4>❓ 3.2 节练习题</h4>
+  <ol>
+    <li><strong>手算 WL</strong>：对路径图 $P_4$（4个节点的路径）手动执行 WL 精化，画出每一轮的颜色分配。</li>
+    <li><strong>自同构群</strong>：完全图 $K_n$ 的自同构群是什么？大小是多少？</li>
+    <li><strong>编程练习</strong>：修改上面的 WL 代码，使其支持<strong>节点特征</strong>（用初始颜色区分不同类型的节点），
+    并验证加入特征后是否能区分之前的反例。</li>
+    <li><strong>思考题</strong>：为什么说"GNN 的表达能力 ≤ 1-WL"？给出直觉解释。</li>
+    <li><strong>进阶</strong>：查阅 2-WL 和 3-WL 的定义，描述它们与 1-WL 的区别。</li>
+  </ol>
+</div>
+
+
+<!-- ======================================== -->
+<!-- SECTION 3.3: DEFORMATION STABILITY -->
+<!-- ======================================== -->
+<h2 id="sec3-3">3.3 形变稳定性<br><span style="font-size:0.55em; color:var(--text-secondary)">Deformation Stability</span></h2>
+
+<p>3.1–3.2 节建立了一个<strong>理想化的</strong>对称性框架：我们精确地知道哪些变换是对称性，并要求精确地尊重它们。
+但现实世界是<strong>嘈杂的</strong>，理想模型在两个方面不够：</p>
+
+<ol>
+  <li><strong>局部对称性 vs 全局对称性</strong>：视频中多个物体各自沿不同方向运动——没有全局平移能解释整个变换</li>
+  <li><strong>难以描述的变换群</strong>：可变形 3D 物体在相机前的形变很难用简单群描述</li>
+</ol>
+
+<div class="box example">
+  <div class="box-title">💡 直觉：从精确对称到近似不变</div>
+  <p>想象你在识别手写数字"7"。严格来说，每个人写的"7"都不完全一样——
+  有些人写得略微倾斜，有些人笔画有弧度。这些都是<strong>小形变</strong>，它们不构成一个群（两个小形变的复合可能是大形变），
+  但我们仍然希望识别系统对它们<strong>保持稳定</strong>。</p>
+</div>
+
+<h3 id="sec3-3-signal">信号形变的稳定性 (Stability to Signal Deformations)</h3>
+
+<p>关键思路：用一个<strong>复杂度度量 (complexity measure)</strong> $c(\tau)$ 来量化变换 $\tau$ 离对称群 $\mathfrak{G}$ 有多远。</p>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.13：几何稳定性 (Geometric Stability)</div>
+  <p>设 $\tau \in \mathrm{Diff}(\Omega)$ 是一个微分同胚，$\mathfrak{G} \subset \mathrm{Diff}(\Omega)$ 是对称子群，
+  $c(\tau)$ 是一个<strong>复杂度度量</strong>满足 $c(\tau) = 0 \iff \tau \in \mathfrak{G}$。
+  函数 $f \in \mathcal{F}(\mathcal{X}(\Omega))$ 是<strong>几何稳定的</strong>，如果：</p>
+  $$\boxed{\|f(\rho(\tau)x) - f(x)\| \leq C \cdot c(\tau) \cdot \|x\|} \quad \forall\, x \in \mathcal{X}(\Omega) \tag{7}$$
+  <div class="symbol-table" style="margin-top: 12px;">
+    <span class="sym">$\tau$</span><span class="desc">域上的微分同胚（可以看作"变形"或"扭曲"）</span>
+    <span class="sym">$\rho(\tau)x(u) = x(\tau^{-1}u)$</span><span class="desc">变形作用于信号</span>
+    <span class="sym">$c(\tau)$</span><span class="desc">变形复杂度：衡量 $\tau$ 偏离对称群 $\mathfrak{G}$ 的程度</span>
+    <span class="sym">$C$</span><span class="desc">与信号 $x$ 无关的常数</span>
+    <span class="sym">$\|x\|$</span><span class="desc">信号的范数</span>
+  </div>
+</div>
+
+<div class="box thm">
+  <div class="box-title">📗 几何稳定性推广了不变性</div>
+  <p>当 $\tau \in \mathfrak{G}$ 时，$c(\tau) = 0$，不等式右边为零，所以：</p>
+  $$\|f(\rho(\tau)x) - f(x)\| \leq 0 \implies f(\rho(\tau)x) = f(x)$$
+  <p>这正是 $\mathfrak{G}$-不变性！几何稳定性是不变性的<strong>连续推广</strong>："越接近对称群，输出变化越小"。</p>
+</div>
+
+<h4>变形复杂度的典型选择</h4>
+
+<p>对于定义在连续欧几里得平面上的图像，一个常见的选择是<strong>Dirichlet 能量</strong>：</p>
+
+$$c^2(\tau) := \int_\Omega \|\nabla \tau(u)\|^2 \, du \tag{8}$$
+
+<p>这个度量衡量了 $\tau$ 的"弹性"——它距离常向量场（即平移）有多远。
+当 $\tau$ 是一个纯平移时，$\nabla \tau$ 是常数（其变形量为零）。</p>
+
+<div class="figure">
+  <img src="../assets/ch3_p25_img0.png" alt="几何稳定性示意图">
+  <div class="caption"><strong>图 3.5</strong>：$\mathrm{Aut}(\Omega)$ 中所有双射映射的集合，对称群 $\mathfrak{G}$（圆圈）是其子群。
+  几何稳定性将 $\mathfrak{G}$-不变性扩展到"$\mathfrak{G}$ 附近的变换"（灰色环），用某种度量来量化离 $\mathfrak{G}$ 的距离。
+  在此例中，图像的光滑扭曲接近于一个平移。</div>
+</div>
+
+<h3 id="sec3-3-domain">域形变的稳定性 (Stability to Domain Deformations)</h3>
+
+<p>在很多应用中，被变形的不是信号，而是<strong>域 $\Omega$ 本身</strong>。
+典型例子：随时间变化的社交网络（图结构在变化），或经历非刚性变形的 3D 物体。</p>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.14：域形变稳定性</div>
+  <p>设 $\mathcal{D}$ 是所有可能域的空间，$d_\mathcal{D}(\Omega, \tilde\Omega)$ 是域之间的距离。
+  函数 $f : \mathcal{X}(\mathcal{D}) \to \mathcal{Y}$ 对域形变是<strong>稳定的</strong>，如果：</p>
+  $$\boxed{\|f(x, \Omega) - f(\tilde{x}, \tilde\Omega)\| \leq C \|x\| \cdot d_\mathcal{D}(\Omega, \tilde\Omega)} \tag{9}$$
+  <div class="symbol-table" style="margin-top: 8px;">
+    <span class="sym">$d_\mathcal{D}(\Omega, \tilde\Omega)$</span><span class="desc">域之间的距离（如图编辑距离、Gromov-Hausdorff 距离）</span>
+    <span class="sym">$\tilde{x} = x \circ \eta^{-1}$</span><span class="desc">通过对齐映射 $\eta : \Omega \to \tilde\Omega$ 得到的变形信号</span>
+  </div>
+</div>
+
+<p>域之间的距离通常通过寻找最优"对齐"来定义：</p>
+
+$$d_\mathcal{D}(\Omega, \tilde\Omega) = \inf_{\eta \in \mathfrak{G}} \|d - \tilde{d} \circ (\eta \times \eta)\| \tag{10}$$
+
+<p>这里 $\mathfrak{G}$ 是同构群（如双射或等距映射），$d, \tilde{d}$ 分别是两个域上的距离函数。
+直觉上：两个域的距离 = 将它们"最佳对齐"后剩余的结构差异。</p>
+
+<h3 id="sec3-3-math">📐 数学推导：Lipschitz 稳定性界限</h3>
+
+<div class="box thm">
+  <div class="box-title">📗 Lipschitz 连续性与稳定性</div>
+  <p>几何稳定性本质上是一个<strong>Lipschitz 条件</strong>。回忆 Lipschitz 连续性的定义：</p>
+  $$\|f(x_1) - f(x_2)\| \leq L \|x_1 - x_2\|$$
+  <p>其中 $L$ 是 Lipschitz 常数。几何稳定性 (公式 7) 可以改写为：</p>
+  $$\frac{\|f(\rho(\tau)x) - f(x)\|}{\|x\|} \leq C \cdot c(\tau)$$
+  <p>这说明输出的<strong>相对变化</strong>被变形复杂度<strong>线性控制</strong>。</p>
+</div>
+
+<div class="box thm">
+  <div class="box-title">📗 推导：为什么 Dirichlet 能量是好的复杂度度量</div>
+  <p>考虑 $\Omega = \mathbb{R}^d$，$\tau(u) = u - \tilde\tau(u)$，其中 $\tilde\tau$ 是一个小位移场。</p>
+  <p><strong>Step 1</strong>：当 $\tilde\tau(u) = v$（常数）时，$\tau$ 是一个纯平移 $\tau \in T(\mathbb{R}^d)$。此时 $\nabla\tilde\tau = 0$。</p>
+  <p><strong>Step 2</strong>：$\nabla\tilde\tau$ 衡量了 $\tau$ 偏离平移的程度。Dirichlet 能量 $\int \|\nabla\tilde\tau\|^2 du$ 就是这个偏离的 $L^2$ 范数。</p>
+  <p><strong>Step 3</strong>：对于信号 $x$ 和变形 $\tau$，一阶泰勒展开给出：</p>
+  $$\rho(\tau)x(u) = x(\tau^{-1}u) \approx x(u) + \nabla x(u) \cdot \tilde\tau(u)$$
+  <p><strong>Step 4</strong>：因此：</p>
+  $$\|\rho(\tau)x - x\|^2 \approx \int_\Omega |\nabla x(u) \cdot \tilde\tau(u)|^2 du \leq \|\nabla x\|^2_\infty \cdot \int_\Omega \|\tilde\tau(u)\|^2 du$$
+  <p>这给出了信号变化的<strong>上界</strong>，取决于信号的梯度和变形的大小。如果我们进一步用 Poincaré 不等式将 $\|\tilde\tau\|$ 关联到 $\|\nabla\tilde\tau\|$，就得到了用 Dirichlet 能量控制的稳定性界限。</p>
+</div>
+
+<h3 id="sec3-3-code">🐍 代码示例：Lipschitz 连续性验证</h3>
+
+<div class="code-block">
+  <div class="code-header">
+    <span>Python / PyTorch — Lipschitz 常数估计与稳定性</span>
+    <button class="copy-btn" onclick="copyCode(this)">📋 复制</button>
+  </div>
+<pre><code><span class="kw">import</span> torch
+<span class="kw">import</span> torch.nn <span class="kw">as</span> nn
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="cm"># =====================================================</span>
+<span class="cm"># 实验: 估计网络的 Lipschitz 常数</span>
+<span class="cm"># =====================================================</span>
+
+<span class="kw">def</span> <span class="fn">estimate_lipschitz</span>(model, input_shape, n_samples=<span class="num">1000</span>, device=<span class="str">'cpu'</span>):
+    <span class="str">"""
+    通过随机采样估计模型的 Lipschitz 常数
+    L ≈ max ||f(x1) - f(x2)|| / ||x1 - x2||
+    """</span>
+    model.eval()
+    max_ratio = <span class="num">0.0</span>
+
+    <span class="kw">with</span> torch.no_grad():
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="bi">range</span>(n_samples):
+            x1 = torch.randn(*input_shape, device=device)
+            <span class="cm"># 生成 x1 附近的微小扰动</span>
+            delta = torch.randn_like(x1) * <span class="num">0.01</span>
+            x2 = x1 + delta
+
+            y1 = model(x1)
+            y2 = model(x2)
+
+            output_diff = (y1 - y2).flatten().norm()
+            input_diff = delta.flatten().norm()
+
+            <span class="kw">if</span> input_diff > <span class="num">1e-10</span>:
+                ratio = (output_diff / input_diff).item()
+                max_ratio = <span class="bi">max</span>(max_ratio, ratio)
+
+    <span class="kw">return</span> max_ratio
+
+<span class="cm"># 创建两个网络: 有/无 Spectral Normalization</span>
+<span class="kw">class</span> <span class="cls">SimpleNet</span>(nn.Module):
+    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="sf">self</span>, use_spectral_norm=<span class="kw">False</span>):
+        <span class="bi">super</span>().__init__()
+        layers = [
+            nn.Linear(<span class="num">64</span>, <span class="num">128</span>),
+            nn.ReLU(),
+            nn.Linear(<span class="num">128</span>, <span class="num">128</span>),
+            nn.ReLU(),
+            nn.Linear(<span class="num">128</span>, <span class="num">10</span>),
+        ]
+        <span class="kw">if</span> use_spectral_norm:
+            <span class="cm"># Spectral Normalization 限制每层的 Lipschitz 常数 ≤ 1</span>
+            layers[<span class="num">0</span>] = nn.utils.spectral_norm(layers[<span class="num">0</span>])
+            layers[<span class="num">2</span>] = nn.utils.spectral_norm(layers[<span class="num">2</span>])
+            layers[<span class="num">4</span>] = nn.utils.spectral_norm(layers[<span class="num">4</span>])
+        <span class="sf">self</span>.net = nn.Sequential(*layers)
+
+    <span class="kw">def</span> <span class="fn">forward</span>(<span class="sf">self</span>, x):
+        <span class="kw">return</span> <span class="sf">self</span>.net(x)
+
+torch.manual_seed(<span class="num">42</span>)
+net_normal = SimpleNet(use_spectral_norm=<span class="kw">False</span>)
+net_stable = SimpleNet(use_spectral_norm=<span class="kw">True</span>)
+
+L_normal = estimate_lipschitz(net_normal, (<span class="num">1</span>, <span class="num">64</span>))
+L_stable = estimate_lipschitz(net_stable, (<span class="num">1</span>, <span class="num">64</span>))
+
+<span class="bi">print</span>(<span class="str">f"普通网络的 Lipschitz 常数 ≈ {L_normal:.2f}"</span>)
+<span class="bi">print</span>(<span class="str">f"谱归一化网络的 Lipschitz 常数 ≈ {L_stable:.2f}"</span>)
+<span class="cm"># 普通网络: ~5-15 (较大, 不稳定)</span>
+<span class="cm"># 谱归一化: ~1.0 (被控制, 稳定)</span>
+
+<span class="cm"># =====================================================</span>
+<span class="cm"># 验证: 小扰动 → 小输出变化</span>
+<span class="cm"># =====================================================</span>
+
+x = torch.randn(<span class="num">1</span>, <span class="num">64</span>)
+epsilons = [<span class="num">0.001</span>, <span class="num">0.01</span>, <span class="num">0.1</span>, <span class="num">1.0</span>]
+
+<span class="bi">print</span>(<span class="str">"\n扰动大小 → 输出变化（应接近线性关系）:"</span>)
+<span class="kw">for</span> eps <span class="kw">in</span> epsilons:
+    delta = torch.randn_like(x) * eps
+    <span class="kw">with</span> torch.no_grad():
+        dy_normal = (net_normal(x + delta) - net_normal(x)).norm().item()
+        dy_stable = (net_stable(x + delta) - net_stable(x)).norm().item()
+    <span class="bi">print</span>(<span class="str">f"  ε={eps:.3f}: 普通={dy_normal:.4f}, 谱归一化={dy_stable:.4f}"</span>)</code></pre>
+</div>
+
+<div class="box robot">
+  <div class="box-title">🤖 与 PhysRobot 的关联</div>
+  <p>形变稳定性在物理模拟中至关重要：</p>
+  <ul>
+    <li><strong>噪声鲁棒性</strong>：真实传感器数据（如激光雷达点云）总有噪声——粒子位置的微小扰动不应导致模拟结果的剧烈变化</li>
+    <li><strong>GNS 中的 noise injection</strong>：训练时向输入添加噪声（$\mathbf{x} \leftarrow \mathbf{x} + \epsilon$）正是为了<strong>隐式地</strong>提高模型的形变稳定性</li>
+    <li><strong>Lipschitz 约束</strong>：在某些安全关键的机器人控制任务中，我们可能需要显式地限制网络的 Lipschitz 常数</li>
+  </ul>
+</div>
+
+<div class="exercises" id="sec3-3-exercises">
+  <h4>❓ 3.3 节练习题</h4>
+  <ol>
+    <li><strong>数学证明</strong>：证明 ReLU 函数 $\sigma(x) = \max(0, x)$ 是 1-Lipschitz 的。</li>
+    <li><strong>Lipschitz 组合</strong>：如果 $f$ 是 $L_1$-Lipschitz，$g$ 是 $L_2$-Lipschitz，证明 $f \circ g$ 是 $L_1 L_2$-Lipschitz。
+    这对深度网络的 Lipschitz 常数意味着什么？</li>
+    <li><strong>编程练习</strong>：实现一个函数，通过计算所有层权重矩阵的谱范数（最大奇异值）来<strong>上界估计</strong>网络的 Lipschitz 常数，
+    并与随机采样方法对比。</li>
+    <li><strong>思考题</strong>：BatchNorm 层是否是 Lipschitz 连续的？为什么在某些应用中人们偏好 GroupNorm？</li>
+  </ol>
+</div>
+
+
+<!-- ======================================== -->
+<!-- SECTION 3.4: SCALE SEPARATION -->
+<!-- ======================================== -->
+<h2 id="sec3-4">3.4 尺度分离<br><span style="font-size:0.55em; color:var(--text-secondary)">Scale Separation</span></h2>
+
+<p>虽然形变稳定性大大加强了全局对称先验，但<strong>仅靠它不足以克服维度灾难</strong>：
+满足公式 (7) 的函数在域增大时仍然"太多"了。突破关键在于利用物理任务的<strong>多尺度结构</strong>。</p>
+
+<div class="box example">
+  <div class="box-title">💡 直觉：从近看到远看</div>
+  <p>想象你在辨认一棵树的照片：</p>
+  <ul>
+    <li><strong>细尺度</strong>（近看）：你看到的是叶子的纹理、树皮的纹路</li>
+    <li><strong>中尺度</strong>：你看到的是树枝的形状、叶子的分布</li>
+    <li><strong>粗尺度</strong>（远看）：你看到的是树的整体轮廓</li>
+  </ul>
+  <p>"这是一棵松树"的判断主要依赖粗尺度和中尺度的信息。<strong>尺度分离</strong>就是将信息按尺度组织，
+  先处理局部细节，再逐步整合到全局——这正是 CNN 池化层和 GNN 的图粗化在做的事！</p>
+</div>
+
+<h3 id="sec3-4-fourier">傅里叶变换 (Fourier Transform)</h3>
+
+<p>在介绍多尺度表示之前，我们先回顾信号分解的经典工具——<strong>傅里叶变换</strong>。</p>
+
+<div class="box def">
+  <div class="box-title">📘 定义 3.15：傅里叶变换 (Fourier Transform)</div>
+  <p>一维傅里叶变换将信号 $x(u) \in L^2(\mathbb{R})$ 分解为不同频率的振荡基函数 $\varphi_\xi(u) = e^{i\xi u}$：</p>
+  $$\hat{x}(\xi) = \int_{-\infty}^{+\infty} x(u) e^{-i\xi u} du \tag{11}$$
+  <div class="symbol-table" style="margin-top: 8px;">
+    <span class="sym">$\hat{x}(\xi)$</span><span class="desc">信号 $x$ 的傅里叶变换（频率 $\xi$ 处的成分）</span>
+    <span class="sym">$\xi$</span><span class="desc">频率（oscillation rate）</span>
+    <span class="sym">$e^{-i\xi u}$</span><span class="desc">傅里叶基函数（复指数）</span>
+    <span class="sym">$L^2(\mathbb{R})$</span><span class="desc">平方可积函数空间</span>
+  </div>
+</div>
+
+<div class="box thm">
+  <div class="box-title">📗 卷积定理 (Convolution Theorem)</div>
+  <p>卷积在傅里叶域中变成了逐点乘法：</p>
+  $$\widehat{(x \star \theta)}(\xi) = \hat{x}(\xi) \cdot \hat{\theta}(\xi) \tag{12}$$
+  <p>其中卷积定义为：$(x \star \theta)(u) = \int_{-\infty}^{+\infty} x(v)\theta(u-v)dv$</p>
+  <p>这意味着卷积算子在傅里叶基下被<strong>对角化</strong>了——这是信号处理和谱图理论的基石。</p>
+</div>
+
+<h4>

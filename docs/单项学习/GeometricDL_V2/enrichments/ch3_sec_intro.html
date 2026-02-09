@@ -1,0 +1,127 @@
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：为什么需要几何先验</h4>
+    
+    <div class="qa-pair">
+      <p class="question">❓ 小白：第2章说"维度灾难让通用学习不可能",为什么第3章又说能学习了？矛盾吗？</p>
+      <div class="answer">
+        <p>💡 专家：不矛盾！关键在于"通用"vs"结构化"。</p>
+        <p><strong>第2章的结论</strong>：如果数据是"任意的高维函数"，需要 $N = O(\epsilon^{-d})$ 个样本 — 维度 $d$ 稍大就爆炸。</p>
+        <p><strong>第3章的突破</strong>：现实世界的数据不是任意的！物理数据有两个黄金性质：</p>
+        <ol>
+          <li><strong>对称性</strong>：图像识别不应随物体位置改变（平移对称）</li>
+          <li><strong>局部性</strong>：像素只和邻近像素强相关（尺度分离）</li>
+        </ol>
+        <p>这两个性质把"无限大的假设空间"缩小到"可学习的子空间"！</p>
+        <p><strong>类比</strong>：就像猜一个1-1000的数字。如果完全随机，需要很多次。但如果知道"这个数是10的倍数"（对称性）且"在200-300之间"（局部性），一下就简单了！</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白："几何先验"到底指什么？为什么叫"几何"？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>几何先验 = 关于数据空间结构的先验假设</strong>。</p>
+        <p>为什么叫"几何"？因为我们关心的是<strong>空间的形状和对称性</strong>，而不是具体的数值。</p>
+        <p><strong>三个层次的几何先验</strong>：</p>
+        <ol>
+          <li><strong>对称性先验</strong>：哪些变换不改变任务（旋转、平移、置换）</li>
+          <li><strong>稳定性先验</strong>：小扰动 → 小输出变化（Lipschitz 连续性）</li>
+          <li><strong>多尺度先验</strong>：信息有层次结构（局部→中级→全局）</li>
+        </ol>
+        <p><strong>对比</strong>：</p>
+        <ul>
+          <li><strong>统计先验</strong>（传统ML）："数据服从正态分布"</li>
+          <li><strong>几何先验</strong>（GDL）："数据的对称群是 $\mathrm{SE}(3)$"</li>
+        </ul>
+        <p>几何先验更强、更精确，所以能用更少数据学到更好的模型！</p>
+      </div>
+    </div>
+
+    <div class="qa-pair">
+      <p class="question">❓ 小白：书上说"CNN、GNN、Transformer 都是同一蓝图的实例"，真的假的？它们看起来完全不同啊！</p>
+      <div class="answer">
+        <p>💡 专家：真的！它们只是<strong>选择了不同的域 $\Omega$ 和对称群 $\mathfrak{G}$</strong>。</p>
+        <p><strong>统一视角</strong>（GDL蓝图）：</p>
+        <table style="width:100%; font-size:0.9em; margin-top:8px;">
+          <tr style="background:var(--bg-secondary);">
+            <th>架构</th><th>域 $\Omega$</th><th>对称群 $\mathfrak{G}$</th><th>等变层</th>
+          </tr>
+          <tr>
+            <td><strong>CNN</strong></td>
+            <td>欧氏网格 $\mathbb{Z}^2$</td>
+            <td>平移群 $T(\mathbb{Z}^2)$</td>
+            <td>卷积</td>
+          </tr>
+          <tr>
+            <td><strong>GNN</strong></td>
+            <td>图 $G=(V,E)$</td>
+            <td>置换群 $S_n$</td>
+            <td>消息传递</td>
+          </tr>
+          <tr>
+            <td><strong>Transformer</strong></td>
+            <td>集合（序列）</td>
+            <td>置换群 $S_n$</td>
+            <td>注意力</td>
+          </tr>
+        </table>
+        <p><strong>共同模式</strong>（3.5节详细讲）：</p>
+        <ol>
+          <li><strong>局部等变层</strong>：卷积/消息传递/注意力</li>
+          <li><strong>非线性</strong>：ReLU/GELU</li>
+          <li><strong>粗粒化</strong>：池化/图粗化/CLS token</li>
+          <li><strong>不变聚合</strong>：全局池化/求和/softmax</li>
+        </ol>
+        <p>看起来不同，但数学骨架完全一样！就像不同品牌的汽车，都是"引擎+轮子+方向盘"。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解：几何先验的"能量守恒"</h4>
+    <p><strong>物理世界的深刻对称性</strong>：牛顿定律在所有惯性系中相同（Galilean 不变性）→ 动量守恒。</p>
+    <p><strong>深度学习的类比</strong>：如果我们的模型具有平移对称性 → 参数共享 → "学习能量"守恒！</p>
+    <p>传统全连接网络：每个位置独立学习 → 浪费"学习能量"。</p>
+    <p>卷积网络：所有位置共享权重 → 集中"学习能量"在更重要的地方（什么模式，而非在哪）。</p>
+    <p><strong>数值对比</strong>（ImageNet分类）：</p>
+    <ul>
+      <li>全连接：$224 \times 224 \times 3 \times 1000 = 150M$ 参数</li>
+      <li>ResNet-50：$25M$ 参数（减少6倍）</li>
+      <li>但ResNet性能远超全连接 — <strong>对称性是免费的午餐</strong>！</li>
+    </ul>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用：PhysRobot 的几何先验选择</h4>
+    <p><strong>场景</strong>：手术中的软组织模拟（柔性器官）</p>
+    <p><strong>数据表示</strong>：粒子系统 + 图结构</p>
+    <p><strong>核心对称性</strong>：</p>
+    <ol>
+      <li><strong>置换对称性</strong>：粒子编号是任意的
+        <ul>
+          <li>❌ 错误：用固定索引的全连接层</li>
+          <li>✅ 正确：GNN消息传递（对顺序不敏感）</li>
+        </ul>
+      </li>
+      <li><strong>平移对称性</strong>：物理定律不依赖绝对位置
+        <ul>
+          <li>❌ 错误：直接用 $\mathbf{r}_i$ 作为输入</li>
+          <li>✅ 正确：用相对位置 $\Delta \mathbf{r}_{ij} = \mathbf{r}_j - \mathbf{r}_i$</li>
+        </ul>
+      </li>
+      <li><strong>（可选）旋转对称性</strong>：如果是各向同性材料
+        <ul>
+          <li>标准GNN：只满足平移不变</li>
+          <li>EGNN/SE(3)-Transformer：满足旋转等变</li>
+        </ul>
+      </li>
+    </ol>
+    <p><strong>性能提升</strong>（GNS论文数据）：</p>
+    <ul>
+      <li>普通MLP：rollout 5步后发散</li>
+      <li>置换等变GNN：rollout 100+步稳定</li>
+      <li>加入噪声增强（形变稳定性）：泛化到新材料 ✅</li>
+    </ul>
+    <p><strong>结论</strong>：正确的几何先验 = 从"玩具演示"到"可部署系统"的关键！</p>
+  </div>
+</div>

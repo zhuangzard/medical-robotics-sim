@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geometric Deep Learning 学习指南</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Serif+SC:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    .hero {
+      text-align: center;
+      padding: 60px 20px;
+      background: linear-gradient(135deg, var(--accent-light), var(--bg-secondary));
+      border-radius: var(--radius);
+      margin-bottom: 40px;
+    }
+    .hero h1 { font-size: 2.4rem; margin-bottom: 12px; }
+    .hero .subtitle { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 8px; }
+    .hero .authors { font-size: 0.95rem; color: var(--text-muted); }
+    .hero .arxiv { margin-top: 12px; }
+    .hero .arxiv a {
+      display: inline-block;
+      padding: 8px 20px;
+      background: var(--accent);
+      color: white;
+      border-radius: 20px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .hero .arxiv a:hover { background: var(--accent-dark); transform: translateY(-1px); }
+
+    .chapter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 20px;
+      margin: 30px 0;
+    }
+    .chapter-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: all 0.2s;
+      text-decoration: none;
+      color: var(--text);
+      display: block;
+    }
+    .chapter-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-2px);
+      text-decoration: none;
+    }
+    .chapter-card .ch-num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .chapter-card h3 { font-size: 1.1rem; margin: 0 0 8px 0; }
+    .chapter-card .ch-desc { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; }
+    .chapter-card .ch-pages { font-size: 0.8rem; color: var(--text-muted); margin-top: 10px; }
+    .chapter-card.highlight { border-color: var(--success); border-width: 2px; }
+    .chapter-card.highlight .ch-num { color: var(--success); }
+
+    .section-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin: 24px 0;
+    }
+    .main.index-main { margin-left: 0; max-width: 1000px; margin: calc(var(--header-height) + 20px) auto 0; padding: 20px 40px; }
+    @media (max-width: 640px) { .main.index-main { padding: 16px; } }
+  </style>
+</head>
+<body>
+  <div class="progress-bar"></div>
+
+  <header class="header">
+    <div class="header-title">📐 Geometric Deep Learning 学习指南</div>
+    <div class="header-nav">
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+  </header>
+
+  <main class="main index-main">
+
+    <div class="hero">
+      <h1>Geometric Deep Learning</h1>
+      <div class="subtitle">Grids, Groups, Graphs, Geodesics, and Gauges</div>
+      <div class="authors">Michael M. Bronstein, Joan Bruna, Taco Cohen, Petar Veličković (2021)</div>
+      <div class="arxiv">
+        <a href="https://arxiv.org/abs/2104.13478" target="_blank">📄 arXiv 2104.13478v2</a>
+      </div>
+    </div>
+
+    <!-- 阅读建议 -->
+    <div class="section-box">
+      <h2 style="margin-top:0; border-bottom-color: var(--success);">📖 阅读建议</h2>
+      
+      <h4>🎯 推荐阅读顺序</h4>
+      <ol>
+        <li><strong>🔰 Chapter 0</strong>（数学基础）— <span style="color: #f59e0b; font-weight: bold;">初学者从这里开始！</span>群论、张量、流形等所有前置知识</li>
+        <li><strong>Chapter 1-2</strong>（入门）— 理解高维学习的基本挑战和动机</li>
+        <li><strong>Chapter 3</strong>（核心理论）— 对称性、不变性、等变性的数学框架</li>
+        <li><strong>Chapter 4</strong>（几何域）— 五种几何结构：Grids, Groups, Graphs, Geodesics, Gauges</li>
+        <li><strong>Chapter 5</strong>（⭐ 最重要）— CNN、GNN、Transformer 等架构的几何推导</li>
+        <li><strong>Chapter 6</strong>（应用）— 实际应用场景</li>
+        <li><strong>Chapter 7</strong>（历史）— 选读，了解领域发展脉络</li>
+      </ol>
+
+      <h4>📋 预备知识</h4>
+      <ul>
+        <li><strong>线性代数</strong> — 向量空间、特征值、矩阵分解</li>
+        <li><strong>微积分</strong> — 多元微积分、积分变换（Fourier）</li>
+        <li><strong>概率论</strong> — 基本概率、期望、统计学习理论</li>
+        <li><strong>群论基础</strong> — 群、子群、群作用（Chapter 3 会详细介绍）</li>
+        <li><strong>深度学习基础</strong> — 了解 MLP、反向传播、梯度下降</li>
+      </ul>
+    </div>
+
+    <!-- 与 PhysRobot 项目的关系 -->
+    <div class="callout callout-project" style="margin: 24px 0;">
+      <h4>与 PhysRobot 项目的关系</h4>
+      <p>本书是我们 PhysRobot（物理引导的医疗机器人仿真）项目的核心理论参考：</p>
+      <ul>
+        <li><strong>GNN 用于物理仿真</strong> — Chapter 5.3-5.5 的图神经网络理论直接指导我们的粒子/网格仿真中消息传递网络的设计</li>
+        <li><strong>等变性保证物理一致性</strong> — Chapter 3 的对称性理论解释了为什么物理仿真中 SE(3) 等变性如此重要</li>
+        <li><strong>Mesh CNN 用于组织建模</strong> — Chapter 5.6 的网格卷积网络可用于软组织表面的形变预测</li>
+        <li><strong>几何域的选择</strong> — Chapter 4 帮助我们理解不同物理量（粒子位置、网格节点、力场）适合哪种几何表示</li>
+        <li><strong>Transformer 和 GNN 的统一</strong> — Chapter 5.4 揭示了 Attention 机制和图网络的深层联系</li>
+      </ul>
+    </div>
+
+    <!-- 章节目录 -->
+    <h2>📚 章节目录</h2>
+
+    <div class="chapter-grid">
+      <a href="chapter0/index.html" class="chapter-card" style="border-color: #f59e0b; border-width: 2px; background: linear-gradient(135deg, rgba(245,158,11,0.05), var(--bg-secondary));">
+        <div class="ch-num" style="color: #f59e0b;">00 🔰</div>
+        <h3>数学前置知识<br>Math Prerequisites</h3>
+        <div class="ch-desc">从零开始的数学基础：符号速查表、群论入门（魔方讲群公理）、张量直觉、流形与曲率、傅里叶变换、全书关键公式速解。<strong>初学者必读！</strong></div>
+        <div class="ch-pages">📄 新增章节 | 🕐 1-2 小时 | 🔑 前置知识</div>
+      </a>
+
+      <a href="chapter1/index.html" class="chapter-card">
+        <div class="ch-num">01</div>
+        <h3>Introduction 引言</h3>
+        <div class="ch-desc">深度学习的几何统一视角。介绍 Erlangen Program 的精神——用对称性统一所有主流神经网络架构。</div>
+        <div class="ch-pages">📄 1 页 | 🕐 10 分钟</div>
+      </a>
+
+      <a href="chapter2/index.html" class="chapter-card">
+        <div class="ch-num">02</div>
+        <h3>Learning in High Dimensions<br>高维空间中的学习</h3>
+        <div class="ch-desc">维度灾难与归纳偏置。为什么通用函数逼近在高维失效，以及正则性如何帮助我们。</div>
+        <div class="ch-pages">📄 4 页 | 🕐 20 分钟</div>
+      </a>
+
+      <a href="chapter3/index.html" class="chapter-card">
+        <div class="ch-num">03</div>
+        <h3>Geometric Priors<br>几何先验</h3>
+        <div class="ch-desc">对称性、群表示、不变性与等变性。Geometric Deep Learning 的数学蓝图：信号域、对称群、局部性、尺度分离。</div>
+        <div class="ch-pages">📄 21 页 | 🕐 2 小时</div>
+      </a>
+
+      <a href="chapter4/index.html" class="chapter-card">
+        <div class="ch-num">04</div>
+        <h3>Geometric Domains: the 5 Gs<br>几何域：五个 G</h3>
+        <div class="ch-desc">五种核心几何结构的详细分析：Graphs（图）、Grids（网格）、Groups（群）、Geodesics（测地线）、Gauges（标架）。</div>
+        <div class="ch-pages">📄 38 页 | 🕐 4 小时</div>
+      </a>
+
+      <a href="chapter5/index.html" class="chapter-card highlight">
+        <div class="ch-num">05 ⭐</div>
+        <h3>Geometric Deep Learning Models<br>几何深度学习模型</h3>
+        <div class="ch-desc">CNN、Group-equivariant CNN、GNN、Deep Sets、Transformer、Equivariant Message Passing、Mesh CNN、RNN/LSTM 的几何推导。与我们的项目最直接相关！</div>
+        <div class="ch-pages">📄 34 页 | 🕐 5 小时 | 🤖 PhysRobot 核心</div>
+      </a>
+
+      <a href="chapter6/index.html" class="chapter-card">
+        <div class="ch-num">06</div>
+        <h3>Problems and Applications<br>问题与应用</h3>
+        <div class="ch-desc">计算化学、药物发现、物理仿真、推荐系统、组合优化等实际应用场景。</div>
+        <div class="ch-pages">📄 12 页 | 🕐 1 小时</div>
+      </a>
+
+      <a href="chapter7/index.html" class="chapter-card">
+        <div class="ch-num">07</div>
+        <h3>Historic Perspective<br>历史视角</h3>
+        <div class="ch-desc">从 Erlangen Program 到现代几何深度学习的发展历程。参考文献和未来方向。</div>
+        <div class="ch-pages">📄 43 页 | 🕐 2 小时（含参考文献）</div>
+      </a>
+    </div>
+
+    <!-- 书籍信息 -->
+    <div class="section-box" style="margin-top: 40px;">
+      <h2 style="margin-top:0;">📋 书籍信息</h2>
+      <table>
+        <tr><th>标题</th><td>Geometric Deep Learning: Grids, Groups, Graphs, Geodesics, and Gauges</td></tr>
+        <tr><th>作者</th><td>Michael M. Bronstein, Joan Bruna, Taco Cohen, Petar Veličković</td></tr>
+        <tr><th>年份</th><td>2021</td></tr>
+        <tr><th>来源</th><td>arXiv 2104.13478v2</td></tr>
+        <tr><th>页数</th><td>160 页</td></tr>
+        <tr><th>提取图片</th><td>52 张</td></tr>
+        <tr><th>关键词</th><td>对称性 · 等变性 · 图神经网络 · 卷积 · 流形 · 群论 · Transformer</td></tr>
+      </table>
+    </div>
+
+    <footer style="text-align:center; color:var(--text-muted); padding:40px 0 20px; font-size:0.85rem;">
+      PhysRobot Project · Geometric Deep Learning Study Guide · 2026
+    </footer>
+
+  </main>
+
+  <script src="assets/script.js"></script>
+</body>
+</html>

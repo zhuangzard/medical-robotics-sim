@@ -1,0 +1,179 @@
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：内蕴网格 CNN — 什么是"内蕴"？</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白："内蕴"（intrinsic）是什么意思？和普通的 3D CNN 有什么区别？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>内蕴 vs 外延</strong>是微分几何的核心概念。</p>
+        
+        <p><strong>生活类比</strong>：</p>
+        <ul>
+          <li><strong>外延</strong>（extrinsic）：从外部空间看物体（如在 $\mathbb{R}^3$ 中嵌入的曲面）</li>
+          <li>例子：地球表面在 3D 空间中的形状（椭球）</li>
+          <li><strong>内蕴</strong>（intrinsic）：只从<strong>曲面自身</strong>的视角看（不考虑外部空间）</li>
+          <li>例子：地球表面上的<strong>最短路径</strong>（大圆弧）— 不需要"飞出地球"才能定义</li>
+        </ul>
+        
+        <p><strong>关键区别</strong>：</p>
+        <table>
+          <thead><tr><th>性质</th><th>外延方法</th><th>内蕴方法</th></tr></thead>
+          <tbody>
+            <tr><td>坐标</td><td>嵌入空间的 $(x, y, z)$</td><td>曲面自己的参数 $(u, v)$</td></tr>
+            <tr><td>距离</td><td>欧几里得距离 $\sqrt{\Delta x^2 + \Delta y^2 + \Delta z^2}$</td><td>测地线距离（曲面上的最短路径）</td></tr>
+            <tr><td>卷积</td><td>3D 网格卷积（如 voxel）</td><td>曲面上的卷积（沿测地线）</td></tr>
+            <tr><td>等变性</td><td>$E(3)$（刚体旋转/平移）</td><td>等距群（保持测地距离）</td></tr>
+          </tbody>
+        </table>
+        
+        <p><strong>为什么需要内蕴方法？</strong></p>
+        <ul>
+          <li>医学影像中的<strong>器官表面</strong>（心脏、大脑）是曲面，不是规则网格</li>
+          <li>内蕴距离<strong>更合理</strong>：器官上两点的"真实距离"应该沿着表面测量，而非"穿过"器官内部</li>
+          <li>等距不变性：即使器官<strong>变形</strong>（如呼吸导致的肺部扩张），内蕴距离保持不变</li>
+        </ul>
+        
+        <p><strong>例子：脑皮层分析</strong></p>
+        <ul>
+          <li>大脑皮层高度褶皱（沟回结构）</li>
+          <li>外延距离：两个脑区可能在 3D 空间中很近（隔着沟），但<strong>不直接相连</strong></li>
+          <li>内蕴距离：沿着皮层表面测量 → 反映真实的功能连接</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：测地线卷积（Geodesic CNN）</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：测地线卷积是怎么做的？曲面上没有"规则网格"，怎么定义卷积核？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>测地线 CNN</strong> (Masci et al., 2015) 将欧几里得卷积推广到流形。</p>
+        
+        <p><strong>核心思想</strong>：用<strong>测地线坐标系</strong>代替笛卡尔坐标。</p>
+        
+        <p><strong>Step 1：测地线极坐标</strong></p>
+        <ul>
+          <li>在中心点 $p$ 建立局部坐标系</li>
+          <li>对邻域内的点 $q$：
+            <ul>
+              <li>$r$：从 $p$ 到 $q$ 的<strong>测地线距离</strong>（沿曲面的最短路径长度）</li>
+              <li>$\theta$：<strong>角度</strong>（需要定义"参考方向"）</li>
+            </ul>
+          </li>
+          <li>类似 2D 图像的极坐标 $(r, \theta)$</li>
+        </ul>
+        
+        <p><strong>Step 2：定义卷积核</strong></p>
+        <ul>
+          <li>卷积核 $\theta(r, \theta)$ 是测地线极坐标上的函数</li>
+          <li>通常用<strong>径向基函数</strong>（RBF）参数化：
+            $$\theta(r, \theta) = \sum_{k=1}^K w_k \exp\left(-\frac{(r - r_k)^2}{2\sigma^2}\right) \cdot g_k(\theta)$$</li>
+          <li>$g_k(\theta)$ 可以是 Fourier 基：$\{\cos(n\theta), \sin(n\theta)\}$</li>
+        </ul>
+        
+        <p><strong>Step 3：卷积操作</strong></p>
+        $$f_p' = \sum_{q \in \mathcal{N}(p)} \theta(r_{pq}, \theta_{pq}) \cdot f_q \cdot w_{pq}$$
+        <ul>
+          <li>$\mathcal{N}(p)$：点 $p$ 的测地线邻域（所有测地距离 < $r_{\max}$ 的点）</li>
+          <li>$w_{pq}$：权重（如面积修正因子）</li>
+        </ul>
+        
+        <p><strong>挑战</strong>：</p>
+        <ol>
+          <li><strong>参考方向</strong>：如何在曲面上定义"角度 $\theta$"？
+            <ul>
+              <li>解决：用<strong>主曲率方向</strong>或<strong>并行传输</strong>（parallel transport）</li>
+            </ul>
+          </li>
+          <li><strong>测地距离计算</strong>：需要<strong>Dijkstra 算法</strong>或<strong>Fast Marching Method</strong></li>
+          <li><strong>计算复杂度</strong>：比欧几里得卷积慢很多</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：MoNet 与 Gauge 等变 CNN</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：MoNet 和 Gauge CNN 解决了什么问题？</p>
+      <div class="answer">
+        <p>💡 专家：它们都解决<strong>局部坐标系选择</strong>的问题。</p>
+        
+        <p><strong>MoNet（Monti et al., 2017）</strong>：</p>
+        <ul>
+          <li>核心思想：用<strong>可学习的权重函数</strong>代替固定的测地线坐标</li>
+          <li>公式：
+            $$f_i' = \sum_{j \in \mathcal{N}(i)} w(\mathbf{u}(i, j)) \cdot f_j$$
+            其中 $\mathbf{u}(i, j) \in \mathbb{R}^d$ 是<strong>伪坐标</strong>（pseudo-coordinates）</li>
+          <li>$\mathbf{u}$ 可以是：
+            <ul>
+              <li>测地距离 + 角度：$(r, \theta)$</li>
+              <li>边特征：相对位置、法向量夹角等</li>
+            </ul>
+          </li>
+          <li>权重函数 $w$ 用<strong>高斯混合模型</strong>（GMM）参数化</li>
+          <li>好处：统一框架涵盖图/网格/点云</li>
+        </ul>
+        
+        <p><strong>Gauge Equivariant CNN（Cohen et al., 2019）</strong>：</p>
+        <ul>
+          <li>问题：曲面上的卷积依赖<strong>局部坐标系的选择</strong>（gauge），但这个选择是任意的</li>
+          <li>例子：在球面上，"北"的方向在不同点指向不同</li>
+          <li>解决：设计<strong>规范等变</strong>（gauge equivariant）卷积，对坐标系选择不敏感</li>
+          <li>数学：用<strong>并行传输</strong>（parallel transport）同步不同点的坐标系</li>
+        </ul>
+        
+        <p><strong>与 GNN 的关系</strong>：</p>
+        <ul>
+          <li>内蕴网格 CNN 可以看作<strong>几何图上的 GNN</strong></li>
+          <li>节点 = 网格顶点</li>
+          <li>边 = 网格边，权重由测地距离/法向量等决定</li>
+          <li>MoNet 公式 $\approx$ GAT（可学习的边权重）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解：为什么需要内蕴方法？</h4>
+    <p><strong>类比：地图投影</strong></p>
+    <ul>
+      <li>外延方法 = 把地球"压平"成 2D 地图（墨卡托投影）</li>
+      <li>问题：<strong>失真</strong>！格陵兰岛看起来比非洲大（实际只有 1/14）</li>
+      <li>内蕴方法 = 直接在球面上工作，用<strong>经纬度</strong>和<strong>大圆弧距离</strong></li>
+      <li>好处：<strong>保持真实距离</strong>，不失真</li>
+    </ul>
+    
+    <p><strong>医学影像中的应用</strong>：</p>
+    <ul>
+      <li>心脏表面：收缩/舒张时形状变化，但<strong>表面积几乎不变</strong></li>
+      <li>内蕴方法对这种<strong>等距变形</strong>鲁棒</li>
+      <li>外延方法：心脏移动/旋转会导致特征完全不同</li>
+    </ul>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用：网格 CNN 的实际场景</h4>
+    <p><strong>场景 1：心脏表面分割</strong></p>
+    <ul>
+      <li>输入：心脏 MRI 重建的 3D 网格</li>
+      <li>任务：分割左心室、右心室、瓣膜等区域</li>
+      <li>方法：测地线 CNN 在网格上做语义分割</li>
+      <li>优势：对心脏姿态变化鲁棒</li>
+    </ul>
+    
+    <p><strong>场景 2：器官形状分析</strong></p>
+    <ul>
+      <li>任务：检测器官形态异常（如脑萎缩、肿瘤导致的变形）</li>
+      <li>方法：内蕴 CNN 提取形状特征 → 分类健康/病变</li>
+      <li>数据集：Alzheimer's 患者的脑部网格数据</li>
+    </ul>
+    
+    <p><strong>PhysRobot 关联</strong>：</p>
+    <ul>
+      <li>当前：粒子系统（点云）</li>
+      <li>扩展：如果要仿真<strong>薄膜</strong>（如腹膜、血管壁），需要网格表示</li>
+      <li>方法：MoNet 或 Gauge CNN 建模网格上的应力传播</li>
+    </ul>
+  </div>
+</div>

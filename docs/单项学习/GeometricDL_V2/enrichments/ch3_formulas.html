@@ -1,0 +1,349 @@
+<div class="enrichment-block" style="border-left-color: #8b5cf6;">
+  <h4>📐 Ch3 公式详解：群论与几何先验</h4>
+  
+  <!-- 公式 1: 信号空间定义 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$X(\Omega, C) = \{x : \Omega \to C\}$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$X(\Omega, C)$</td>
+        <td style="padding: 6px 12px;">信号空间 — 定义在域 $\Omega$ 上、取值为 $C$ 的所有函数的集合</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\Omega$</td>
+        <td style="padding: 6px 12px;">域（Domain）— 信号定义的"地盘"，可以是网格、图、流形等</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$C$</td>
+        <td style="padding: 6px 12px;">通道空间（Channel）— 信号的"颜色"，比如 RGB 图像是 $\mathbb{R}^3$</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$x : \Omega \to C$</td>
+        <td style="padding: 6px 12px;">一个具体的信号 — 把域上的每个点 $u \in \Omega$ 映射到一个值 $x(u) \in C$</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\{...\}$</td>
+        <td style="padding: 6px 12px;">集合符号 — 表示所有满足条件的函数构成的集合</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>这是在定义"什么是一个信号"——就是把空间上的每个位置 $u$ 对应到一个数值 $x(u)$ 的函数。</p>
+    <p><strong>🔍 类比：</strong>就像气温分布图：地图上每个位置（$\Omega$）对应一个温度值（$C$），整张图就是一个"信号" $x$。</p>
+  </div>
+
+  <!-- 公式 2: 信号内积 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\langle x, y \rangle = \int_{\Omega} \langle x(u), y(u) \rangle_C \, d\mu(u)$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\langle x, y \rangle$</td>
+        <td style="padding: 6px 12px;">两个信号的内积 — 衡量两个信号的"相似度"</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\int_{\Omega}$</td>
+        <td style="padding: 6px 12px;">在域上积分 — 把域上所有点的贡献累加起来</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\langle x(u), y(u) \rangle_C$</td>
+        <td style="padding: 6px 12px;">通道空间上的内积 — 位置 $u$ 处两个信号值的内积</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$d\mu(u)$</td>
+        <td style="padding: 6px 12px;">测度（微分元）— 积分时的"权重"，离散情况下就是求和</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>把两个信号在每个位置的相似度加权求和，得到整体相似度。</p>
+    <p><strong>🔍 类比：</strong>比较两张照片的相似度：对每个像素算颜色差异，然后把所有像素的差异加起来。</p>
+  </div>
+
+  <!-- 公式 3: 群作用在信号上 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$(g \cdot x)(u) = x(g^{-1}u)$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$g$</td>
+        <td style="padding: 6px 12px;">群元素 — 一个对称变换（如平移、旋转）</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$g \cdot x$</td>
+        <td style="padding: 6px 12px;">变换后的信号 — 对信号 $x$ 施加变换 $g$ 的结果</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$(g \cdot x)(u)$</td>
+        <td style="padding: 6px 12px;">新信号在位置 $u$ 的值 — 对位置 $u$ 求新信号的值</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$g^{-1}u$</td>
+        <td style="padding: 6px 12px;">逆变换后的位置 — 先对位置 $u$ 做逆变换</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$x(g^{-1}u)$</td>
+        <td style="padding: 6px 12px;">原信号在逆位置的值 — 从原信号取逆变换位置的值</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>对信号做变换，就是在新位置 $u$ 处，取原信号在"逆向查找位置" $g^{-1}u$ 的值。</p>
+    <p><strong>🔍 类比：</strong>把照片向右平移 10 像素：新位置 $u$ 的像素值，来自原图 $u-10$ 位置的像素（逆向查找）。</p>
+    <p><strong>⚠️ 为什么用 $g^{-1}$？</strong>保证群作用的复合规律：$(gh) \cdot x = g \cdot (h \cdot x)$。如果不用逆，会变成 $h \cdot (g \cdot x)$，顺序反了！</p>
+  </div>
+
+  <!-- 公式 4: 群表示 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\rho(gh) = \rho(g)\rho(h)$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\rho$</td>
+        <td style="padding: 6px 12px;">群表示（Representation）— 把抽象的群元素映射成矩阵</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\rho(g)$</td>
+        <td style="padding: 6px 12px;">群元素 $g$ 对应的矩阵 — 一个可逆矩阵，通常是 $n \times n$ 维</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$gh$</td>
+        <td style="padding: 6px 12px;">群元素的复合 — 先做变换 $h$，再做变换 $g$</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\rho(g)\rho(h)$</td>
+        <td style="padding: 6px 12px;">矩阵乘法 — 复合变换对应矩阵相乘</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>群表示是把抽象变换"翻译"成矩阵，而且保持复合关系：先做 $h$ 再做 $g$，等于矩阵 $\rho(g)$ 乘以 $\rho(h)$。</p>
+    <p><strong>🔍 类比：</strong>2D 平面旋转可以用 $2 \times 2$ 矩阵表示，先转 30°再转 60°，等于两个旋转矩阵相乘。</p>
+  </div>
+
+  <!-- 公式 5: 等变性定义 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$f(\rho(g)x) = \rho'(g)f(x)$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$f$</td>
+        <td style="padding: 6px 12px;">等变函数 — 一个满足等变性质的映射</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\rho(g)$</td>
+        <td style="padding: 6px 12px;">输入空间的群作用 — 对输入 $x$ 做变换 $g$</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\rho'(g)$</td>
+        <td style="padding: 6px 12px;">输出空间的群作用 — 对输出 $f(x)$ 做变换 $g$</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">等式</td>
+        <td style="padding: 6px 12px;">"先变换再处理" = "先处理再变换" — 顺序可交换</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>如果输入变了，输出也以同样的方式变化——变换是"透明传递"的。</p>
+    <p><strong>🔍 类比：</strong>图像分割：输入照片向右移 10 像素，输出分割掩码也向右移 10 像素。</p>
+    <p><strong>💡 与不变性的区别：</strong>不变性是 $f(gx) = f(x)$（输出不变），等变性是 $f(gx) = g f(x)$（输出跟着变）。</p>
+  </div>
+
+  <!-- 公式 6: 不变性定义 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$f(\rho(g)x) = f(x) \quad \forall g \in G$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$f$</td>
+        <td style="padding: 6px 12px;">不变函数 — 输出不受输入变换影响</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\rho(g)x$</td>
+        <td style="padding: 6px 12px;">变换后的输入 — 对 $x$ 施加变换 $g$</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$f(x)$</td>
+        <td style="padding: 6px 12px;">原输出 — 不变换时的输出</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\forall g \in G$</td>
+        <td style="padding: 6px 12px;">对所有群元素 $g$ — 无论做什么变换，输出都不变</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>无论怎么变换输入，输出始终一样——函数"看穿"了变换。</p>
+    <p><strong>🔍 类比：</strong>图像分类：无论猫的照片放在左边还是右边，识别结果都是"猫"。</p>
+  </div>
+
+  <!-- 公式 7: 几何稳定性 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\|f(\rho(\tau)x) - f(x)\| \leq C \cdot c(\tau) \cdot \|x\|$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\tau$</td>
+        <td style="padding: 6px 12px;">形变（Deformation）— 接近对称群 $G$ 的变换</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$c(\tau)$</td>
+        <td style="padding: 6px 12px;">形变复杂度 — 衡量 $\tau$ 偏离对称群 $G$ 的程度（$c(\tau)=0$ 当 $\tau \in G$）</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\|f(\rho(\tau)x) - f(x)\|$</td>
+        <td style="padding: 6px 12px;">输出的变化量 — 形变后输出与原输出的差异</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$C$</td>
+        <td style="padding: 6px 12px;">稳定性常数 — 与输入 $x$ 无关的常数</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\|x\|$</td>
+        <td style="padding: 6px 12px;">输入的范数（大小）— 归一化因子</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>小形变只引起小变化——输出对"接近对称"的变换不敏感，变化量与形变复杂度成正比。</p>
+    <p><strong>🔍 类比：</strong>识别手写数字：轻微的笔画扭曲不影响识别结果，但形变越大，识别越不稳定。</p>
+    <p><strong>💡 为什么重要：</strong>纯粹的不变性太严格（大形变也不变），几何稳定性更现实——允许小扰动，但要求输出变化可控。</p>
+  </div>
+
+  <!-- 公式 8: 卷积定理 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$\widehat{(x \star \theta)}(\xi) = \hat{x}(\xi) \cdot \hat{\theta}(\xi)$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$x \star \theta$</td>
+        <td style="padding: 6px 12px;">卷积 — 信号 $x$ 与滤波器 $\theta$ 的卷积</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\hat{x}(\xi)$</td>
+        <td style="padding: 6px 12px;">傅里叶变换 — 信号 $x$ 在频率 $\xi$ 处的频谱</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\hat{\theta}(\xi)$</td>
+        <td style="padding: 6px 12px;">滤波器的频率响应 — 滤波器 $\theta$ 在频率 $\xi$ 处的响应</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\cdot$</td>
+        <td style="padding: 6px 12px;">逐点相乘 — 频域上的简单乘法</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\widehat{...}$</td>
+        <td style="padding: 6px 12px;">傅里叶变换符号 — 把时域信号变换到频域</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>时域卷积 = 频域相乘——卷积在频域变成简单的乘法，计算更高效。</p>
+    <p><strong>🔍 类比：</strong>音频处理：时域的复杂滤波，在频域只需把频谱乘以滤波器的频率响应。</p>
+    <p><strong>💡 为什么重要：</strong>CNN 的卷积核可以在频域理解为频率选择器，这也是为什么傅里叶分析对理解深度学习很重要。</p>
+  </div>
+
+  <!-- 公式 9: 小波变换 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$(W_\psi x)(u, \xi) = \xi^{-1/2} \int_{-\infty}^{+\infty} \psi\left(\frac{v-u}{\xi}\right) x(v) \, dv$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$W_\psi$</td>
+        <td style="padding: 6px 12px;">小波变换 — 用母小波 $\psi$ 对信号 $x$ 做多尺度分析</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$(u, \xi)$</td>
+        <td style="padding: 6px 12px;">位置-尺度坐标 — $u$ 是位置，$\xi$ 是尺度（尺度越大越粗糙）</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\psi$</td>
+        <td style="padding: 6px 12px;">母小波（Mother Wavelet）— 基础的振荡函数</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\frac{v-u}{\xi}$</td>
+        <td style="padding: 6px 12px;">归一化位置 — 平移到 $u$，缩放 $\xi$ 倍</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\xi^{-1/2}$</td>
+        <td style="padding: 6px 12px;">归一化系数 — 保证不同尺度的能量一致</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\int ... dv$</td>
+        <td style="padding: 6px 12px;">积分 — 信号与缩放平移后的小波做内积</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>小波变换在每个位置 $u$ 和尺度 $\xi$ 上，用"放大/缩小+平移"的小波去匹配信号，得到局部时频特征。</p>
+    <p><strong>🔍 类比：</strong>用不同尺寸的"放大镜"（小波）扫描信号：大放大镜看整体趋势（粗尺度），小放大镜看细节（细尺度）。</p>
+    <p><strong>💡 与傅里叶的区别：</strong>傅里叶只有频率信息（全局），小波同时有位置和尺度信息（局部），更适合分析非平稳信号。</p>
+  </div>
+
+  <!-- 公式 10: GDL Blueprint - 等变层 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$B(g \cdot x) = g \cdot B(x) \quad \forall g \in G$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$B$</td>
+        <td style="padding: 6px 12px;">线性等变层 — GDL 蓝图的核心构建块</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$X(\Omega, C)$</td>
+        <td style="padding: 6px 12px;">输入信号空间 — 定义在域 $\Omega$ 上，通道数为 $C$</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$X(\Omega', C')$</td>
+        <td style="padding: 6px 12px;">输出信号空间 — 可能在不同的域 $\Omega'$，不同通道数 $C'$</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$g \cdot x$</td>
+        <td style="padding: 6px 12px;">输入变换 — 对输入信号施加群变换</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$g \cdot B(x)$</td>
+        <td style="padding: 6px 12px;">输出变换 — 对输出施加相同的群变换</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>线性等变层是神经网络层，它保证"输入怎么变，输出就怎么变"——这是 GDL 最核心的构建块。</p>
+    <p><strong>🔍 类比：</strong>CNN 的卷积层就是平移等变层：输入图像平移，输出特征图也平移。</p>
+    <p><strong>💡 为什么线性？</strong>因为线性映射的复合仍是线性，且容易优化；非线性通过激活函数 $\sigma$ 逐元素施加。</p>
+  </div>
+
+  <!-- 公式 11: 局部等变性 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$(Ux)(u) \text{ 仅依赖于 } \{x(v) : v \in N_u\}$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$U$</td>
+        <td style="padding: 6px 12px;">局部等变算子 — 满足等变性的局部操作</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$(Ux)(u)$</td>
+        <td style="padding: 6px 12px;">位置 $u$ 的输出 — 对输入 $x$ 在位置 $u$ 处的运算结果</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$N_u$</td>
+        <td style="padding: 6px 12px;">感受野（Receptive Field）— 位置 $u$ 的邻域，距离 $\leq r$</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$x(v)$</td>
+        <td style="padding: 6px 12px;">邻域信号值 — 只看邻居 $v \in N_u$ 的信号值</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>局部等变层只看"附近"的信息，不看远处——这让网络更稳定，且能通过叠加层逐渐扩大视野。</p>
+    <p><strong>🔍 类比：</strong>CNN 的 3×3 卷积核：每个输出像素只由 3×3 邻域的输入像素决定，不看整张图。</p>
+    <p><strong>💡 为什么重要：</strong>局部性 + 多层叠加 = 既稳定又能捕获长程依赖。这是深度网络的核心设计哲学。</p>
+  </div>
+
+  <!-- 公式 12: GDL Blueprint 完整公式 -->
+  <div class="formula-explain" style="margin: 1.5rem 0; padding: 1rem; background: rgba(139,92,246,0.08); border-radius: 8px;">
+    <p style="font-size: 1.1em; text-align: center; margin-bottom: 1rem;">$$f = A \circ \sigma \circ U_J \circ \sigma \circ \cdots \circ \sigma \circ U_1$$</p>
+    <table style="width: 100%; font-size: 0.95em; border-collapse: collapse;">
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$f$</td>
+        <td style="padding: 6px 12px;">完整的 GDL 模型 — 从输入到输出的整个映射</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$U_j$</td>
+        <td style="padding: 6px 12px;">第 $j$ 层的局部等变层 — 提取局部特征并保持等变性</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\sigma$</td>
+        <td style="padding: 6px 12px;">非线性激活函数 — 逐元素施加（如 ReLU），保持等变性</td>
+      </tr>
+      <tr style="border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$A$</td>
+        <td style="padding: 6px 12px;">全局不变池化层 — 最后汇总成不变输出（如分类标签）</td>
+      </tr>
+      <tr>
+        <td style="padding: 6px 12px; font-weight: bold; white-space: nowrap;">$\circ$</td>
+        <td style="padding: 6px 12px;">函数复合 — 从右向左依次执行：$U_1 \to \sigma \to U_2 \to \cdots$</td>
+      </tr>
+    </table>
+    <p style="margin-top: 1rem;"><strong>🗣️ 用人话说：</strong>GDL 蓝图是：多层"等变层+激活函数"提取特征，最后用"不变池化"得到最终结果。</p>
+    <p><strong>🔍 类比：</strong>经典 CNN 架构：卷积层（等变）→ ReLU（激活）→ 卷积层 → ReLU → 全局平均池化（不变）→ 分类。</p>
+    <p><strong>💡 三大原则统一：</strong></p>
+    <ul style="margin-left: 1.5rem; font-size: 0.95em;">
+      <li><strong>对称性：</strong>$U_j$ 是等变层，$A$ 是不变层</li>
+      <li><strong>几何稳定性：</strong>局部等变层对小形变稳定</li>
+      <li><strong>尺度分离：</strong>多层逐渐扩大感受野（通常配合 coarsening/pooling）</li>
+    </ul>
+  </div>
+
+</div>

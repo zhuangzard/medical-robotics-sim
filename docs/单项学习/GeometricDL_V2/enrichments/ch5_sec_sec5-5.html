@@ -1,0 +1,425 @@
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：什么是 E(3) 等变性？</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：$E(3)$ 是什么群？为什么分子/粒子系统需要 E(3) 等变性？和置换不变性有什么区别？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>$E(3)$ = 3D 欧几里得群</strong>，包含所有保持距离不变的刚体变换。</p>
+        
+        <p><strong>$E(3)$ 的组成</strong>：</p>
+        <ul>
+          <li><strong>平移</strong>（Translations）：$\mathbf{x} \mapsto \mathbf{x} + \mathbf{t}$，$\mathbf{t} \in \mathbb{R}^3$</li>
+          <li><strong>旋转</strong>（Rotations）：$\mathbf{x} \mapsto R\mathbf{x}$，$R \in SO(3)$（旋转矩阵，$R^\top R = I$, $\det R = 1$）</li>
+          <li>组合：$\mathbf{x} \mapsto R\mathbf{x} + \mathbf{t}$</li>
+        </ul>
+        
+        <p><strong>为什么物理系统需要 E(3) 等变性？</strong></p>
+        <ul>
+          <li><strong>平移不变性</strong>：物理定律在任何位置都相同（牛顿定律不依赖绝对坐标）</li>
+          <li><strong>旋转不变性</strong>：空间没有"绝对方向"（在地球上还是在太空中，力学规律相同）</li>
+          <li>例子：分子的能量只依赖原子间<strong>相对位置</strong>，与分子整体放在哪里、如何旋转无关</li>
+        </ul>
+        
+        <p><strong>置换 vs E(3) 等变性</strong>：</p>
+        <table>
+          <thead><tr><th>对称性</th><th>作用对象</th><th>含义</th><th>例子</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>置换不变性</strong><br>$\Sigma_n$</td>
+              <td>节点编号</td>
+              <td>重新排列粒子编号不影响结果</td>
+              <td>粒子 1,2,3 = 粒子 3,1,2</td>
+            </tr>
+            <tr>
+              <td><strong>E(3) 等变性</strong></td>
+              <td>3D 空间坐标</td>
+              <td>旋转/平移整个系统，输出也旋转/平移</td>
+              <td>旋转分子 → 预测的力也旋转</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <p><strong>标准 GNN 的问题</strong>：</p>
+        <ul>
+          <li>GCN/GAT/GraphSAGE 只保证<strong>置换不变性</strong></li>
+          <li>但它们<strong>不保证</strong> E(3) 等变性！</li>
+          <li>如果直接把 3D 坐标 $(x,y,z)$ 作为特征输入 GNN，旋转分子后，输出会<strong>完全不同</strong></li>
+        </ul>
+        
+        <p><strong>反例</strong>（标准 GNN 失败）：</p>
+        <ul>
+          <li>输入：氢分子 H₂，原子坐标 $[x_1=(0,0,0), x_2=(1,0,0)]$</li>
+          <li>GNN 预测：原子 1 受力 $\mathbf{F}_1 = (1, 0, 0)$</li>
+          <li>旋转分子 90°：$x_1'=(0,0,0), x_2'=(0,1,0)$</li>
+          <li>如果 GNN 是 E(3) 等变的，应该预测 $\mathbf{F}_1' = (0, 1, 0)$</li>
+          <li>但标准 GNN 会预测<strong>错误的</strong>方向（因为它只是学习了数据模式，没有理解旋转）</li>
+        </ul>
+        
+        <p><strong>E(3) 等变的严格定义</strong>：</p>
+        <p>对任意 $R \in SO(3)$, $\mathbf{t} \in \mathbb{R}^3$，如果函数 $F$ 满足：</p>
+        $$F(R\mathbf{x}_1 + \mathbf{t}, \ldots, R\mathbf{x}_n + \mathbf{t}) = R \cdot F(\mathbf{x}_1, \ldots, \mathbf{x}_n) + \mathbf{t}$$
+        <p>则称 $F$ 是 <strong>E(3) 等变</strong>的。</p>
+        
+        <p><strong>生活类比</strong>：</p>
+        <ul>
+          <li>想象你在测量两根棍子之间的夹角</li>
+          <li><strong>旋转整张桌子</strong>（空间旋转）→ 夹角不变（E(3) 不变性）</li>
+          <li><strong>交换两根棍子的标签</strong>（置换）→ 夹角不变（置换不变性）</li>
+          <li>物理量（如力、速度）需要<strong>同时满足</strong>这两种对称性</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：EGNN 的核心公式逐步推导</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：EGNN 的公式看起来很复杂：<br>$f_u' = \phi(f_u, \bigoplus_v \psi_f(f_u, f_v, \|x_u - x_v\|^2))$<br>$x_u' = x_u + \sum_v (x_u - x_v) \psi_c(f_u, f_v, \|x_u - x_v\|^2)$<br>为什么这样设计就能保证 E(3) 等变性？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>EGNN 的天才之处</strong>：用最简单的设计达到 E(3) 等变性。逐步理解：</p>
+        
+        <p><strong>Step 1：区分标量特征和坐标</strong></p>
+        <ul>
+          <li>$f_u$：<strong>标量特征</strong>（如原子类型、质量）— 旋转/平移不变</li>
+          <li>$x_u \in \mathbb{R}^3$：<strong>3D 坐标</strong> — 旋转/平移下会变化</li>
+          <li>关键思想：<strong>分别处理</strong>两类信息</li>
+        </ul>
+        
+        <p><strong>Step 2：标量特征更新（E(3) 不变）</strong></p>
+        $$f_u' = \phi\left(f_u, \bigoplus_{v \in \mathcal{N}_u} \psi_f(f_u, f_v, \|x_u - x_v\|^2)\right)$$
+        <ul>
+          <li>$\|x_u - x_v\|^2$：距离的<strong>平方</strong>（E(3) 不变量）</li>
+          <li>$\psi_f$：消息函数，输入是<strong>标量</strong>（$f_u, f_v$）和<strong>距离</strong>（不变量）</li>
+          <li>输出 $f_u'$ 只依赖不变量 → 旋转/平移输入时，$f_u'$ 不变 ✅</li>
+        </ul>
+        
+        <p><strong>Step 3：坐标更新（E(3) 等变）</strong></p>
+        $$x_u' = x_u + \sum_{v \neq u} (x_u - x_v) \psi_c(f_u, f_v, \|x_u - x_v\|^2)$$
+        <ul>
+          <li>$\psi_c$：输出<strong>标量</strong>权重（不变）</li>
+          <li>$(x_u - x_v)$：<strong>向量</strong>（相对位移）</li>
+          <li>关键：<strong>标量 × 向量</strong> = 新向量</li>
+        </ul>
+        
+        <p><strong>Step 4：等变性证明（旋转）</strong></p>
+        <p>设旋转变换 $\mathbf{x} \mapsto R\mathbf{x}$，我们要证明 $x_u' \mapsto Rx_u'$。</p>
+        <ul>
+          <li>原始更新：$x_u' = x_u + \sum_v (x_u - x_v) w_v$（简记 $w_v = \psi_c(\cdots)$）</li>
+          <li>旋转后输入：$\tilde{x}_u = Rx_u$，$\tilde{x}_v = Rx_v$</li>
+          <li>距离不变：$\|\tilde{x}_u - \tilde{x}_v\|^2 = \|R(x_u - x_v)\|^2 = \|x_u - x_v\|^2$</li>
+          <li>因此权重不变：$\tilde{w}_v = \psi_c(f_u, f_v, \|\tilde{x}_u - \tilde{x}_v\|^2) = w_v$</li>
+          <li>旋转后的更新：
+            $$\begin{align*}
+            \tilde{x}_u' &= \tilde{x}_u + \sum_v (\tilde{x}_u - \tilde{x}_v) \tilde{w}_v \\
+            &= Rx_u + \sum_v (Rx_u - Rx_v) w_v \\
+            &= Rx_u + R\sum_v (x_u - x_v) w_v \\
+            &= R\left(x_u + \sum_v (x_u - x_v) w_v\right) \\
+            &= R x_u'
+            \end{align*}$$
+          </li>
+          <li>证毕 ✅</li>
+        </ul>
+        
+        <p><strong>Step 5：平移等变性</strong>（更简单）</p>
+        <ul>
+          <li>平移 $\mathbf{x} \mapsto \mathbf{x} + \mathbf{t}$</li>
+          <li>相对位移：$(x_u + \mathbf{t}) - (x_v + \mathbf{t}) = x_u - x_v$（平移抵消）</li>
+          <li>因此 $x_u' \mapsto x_u' + \mathbf{t}$ ✅</li>
+        </ul>
+        
+        <p><strong>关键洞察</strong>：</p>
+        <ol>
+          <li><strong>只用相对量</strong>：$x_u - x_v$（不用绝对坐标 $x_u$）→ 平移不变</li>
+          <li><strong>只用不变量</strong>：$\|x_u - x_v\|$（不用向量本身）→ 旋转不变的标量</li>
+          <li><strong>标量 × 向量</strong>：$w (x_u - x_v)$（标量权重乘以向量）→ 旋转等变</li>
+        </ol>
+        
+        <p><strong>为什么不直接用 $(x_u - x_v)$ 作为特征？</strong></p>
+        <ul>
+          <li>如果 $\psi_f$ 接收向量 $(x_u - x_v)$，旋转后向量会变 → $f_u'$ 会变 → 不再是不变量</li>
+          <li>只用距离 $\|x_u - x_v\|$：丢弃了方向信息，只保留长度 → 完全不变</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：Tensor Field Networks 与不可约表示</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：EGNN 只能处理标量特征，如果节点特征本身是<strong>向量</strong>（如速度）或<strong>张量</strong>（如应力），怎么办？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>Tensor Field Networks (TFN)</strong> 和 <strong>SE(3)-Transformer</strong> 使用<strong>不可约表示</strong>理论，可以处理任意类型的张量。</p>
+        
+        <p><strong>问题背景</strong>：</p>
+        <ul>
+          <li>EGNN 假设所有特征是<strong>标量</strong>（0 阶张量）</li>
+          <li>但物理中很多量是<strong>向量</strong>（1 阶张量）或<strong>矩阵</strong>（2 阶张量）：</li>
+          <li>例子：力 $\mathbf{F}$、速度 $\mathbf{v}$、角动量 $\mathbf{L}$（向量）；应力张量 $\boldsymbol{\sigma}$（矩阵）</li>
+        </ul>
+        
+        <p><strong>核心数学：不可约表示（Irreducible Representations, Irreps）</strong></p>
+        <ul>
+          <li>旋转群 $SO(3)$ 的任何表示都可以分解为<strong>不可约</strong>块（就像矩阵的特征值分解）</li>
+          <li>标准基：<strong>球谐函数</strong> $Y_l^m(\theta, \phi)$，其中 $l$ 是<strong>阶数</strong>（order）</li>
+          <li>$l=0$：标量（1 个分量）</li>
+          <li>$l=1$：向量（3 个分量，对应 $m = -1, 0, +1$）</li>
+          <li>$l=2$：2 阶张量（5 个独立分量，对应无迹对称张量）</li>
+        </ul>
+        
+        <p><strong>如何表示向量？</strong></p>
+        <ul>
+          <li>笛卡尔坐标 $(x, y, z)$ <strong>不是</strong>不可约表示（旋转时三个分量会混合）</li>
+          <li>球坐标 $(Y_1^{-1}, Y_1^0, Y_1^{+1})$ <strong>是</strong>不可约表示：
+            $$Y_1^{-1} = \frac{x - iy}{\sqrt{2}}, \quad Y_1^0 = z, \quad Y_1^{+1} = -\frac{x + iy}{\sqrt{2}}$$</li>
+          <li>旋转 $R$ 后，每个 $Y_1^m$ 只与<strong>同阶</strong>的 $Y_1^{m'}$ 线性组合（$3 \times 3$ Wigner D-矩阵）</li>
+        </ul>
+        
+        <p><strong>Tensor Field Network 的核心思想</strong>：</p>
+        <ol>
+          <li>将所有特征表示为<strong>不可约表示的直和</strong>：$f = \bigoplus_{l=0}^{L_{\max}} f^{(l)}$</li>
+          <li>$f^{(0)}$：标量部分（如原子类型）</li>
+          <li>$f^{(1)}$：向量部分（如速度）</li>
+          <li>$f^{(2)}$：2 阶张量部分</li>
+          <li>消息传递时，用<strong>Clebsch-Gordan 系数</strong>（CG 系数）组合不同阶的特征</li>
+          <li>CG 系数保证组合后仍然是等变的</li>
+        </ol>
+        
+        <p><strong>CG 系数的作用</strong>：</p>
+        <ul>
+          <li>问题：如何从两个向量 $f^{(1)}$ 和 $g^{(1)}$ 生成一个新的标量/向量/张量？</li>
+          <li>答案：用 CG 系数 $C_{l_1 m_1, l_2 m_2}^{l m}$ 组合</li>
+          <li>例子（向量 × 向量）：
+            <ul>
+              <li>→ 标量（$l=0$）：$f \cdot g$（点积）</li>
+              <li>→ 向量（$l=1$）：$f \times g$（叉积）</li>
+              <li>→ 2 阶张量（$l=2$）：对称无迹部分 $f \otimes g$</li>
+            </ul>
+          </li>
+        </ul>
+        
+        <p><strong>为什么这么复杂？</strong></p>
+        <ul>
+          <li>代价：数学复杂（需要球谐函数、CG 系数）</li>
+          <li>收益：<strong>理论保证</strong>的等变性 + 可以处理任意物理量</li>
+          <li>适用场景：分子动力学、量子化学、天体物理</li>
+        </ul>
+        
+        <p><strong>现代简化方法：E(n)-GNN (Satorras et al., 2021)</strong></p>
+        <ul>
+          <li>用 EGNN 的思路：<strong>不显式表示旋转</strong>，只用不变量 + 等变构造</li>
+          <li>速度特征：用<strong>速度的模</strong> $\|\mathbf{v}\|$ 作为标量，方向信息隐式包含在坐标更新中</li>
+          <li>更简单但表达力略低（无法显式处理角动量等高阶量）</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：PhysRobot 的 EdgeFrame 设计</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：项目代码里的 <code>EdgeFrame</code> 是怎么编码粒子间关系的？为什么要分别存储 $\mathbf{r}_{ij}$ 和 $\|\mathbf{r}_{ij}\|$？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>EdgeFrame 的设计</strong>直接来自 EGNN 理论，但针对<strong>动力学系统</strong>优化。</p>
+        
+        <p><strong>完整特征列表</strong>（8 维）：</p>
+        <pre><code>edge_features = [
+    r_x, r_y, r_z,        # 相对位移（向量，3D）
+    ||r||,                 # 距离（标量，不变量）
+    v_x, v_y, v_z,        # 相对速度（向量，3D）
+    ||v||                  # 速率（标量，不变量）
+]</code></pre>
+        
+        <p><strong>为什么需要向量 + 标量？</strong></p>
+        <table>
+          <thead><tr><th>特征</th><th>类型</th><th>E(3) 性质</th><th>物理意义</th></tr></thead>
+          <tbody>
+            <tr><td>$\mathbf{r}_{ij}$</td><td>向量</td><td>等变</td><td>粒子 $j$ 相对 $i$ 的<strong>方向</strong></td></tr>
+            <tr><td>$\|\mathbf{r}_{ij}\|$</td><td>标量</td><td>不变</td><td>粒子间<strong>距离</strong>（如弹簧长度）</td></tr>
+            <tr><td>$\mathbf{v}_{\text{rel}}$</td><td>向量</td><td>等变</td><td>相对运动<strong>方向</strong>（碰撞/分离）</td></tr>
+            <tr><td>$\|\mathbf{v}_{\text{rel}}\|$</td><td>标量</td><td>不变</td><td>相对<strong>速率</strong>（碰撞强度）</td></tr>
+          </tbody>
+        </table>
+        
+        <p><strong>设计原理</strong>：</p>
+        <ol>
+          <li><strong>向量特征</strong>（$\mathbf{r}, \mathbf{v}$）：提供<strong>方向信息</strong>
+            <ul>
+              <li>用于计算力的方向（如弹簧力沿 $\mathbf{r}$ 方向）</li>
+              <li>必须保留完整的 3D 信息</li>
+            </ul>
+          </li>
+          <li><strong>标量特征</strong>（$\|\mathbf{r}\|, \|\mathbf{v}\|$）：提供<strong>幅度信息</strong>
+            <ul>
+              <li>用于计算力的大小（如胡克定律 $F = k \|\mathbf{r} - \mathbf{r}_0\|$）</li>
+              <li>E(3) 不变 → 可以直接输入 MLP</li>
+            </ul>
+          </li>
+        </ol>
+        
+        <p><strong>具体应用（弹簧力）</strong>：</p>
+        <ul>
+          <li>物理公式：$\mathbf{F}_{ij} = -k (\|\mathbf{r}_{ij}\| - l_0) \frac{\mathbf{r}_{ij}}{\|\mathbf{r}_{ij}\|}$</li>
+          <li>分解：
+            <ul>
+              <li>$k (\|\mathbf{r}_{ij}\| - l_0)$：<strong>标量</strong>权重（取决于距离）</li>
+              <li>$\frac{\mathbf{r}_{ij}}{\|\mathbf{r}_{ij}\|}$：<strong>单位向量</strong>（方向）</li>
+            </ul>
+          </li>
+          <li>EdgeFrame 提供：$\|\mathbf{r}_{ij}\|$ 和 $\mathbf{r}_{ij}$ → MLP 学习权重 $w$，然后 $\mathbf{F} = w \cdot \mathbf{r}_{ij}$</li>
+        </ul>
+        
+        <p><strong>反对称性验证</strong>：</p>
+        <ul>
+          <li>牛顿第三定律：$\mathbf{F}_{ij} = -\mathbf{F}_{ji}$</li>
+          <li>EdgeFrame 保证：$\mathbf{r}_{ij} = -\mathbf{r}_{ji}$（相对位移反向）</li>
+          <li>如果消息函数是对称的（$\psi(f_i, f_j, e_{ij}) = \psi(f_j, f_i, e_{ji})$），加权后自然满足反对称性</li>
+        </ul>
+        
+        <p><strong>代码实现要点</strong>：</p>
+        <pre><code># 相对位移
+r_ij = positions[tgt] - positions[src]  # (E, 3)
+r_norm = torch.norm(r_ij, dim=1, keepdim=True)  # (E, 1)
+
+# 相对速度
+v_rel = velocities[tgt] - velocities[src]  # (E, 3)
+v_norm = torch.norm(v_rel, dim=1, keepdim=True)  # (E, 1)
+
+# 拼接：[向量, 标量, 向量, 标量] = 8 维
+edge_feat = torch.cat([r_ij, r_norm, v_rel, v_norm], dim=1)</code></pre>
+        
+        <p><strong>扩展：加入角度信息</strong>（未来改进）</p>
+        <ul>
+          <li>当前 EdgeFrame 是<strong>成对</strong>的（只看两个粒子）</li>
+          <li>三体作用（如弯曲力）需要<strong>角度</strong>：$\angle(i, j, k)$</li>
+          <li>可以扩展为 <strong>3-body EdgeFrame</strong>：包含两个相对向量和它们的夹角</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解：等变性 = "正确旋转"</h4>
+    <p><strong>生活类比：指南针</strong></p>
+    <ul>
+      <li>你有一个指南针，它指向北方</li>
+      <li><strong>旋转你自己</strong>（空间旋转）→ 指南针的指针也相对你旋转（但仍指向北）</li>
+      <li>这就是<strong>等变性</strong>：输出"跟随"输入旋转</li>
+      <li>如果指南针是<strong>不变的</strong>（总是指向同一方向），那就是"不变性"</li>
+    </ul>
+    
+    <p><strong>物理直觉</strong>：</p>
+    <ul>
+      <li><strong>标量</strong>（如温度、质量）：旋转/平移空间，值不变 → <strong>不变</strong></li>
+      <li><strong>向量</strong>（如力、速度）：旋转空间，方向跟着旋转 → <strong>等变</strong></li>
+      <li><strong>张量</strong>（如应力）：旋转空间，所有分量按特定规则变换 → <strong>等变</strong></li>
+    </ul>
+    
+    <p><strong>为什么 EGNN 的设计"优雅"？</strong></p>
+    <ul>
+      <li>不需要显式处理旋转矩阵 $R$（避免复杂的球谐函数）</li>
+      <li>只用<strong>相对量</strong>和<strong>不变量</strong>→ 自然满足等变性</li>
+      <li>简单、高效、可解释</li>
+    </ul>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用：E(3) 等变性的实际价值</h4>
+    <p><strong>场景 1：手术机器人的力感知</strong></p>
+    <ul>
+      <li>问题：机器人手臂接触软组织，需要预测<strong>接触力</strong></li>
+      <li>挑战：接触点的空间方向随机，不能假设"总是从上往下接触"</li>
+      <li>解决：E(3) 等变网络 → 无论手臂从哪个角度接触，预测的力方向都<strong>正确</strong></li>
+      <li>数据效率：只需要<strong>一个方向</strong>的训练数据，自动泛化到所有方向</li>
+    </ul>
+    
+    <p><strong>场景 2：PhysRobot 的粒子仿真</strong></p>
+    <ul>
+      <li>当前实现：EdgeFrame（相对位移 + 距离）→ 天然 E(3) 等变</li>
+      <li>好处：无论患者体位如何（仰卧/侧卧/俯卧），仿真结果<strong>物理一致</strong></li>
+      <li>扩展：加入<strong>速度</strong> EdgeFrame（已实现）→ 处理动态碰撞</li>
+    </ul>
+    
+    <p><strong>场景 3：分子对接（药物设计）</strong></p>
+    <ul>
+      <li>问题：预测药物分子与蛋白质的结合姿态</li>
+      <li>挑战：分子可以从<strong>任意角度</strong>接近蛋白质</li>
+      <li>方法：E(3) 等变 GNN（如 SchNet, DimeNet）预测结合能</li>
+      <li>优势：旋转不变性 = 不需要枚举所有可能的对接角度</li>
+    </ul>
+  </div>
+</div>
+
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：EGNN vs TFN vs SchNet 对比</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：这么多 E(3) 等变方法，应该用哪个？</p>
+      <div class="answer">
+        <p>💡 专家：<strong>选择指南</strong>：</p>
+        
+        <table>
+          <thead><tr><th>方法</th><th>复杂度</th><th>特征类型</th><th>表达力</th><th>速度</th><th>适用场景</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><strong>EGNN</strong></td>
+              <td>简单</td>
+              <td>标量</td>
+              <td>中</td>
+              <td>快</td>
+              <td>粒子系统、点云、分子动力学</td>
+            </tr>
+            <tr>
+              <td><strong>SchNet</strong></td>
+              <td>中等</td>
+              <td>标量 + 径向基</td>
+              <td>中</td>
+              <td>快</td>
+              <td>量子化学（能量预测）</td>
+            </tr>
+            <tr>
+              <td><strong>TFN</strong></td>
+              <td>复杂</td>
+              <td>任意张量</td>
+              <td>高</td>
+              <td>慢</td>
+              <td>需要角动量、应力张量的系统</td>
+            </tr>
+            <tr>
+              <td><strong>SE(3)-Trans</strong></td>
+              <td>复杂</td>
+              <td>任意张量 + 注意力</td>
+              <td>最高</td>
+              <td>慢</td>
+              <td>蛋白质折叠、复杂分子</td>
+            </tr>
+            <tr>
+              <td><strong>PhysRobot<br>DynamicalGNN</strong></td>
+              <td>简单</td>
+              <td>标量 + EdgeFrame</td>
+              <td>中</td>
+              <td>快</td>
+              <td>实时软组织仿真</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <p><strong>决策树</strong>：</p>
+        <ul>
+          <li>只需要标量特征（位置、类型）？→ <strong>EGNN</strong></li>
+          <li>需要预测标量能量（量子化学）？→ <strong>SchNet</strong></li>
+          <li>需要向量/张量特征（力、应力）？→ <strong>TFN 或 SE(3)-Transformer</strong></li>
+          <li>实时性要求高？→ <strong>EGNN</strong>（最快）</li>
+          <li>表达力要求最高（不在乎速度）？→ <strong>SE(3)-Transformer</strong></li>
+        </ul>
+        
+        <p><strong>PhysRobot 为什么选择 EGNN 思路？</strong></p>
+        <ol>
+          <li><strong>实时性</strong>：医疗机器人需要 30-60 Hz 更新（16-33ms 每帧）</li>
+          <li><strong>简单性</strong>：EdgeFrame 容易理解和调试</li>
+          <li><strong>物理先验</strong>：牛顿力学只需要标量力的大小 + 方向向量</li>
+          <li><strong>可扩展</strong>：未来可以加入角动量（升级到 TFN）</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>

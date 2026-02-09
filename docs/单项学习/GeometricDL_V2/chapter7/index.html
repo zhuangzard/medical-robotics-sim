@@ -1,0 +1,2510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chapter 7: Historic Perspective | GDL 深度教程</title>
+  <style>
+    /* ===== CSS Variables ===== */
+    :root {
+      --bg: #ffffff;
+      --bg-secondary: #f8f9fa;
+      --bg-code: #f4f4f5;
+      --text: #1a1a2e;
+      --text-secondary: #555;
+      --accent: #2563eb;
+      --accent-light: #dbeafe;
+      --border: #e0e0e0;
+      --sidebar-bg: #f0f4f8;
+      --sidebar-width: 280px;
+      --header-height: 56px;
+      --callout-info-bg: #eff6ff;
+      --callout-info-border: #3b82f6;
+      --callout-warn-bg: #fffbeb;
+      --callout-warn-border: #f59e0b;
+      --callout-success-bg: #f0fdf4;
+      --callout-success-border: #22c55e;
+      --callout-robot-bg: #ecfdf5;
+      --callout-robot-border: #10b981;
+      --callout-math-bg: #faf5ff;
+      --callout-math-border: #8b5cf6;
+      --callout-exercise-bg: #fff7ed;
+      --callout-exercise-border: #f97316;
+      --callout-history-bg: #fefce8;
+      --callout-history-border: #ca8a04;
+      --code-keyword: #d73a49;
+      --code-string: #032f62;
+      --code-comment: #6a737d;
+      --code-function: #6f42c1;
+      --code-number: #005cc5;
+      --progress-color: #2563eb;
+      --shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    [data-theme="dark"] {
+      --bg: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-code: #1e293b;
+      --text: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --accent: #60a5fa;
+      --accent-light: #1e3a5f;
+      --border: #334155;
+      --sidebar-bg: #1e293b;
+      --callout-info-bg: #172554;
+      --callout-info-border: #3b82f6;
+      --callout-warn-bg: #422006;
+      --callout-warn-border: #f59e0b;
+      --callout-success-bg: #052e16;
+      --callout-success-border: #22c55e;
+      --callout-robot-bg: #064e3b;
+      --callout-robot-border: #10b981;
+      --callout-math-bg: #2e1065;
+      --callout-math-border: #8b5cf6;
+      --callout-exercise-bg: #431407;
+      --callout-exercise-border: #f97316;
+      --callout-history-bg: #422006;
+      --callout-history-border: #ca8a04;
+      --code-keyword: #ff7b72;
+      --code-string: #a5d6ff;
+      --code-comment: #8b949e;
+      --code-function: #d2a8ff;
+      --code-number: #79c0ff;
+      --shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; scroll-padding-top: calc(var(--header-height) + 16px); }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ===== Progress Bar ===== */
+    .progress-bar {
+      position: fixed; top: 0; left: 0;
+      width: 0%; height: 3px;
+      background: linear-gradient(90deg, var(--accent), #8b5cf6);
+      z-index: 1001;
+      transition: width 0.1s;
+    }
+
+    /* ===== Header ===== */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--header-height);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 24px;
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+    .header-title a {
+      font-weight: 700; font-size: 1.1em;
+      color: var(--text); text-decoration: none;
+    }
+    .header-nav { display: flex; gap: 12px; align-items: center; }
+    .header-nav a {
+      color: var(--accent); text-decoration: none; font-size: 0.9em;
+      padding: 4px 8px; border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .header-nav a:hover { background: var(--accent-light); }
+    .theme-toggle {
+      background: none; border: 1px solid var(--border);
+      border-radius: 8px; padding: 6px 10px;
+      cursor: pointer; font-size: 1.1em;
+      color: var(--text);
+    }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      position: fixed; top: var(--header-height); left: 0;
+      width: var(--sidebar-width);
+      height: calc(100vh - var(--header-height));
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px 12px;
+      z-index: 999;
+      transition: transform 0.3s;
+      font-size: 0.88em;
+    }
+    .sidebar h3 {
+      font-size: 0.8em; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-secondary);
+      margin: 16px 0 8px; padding-left: 8px;
+    }
+    .sidebar h3:first-child { margin-top: 0; }
+    .sidebar a {
+      display: block; padding: 5px 12px;
+      color: var(--text); text-decoration: none;
+      border-radius: 6px; margin: 1px 0;
+      transition: background 0.2s;
+      line-height: 1.5;
+    }
+    .sidebar a:hover { background: var(--accent-light); color: var(--accent); }
+    .sidebar a.sub { padding-left: 28px; font-size: 0.92em; color: var(--text-secondary); }
+    .sidebar a.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+    .sidebar-toggle {
+      display: none;
+      position: fixed; top: calc(var(--header-height) + 8px); left: 8px;
+      z-index: 1001;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px;
+      cursor: pointer; font-size: 1.2em;
+      color: var(--text);
+    }
+
+    /* ===== Main Content ===== */
+    .main {
+      margin-left: var(--sidebar-width);
+      margin-top: var(--header-height);
+      max-width: 900px;
+      padding: 32px 40px 80px;
+    }
+    .main h1 {
+      font-size: 2.2em; font-weight: 800;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, var(--accent), #8b5cf6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.3;
+    }
+    .main h2 {
+      font-size: 1.6em; font-weight: 700;
+      margin: 48px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--accent);
+      color: var(--text);
+    }
+    .main h3 {
+      font-size: 1.25em; font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+    .main h4 {
+      font-size: 1.05em; font-weight: 600;
+      margin: 20px 0 8px;
+    }
+    .main p { margin-bottom: 12px; }
+    .main ul, .main ol { margin: 8px 0 16px 24px; }
+    .main li { margin-bottom: 6px; }
+    .main strong { color: var(--text); }
+    .term { color: var(--accent); font-weight: 600; }
+    .main a { color: var(--accent); text-decoration: underline; }
+
+    /* ===== Callout Boxes ===== */
+    .callout {
+      border-left: 4px solid;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+    .callout h4 { margin-top: 0; margin-bottom: 8px; }
+    .callout-info { background: var(--callout-info-bg); border-color: var(--callout-info-border); }
+    .callout-warn { background: var(--callout-warn-bg); border-color: var(--callout-warn-border); }
+    .callout-success { background: var(--callout-success-bg); border-color: var(--callout-success-border); }
+    .callout-robot { background: var(--callout-robot-bg); border-color: var(--callout-robot-border); }
+    .callout-math { background: var(--callout-math-bg); border-color: var(--callout-math-border); }
+    .callout-exercise { background: var(--callout-exercise-bg); border-color: var(--callout-exercise-border); }
+    .callout-history { background: var(--callout-history-bg); border-color: var(--callout-history-border); }
+
+    /* ===== Blueprint Box ===== */
+    .blueprint {
+      background: var(--bg-secondary);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 20px 0;
+    }
+    .blueprint h4 { color: var(--accent); margin-bottom: 12px; }
+
+    /* ===== Math ===== */
+    .math-block {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 16px 0;
+      overflow-x: auto;
+    }
+    .math-explain {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+      font-size: 0.92em;
+      color: var(--text-secondary);
+    }
+
+    /* ===== Code Blocks ===== */
+    .code-container {
+      position: relative;
+      margin: 16px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .code-header {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--bg-secondary);
+      padding: 8px 16px;
+      font-size: 0.85em;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    .copy-btn {
+      background: none; border: 1px solid var(--border);
+      border-radius: 4px; padding: 2px 10px;
+      cursor: pointer; font-size: 0.85em;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+    .copy-btn:hover { background: var(--accent-light); color: var(--accent); }
+    pre {
+      margin: 0; padding: 16px;
+      background: var(--bg-code);
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.88em;
+      line-height: 1.6;
+      color: var(--text);
+    }
+    code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.9em;
+    }
+    p code, li code {
+      background: var(--bg-code);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* ===== Figures ===== */
+    .figure {
+      margin: 24px 0;
+      text-align: center;
+    }
+    .figure img {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    .figure figcaption {
+      margin-top: 8px;
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    /* ===== Bilingual ===== */
+    .bilingual {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .bilingual .en {
+      font-size: 0.9em;
+      color: var(--text-secondary);
+      font-style: italic;
+      padding-left: 16px;
+      border-left: 2px solid var(--border);
+    }
+
+    /* ===== Timeline ===== */
+    .timeline {
+      position: relative;
+      padding-left: 32px;
+      margin: 24px 0;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 12px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--accent);
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 20px;
+      padding: 12px 16px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -26px;
+      top: 18px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg);
+    }
+    .timeline-year {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 0.95em;
+    }
+    .timeline-title {
+      font-weight: 600;
+      margin: 4px 0;
+    }
+    .timeline-desc {
+      font-size: 0.92em;
+      color: var(--text-secondary);
+    }
+
+    /* ===== Table ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.92em;
+    }
+    th, td {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+    th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+    }
+
+    /* ===== Chapter Nav ===== */
+    .chapter-nav {
+      display: flex; justify-content: space-between;
+      margin-top: 48px; padding-top: 24px;
+      border-top: 2px solid var(--border);
+    }
+    .chapter-nav a {
+      color: var(--accent); text-decoration: none;
+      font-weight: 600; padding: 8px 16px;
+      border-radius: 8px; border: 1px solid var(--accent);
+      transition: all 0.2s;
+    }
+    .chapter-nav a:hover { background: var(--accent); color: white; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-toggle { display: block; }
+      .main { margin-left: 0; padding: 24px 16px 60px; }
+      .main h1 { font-size: 1.6em; }
+      .main h2 { font-size: 1.3em; }
+    }
+
+    /* ===== Person Card ===== */
+    .person-card {
+      display: flex; gap: 16px; align-items: flex-start;
+      background: var(--bg-secondary);
+      border-radius: 10px;
+      padding: 16px;
+      margin: 12px 0;
+      border: 1px solid var(--border);
+    }
+    .person-card .person-emoji {
+      font-size: 2em;
+      flex-shrink: 0;
+    }
+    .person-card .person-info h4 {
+      margin: 0 0 4px; font-size: 1.05em;
+    }
+    .person-card .person-info p {
+      margin: 0; font-size: 0.92em; color: var(--text-secondary);
+    }
+
+    /* ===== Quote ===== */
+    .epigraph {
+      font-style: italic;
+      font-size: 1.15em;
+      text-align: center;
+      margin: 32px 24px;
+      padding: 24px;
+      border-left: 4px solid var(--accent);
+      background: var(--bg-secondary);
+      border-radius: 0 8px 8px 0;
+      color: var(--accent);
+    }
+    .epigraph .attribution {
+      font-size: 0.85em;
+      margin-top: 8px;
+      color: var(--text-secondary);
+      font-style: normal;
+    }
+
+    /* ===== Comparison Grid ===== */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+    .compare-grid > div {
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      padding: 16px;
+      border: 1px solid var(--border);
+    }
+    @media (max-width: 600px) {
+      .compare-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<!-- Enrichment CSS - to be injected into each chapter's <head> -->
+<style>
+/* ========== Enrichment Blocks ========== */
+.enrichment-block {
+  margin: 2.5rem 0;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  border-left: 4px solid #3b82f6;
+  border-radius: 0 12px 12px 0;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+[data-theme="dark"] .enrichment-block {
+  background: linear-gradient(135deg, #1a2332 0%, #1e293b 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.enrichment-block h4 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  color: #1e40af;
+}
+[data-theme="dark"] .enrichment-block h4 {
+  color: #93c5fd;
+}
+
+.enrichment-qa { margin-bottom: 1.5rem; }
+
+.qa-pair {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(255,255,255,0.7);
+  border-radius: 10px;
+  transition: transform 0.2s;
+}
+.qa-pair:hover { transform: translateX(4px); }
+[data-theme="dark"] .qa-pair {
+  background: rgba(0,0,0,0.25);
+}
+
+.question {
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 0.75rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+[data-theme="dark"] .question { color: #60a5fa; }
+
+.answer {
+  line-height: 1.9;
+  color: #374151;
+  font-size: 1rem;
+}
+[data-theme="dark"] .answer { color: #d1d5db; }
+.answer p { margin: 0.5rem 0; }
+
+.enrichment-intuition {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(251,191,36,0.1);
+  border-radius: 10px;
+  border-left: 3px solid #f59e0b;
+  line-height: 1.8;
+}
+[data-theme="dark"] .enrichment-intuition {
+  background: rgba(251,191,36,0.05);
+}
+
+.enrichment-application {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(16,185,129,0.1);
+  border-radius: 10px;
+  border-left: 3px solid #10b981;
+  line-height: 1.8;
+}
+[data-theme="dark"] .enrichment-application {
+  background: rgba(16,185,129,0.05);
+}
+
+.enrichment-summary {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(139,92,246,0.1);
+  border-radius: 10px;
+  border-left: 3px solid #8b5cf6;
+  line-height: 1.8;
+}
+[data-theme="dark"] .enrichment-summary {
+  background: rgba(139,92,246,0.05);
+}
+</style>
+
+</head>
+<body>
+  <div class="progress-bar" id="progressBar"></div>
+
+  <header class="header">
+    <div class="header-title"><a href="../index.html">📐 GDL 深度教程</a></div>
+    <div class="header-nav">
+      <a href="../chapter6/index.html">← Ch.6</a>
+      <a href="../index.html">目录</a>
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    </div>
+  </header>
+
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+  <nav class="sidebar" id="sidebar">
+    <h3>Chapter 7</h3>
+    <a href="#overview">📋 概述</a>
+    <a href="#ancient-symmetry">古代对称性思想</a>
+    <a href="#platonic" class="sub">柏拉图体</a>
+    <a href="#kepler" class="sub">Kepler 与雪花</a>
+
+    <h3>7.1 数学与物理中的对称性</h3>
+    <a href="#sec7-1">Symmetry in Math & Physics</a>
+    <a href="#group-theory-origins" class="sub">群论的起源</a>
+    <a href="#galois" class="sub">Galois & 多项式</a>
+    <a href="#lie-klein" class="sub">Lie & Klein</a>
+    <a href="#erlangen" class="sub">Erlangen Program</a>
+    <a href="#noether" class="sub">Noether 定理</a>
+    <a href="#noether-deriv" class="sub">📐 Noether 推导</a>
+    <a href="#gauge-physics" class="sub">规范理论</a>
+    <a href="#standard-model" class="sub">标准模型</a>
+
+    <h3>7.2 调和分析与信号处理</h3>
+    <a href="#sec7-2">Harmonic Analysis</a>
+    <a href="#fourier-history" class="sub">Fourier 的遗产</a>
+    <a href="#m-theory" class="sub">M-theory & 视觉皮层</a>
+    <a href="#steerable" class="sub">可控金字塔</a>
+    <a href="#scattering" class="sub">散射变换</a>
+    <a href="#gsp-history" class="sub">图信号处理</a>
+    <a href="#computer-graphics" class="sub">计算机图形学</a>
+    <a href="#code-scattering" class="sub">💻 散射变换代码</a>
+
+    <h3>7.3 早期 ML 中的对称性</h3>
+    <a href="#sec7-3">Early ML Symmetry</a>
+    <a href="#invariance-theorem" class="sub">群不变性定理</a>
+    <a href="#neocognitron" class="sub">Neocognitron</a>
+    <a href="#lecun-cnn" class="sub">LeCun 与 CNN</a>
+    <a href="#wood-shawe" class="sub">表示论视角</a>
+    <a href="#code-cnn-symmetry" class="sub">💻 CNN 对称性代码</a>
+
+    <h3>7.4 GNN 的发展史</h3>
+    <a href="#sec7-4">GNN History</a>
+    <a href="#gnn-prehistory" class="sub">1990s: 前 GNN 时代</a>
+    <a href="#gnn-birth" class="sub">2005: GNN 诞生</a>
+    <a href="#gnn-chemistry" class="sub">计算化学驱动</a>
+    <a href="#node-embed" class="sub">节点嵌入</a>
+    <a href="#pgm-gnn" class="sub">PGM 与 GNN</a>
+    <a href="#spectral-gnn" class="sub">谱域 GNN</a>
+    <a href="#spatial-gnn" class="sub">空间域 GNN</a>
+    <a href="#code-gnn-evolution" class="sub">💻 GNN 演化代码</a>
+
+    <h3>7.5 WL 测试与表达力</h3>
+    <a href="#sec7-5">WL Test & Expressivity</a>
+    <a href="#wl-formalism" class="sub">WL 形式化</a>
+    <a href="#wl-gnn-bound" class="sub">GNN ≤ WL</a>
+    <a href="#gin" class="sub">GIN 架构</a>
+    <a href="#higher-order" class="sub">高阶方法</a>
+    <a href="#continuous-express" class="sub">连续特征空间</a>
+    <a href="#code-wl" class="sub">💻 WL 测试代码</a>
+
+    <h3>7.6 Transformer 与 GNN</h3>
+    <a href="#sec7-6">Transformers & GNNs</a>
+    <a href="#transformer-as-gnn" class="sub">Transformer = 完全图 GNN</a>
+    <a href="#latent-graph" class="sub">潜图学习</a>
+    <a href="#algorithmic-reasoning" class="sub">算法推理</a>
+
+    <h3>7.7 GDL 的诞生与未来</h3>
+    <a href="#sec7-7">GDL: Past & Future</a>
+    <a href="#gdl-name" class="sub">名字的由来</a>
+    <a href="#5g-naming" class="sub">"5G" 的命名</a>
+    <a href="#gdl-future" class="sub">未来方向</a>
+    <a href="#robot-future" class="sub">🤖 PhysRobot</a>
+
+    <h3>附录</h3>
+    <a href="#summary-table">📊 大事年表</a>
+    <a href="#exercises">📝 练习题</a>
+    <a href="#references">📚 参考文献</a>
+
+    <h3>导航</h3>
+    <a href="../index.html">📚 总目录</a>
+    <a href="../chapter6/index.html">← Ch.6 应用</a>
+  </nav>
+
+  <!-- ============================================================ -->
+  <!-- MAIN CONTENT -->
+  <!-- ============================================================ -->
+  <main class="main">
+
+    <h1>Chapter 7: Historic Perspective<br><span style="font-size:0.5em;color:var(--text-secondary)">历史视角：从柏拉图到 Transformer 的对称性之路</span></h1>
+
+    <!-- ============================================================ -->
+    <!-- OVERVIEW -->
+    <!-- ============================================================ -->
+    <div class="callout callout-info" id="overview">
+      <h4>📋 本章概述</h4>
+      <p>本章是全书最长的章节（含参考文献共 43 页），追溯了从古代对称性思想到现代几何深度学习的完整发展历程。它不仅是一部学术史，更是理解 GDL 统一框架 <strong>为什么</strong> 有效的思想根源。</p>
+      <p><strong>覆盖主题</strong>：</p>
+      <ol>
+        <li>古代对称性：柏拉图体、Kepler 的雪花</li>
+        <li>群论的起源：Galois → Lie → Klein → Erlangen Program</li>
+        <li>物理学中的对称性：Noether 定理、规范理论、标准模型</li>
+        <li>调和分析：从 Fourier 到散射变换</li>
+        <li>神经网络中的对称性：从感知机到 CNN</li>
+        <li>图神经网络的完整发展史</li>
+        <li>WL 测试与表达力分析</li>
+        <li>Transformer 与 GNN 的统一视角</li>
+        <li>算法推理与 GDL 的未来</li>
+      </ol>
+      <p><strong>预计阅读时间</strong>：3-4 小时（含代码实验和练习）</p>
+    </div>
+
+    <div class="callout callout-robot">
+      <h4>🤖 PhysRobot 视角：为什么学历史？</h4>
+      <p>历史不是装饰。理解每种架构的 <strong>思想起源</strong>，才能在面对新问题时做出正确的设计选择：</p>
+      <ul>
+        <li><strong>物理仿真</strong>中的等变性 → 直接源于 Noether 定理（1918）和规范理论</li>
+        <li><strong>网格上的消息传递</strong> → 源于 PGM 的信念传播和计算化学的分子图</li>
+        <li><strong>多尺度方法</strong> → 源于调和分析和小波理论</li>
+        <li><strong>注意力机制</strong> → 源于 MoNet 和计算机图形学的局部描述子</li>
+      </ul>
+      <p>理解历史，就是理解为什么你选择的架构是"对的"。</p>
+    </div>
+
+    <div class="epigraph">
+      "Symmetry, as wide or as narrow as you may define its meaning, is one idea by which man through the ages has tried to comprehend and create order, beauty, and perfection."
+      <div class="attribution">— Hermann Weyl, <em>Symmetry</em> (1952)</div>
+    </div>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>这个颇具诗意的对称性定义来自伟大的数学家 <strong>Hermann Weyl</strong>，出自他的同名著作，这是他从普林斯顿高等研究院退休前的 <span class="term">天鹅之歌</span>（Schwanengesang）。Weyl 追溯了对称性在科学和艺术中一直以来的特殊地位——从苏美尔的对称设计到毕达哥拉斯学派对旋转对称的崇拜。</p>
+      </div>
+      <div class="en">
+        This somewhat poetic definition of symmetry is given in the eponymous book of Hermann Weyl, his Schwanengesang on the eve of retirement from the Institute for Advanced Study in Princeton.
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ANCIENT SYMMETRY -->
+    <!-- ============================================================ -->
+    <h2 id="ancient-symmetry">古代对称性思想<br><span style="font-size:0.7em;color:var(--text-secondary)">Ancient Symmetry: From Sumeria to Kepler</span></h2>
+
+    <h3 id="platonic">柏拉图体与 συμμετρία</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>虽然 <strong>柏拉图</strong>（Plato）被认为创造了 <span class="term">συμμετρία</span>（symmetria，字面意思为"同一度量"）这一术语，但他只是模糊地用它来表达艺术中的比例之美和音乐中的和谐。真正让对称性成为科学概念的，是他对五种正多面体的迷恋：</p>
+      </div>
+      <div class="en">
+        Though Plato is credited with coining the term συμμετρία, which literally translates as 'same measure', he used it only vaguely to convey the beauty of proportion in art and harmony in music.
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>📐 五种柏拉图体 (Platonic Solids)</h4>
+      <table>
+        <thead>
+          <tr><th>多面体</th><th>面</th><th>面的形状</th><th>柏拉图的元素</th><th>旋转对称群</th><th>|G|</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>正四面体 (Tetrahedron)</td><td>4</td><td>正三角形</td><td>🔥 火</td><td>$A_4$</td><td>12</td></tr>
+          <tr><td>正方体 (Cube)</td><td>6</td><td>正方形</td><td>🌍 土</td><td>$S_4$</td><td>24</td></tr>
+          <tr><td>正八面体 (Octahedron)</td><td>8</td><td>正三角形</td><td>💨 气</td><td>$S_4$</td><td>24</td></tr>
+          <tr><td>正十二面体 (Dodecahedron)</td><td>12</td><td>正五边形</td><td>🌌 以太</td><td>$A_5$</td><td>60</td></tr>
+          <tr><td>正二十面体 (Icosahedron)</td><td>20</td><td>正三角形</td><td>💧 水</td><td>$A_5$</td><td>60</td></tr>
+        </tbody>
+      </table>
+      <div class="math-explain">
+        <p>柏拉图认为这五种正多面体是构成物质世界的基本构件。正方体和正八面体共享对称群 $S_4$（对称群 = 旋转 + 反射），正十二面体和正二十面体共享 $A_5$——它们构成<strong>对偶多面体</strong>（dual polyhedra）。这种"对偶性"的概念在 GDL 中以图对偶的形式再次出现。</p>
+      </div>
+    </div>
+
+    <div class="figure">
+      <img src="../assets/ch7_p118_img0.png" alt="Chapter 7 - Historic perspective illustrations">
+      <figcaption>图 7.1：原书插图。从古代对称图案到柏拉图体——对称性作为理解和创造秩序、美和完美的核心思想贯穿了人类文明史。</figcaption>
+    </div>
+
+    <h3 id="kepler">Kepler 与六角雪花 (1611)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>天文学家和数学家 <strong>Johannes Kepler</strong> 对雪花六角对称结构进行了首次严格分析。在他的论文 <em>Strena, Seu De Nive Sexangula</em>（"新年礼物，论六角雪花"）中——这是 1611 年他作为圣诞礼物寄给他的赞助人兼好友 Johannes Matthäus Wackher von Wackenfels 的一本小册子——他将雪花的六重二面体结构归因于粒子的<span class="term">六角密堆</span>（hexagonal packing）。</p>
+        <p>这个想法虽然早于人类对物质构成方式的清晰理解，但至今仍是<span class="term">晶体学</span>的基础（Ball, 2011）。</p>
+      </div>
+      <div class="en">
+        Kepler attributed the six-fold dihedral structure of snowflakes to hexagonal packing of particles — an idea that though preceded the clear understanding of how matter is formed, still holds today as the basis of crystallography.
+      </div>
+    </div>
+
+    <div class="callout callout-history">
+      <h4>🏺 历史趣闻：从雪花到 GNN</h4>
+      <p>Kepler 的六角密堆假设（"球堆问题"）直到 2017 年才被 Thomas Hales 通过计算机辅助证明完全解决。有趣的是，Kepler 观察雪花对称性的思维模式——<strong>"从可观察的对称性推断底层结构"</strong>——恰恰是现代 GNN 做的事：从图的对称不变性推断节点和边的性质。</p>
+    </div>
+
+    <div class="math-block">
+      <p><strong>雪花的对称群：</strong>二面体群 $D_6$</p>
+      $$D_6 = \langle r, s \mid r^6 = s^2 = e, \; srs = r^{-1} \rangle$$
+      <div class="math-explain">
+        <p>$r$ = 旋转 60°，$s$ = 反射。$|D_6| = 12$（6 个旋转 + 6 个反射）。这是雪花（以及苯环）的精确对称群。在分子图网络中，利用这种对称性可以大大减少需要学习的参数。</p>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 7.1 SYMMETRY IN MATH & PHYSICS -->
+    <!-- ============================================================ -->
+    <h2 id="sec7-1">7.1 数学与物理中的对称性<br><span style="font-size:0.7em;color:var(--text-secondary)">Symmetry in Mathematics and Physics</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>在现代数学中，对称性几乎无一例外地用<span class="term">群论</span>（Group Theory）的语言来表达。群论的起源通常归功于 Évariste Galois，他在 1830 年代创造了这个术语并用它来研究多项式方程的可解性。</p>
+      </div>
+      <div class="en">
+        In modern mathematics, symmetry is almost univocally expressed in the language of group theory. The origins of this theory are usually attributed to Évariste Galois, who coined the term and used it to study solvability of polynomial equations in the 1830s.
+      </div>
+    </div>
+
+<!-- === ENRICHMENT: sec7-1 === -->
+<div class="enrichment-block">
+        <h3>❓ 什么是 Noether 定理？为什么说它"震撼"了物理学？</h3>
+        <div class="answer">
+            <p><strong>Noether 定理（1918）</strong>：如果一个物理系统对某种<span class="highlight">连续对称变换</span>保持不变（作用量不变），那么必然存在一个<span class="highlight">守恒量</span>。</p>
+            
+            <p><strong>🔑 核心思想：</strong>"对称性 → 守恒律"</p>
+            
+            <p><strong>经典例子：</strong></p>
+            <ul>
+                <li><strong>时间平移对称</strong>（今天做实验和明天做结果一样）→ <strong>能量守恒</strong></li>
+                <li><strong>空间平移对称</strong>（这里做和那里做结果一样）→ <strong>动量守恒</strong></li>
+                <li><strong>空间旋转对称</strong>（转个角度结果不变）→ <strong>角动量守恒</strong></li>
+            </ul>
+            
+            <p><strong>🌟 为什么震撼？</strong></p>
+            <p>在 Noether 定理之前，"能量守恒"、"动量守恒"都是通过大量实验<strong>归纳</strong>出来的经验规律，物理学家不知道<strong>为什么</strong>它们成立。</p>
+            <p>Noether 证明：这些守恒律<strong>不是偶然</strong>，而是<strong>对称性的必然结果</strong>！这让物理学从"经验科学"向"数学演绎"迈进了一大步。</p>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>如果你玩一个游戏，规则在"任何时候"都一样（时间对称），那么游戏里一定有个"能量条"不会凭空增减。如果规则在"任何地点"都一样（空间对称），那么一定有个"总动量"守恒。</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 群论是怎么和物理对称性联系起来的？</h3>
+        <div class="answer">
+            <p><strong>历史脉络：</strong></p>
+            <ul>
+                <li><strong>1830s — Galois</strong>：发明群论，研究多项式方程的求解（代数学）</li>
+                <li><strong>1870s — Felix Klein（Erlangen Program）</strong>：提出"几何 = 对称群的研究"</li>
+                <li><strong>1920s — Hermann Weyl</strong>：把群论引入量子力学，描述粒子的对称性</li>
+            </ul>
+            
+            <p><strong>🔑 核心联系：</strong></p>
+            <p><strong>对称变换</strong>（如旋转、平移、镜像）可以用<strong>群元素</strong>表示，所有这些变换构成一个<strong>群</strong>。</p>
+            
+            <p><strong>例子：</strong></p>
+            <ul>
+                <li>平移对称 → 平移群 $(\mathbb{R}^3, +)$</li>
+                <li>旋转对称 → 旋转群 $SO(3)$</li>
+                <li>晶体对称 → 点群/空间群</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>群论给"对称性"提供了一套<strong>精确的数学语言</strong>。以前说"这个分子旋转 60° 不变"，现在可以说"这个分子具有 $C_6$ 对称群"，然后用群表示论分析它的性质。</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 为什么雪花是六角形？Kepler 的猜想对吗？</h3>
+        <div class="answer">
+            <p><strong>Kepler（1611）的猜想：</strong></p>
+            <p>雪花的六角形来自水分子的<strong>六方紧密堆积</strong>（hexagonal close packing）。虽然 Kepler 那个年代还不知道"原子"和"分子"，但他直觉认为微观粒子的排列决定了宏观形状。</p>
+            
+            <p><strong>现代解释：</strong></p>
+            <ul>
+                <li>水分子 $H_2O$ 的形状和氢键角度（约 104.5°）导致冰晶优先形成<strong>六方晶格</strong></li>
+                <li>这种晶格具有 $C_6$ 旋转对称（旋转 60° 不变）</li>
+                <li>雪花生长时，六个方向的分支"等价"，所以长成六角形</li>
+            </ul>
+            
+            <p><strong>🔑 对称性的力量：</strong></p>
+            <p>雪花的形状<strong>不是随机</strong>的，而是<strong>对称性约束</strong>的结果！这是物理对称性在自然界最美的展现之一。</p>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>水分子像乐高积木，只能按特定角度拼接。拼多了自然形成六角形图案。Kepler 虽然不知道分子，但猜对了"微观规则决定宏观形状"！</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 标准模型（Standard Model）和对称性有什么关系？</h3>
+        <div class="answer">
+            <p><strong>标准模型</strong>是描述所有基本粒子和三种基本力（电磁力、弱力、强力）的理论。它的核心是<strong>规范对称性</strong>（gauge symmetry）。</p>
+            
+            <p><strong>🔑 Yang-Mills 理论（1954）：</strong></p>
+            <p>Yang（杨振宁）和 Mills 推广了电磁学的规范对称性（$U(1)$），提出了<strong>非阿贝尔规范场</strong>。这成为标准模型的数学基础。</p>
+            
+            <p><strong>标准模型的对称群：</strong></p>
+            <ul>
+                <li><strong>电磁力</strong>：$U(1)$ 群（电荷守恒）</li>
+                <li><strong>弱力</strong>：$SU(2)$ 群（弱同位旋）</li>
+                <li><strong>强力</strong>：$SU(3)$ 群（色荷）</li>
+            </ul>
+            
+            <p><strong>🌟 为什么重要？</strong></p>
+            <p>标准模型的所有粒子和相互作用，都可以从对称群 $SU(3) \times SU(2) \times U(1)$ <strong>推导</strong>出来！这意味着：</p>
+            <ul>
+                <li>自然界的基本力<strong>不是偶然</strong>，而是<strong>对称性的必然</strong></li>
+                <li>Philip Anderson 说："<span class="highlight">物理学就是对称性的研究</span>"</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>标准模型就像一个"对称性游戏规则"。粒子是"玩家"，力是"游戏机制"，而<strong>对称群</strong>是"游戏引擎"。只要规定好对称性，整个物理世界就自动"涌现"出来了！</p>
+        </div>
+    </div>
+
+    <hr style="margin: 2rem 0; border: none; border-top: 2px solid #3b82f6;">
+    <p style="text-align: center; color: #666; font-size: 0.9em;">
+        <strong>总结：</strong>对称性是理解物理世界的"钥匙"。从雪花到粒子物理，从守恒定律到深度学习，对称性无处不在！
+    </p>
+<!-- === END ENRICHMENT: sec7-1 === -->
+
+
+    <h3 id="group-theory-origins">群论的起源</h3>
+
+    <h4 id="galois">Évariste Galois 与多项式的可解性</h4>
+
+    <div class="person-card">
+      <div class="person-emoji">🧮</div>
+      <div class="person-info">
+        <h4>Évariste Galois (1811-1832)</h4>
+        <p>在 20 岁死于决斗之前，Galois 创造了群论（Group Theory）——用对称性来判断多项式方程是否有根式解。他证明了五次及以上方程没有一般的根式求解公式，因为对应的对称群（$S_5$）没有可解的正规子群链。这一发现奠定了用"对称性结构"来理解"数学问题可解性"的范式。</p>
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>📐 Galois 理论的核心思想</h4>
+      <p>给定一个多项式 $p(x) = 0$，它的根的<strong>置换对称性</strong>构成一个群 $\text{Gal}(p)$（Galois 群）。</p>
+      <ul>
+        <li>$x^2 - 2 = 0$：根为 $\pm\sqrt{2}$，$\text{Gal} = \mathbb{Z}_2$（交换两个根）→ <strong>可解</strong></li>
+        <li>$x^4 - 10x^2 + 1 = 0$：$\text{Gal} = D_4$（二面体群）→ <strong>可解</strong></li>
+        <li>一般五次方程：$\text{Gal} = S_5$（对称群）→ <strong>不可解</strong>（因为 $A_5$ 是单群）</li>
+      </ul>
+      <p><strong>GDL 联系</strong>：Galois 的核心洞察——<em>理解一个系统的对称群就理解了这个系统的本质</em>——正是 GDL 蓝图的哲学基础。</p>
+    </div>
+
+    <h4 id="lie-klein">Lie 与 Klein：连续对称性与几何分类</h4>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>与群论相关的另外两个名字是 <strong>Sophus Lie</strong> 和 <strong>Felix Klein</strong>，他们曾在一段时间内密切合作（Tobies, 2019）。</p>
+        <ul>
+          <li><strong>Lie</strong> 发展了<span class="term">连续对称性</span>理论——今天以他的名字命名为<strong>李群</strong>（Lie Groups）。李群是同时具有群结构和光滑流形结构的数学对象，是物理学和 GDL 中不可或缺的工具。</li>
+          <li><strong>Klein</strong> 宣称群论是几何学的组织原则——这就是他在 1872 年发表的<strong>Erlangen Program</strong>。</li>
+        </ul>
+      </div>
+      <div class="en">
+        Sophus Lie developed the theory of continuous symmetries (Lie Groups). Felix Klein proclaimed group theory to be the organising principle of geometry in his Erlangen Program.
+      </div>
+    </div>
+
+    <div class="person-card">
+      <div class="person-emoji">📏</div>
+      <div class="person-info">
+        <h4>Sophus Lie (1842-1899)</h4>
+        <p>挪威数学家，创建了<strong>李群理论</strong>——将 Galois 的离散对称推广到连续变换。物理学中的几乎所有对称群（旋转 SO(3)、洛伦兹群、规范群等）都是李群。在 GDL 中，SO(3)、SE(3)、E(n) 等变网络的数学基础都建立在 Lie 的工作之上。</p>
+      </div>
+    </div>
+
+    <h4 id="erlangen">Erlangen Program (1872)</h4>
+
+    <div class="blueprint">
+      <h4>🏛️ Klein's Erlangen Program — GDL 的精神源头</h4>
+      <p>Klein 的核心命题：<strong>每种几何学都可以用其不变量的变换群来定义</strong>。</p>
+      <table>
+        <thead>
+          <tr><th>几何学</th><th>变换群</th><th>不变量</th><th>GDL 对应</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>欧几里得几何</td><td>$E(d) = O(d) \ltimes T(d)$</td><td>距离、角度</td><td>E(n)-等变 GNN</td></tr>
+          <tr><td>仿射几何</td><td>$\text{Aff}(d) = GL(d) \ltimes T(d)$</td><td>平行性、面积比</td><td>仿射等变网络</td></tr>
+          <tr><td>射影几何</td><td>$PGL(d+1)$</td><td>交比</td><td>透视不变CNN</td></tr>
+          <tr><td>拓扑学</td><td>同胚群 $\text{Homeo}(\Omega)$</td><td>连通性</td><td>拓扑数据分析</td></tr>
+        </tbody>
+      </table>
+      <p><strong>层级关系</strong>：$E(d) \subset \text{Aff}(d) \subset PGL(d+1) \subset \text{Homeo}(\Omega)$</p>
+      <p>变换群越大 → 保持的不变量越少 → 几何结构越"弱"。</p>
+      <p><strong>重要注释</strong>：黎曼几何被 Klein 明确排除在他的统一图景之外。直到大约五十年后，主要归功于 <strong>Élie Cartan</strong> 在 1920 年代的工作，黎曼几何才被整合进来。这就是 Chapter 4.4（流形）和 4.5（纤维丛/规范）的历史来源。</p>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>📐 从 Erlangen Program 到 GDL 蓝图</h4>
+      <p>GDL 蓝图可以看作 Erlangen Program 在深度学习中的现代版本：</p>
+      <div class="math-block">
+        $$\text{Klein}: \quad \text{Geometry} \xrightarrow{\text{defined by}} \text{Symmetry Group } G$$
+        $$\text{GDL}: \quad \text{Architecture} \xrightarrow{\text{defined by}} \text{Domain } \Omega + \text{Symmetry Group } G$$
+      </div>
+      <div class="math-explain">
+        <p>Klein 说"几何 = 研究在群 $G$ 下不变的性质"。GDL 说"好的架构 = 在域 $\Omega$ 和群 $G$ 下等变/不变的网络"。思想一脉相承。</p>
+      </div>
+    </div>
+
+    <h3 id="noether">Noether 定理 (1918)</h3>
+
+    <div class="person-card">
+      <div class="person-emoji">⚡</div>
+      <div class="person-info">
+        <h4>Emmy Noether (1882-1935)</h4>
+        <p>Klein 在哥廷根的同事。她证明了物理学中最深刻的定理之一：<strong>物理系统作用量（action）的每一个可微对称性都对应一个守恒律</strong>。Nobel 奖获得者 Frank Wilczek 称之为"20 世纪和 21 世纪物理学的指导之星"。</p>
+      </div>
+    </div>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>在物理学中，这是一个惊人的结果：此前，发现基本定律（如能量守恒）需要 meticulous 的实验观察，即便如此，它也只是一个没有来源的经验结果。Noether 定理表明，<strong>能量守恒来自于时间的平移对称性</strong>——一个相当直观的想法：实验结果不应该取决于它是今天还是明天进行的。</p>
+      </div>
+      <div class="en">
+        Noether's Theorem showed that the conservation of energy emerges from the translational symmetry of time, a rather intuitive idea that the results of an experiment should not depend on whether it is conducted today or tomorrow.
+      </div>
+    </div>
+
+    <h4 id="noether-deriv">📐 Noether 定理的推导</h4>
+
+    <div class="callout callout-math">
+      <h4>Noether 定理：对称性 → 守恒律</h4>
+      <p><strong>设置</strong>：考虑一个物理系统，其动力学由作用量（action）描述：</p>
+      <div class="math-block">
+        $$S[q] = \int_{t_1}^{t_2} L(q, \dot{q}, t) \, dt$$
+        <div class="math-explain">
+          $L(q, \dot{q}, t)$ 是拉格朗日量（Lagrangian），$q(t)$ 是广义坐标，$\dot{q}$ 是广义速度。
+        </div>
+      </div>
+
+      <p><strong>假设</strong>：作用量在某个连续变换下不变：$q \to q + \epsilon \delta q$</p>
+
+      <div class="math-block">
+        $$\delta S = 0 \implies \int_{t_1}^{t_2} \left[ \frac{\partial L}{\partial q} \delta q + \frac{\partial L}{\partial \dot{q}} \delta \dot{q} \right] dt = 0$$
+      </div>
+
+      <p>利用 Euler-Lagrange 方程 $\frac{\partial L}{\partial q} = \frac{d}{dt}\frac{\partial L}{\partial \dot{q}}$ 和分部积分：</p>
+
+      <div class="math-block">
+        $$\delta S = \int_{t_1}^{t_2} \frac{d}{dt}\left[\frac{\partial L}{\partial \dot{q}} \delta q\right] dt = \left[\frac{\partial L}{\partial \dot{q}} \delta q\right]_{t_1}^{t_2} = 0$$
+      </div>
+
+      <p><strong>结论</strong>：守恒量（Noether 荷）为：</p>
+
+      <div class="math-block">
+        $$\boxed{Q = \frac{\partial L}{\partial \dot{q}} \delta q = \text{const}}$$
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>对称性</th><th>变换 $\delta q$</th><th>守恒量 $Q$</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>时间平移 $t \to t + \epsilon$</td><td>$\delta q = -\dot{q}\epsilon$</td><td>能量 $E = \dot{q}\frac{\partial L}{\partial \dot{q}} - L$</td></tr>
+          <tr><td>空间平移 $x \to x + \epsilon$</td><td>$\delta q = \epsilon$</td><td>动量 $p = \frac{\partial L}{\partial \dot{q}}$</td></tr>
+          <tr><td>旋转 $q \to Rq$</td><td>$\delta q = \omega \times q$</td><td>角动量 $\mathbf{L} = q \times p$</td></tr>
+          <tr><td>规范变换 $\psi \to e^{i\alpha}\psi$</td><td>$\delta \psi = i\alpha\psi$</td><td>电荷 $Q_e$</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-robot">
+      <h4>🤖 PhysRobot：Noether 定理的实际意义</h4>
+      <p>如果我们的物理仿真网络是 <strong>SE(3)-等变</strong> 的，Noether 定理保证它学到的物理会自动<strong>守恒线动量和角动量</strong>。这不仅是美学上的优势：</p>
+      <ul>
+        <li><strong>能量守恒</strong>（时间对称）→ 长时间仿真不会"爆炸"或"塌缩"</li>
+        <li><strong>动量守恒</strong>（空间对称）→ 系统质心的运动是物理正确的</li>
+        <li><strong>角动量守恒</strong>（旋转对称）→ 刚体旋转行为正确</li>
+      </ul>
+      <p>相比之下，不等变的网络必须从数据中"学习"这些守恒律，在有限数据和有限训练下几乎不可能完美做到。</p>
+    </div>
+
+    <h3 id="gauge-physics">规范理论 (Gauge Theory)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>与电荷守恒相关的对称性是电磁场的<span class="term">全局规范不变性</span>（global gauge invariance），这首次出现在 Maxwell 的电动力学公式中（Maxwell, 1865）；然而，它的重要性最初并未被注意到。</p>
+        <p>正是写出"对称性"如此优美定义的 <strong>Hermann Weyl</strong>，在 20 世纪早期首次在物理学中引入了<span class="term">规范不变性</span>（gauge invariance）的概念，强调其作为可以推导出电磁学的原理。</p>
+      </div>
+      <div class="en">
+        The same Hermann Weyl who wrote so dithyrambically about symmetry is the one who first introduced the concept of gauge invariance in physics in the early 20th century, emphasizing its role as a principle from which electromagnetism can be derived.
+      </div>
+    </div>
+
+    <div class="callout callout-history">
+      <h4>🏺 "规范"一词的趣味起源</h4>
+      <p>Weyl 最初（1919 年）错误地猜想电磁学的局部对称性是尺度（scale）的不变性。"规范"（gauge，德语 <em>Eich</em>）这个术语是类比铁路的各种轨距（track gauges）而选择的。在量子力学发展之后，Weyl（1929）通过将尺度因子替换为<strong>波的相位变化</strong>来修正了规范选择——这就是我们今天使用的 U(1) 规范理论。</p>
+    </div>
+
+    <h4 id="standard-model">从规范不变到标准模型</h4>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>经过几十年的发展，Weyl 的这个基本原理——以 <strong>Yang 和 Mills</strong>（1954）发展的推广形式——最终成功地提供了描述电磁力、弱核力和强核力的量子力学行为的统一框架，最终形成了捕获除引力外所有基本力的<span class="term">标准模型</span>（Standard Model）。</p>
+      </div>
+      <div class="en">
+        This fundamental principle proved successful in providing a unified framework to describe all fundamental forces but gravity, culminating in the Standard Model.
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>📐 标准模型的对称群</h4>
+      <div class="math-block">
+        $$G_{\text{SM}} = SU(3)_C \times SU(2)_L \times U(1)_Y$$
+      </div>
+      <table>
+        <thead>
+          <tr><th>力</th><th>规范群</th><th>玻色子</th><th>GDL 对应</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>电磁力</td><td>$U(1)$</td><td>光子 $\gamma$</td><td>相位等变性</td></tr>
+          <tr><td>弱核力</td><td>$SU(2)$</td><td>$W^\pm, Z^0$</td><td>非阿贝尔规范</td></tr>
+          <tr><td>强核力</td><td>$SU(3)$</td><td>8 个胶子</td><td>纤维丛连络</td></tr>
+        </tbody>
+      </table>
+      <div class="math-explain">
+        <p>正如 Nobel 奖物理学家 Philip Anderson（1972）所总结的："说物理学就是对称性的研究，这只是稍微夸大了事实。" (<em>"It is only slightly overstating the case to say that physics is the study of symmetry."</em>)</p>
+        <p><strong>GDL 类比</strong>：标准模型中从局部规范对称推导出力场 ↔ GDL 中从域上的对称群推导出网络架构。Chapter 4.5 的规范等变 CNN 正是这一物理思想的直接体现。</p>
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 7.2 HARMONIC ANALYSIS -->
+    <!-- ============================================================ -->
+    <h2 id="sec7-2">7.2 调和分析与信号处理<br><span style="font-size:0.7em;color:var(--text-secondary)">Signal Processing and Harmonic Analysis</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>自从 CNN 取得早期成功以来，研究者们就借助<span class="term">调和分析</span>（harmonic analysis）、图像处理和计算神经科学的工具来试图建立解释 CNN 高效性的理论框架。</p>
+      </div>
+      <div class="en">
+        Since the early successes of CNNs, researchers have resorted to tools from harmonic analysis, image processing, and computational neuroscience to provide a theoretical framework that explains their efficiency.
+      </div>
+    </div>
+
+<!-- === ENRICHMENT: sec7-2 === -->
+<div class="enrichment-block">
+        <h3>❓ 傅里叶变换和"对称性"有什么关系？</h3>
+        <div class="answer">
+            <p><strong>傅里叶变换的本质：</strong></p>
+            <p>把任意信号分解成不同频率的<strong>正弦波</strong>（$e^{i\omega t}$）的叠加。</p>
+            
+            <p>$$f(t) = \int_{-\infty}^{\infty} \hat{f}(\omega) e^{i\omega t} d\omega$$</p>
+            
+            <p><strong>🔑 对称性视角：</strong></p>
+            <ul>
+                <li>正弦波 $e^{i\omega t}$ 是<span class="highlight">平移不变</span>的"本征函数"</li>
+                <li>如果信号 $f(t)$ 平移 $\tau$，频谱只是相位变化：$\hat{f}(\omega) \to \hat{f}(\omega) e^{-i\omega\tau}$</li>
+                <li>傅里叶变换把"平移"变成"相位旋转"，这是<strong>群表示</strong>的体现</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>音乐是声音的"时间信号"，傅里叶变换把它拆成不同音高（频率）的叠加。无论你从哪一秒开始听（平移），音高不变，只是相位变了。</p>
+            
+            <p><strong>🌟 深刻之处：</strong></p>
+            <p>傅里叶变换利用了<strong>时间平移对称性</strong>，把信号处理从"时域"转到"频域"，简化了很多问题（如卷积变成乘法）。</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 小波变换（Wavelet）解决了什么问题？</h3>
+        <div class="answer">
+            <p><strong>傅里叶变换的局限：</strong></p>
+            <ul>
+                <li>只能告诉你信号<strong>有哪些频率</strong>，但不知道<strong>这些频率出现在什么时间</strong></li>
+                <li>对于"突发事件"（如心电图的尖峰），傅里叶变换会"糊掉"</li>
+            </ul>
+            
+            <p><strong>🔑 小波变换的改进：</strong></p>
+            <p>用<strong>局部化的小波函数</strong>（wavelet）代替全局的正弦波，既能看到频率，又能看到时间。</p>
+            
+            <p>$$W(a,b) = \int_{-\infty}^{\infty} f(t) \psi\left(\frac{t-b}{a}\right) dt$$</p>
+            
+            <ul>
+                <li>$a$：尺度（scale），控制小波的"宽度"（频率）</li>
+                <li>$b$：位置（shift），控制小波的"中心"（时间）</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>傅里叶变换像"全局放大镜"，只能看清整体；小波变换像"局部放大镜"，可以移动 + 缩放，哪里不清楚照哪里。</p>
+            
+            <p><strong>🌟 应用：</strong></p>
+            <ul>
+                <li><strong>图像压缩</strong>（JPEG 2000）：小波变换能更好地捕捉边缘和纹理</li>
+                <li><strong>信号去噪</strong>：把噪声（高频小波）过滤掉</li>
+                <li><strong>CNN 的启发</strong>：多尺度特征提取（不同卷积核 ≈ 不同小波）</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 什么是 Scattering Transform？和 CNN 有什么关系？</h3>
+        <div class="answer">
+            <p><strong>Scattering Transform（Mallat, 2012）：</strong></p>
+            <p>一种<span class="highlight">不需要训练的"深度学习"</span>架构，基于小波变换的级联。</p>
+            
+            <p><strong>🔑 核心思想：</strong></p>
+            <ol>
+                <li>对信号做小波变换（多尺度分解）</li>
+                <li>取模（相当于 ReLU）</li>
+                <li>再做小波变换（第二层）</li>
+                <li>重复若干次，最后平均池化</li>
+            </ol>
+            
+            <p><strong>🌟 性质：</strong></p>
+            <ul>
+                <li><strong>平移不变</strong>：信号平移，输出几乎不变</li>
+                <li><strong>形变稳定</strong>：信号微小形变（如拉伸），输出变化可控</li>
+                <li><strong>类似 CNN</strong>：小波 ≈ 卷积核，取模 ≈ ReLU，平均 ≈ 池化</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>Scattering Transform 是"手工设计的 CNN"，用数学保证了不变性和稳定性。虽然性能不如可训练的 CNN，但理论上更清晰，帮助理解 CNN 为什么有效。</p>
+            
+            <p><strong>🔍 和 CNN 的对比：</strong></p>
+            <ul>
+                <li><strong>Scattering</strong>：滤波器固定（小波），数学保证</li>
+                <li><strong>CNN</strong>：滤波器可学习，性能更好但理论较弱</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 图信号处理（Graph Signal Processing）是怎么来的？</h3>
+        <div class="answer">
+            <p><strong>经典信号处理 → 图信号处理</strong></p>
+            
+            <p><strong>经典情况（网格）：</strong></p>
+            <ul>
+                <li>信号定义在<strong>规则网格</strong>上（如时间轴、像素网格）</li>
+                <li>傅里叶变换基于<strong>平移不变性</strong></li>
+            </ul>
+            
+            <p><strong>图的情况（非欧几里得）：</strong></p>
+            <ul>
+                <li>信号定义在<strong>不规则图</strong>上（如社交网络、分子）</li>
+                <li>没有"平移"，但有<strong>图拉普拉斯</strong> $L = D - A$</li>
+            </ul>
+            
+            <p><strong>🔑 关键突破（2000s-2010s）：</strong></p>
+            <ul>
+                <li><strong>Shuman et al. (2013)</strong>：提出"图傅里叶变换"，用<strong>拉普拉斯特征向量</strong>作为"基"</li>
+                <li>$$\hat{f}(\lambda_k) = \langle f, u_k \rangle$$</li>
+                <li>$u_k$ 是拉普拉斯 $L$ 的特征向量，$\lambda_k$ 是特征值（类比"频率"）</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>在图上，虽然没有"平移"，但可以用拉普拉斯的特征向量作为"广义正弦波"，做"图傅里叶变换"。这样就能在图上定义滤波、去噪等操作！</p>
+            
+            <p><strong>🌟 影响：</strong></p>
+            <p>图信号处理是<strong>谱方法 GNN</strong>（如 Bruna et al. 2013, Kipf & Welling 2016）的理论基础，把信号处理的思想带到了深度学习。</p>
+        </div>
+    </div>
+
+    <hr style="margin: 2rem 0; border: none; border-top: 2px solid #10b981;">
+    <p style="text-align: center; color: #666; font-size: 0.9em;">
+        <strong>总结：</strong>从傅里叶到小波，从 Scattering 到图信号处理，调和分析一直在为深度学习提供数学工具！
+    </p>
+<!-- === END ENRICHMENT: sec7-2 === -->
+
+
+    <h3 id="fourier-history">Fourier 的遗产</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>调和分析的核心思想——将信号分解为基函数的线性组合——可以追溯到 <strong>Joseph Fourier</strong>（1807）对热传导方程的研究。从 Fourier 级数到现代的群上 Fourier 分析，其核心思想一脉相承：</p>
+      </div>
+      <div class="en">
+        The core idea of harmonic analysis — decomposing signals into linear combinations of basis functions — traces back to Fourier's study of the heat equation.
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>📐 从经典 Fourier 到群 Fourier 变换</h4>
+
+      <p><strong>经典 Fourier 变换</strong>（平移群 $\mathbb{R}$）：</p>
+      <div class="math-block">
+        $$\hat{f}(\omega) = \int_{-\infty}^{\infty} f(t) e^{-i\omega t} dt$$
+        <div class="math-explain">基函数 $e^{i\omega t}$ 是平移群的不可约表示。</div>
+      </div>
+
+      <p><strong>球谐函数</strong>（旋转群 SO(3)）：</p>
+      <div class="math-block">
+        $$f(\theta, \phi) = \sum_{\ell=0}^{\infty} \sum_{m=-\ell}^{\ell} \hat{f}_\ell^m Y_\ell^m(\theta, \phi)$$
+        <div class="math-explain">$Y_\ell^m$ 是 SO(3) 作用在 $S^2$ 上的不可约表示。这是 Chapter 4.3 球面 CNN 的基础。</div>
+      </div>
+
+      <p><strong>图 Fourier 变换</strong>（置换群 $\Sigma_n$ 的近似）：</p>
+      <div class="math-block">
+        $$\hat{f}(\lambda_k) = \sum_{i=1}^{n} f(i) \, u_k(i), \quad k = 0, \ldots, n-1$$
+        <div class="math-explain">$u_k$ 是图 Laplacian $\mathbf{L}$ 的特征向量，$\lambda_k$ 是对应特征值。</div>
+      </div>
+
+      <p><strong>Peter-Weyl 定理</strong>（紧致群 $G$）：</p>
+      <div class="math-block">
+        $$f(g) = \sum_{\rho \in \hat{G}} d_\rho \, \text{tr}\left[\hat{f}(\rho) \, \rho(g)\right]$$
+        <div class="math-explain">$\hat{G}$ 是群 $G$ 的所有不可约表示的集合。这是最一般的形式，上面所有 Fourier 变换都是其特例。</div>
+      </div>
+    </div>
+
+    <h3 id="m-theory">M-theory 与视觉皮层模型</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">M-theory</span> 是一个受视觉皮层启发的框架，由 <strong>Tomaso Poggio</strong> 及其合作者首创（Riesenhuber and Poggio, 1999; Serre et al., 2007），基于可以在某些对称群下操纵的<strong>模板</strong>（templates）概念。其层次化结构——简单细胞检测特征，复杂细胞池化以获得不变性——直接预示了现代 CNN 的设计。</p>
+      </div>
+      <div class="en">
+        M-theory is a framework inspired by the visual cortex, based on the notion of templates that can be manipulated under certain symmetry groups.
+      </div>
+    </div>
+
+    <h3 id="steerable">可控金字塔 (Steerable Pyramids)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>另一个源于计算神经科学的著名模型是<span class="term">可控金字塔</span>（steerable pyramids），由 <strong>Simoncelli 和 Freeman</strong>（1995）开发，这是一种多尺度小波分解，对某些输入变换具有良好的性质。它们是早期纹理生成模型（Portilla and Simoncelli, 2000）的核心元素，后来这些模型通过用深度 CNN 特征替换可控小波特征而得到改进（Gatys et al., 2015）。</p>
+        <p><strong>GDL 联系</strong>：可控金字塔 → 可控滤波器（steerable filters）→ 可控 CNN（Cohen and Welling, 2016）→ 群等变 CNN。"可控性"(steerability) 意味着滤波器在旋转下可以用有限基来表示——这正是 Chapter 5 中等变架构的核心思想。</p>
+      </div>
+      <div class="en">
+        Steerable pyramids — multiscale wavelet decompositions with favorable properties against input transformations — were a central element in early generative models for textures.
+      </div>
+    </div>
+
+    <h3 id="scattering">散射变换 (Scattering Transforms)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p><span class="term">散射变换</span>（Scattering Transforms）由 <strong>Stéphane Mallat</strong>（2012）引入并由 <strong>Bruna 和 Mallat</strong>（2013）发展，提供了一个理解 CNN 的框架——通过用多尺度小波分解替换可训练滤波器，同时展示了<strong>形变稳定性</strong>（deformation stability）和架构中<strong>深度</strong>的作用。</p>
+      </div>
+      <div class="en">
+        Scattering transforms, introduced by Mallat (2012), provided a framework to understand CNNs by replacing trainable filters with multiscale wavelet decompositions, showcasing deformation stability and the role of depth.
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>📐 散射变换的数学框架</h4>
+      <p>散射变换可以看作一个"固定权重的 CNN"：</p>
+
+      <div class="math-block">
+        <p><strong>第一层</strong>（类比 CNN 第一层卷积 + ReLU）：</p>
+        $$S_1[j, \theta] f = |f * \psi_{j,\theta}|$$
+        <div class="math-explain">
+          $\psi_{j,\theta}$ 是尺度 $j$、方向 $\theta$ 的小波，$|\cdot|$ 是模（非线性，类比 ReLU）。
+        </div>
+      </div>
+
+      <div class="math-block">
+        <p><strong>第二层</strong>（恢复第一层非线性丢失的信息）：</p>
+        $$S_2[j_1, \theta_1, j_2, \theta_2] f = ||f * \psi_{j_1,\theta_1}| * \psi_{j_2,\theta_2}|$$
+      </div>
+
+      <div class="math-block">
+        <p><strong>最终输出</strong>（对每层做低通滤波获得平移不变特征）：</p>
+        $$\overline{S}_m f = S_m f * \phi_J$$
+        <div class="math-explain">
+          $\phi_J$ 是尺度 $J$ 的低通滤波器（类比 CNN 的全局池化）。
+        </div>
+      </div>
+
+      <p><strong>关键性质</strong>：</p>
+      <ul>
+        <li><strong>平移不变性</strong>：$\overline{S}_m(T_c f) = \overline{S}_m f + O(2^{-J})$</li>
+        <li><strong>形变稳定性（Lipschitz）</strong>：$\|\overline{S} f - \overline{S} (f \circ \tau)\| \leq C \|\nabla \tau\|_\infty \|f\|$</li>
+        <li><strong>能量守恒</strong>：$\sum_{m=0}^{\infty} \|\overline{S}_m f\|^2 = \|f\|^2$</li>
+      </ul>
+    </div>
+
+    <h4 id="code-scattering">💻 代码：散射变换与 CNN 的对比</h4>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — 散射变换 vs CNN 特征提取</span>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+      </div>
+<pre><code><span style="color:var(--code-comment)"># 散射变换 vs CNN：理解固定滤波器与可学习滤波器</span>
+<span style="color:var(--code-keyword)">import</span> numpy <span style="color:var(--code-keyword)">as</span> np
+<span style="color:var(--code-keyword)">import</span> torch
+<span style="color:var(--code-keyword)">import</span> torch.nn <span style="color:var(--code-keyword)">as</span> nn
+
+<span style="color:var(--code-comment)"># === 1. 简化的 1D 散射变换 ===</span>
+<span style="color:var(--code-keyword)">def</span> <span style="color:var(--code-function)">morlet_wavelet</span>(t, scale, freq=<span style="color:var(--code-number)">5.0</span>):
+    <span style="color:var(--code-string)">"""Morlet 小波：ψ(t) = exp(-t²/2) * exp(iωt)"""</span>
+    t_scaled = t / scale
+    envelope = np.exp(-t_scaled**<span style="color:var(--code-number)">2</span> / <span style="color:var(--code-number)">2</span>)
+    oscillation = np.exp(<span style="color:var(--code-number)">1j</span> * freq * t_scaled)
+    <span style="color:var(--code-keyword)">return</span> envelope * oscillation / np.sqrt(scale)
+
+<span style="color:var(--code-keyword)">def</span> <span style="color:var(--code-function)">scattering_layer</span>(signal, scales):
+    <span style="color:var(--code-string)">"""单层散射变换：|signal * ψ_j| for each scale j"""</span>
+    t = np.linspace(-<span style="color:var(--code-number)">5</span>, <span style="color:var(--code-number)">5</span>, len(signal))
+    outputs = []
+    <span style="color:var(--code-keyword)">for</span> s <span style="color:var(--code-keyword)">in</span> scales:
+        psi = morlet_wavelet(t, s)
+        <span style="color:var(--code-comment)"># 卷积 + 取模（非线性）</span>
+        conv = np.abs(np.convolve(signal, np.real(psi), mode=<span style="color:var(--code-string)">'same'</span>))
+        outputs.append(conv)
+    <span style="color:var(--code-keyword)">return</span> np.stack(outputs)
+
+<span style="color:var(--code-comment)"># 两层散射</span>
+signal = np.random.randn(<span style="color:var(--code-number)">256</span>)
+scales = [<span style="color:var(--code-number)">1</span>, <span style="color:var(--code-number)">2</span>, <span style="color:var(--code-number)">4</span>, <span style="color:var(--code-number)">8</span>]
+S1 = scattering_layer(signal, scales)       <span style="color:var(--code-comment)"># [4, 256]</span>
+S2 = np.stack([scattering_layer(S1[j], scales) <span style="color:var(--code-keyword)">for</span> j <span style="color:var(--code-keyword)">in</span> range(len(scales))])  <span style="color:var(--code-comment)"># [4, 4, 256]</span>
+
+<span style="color:var(--code-comment)"># 低通滤波获得平移不变特征</span>
+<span style="color:var(--code-keyword)">def</span> <span style="color:var(--code-function)">lowpass_pool</span>(x, J=<span style="color:var(--code-number)">16</span>):
+    <span style="color:var(--code-string)">"""全局低通：类比 CNN 的 global average pooling"""</span>
+    <span style="color:var(--code-keyword)">return</span> np.mean(x.reshape(*x.shape[:-<span style="color:var(--code-number)">1</span>], -<span style="color:var(--code-number)">1</span>, J), axis=-<span style="color:var(--code-number)">1</span>)
+
+S0_bar = lowpass_pool(signal[None, :])  <span style="color:var(--code-comment)"># 零阶散射系数</span>
+S1_bar = lowpass_pool(S1)                <span style="color:var(--code-comment)"># 一阶散射系数</span>
+S2_bar = lowpass_pool(S2.reshape(-<span style="color:var(--code-number)">1</span>, <span style="color:var(--code-number)">256</span>))  <span style="color:var(--code-comment)"># 二阶散射系数</span>
+
+print(f<span style="color:var(--code-string)">"散射特征维度: S0={S0_bar.shape}, S1={S1_bar.shape}, S2={S2_bar.shape}"</span>)
+print(f<span style="color:var(--code-string)">"关键区别: 散射变换的'滤波器'(小波)是固定的, 不需要训练!"</span>)
+
+<span style="color:var(--code-comment)"># === 2. 对比：等价的 CNN 结构 ===</span>
+<span style="color:var(--code-keyword)">class</span> <span style="color:var(--code-function)">SimpleCNN1D</span>(nn.Module):
+    <span style="color:var(--code-string)">"""对标散射变换的两层 CNN"""</span>
+    <span style="color:var(--code-keyword)">def</span> <span style="color:var(--code-function)">__init__</span>(self, n_scales=<span style="color:var(--code-number)">4</span>):
+        super().__init__()
+        <span style="color:var(--code-comment)"># 对应散射的第一层：可学习滤波器</span>
+        self.conv1 = nn.Conv1d(<span style="color:var(--code-number)">1</span>, n_scales, kernel_size=<span style="color:var(--code-number)">11</span>, padding=<span style="color:var(--code-number)">5</span>)
+        <span style="color:var(--code-comment)"># 对应散射的第二层</span>
+        self.conv2 = nn.Conv1d(n_scales, n_scales**<span style="color:var(--code-number)">2</span>, kernel_size=<span style="color:var(--code-number)">11</span>, padding=<span style="color:var(--code-number)">5</span>)
+        <span style="color:var(--code-comment)"># 非线性: ReLU 代替取模</span>
+        self.relu = nn.ReLU()
+        <span style="color:var(--code-comment)"># 池化: 类比散射的低通滤波</span>
+        self.pool = nn.AdaptiveAvgPool1d(<span style="color:var(--code-number)">16</span>)
+
+    <span style="color:var(--code-keyword)">def</span> <span style="color:var(--code-function)">forward</span>(self, x):
+        h1 = self.relu(self.conv1(x))   <span style="color:var(--code-comment)"># [B, 4, L]  ← 第一层</span>
+        h2 = self.relu(self.conv2(h1))  <span style="color:var(--code-comment)"># [B, 16, L] ← 第二层</span>
+        <span style="color:var(--code-keyword)">return</span> self.pool(h2)             <span style="color:var(--code-comment)"># [B, 16, 16] ← 池化</span>
+
+model = SimpleCNN1D()
+x = torch.randn(<span style="color:var(--code-number)">1</span>, <span style="color:var(--code-number)">1</span>, <span style="color:var(--code-number)">256</span>)
+out = model(x)
+print(f<span style="color:var(--code-string)">"CNN 输出: {out.shape}"</span>)
+print(f<span style="color:var(--code-string)">"CNN 有 {sum(p.numel() for p in model.parameters())} 个可训练参数"</span>)
+print(f<span style="color:var(--code-string)">"散射变换有 0 个可训练参数（全部固定小波）"</span>)
+</code></pre>
+    </div>
+
+    <h3 id="gsp-history">图信号处理 (Graph Signal Processing)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>另一类重要的图神经网络——通常被称为<span class="term">谱域</span>（spectral）方法——源于本书作者之一（Bruna et al., 2013）的工作，使用了<span class="term">图 Fourier 变换</span>（Graph Fourier Transform）的概念。</p>
+        <p>这一构造的根源在信号处理和计算调和分析社区，其中处理非欧几里得信号在 2000 年代后期和 2010 年代初期变得突出。来自 <strong>Pierre Vandergheynst</strong>（Shuman et al., 2013）和 <strong>José Moura</strong>（Sandryhaila and Moura, 2013）团队的有影响力的论文推广了"图信号处理"（GSP）的概念以及基于图邻接矩阵和 Laplacian 矩阵的特征向量的广义 Fourier 变换。</p>
+      </div>
+      <div class="en">
+        The roots of spectral GNNs are in the signal processing community, where dealing with non-Euclidean signals became prominent in the late 2000s and early 2010s.
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>📐 从经典 Fourier 到图 Fourier</h4>
+      <div class="compare-grid">
+        <div>
+          <h4>经典信号处理</h4>
+          <p>域：$\mathbb{R}^d$（欧几里得空间）</p>
+          <p>算子：Laplacian $\nabla^2$</p>
+          <p>特征函数：$e^{i\omega \cdot x}$</p>
+          <p>变换：$\hat{f}(\omega) = \int f(x) e^{-i\omega \cdot x} dx$</p>
+          <p>卷积：$f * g = \mathcal{F}^{-1}[\hat{f} \cdot \hat{g}]$</p>
+        </div>
+        <div>
+          <h4>图信号处理</h4>
+          <p>域：图 $\mathcal{G} = (V, E)$</p>
+          <p>算子：图 Laplacian $\mathbf{L}$</p>
+          <p>特征向量：$\mathbf{L} \mathbf{u}_k = \lambda_k \mathbf{u}_k$</p>
+          <p>变换：$\hat{f}(\lambda_k) = \langle f, \mathbf{u}_k \rangle$</p>
+          <p>卷积：$f *_{\mathcal{G}} g = \mathbf{U} \text{diag}(\hat{g}) \mathbf{U}^T f$</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="computer-graphics">计算机图形学与几何处理</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>值得注意的是，在计算机图形学和几何处理领域，<strong>非欧几里得调和分析比图信号处理至少早了十年</strong>。我们可以追溯流形和网格上的谱滤波器到 <strong>Taubin et al.</strong>（1996）的工作。这些方法在 2000 年代成为主流，随后是 <strong>Karni 和 Gotsman</strong>（2000）关于谱几何压缩的有影响力论文以及 <strong>Lévy</strong>（2006）关于使用 Laplacian 特征向量作为非欧几里得 Fourier 基的论文。</p>
+        <p>谱方法已被用于一系列应用，最突出的是形状描述子（Sun et al., 2009）和<span class="term">函数映射</span>（Functional Maps, Ovsjanikov et al., 2012）。</p>
+      </div>
+      <div class="en">
+        Non-Euclidean harmonic analysis in computer graphics predates Graph Signal Processing by at least a decade. Spectral methods on manifolds trace back to Taubin et al. (1996).
+      </div>
+    </div>
+
+    <div class="callout callout-history">
+      <h4>🏺 "双胞胎兄弟"趣事</h4>
+      <p>书中提到：与谱图 CNN 类似的可学习形状描述子由 <strong>Roee Litman</strong> 和 <strong>Alex Bronstein</strong>（2013）提出，后者是本书作者（Michael Bronstein）的<strong>双胞胎兄弟</strong>。GDL 确实是一个"家族事业"！</p>
+    </div>
+
+    <h4>网格上的深度学习先驱</h4>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>基于内在度量不变量的形状分析模型由计算机图形学领域的多位作者引入（Elad and Kimmel, 2003; Mémoli and Sapiro, 2005; Bronstein et al., 2006）。第一个用于网格深度学习的架构——<span class="term">Geodesic CNN</span>——由本书作者之一的团队开发（Masci et al., 2015），使用应用于测地线径向 patch 的局部共享权重滤波器。</p>
+        <p>它是后来由另一位作者（Cohen et al., 2019）开发的<strong>规范等变 CNN</strong> 的特例。Geodesic CNN 的一个推广——<span class="term">MoNet</span>（Monti et al., 2017）——使用了注意力类似的机制对网格的局部结构特征进行操作，也可以在一般图上工作。</p>
+      </div>
+      <div class="en">
+        Geodesic CNNs (Masci et al., 2015) were the first deep learning architecture on meshes. MoNet (Monti et al., 2017) generalized it with an attention-like mechanism.
+      </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 7.3 EARLY ML SYMMETRY -->
+    <!-- ============================================================ -->
+    <h2 id="sec7-3">7.3 早期机器学习中的对称性<br><span style="font-size:0.7em;color:var(--text-secondary)">Early Use of Symmetry in Machine Learning</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>在机器学习及其在模式识别和计算机视觉中的应用中，对称性的重要性早已被认识到。设计等变特征检测器的早期工作由 <strong>Amari</strong>（1978）、<strong>Kanatani</strong>（2012）和 <strong>Lenz</strong>（1990）完成。</p>
+      </div>
+      <div class="en">
+        Early work on designing equivariant feature detectors for pattern recognition was done by Amari (1978), Kanatani (2012), and Lenz (1990).
+      </div>
+    </div>
+
+    <div class="callout callout-history">
+      <h4>🏺 Shun'ichi Amari 与信息几何</h4>
+      <p><strong>Shun'ichi Amari</strong> 被认为是<strong>信息几何</strong>（information geometry）领域的创始人，该领域将黎曼几何模型应用于概率分布。其主要研究对象是<span class="term">统计流形</span>（statistical manifold），其中每个点对应一个概率分布。信息几何至今仍是机器学习理论的重要分支——例如自然梯度下降法就来自信息几何。</p>
+    </div>
+
+<!-- === ENRICHMENT: sec7-3 === -->
+<div class="enrichment-block">
+        <h3>❓ Neocognitron（1982）是怎么"发现"卷积和池化的？</h3>
+        <div class="answer">
+            <p><strong>Fukushima 的灵感来源：</strong></p>
+            <ul>
+                <li><strong>Hubel & Wiesel（1959，诺奖工作）</strong>：发现视觉皮层有"简单细胞"和"复杂细胞"</li>
+                <li><strong>简单细胞</strong>：对特定位置的边缘敏感（局部特征检测）</li>
+                <li><strong>复杂细胞</strong>：对位置不敏感，只要边缘在某个区域内就激活（位置不变性）</li>
+            </ul>
+            
+            <p><strong>🔑 Neocognitron 的设计：</strong></p>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>S-cells（简单细胞）</strong>：<span class="highlight">局部卷积</span>，提取边缘、角点等特征
+                </div>
+                <div class="timeline-item">
+                    <strong>C-cells（复杂细胞）</strong>：<span class="highlight">局部池化</span>（类似 max-pooling），获得位置不变性
+                </div>
+                <div class="timeline-item">
+                    <strong>层级结构</strong>：S → C → S → C ...，逐层抽象
+                </div>
+            </div>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>Fukushima 说："既然大脑视觉系统是这样工作的（局部感受野 + 池化），那神经网络也应该这样设计！"于是手工设计了卷积和池化，成为 CNN 的雏形。</p>
+            
+            <p><strong>🌟 重要性：</strong></p>
+            <ul>
+                <li>首次在神经网络中引入<strong>局部连接</strong>（local connectivity）</li>
+                <li>首次引入<strong>权重共享</strong>（weight sharing）→ 平移不变性</li>
+                <li>首次引入<strong>池化</strong>（pooling）→ 减少参数 + 位置鲁棒性</li>
+            </ul>
+            
+            <p><strong>⚠️ 局限：</strong></p>
+            <p>Neocognitron 的权重是<strong>手工设计</strong>的（无监督学习），没有反向传播。直到 LeCun 的 LeNet（1998）才用 BP 训练成功！</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ Minsky & Papert 的《Perceptrons》为什么"打击"了神经网络？</h3>
+        <div class="answer">
+            <p><strong>《Perceptrons》（1969）的核心论断：</strong></p>
+            <ul>
+                <li>单层感知机<strong>无法学习非线性可分</strong>的问题（如 XOR）</li>
+                <li>特别地，单层感知机<strong>无法高效学习对称性/不变性</strong></li>
+            </ul>
+            
+            <p><strong>🔑 Group Invariance Theorem（群不变性定理）：</strong></p>
+            <p>单层感知机要学习一个<strong>群不变函数</strong>（如旋转不变、平移不变），需要的参数量随输入大小<strong>指数增长</strong>，实际上不可行。</p>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>如果你想让单层神经网络识别"旋转后的数字"，它需要<strong>记住所有可能的旋转版本</strong>，参数量爆炸！这证明了单层网络的局限。</p>
+            
+            <p><strong>🌟 历史影响：</strong></p>
+            <ul>
+                <li>这本书导致神经网络研究进入"寒冬"（1970s-1980s）</li>
+                <li>但它也<strong>激励</strong>了多层网络的研究（Hinton、LeCun 等人）</li>
+                <li>多层网络 + 反向传播（1986）才解决了这个问题</li>
+            </ul>
+            
+            <p><strong>🔍 深刻教训：</strong></p>
+            <p><strong>不变性/对称性</strong>必须<strong>内置到架构</strong>中（如 CNN 的卷积），而不是让网络"死记硬背"！</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ LeCun 的 LeNet（1998）为什么成功？和 Neocognitron 的区别是什么？</h3>
+        <div class="answer">
+            <p><strong>LeNet-5（1998）的关键改进：</strong></p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>1. 反向传播</strong>：用梯度下降<strong>自动学习</strong>卷积核，不再手工设计
+                </div>
+                <div class="timeline-item">
+                    <strong>2. 端到端训练</strong>：从原始像素到分类标签，一次性优化
+                </div>
+                <div class="timeline-item">
+                    <strong>3. 应用场景</strong>：手写数字识别（MNIST），实际部署到邮政系统
+                </div>
+            </div>
+            
+            <p><strong>和 Neocognitron 的对比：</strong></p>
+            <table style="width: 100%; margin: 1rem 0; border-collapse: collapse;">
+                <tr style="background: rgba(245,158,11,0.1);">
+                    <th style="padding: 8px; border: 1px solid #ddd;">特性</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">Neocognitron</th>
+                    <th style="padding: 8px; border: 1px solid #ddd;">LeNet</th>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">卷积核</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">手工设计</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">自动学习</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">训练方法</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">无监督</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">监督学习 + BP</td>
+                </tr>
+                <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">性能</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">概念验证</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">工业级应用</td>
+                </tr>
+            </table>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>Neocognitron 是"手工艺品"，LeNet 是"工业产品"。核心区别是<strong>反向传播</strong>让网络自己学习最佳特征，而不是人类猜测。</p>
+            
+            <p><strong>🌟 历史地位：</strong></p>
+            <p>LeNet 是第一个<strong>工业部署</strong>的深度卷积网络，证明了 CNN 的实用性。但由于计算资源限制和 SVM 的竞争，直到 2012 年 AlexNet 才真正引爆深度学习！</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 为什么 CNN 在 1998-2012 年间"沉寂"了？</h3>
+        <div class="answer">
+            <p><strong>1998-2012 的"寒冬"原因：</strong></p>
+            
+            <ul>
+                <li><strong>1. 计算资源不足</strong>：训练 CNN 需要大量计算，CPU 太慢</li>
+                <li><strong>2. 数据不足</strong>：MNIST 太简单，复杂任务（如 ImageNet）数据量不够</li>
+                <li><strong>3. 理论不足</strong>：不知道如何初始化权重、如何防止梯度消失</li>
+                <li><strong>4. 竞争对手</strong>：SVM（支持向量机）+ 手工特征（SIFT, HOG）在 2000s 年代占主导</li>
+            </ul>
+            
+            <p><strong>🔑 2012 年的突破（AlexNet）：</strong></p>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>GPU 训练</strong>：利用 CUDA 加速，速度提升 10-50 倍
+                </div>
+                <div class="timeline-item">
+                    <strong>大数据</strong>：ImageNet（120万张图）提供充足训练样本
+                </div>
+                <div class="timeline-item">
+                    <strong>ReLU + Dropout</strong>：解决梯度消失 + 过拟合
+                </div>
+                <div class="timeline-item">
+                    <strong>数据增强</strong>：随机裁剪、翻转，增加不变性
+                </div>
+            </div>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>LeNet 就像"原型机"，AlexNet 是"量产版"。中间 14 年，CNN 等的是：<strong>更快的硬件</strong>（GPU）+ <strong>更多的数据</strong>（ImageNet）+ <strong>更好的技巧</strong>（ReLU/Dropout）。</p>
+            
+            <p><strong>🌟 启示：</strong></p>
+            <p>好的想法（CNN）可能领先时代，但需要<strong>技术生态</strong>（硬件 + 数据 + 算法）成熟才能爆发！</p>
+        </div>
+    </div>
+
+    <hr style="margin: 2rem 0; border: none; border-top: 2px solid #f59e0b;">
+    <p style="text-align: center; color: #666; font-size: 0.9em;">
+        <strong>总结：</strong>从 Neocognitron 到 LeNet 再到 AlexNet，CNN 的演化史就是"对称性思想 + 工程突破"的完美结合！
+    </p>
+<!-- === END ENRICHMENT: sec7-3 === -->
+
+
+    <h3 id="invariance-theorem">群不变性定理 (Group Invariance Theorem)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>在神经网络文献中，<strong>Minsky 和 Papert</strong>（2017, 原版 1969）的《Perceptrons》一书中著名的<span class="term">感知机的群不变性定理</span>（Group Invariance Theorem for Perceptrons）为（单层）感知机学习不变量的能力设定了根本限制。</p>
+        <p>这是研究多层架构的主要动机之一（Sejnowski et al., 1986; Shawe-Taylor, 1989, 1993），最终导致了深度学习的发展。</p>
+      </div>
+      <div class="en">
+        The Group Invariance Theorem puts fundamental limitations on the capabilities of single-layer perceptrons to learn invariants. This was a primary motivation for studying multi-layer architectures.
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>📐 群不变性定理 (Minsky & Papert, 1969)</h4>
+      <p><strong>定理</strong>：设 $G$ 是作用在输入空间 $\mathcal{X}$ 上的群。如果一个单层感知机（线性分类器）$f(x) = \text{sign}(\mathbf{w}^T x + b)$ 对 $G$ 不变，即 $f(gx) = f(x), \; \forall g \in G$，那么 $\mathbf{w}$ 必须满足：</p>
+      <div class="math-block">
+        $$\rho(g)^T \mathbf{w} = \mathbf{w}, \quad \forall g \in G$$
+        <div class="math-explain">
+          其中 $\rho(g)$ 是 $G$ 在输入空间上的表示。这意味着 $\mathbf{w}$ 必须在 $G$ 的不变子空间中。对于"大"的群（如旋转群），不变子空间可能非常小（甚至只有零向量），使得感知机完全无法学习有意义的不变特征。
+        </div>
+      </div>
+      <p><strong>推论</strong>：这就是为什么需要<strong>多层</strong>网络——中间层可以计算等变特征（而非不变），只在最后一层施加不变性（如全局池化）。这正是 GDL 蓝图中先等变、最后不变的设计原则。</p>
+    </div>
+
+    <h3 id="neocognitron">Neocognitron (1982)：第一个平移不变神经网络</h3>
+
+    <div class="person-card">
+      <div class="person-emoji">🧠</div>
+      <div class="person-info">
+        <h4>Kunihiko Fukushima (福島邦彦)</h4>
+        <p>在神经网络社区中，<strong>Neocognitron</strong>（Fukushima and Miyake, 1982）被认为是第一个在神经网络中实现<strong>平移不变性</strong>的架构——"不受位置偏移影响的模式识别"。他的解决方案是具有<strong>局部连接</strong>和<strong>层级结构</strong>的神经网络，灵感来自 <strong>Hubel 和 Wiesel</strong>（1959）在视觉皮层中发现的感受野。</p>
+      </div>
+    </div>
+
+    <div class="callout callout-history">
+      <h4>🏺 Nobel 级的生物学灵感</h4>
+      <p>Hubel 和 Wiesel 发现视觉皮层中的神经元具有<strong>层级化的感受野</strong>：简单细胞响应特定方向的边缘，复杂细胞对边缘的位置不敏感（位置不变性）。这一经典工作获得了 1981 年的<strong>诺贝尔医学奖</strong>（与 Roger Sperry 共享）。从 Neocognitron 到 CNN 到 GDL，这个生物学灵感一直是核心。</p>
+    </div>
+
+    <h3 id="lecun-cnn">LeCun 与 CNN (1998)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>这些想法在 <strong>Yann LeCun</strong> 及其合作者的开创性工作（LeCun et al., 1998）中达到了顶峰——<span class="term">卷积神经网络</span>（Convolutional Neural Networks）。CNN 把 Neocognitron 的局部连接 + 权重共享思想与反向传播训练结合，创造了第一个大规模实用的深度学习架构。</p>
+      </div>
+      <div class="en">
+        These ideas culminated in CNNs in the seminal work of LeCun et al. (1998), combining local connectivity, weight sharing, and backpropagation training.
+      </div>
+    </div>
+
+    <h3 id="wood-shawe">表示论视角 (Wood & Shawe-Taylor, 1996)</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>首次从<span class="term">表示论</span>（representation theory）角度研究不变和等变神经网络的工作由 <strong>Wood 和 Shawe-Taylor</strong>（1996）完成，但<strong>不幸很少被引用</strong>。这些思想的更近期的体现包括 Makadia et al.（2007）、Esteves et al.（2020）和本书作者之一（Cohen and Welling, 2016）的工作。</p>
+      </div>
+      <div class="en">
+        The first representation-theoretical view on invariant and equivariant neural networks was performed by Wood and Shawe-Taylor (1996), unfortunately rarely cited.
+      </div>
+    </div>
+
+    <h4 id="code-cnn-symmetry">💻 代码：CNN 的平移等变性验证</h4>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — 验证 CNN 的平移等变性与旋转非等变性</span>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+      </div>
+<pre><code><span style="color:var(--code-comment)"># CNN 对称性验证：平移等变 vs 旋转不等变</span>
+<span style="color:var(--code-keyword)">import</span> torch
+<span style="color:var(--code-keyword)">import</span> torch.nn <span style="color:var(--code-keyword)">as</span> nn
+<span style="color:var(--code-keyword)">import</span> torch.nn.functional <span style="color:var(--code-keyword)">as</span> F
+<span style="color:var(--code-keyword)">import</span> numpy <span style="color:var(--code-keyword)">as</span> np
+
+<span style="color:var(--code-comment)"># === 1. 平移等变性 ===</span>
+conv = nn.Conv2d(<span style="color:var(--code-number)">1</span>, <span style="color:var(--code-number)">4</span>, kernel_size=<span style="color:var(--code-number)">3</span>, padding=<span style="color:var(--code-number)">1</span>, bias=<span style="color:var(--code-keyword)">False</span>)
+
+<span style="color:var(--code-comment)"># 原始输入</span>
+x = torch.zeros(<span style="color:var(--code-number)">1</span>, <span style="color:var(--code-number)">1</span>, <span style="color:var(--code-number)">16</span>, <span style="color:var(--code-number)">16</span>)
+x[<span style="color:var(--code-number)">0</span>, <span style="color:var(--code-number)">0</span>, <span style="color:var(--code-number)">4</span>:<span style="color:var(--code-number)">8</span>, <span style="color:var(--code-number)">4</span>:<span style="color:var(--code-number)">8</span>] = <span style="color:var(--code-number)">1.0</span>  <span style="color:var(--code-comment)"># 一个方块</span>
+
+<span style="color:var(--code-comment)"># 平移后的输入（向右移 3 像素）</span>
+x_shifted = torch.zeros_like(x)
+x_shifted[<span style="color:var(--code-number)">0</span>, <span style="color:var(--code-number)">0</span>, <span style="color:var(--code-number)">4</span>:<span style="color:var(--code-number)">8</span>, <span style="color:var(--code-number)">7</span>:<span style="color:var(--code-number)">11</span>] = <span style="color:var(--code-number)">1.0</span>
+
+<span style="color:var(--code-keyword)">with</span> torch.no_grad():
+    y = conv(x)               <span style="color:var(--code-comment)"># 先卷积</span>
+    y_shifted = conv(x_shifted) <span style="color:var(--code-comment)"># 对平移输入卷积</span>
+
+    <span style="color:var(--code-comment)"># 对输出做同样的平移</span>
+    y_then_shift = torch.zeros_like(y)
+    y_then_shift[:, :, :, <span style="color:var(--code-number)">3</span>:] = y[:, :, :, :-<span style="color:var(--code-number)">3</span>]
+
+<span style="color:var(--code-comment)"># 验证：conv(shift(x)) ≈ shift(conv(x))</span>
+diff_translation = (y_shifted[:,:,:<span style="color:var(--code-number)">-3</span>,<span style="color:var(--code-number)">3</span>:] - y_then_shift[:,:,:<span style="color:var(--code-number)">-3</span>,<span style="color:var(--code-number)">3</span>:]).abs().max()
+print(f<span style="color:var(--code-string)">"平移等变误差: {diff_translation:.2e}"</span>)
+<span style="color:var(--code-comment)"># → 约 0 （边界效应外完美等变）</span>
+
+<span style="color:var(--code-comment)"># === 2. 旋转不等变性 ===</span>
+<span style="color:var(--code-keyword)">def</span> <span style="color:var(--code-function)">rotate_90</span>(x):
+    <span style="color:var(--code-string)">"""逆时针旋转 90°"""</span>
+    <span style="color:var(--code-keyword)">return</span> x.flip(-<span style="color:var(--code-number)">1</span>).transpose(-<span style="color:var(--code-number)">2</span>, -<span style="color:var(--code-number)">1</span>)
+
+<span style="color:var(--code-keyword)">with</span> torch.no_grad():
+    x_rot = rotate_90(x)
+    y_rot_input = conv(x_rot)     <span style="color:var(--code-comment)"># 先旋转再卷积</span>
+    y_rot_output = rotate_90(y)   <span style="color:var(--code-comment)"># 先卷积再旋转</span>
+
+diff_rotation = (y_rot_input - y_rot_output).abs().max()
+print(f<span style="color:var(--code-string)">"旋转等变误差: {diff_rotation:.4f}"</span>)
+<span style="color:var(--code-comment)"># → 非零！标准 CNN 对旋转不等变</span>
+<span style="color:var(--code-comment)"># → 这就是为什么需要 Group Equivariant CNN (Cohen & Welling, 2016)</span>
+
+<span style="color:var(--code-comment)"># === 3. 全局池化获得平移不变性 ===</span>
+pool = nn.AdaptiveAvgPool2d(<span style="color:var(--code-number)">1</span>)
+<span style="color:var(--code-keyword)">with</span> torch.no_grad():
+    inv_orig = pool(conv(x))
+    inv_shift = pool(conv(x_shifted))
+diff_invariance = (inv_orig - inv_shift).abs().max()
+print(f<span style="color:var(--code-string)">"池化后平移不变性误差: {diff_invariance:.2e}"</span>)
+<span style="color:var(--code-comment)"># → 约 0 — 等变特征 + 不变池化 = 不变输出（GDL 蓝图！）</span>
+</code></pre>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- 7.4 GNN HISTORY -->
+    <!-- ============================================================ -->
+    <h2 id="sec7-4">7.4 图神经网络的发展史<br><span style="font-size:0.7em;color:var(--text-secondary)">History of Graph Neural Networks</span></h2>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>很难精确指出图神经网络的概念何时开始出现——部分原因是大多数早期工作没有将图作为一等公民，部分是因为 GNN 直到 2010 年代后期才变得实用，还部分是因为这个领域是从多个研究方向的汇合中涌现的。</p>
+      </div>
+      <div class="en">
+        It is difficult to pinpoint exactly when the concept of GNNs began to emerge — partly because most early work did not place graphs as a first-class citizen, and partly because this field emerged from the confluence of several research areas.
+      </div>
+    </div>
+
+<!-- === ENRICHMENT: sec7-4 === -->
+<div class="enrichment-block">
+        <h3>❓ GNN 的"史前时代"（1990s-2000s）：谁最早提出在图上做神经网络？</h3>
+        <div class="answer">
+            <p><strong>🔑 早期先驱（1990s）：</strong></p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>1994 — Labeling RAAM（Sperduti）</strong>：在树结构上递归应用神经网络
+                </div>
+                <div class="timeline-item">
+                    <strong>1996 — Backpropagation through structure（Goller & Kuchler）</strong>：对有向无环图（DAG）做反向传播
+                </div>
+                <div class="timeline-item">
+                    <strong>1997 — Adaptive processing（Sperduti & Starita）</strong>：处理任意图结构，但限于小图
+                </div>
+            </div>
+            
+            <p><strong>⚠️ 核心问题：</strong></p>
+            <ul>
+                <li>这些方法主要处理<strong>树或 DAG</strong>，对通用图（有环）效果不好</li>
+                <li>计算复杂度高，难以扩展</li>
+                <li>缺乏理论保证（如收敛性）</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>1990s 的研究者意识到"图 + 神经网络"很有用，但当时的方法像"在泥泞路上开车"——能走，但慢且不稳定。</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 第一个真正的 GNN（2005-2009）：Gori 和 Scarselli 做了什么？</h3>
+        <div class="answer">
+            <p><strong>Scarselli et al. (2005, 2009) — Graph Neural Network：</strong></p>
+            
+            <p><strong>🔑 核心思想：</strong></p>
+            <ul>
+                <li>节点表示通过<strong>递归更新</strong>达到<strong>不动点</strong>（fixed point）</li>
+                <li>$$h_v = f(x_v, \{h_u \mid u \in N(v)\}, \{e_{uv}\})$$</li>
+                <li>迭代直到 $h_v$ 不再变化（收敛到不动点）</li>
+            </ul>
+            
+            <p><strong>⚠️ 限制：</strong></p>
+            <ul>
+                <li>需要保证<strong>收缩映射</strong>（contraction mapping）才能收敛</li>
+                <li>不使用节点特征（$x_v$ 只是标签）</li>
+                <li>需要特殊的反向传播算法（Almeida-Pineda 算法）</li>
+            </ul>
+            
+            <p><strong>🌟 重要性：</strong></p>
+            <p>首次正式定义"GNN"这个名字，并提出了<strong>消息传递</strong>的核心思想！</p>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>Scarselli 的 GNN 像"传话游戏"：每个人（节点）不断和邻居交流，直到大家的观点稳定下来（不动点）。但这个过程需要精心设计才能保证"收敛"。</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ GNN 的"文艺复兴"（2013-2016）：谁点燃了第二波浪潮？</h3>
+        <div class="answer">
+            <p><strong>关键突破：</strong></p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>2013 — Spectral GNN（Bruna et al.）</strong>：用图拉普拉斯的<span class="highlight">谱分解</span>定义卷积，引入"图信号处理"视角
+                </div>
+                <div class="timeline-item">
+                    <strong>2015 — Gated GNN（Li et al.）</strong>：用<span class="highlight">GRU 门控机制</span>代替不动点迭代，用标准 BP 训练
+                </div>
+                <div class="timeline-item">
+                    <strong>2016 — GCN（Kipf & Welling）</strong>：简化谱方法，提出<span class="highlight">局部卷积</span>公式，易于实现和扩展
+                </div>
+            </div>
+            
+            <p><strong>🔑 GCN 的革命性：</strong></p>
+            <p>$$H^{(l+1)} = \sigma(\tilde{D}^{-1/2}\tilde{A}\tilde{D}^{-1/2}H^{(l)}W^{(l)})$$</p>
+            
+            <ul>
+                <li>公式<strong>简洁优雅</strong>，易于理解和实现</li>
+                <li>计算<strong>高效</strong>，利用稀疏矩阵</li>
+                <li>理论上是<strong>一阶 Chebyshev 多项式滤波器</strong>的特例</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>Kipf & Welling 的 GCN 是 GNN 的"iPhone 时刻"——不一定是技术最先进的，但足够简单、好用，让大家都能上手！</p>
+            
+            <p><strong>🌟 影响：</strong></p>
+            <p>GCN 论文（2016）是 GNN 领域<strong>引用最多</strong>的论文之一，引爆了 2017-2020 年的 GNN 热潮。</p>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ 2017-2020 的 GNN"百花齐放"：都有哪些重要变种？</h3>
+        <div class="answer">
+            <p><strong>核心架构的演化：</strong></p>
+            
+            <table>
+                <tr>
+                    <th>年份</th>
+                    <th>模型</th>
+                    <th>核心创新</th>
+                </tr>
+                <tr>
+                    <td>2017</td>
+                    <td><strong>GraphSAGE</strong></td>
+                    <td>邻居<strong>采样</strong>，支持大图和归纳学习</td>
+                </tr>
+                <tr>
+                    <td>2017</td>
+                    <td><strong>MPNN</strong></td>
+                    <td>统一<strong>消息传递</strong>框架，提出边特征</td>
+                </tr>
+                <tr>
+                    <td>2017</td>
+                    <td><strong>MoNet</strong></td>
+                    <td>网格/流形上的 GNN，<strong>注意力聚合</strong></td>
+                </tr>
+                <tr>
+                    <td>2018</td>
+                    <td><strong>GAT</strong></td>
+                    <td><strong>自注意力</strong>机制，动态加权邻居</td>
+                </tr>
+                <tr>
+                    <td>2018</td>
+                    <td><strong>GIN</strong></td>
+                    <td>理论最优表达力（与 <strong>WL 测试</strong>等价）</td>
+                </tr>
+            </table>
+            
+            <p><strong>🔑 三大派系：</strong></p>
+            <ul>
+                <li><strong>谱方法</strong>（Spectral）：GCN, ChebNet — 基于图傅里叶变换</li>
+                <li><strong>空间方法</strong>（Spatial）：GraphSAGE, GAT — 基于局部邻居聚合</li>
+                <li><strong>消息传递</strong>（Message Passing）：MPNN, EGNN — 基于边消息</li>
+            </ul>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>2017-2020 年的 GNN 研究像"军备竞赛"：每个月都有新模型，大家比谁的架构更强、理论更深、应用更广！</p>
+            
+            <p><strong>🌟 重要应用突破：</strong></p>
+            <ul>
+                <li><strong>药物发现</strong>：分子性质预测（Gilmer et al. 2017）</li>
+                <li><strong>推荐系统</strong>：图协同过滤（Pinterest, Alibaba）</li>
+                <li><strong>物理模拟</strong>：粒子系统、流体力学（DeepMind）</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="enrichment-block">
+        <h3>❓ GNN 的"表达力危机"（2018-2019）：WL 测试揭示了什么？</h3>
+        <div class="answer">
+            <p><strong>问题：GNN 能区分哪些图？</strong></p>
+            
+            <p><strong>🔑 关键发现（Xu et al. 2018, Morris et al. 2019）：</strong></p>
+            <p>大多数 GNN（包括 GCN、GraphSAGE、GAT）的表达力<strong>不超过 1-WL 测试</strong>！</p>
+            
+            <p><strong>什么是 WL 测试？</strong></p>
+            <ul>
+                <li><strong>Weisfeiler-Lehman（1968）</strong>：一个经典的图同构测试算法</li>
+                <li>迭代更新节点标签：$\text{hash}(v) = \text{hash}(\text{hash}(v), \{\text{hash}(u) \mid u \in N(v)\})$</li>
+                <li>如果两个图的节点标签最终相同 → 可能同构；否则一定不同构</li>
+            </ul>
+            
+            <p><strong>⚠️ 1-WL 的局限：</strong></p>
+            <ul>
+                <li>无法区分很多简单的图结构（如<strong>三角形</strong> vs <strong>3-星图</strong>）</li>
+                <li>无法计数<strong>环</strong>的数量</li>
+            </ul>
+            
+            <p><strong>🌟 解决方案：</strong></p>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <strong>GIN（Xu et al. 2018）</strong>：用 MLP + sum 聚合，达到 1-WL 的<span class="highlight">最大表达力</span>
+                </div>
+                <div class="timeline-item">
+                    <strong>k-GNN（Morris et al. 2019）</strong>：在 k-元组上做消息传递，超越 1-WL
+                </div>
+                <div class="timeline-item">
+                    <strong>子图 GNN（Bouritsas et al. 2020）</strong>：计数子结构（如三角形），增强表达力
+                </div>
+            </div>
+            
+            <p><strong>🗣️ 用人话说：</strong></p>
+            <p>2018 年大家发现：很多 GNN 虽然实用，但理论上有"盲区"——有些简单的图结构它们根本分不清！这引发了"表达力军备竞赛"，大家开始设计更强的架构。</p>
+            
+            <p><strong>🔍 深刻启示：</strong></p>
+            <p><strong>实践 vs 理论</strong>：大多数真实任务不需要完美的表达力（因为有丰富的节点特征），但理论分析能指导架构设计，避免"盲目试错"！</p>
+        </div>
+    </div>
+
+    <hr style="margin: 2rem 0; border: none; border-top: 2px solid #ef4444;">
+    <p style="text-align: center; color: #666; font-size: 0.9em;">
+        <strong>总结：</strong>从 1990s 的树递归到 2020s 的 Transformer-GNN，GNN 经历了"探索→沉寂→爆发→深化"的完整周期，现在已成为几何深度学习的核心支柱！
+    </p>
+<!-- === END ENRICHMENT: sec7-4 === -->
+
+
+    <h3 id="gnn-prehistory">1990s：前 GNN 时代 — "通过结构反向传播"</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>GNN 的早期形式至少可以追溯到 1990 年代：</p>
+        <ul>
+          <li><strong>Sperduti</strong>（1994）— Labeling RAAM：在结构化数据上学习表示</li>
+          <li><strong>Goller 和 Kuchler</strong>（1996）— <span class="term">"通过结构反向传播"</span>（backpropagation through structure）</li>
+          <li><strong>Sperduti 和 Starita</strong>（1997）— 自适应数据结构处理</li>
+          <li><strong>Frasconi et al.</strong>（1998）— 数据结构的通用框架</li>
+        </ul>
+        <p>虽然这些工作主要关注"结构"（通常是树或有向无环图），但它们架构中保留的许多不变性与今天更常用的 GNN 是相似的。</p>
+      </div>
+      <div class="en">
+        Early forms of GNNs can be traced back to the 1990s, primarily concerned with operating over "structures" (often trees or DAGs), many of the invariances preserved are reminiscent of modern GNNs.
+      </div>
+    </div>
+
+    <h3 id="gnn-birth">2005：GNN 的正式诞生</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>对通用图结构处理的首次正式处理（以及"<span class="term">图神经网络</span>"一词的创造）发生在 21 世纪初。在意大利锡耶纳大学的人工智能实验室内，由 <strong>Marco Gori</strong> 和 <strong>Franco Scarselli</strong> 主导的论文（Gori et al., 2005; Scarselli et al., 2008）提出了第一个"GNN"。</p>
+        <p>它们依赖于<strong>循环机制</strong>（recurrent mechanisms），要求神经网络参数指定<strong>收缩映射</strong>（contraction mappings），因此通过搜索<strong>不动点</strong>来计算节点表示——这本身需要一种特殊形式的反向传播（Almeida, 1990; Pineda, 1988），而且完全不依赖于节点特征。</p>
+      </div>
+      <div class="en">
+        The first proper "GNN" (Gori et al., 2005; Scarselli et al., 2008) relied on recurrent mechanisms, required contraction mappings, and computed node representations by searching for a fixed point.
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>📐 原始 GNN 的不动点公式</h4>
+      <div class="math-block">
+        $$\mathbf{h}_u^{(t+1)} = f_\theta\!\left(\mathbf{x}_u, \left\{\mathbf{h}_v^{(t)}, \mathbf{x}_v, \mathbf{e}_{uv}\right\}_{v \in \mathcal{N}(u)}\right)$$
+        <div class="math-explain">
+          <p>在 $t \to \infty$ 时收敛到不动点 $\mathbf{h}^* = f_\theta(\mathbf{h}^*)$。<strong>要求</strong>：$f_\theta$ 必须是收缩映射（$\|f_\theta(a) - f_\theta(b)\| \leq c\|a - b\|, c < 1$），由 Banach 不动点定理保证收敛。</p>
+          <p><strong>缺陷</strong>：收缩映射的约束严重限制了表达力；不动点反向传播计算量大；不使用节点特征。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>所有上述问题都被 <strong>Li et al.</strong>（2015）的 <span class="term">Gated GNN</span>（GGNN）模型解决了。GGNN 将现代 RNN 的许多优点（如门控机制和时间反向传播）引入了 GNN 模型，至今仍然流行。</p>
+        <p>同时，<strong>Alessio Micheli</strong> 提出了图的神经网络（NN4G）模型，专注于<strong>前馈</strong>而非循环范式（Micheli, 2009）。</p>
+      </div>
+      <div class="en">
+        All issues were rectified by the Gated GNN (GGNN) of Li et al. (2015), which brought gating mechanisms and backpropagation through time to the GNN model.
+      </div>
+    </div>
+
+    <h3 id="gnn-chemistry">计算化学：GNN 的独立起源</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>另一条独立且并行的 GNN 发展线是完全由<span class="term">计算化学</span>的需求驱动的，在那里分子最自然地表示为原子（节点）通过化学键（边）连接的图。</p>
+        <ul>
+          <li><strong>Kireev</strong>（1995）— ChemNet：最早的分子图神经网络</li>
+          <li><strong>Baskin et al.</strong>（1997）— 结构-性质直接关联</li>
+          <li><strong>Merkwirth 和 Lengauer</strong>（2005）— 显式提出了<strong>边类型条件权重</strong>和<strong>全局池化</strong>——这些是当代 GNN 中常见的元素</li>
+          <li><strong>Duvenaud et al.</strong>（2015）— 改进<strong>分子指纹</strong>（molecular fingerprinting）</li>
+          <li><strong>Gilmer et al.</strong>（2017）— <span class="term">MPNN</span> 框架：预测量子化学性质，统一了多种 GNN 变体</li>
+        </ul>
+        <p>在撰写本书时，分子性质预测是 GNN 最成功的应用之一，具有发现新型抗生素药物（Stokes et al., 2020）等有影响力的成果。</p>
+      </div>
+      <div class="en">
+        An independent line of GNN development was entirely driven by computational chemistry. Molecular property prediction remains one of the most successful GNN applications.
+      </div>
+    </div>
+
+    <div class="callout callout-robot">
+      <h4>🤖 PhysRobot：化学 GNN → 物理仿真 GNN</h4>
+      <p>计算化学和物理仿真的 GNN 共享相同的核心思想：</p>
+      <table>
+        <thead>
+          <tr><th></th><th>计算化学</th><th>物理仿真 (PhysRobot)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>节点</td><td>原子</td><td>粒子/网格点</td></tr>
+          <tr><td>边</td><td>化学键</td><td>空间邻近关系</td></tr>
+          <tr><td>节点特征</td><td>原子序数、电荷</td><td>位置、速度、质量</td></tr>
+          <tr><td>边特征</td><td>键类型、键长</td><td>相对位移、距离</td></tr>
+          <tr><td>等变性</td><td>E(3) (旋转+平移)</td><td>SE(3) (旋转+平移)</td></tr>
+          <tr><td>任务</td><td>预测分子性质</td><td>预测下一步状态</td></tr>
+        </tbody>
+      </table>
+      <p>Gilmer et al. (2017) 的 MPNN 框架——Chapter 5 的核心——直接统一了这两个领域。</p>
+    </div>
+
+    <h3 id="node-embed">节点嵌入：从 DeepWalk 到对比学习</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>图上深度学习的一些最早成功故事涉及以无监督方式学习节点的表示。关键的早期方法依赖于<span class="term">随机游走嵌入</span>（random walk-based embeddings）：学习节点表示，使得在短随机游走中共同出现的节点表示更接近。</p>
+        <ul>
+          <li><strong>DeepWalk</strong>（Perozzi et al., 2014）— 图上的 word2vec</li>
+          <li><strong>node2vec</strong>（Grover and Leskovec, 2016）— 带偏向随机游走</li>
+          <li><strong>LINE</strong>（Tang et al., 2015）— 大规模信息网络嵌入</li>
+          <li><strong>Planetoid</strong>（Yang et al., 2016）— 首个结合监督标签信息的方法</li>
+        </ul>
+      </div>
+      <div class="en">
+        Key early approaches relied on random walk-based embeddings: learning node representations that bring them closer together if nodes co-occur in a short random walk.
+      </div>
+    </div>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>有趣的是，后来发现将邻近节点表示推到一起已经是 GNN 归纳偏置的关键部分。实际上，<strong>未经训练的 GNN</strong> 已经展示出与 DeepWalk 有竞争力的性能（Veličković et al., 2019; Wu et al., 2019）。这引发了从随机游走转向<span class="term">对比学习</span>方法的趋势，包括 <strong>DGI</strong>（Deep Graph Infomax）、<strong>GRACE</strong>、BERT-like 目标和 <strong>BGRL</strong>。</p>
+      </div>
+      <div class="en">
+        An untrained GNN was already competitive with DeepWalk, launching a direction towards contrastive approaches like DGI, GRACE, and BGRL.
+      </div>
+    </div>
+
+    <h3 id="pgm-gnn">概率图模型与 GNN</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>GNN 同时也通过嵌入<span class="term">概率图模型</span>（PGMs, Wainwright and Jordan, 2008）的计算而复兴。PGM 是处理图数据的强大工具：节点被视为随机变量，图结构编码条件独立性假设。PGM 上的学习和推理算法依赖于通过边传递消息的形式（Pearl, 2014），包括变分平均场推理和循环信念传播。</p>
+      </div>
+      <div class="en">
+        GNNs also resurged through embedding PGM computations. Algorithms for learning and inference on PGMs rely on forms of passing messages over edges.
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>📐 从 PGM 到 GNN：structure2vec 的数学桥梁</h4>
+      <p><strong>Dai et al.</strong>（2016）的 <span class="term">structure2vec</span> 建立了 PGM 和 GNN 之间的理论联系。关键"技巧"是使用<strong>分布的 Hilbert 空间嵌入</strong>（Smola et al., 2007）：</p>
+      <div class="math-block">
+        <p>给定适当选择的嵌入函数 $\phi$，概率分布 $p(x)$ 可以嵌入为：</p>
+        $$\mu_p = \mathbb{E}_{x \sim p(x)}[\phi(x)]$$
+        <div class="math-explain">
+          这种对应允许我们进行 GNN 式计算，同时知道 GNN 计算的表示总是对应于节点特征上某个概率分布的嵌入。structure2vec 本身最终是一个很容易纳入 GDL 框架的 GNN 架构。
+        </div>
+      </div>
+      <p>这启发了一系列更直接结合 PGM 计算的 GNN 架构，包括与条件随机场（CRF）、关系 Markov 网络和 Markov 逻辑网络的结合。</p>
+    </div>
+
+    <h3 id="spectral-gnn">谱域 GNN 的演化</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>基于谱滤波器的图卷积神经网络 <strong>Defferrard et al.</strong>（2016）和 <strong>Kipf and Welling</strong>（2016a）是该领域被引用最多的论文之一，可以被认为是重新点燃了近年来对图上机器学习兴趣的关键工作。</p>
+      </div>
+      <div class="en">
+        The graph convolutional neural networks relying on spectral filters by Defferrard et al. (2016) and Kipf and Welling (2016a) can likely be credited as reigniting interest in machine learning on graphs.
+      </div>
+    </div>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-year">2013 — Bruna et al.</div>
+        <div class="timeline-title">第一个谱域图 CNN</div>
+        <div class="timeline-desc">直接在图 Fourier 域定义卷积：$y = \mathbf{U} \text{diag}(\hat{g}) \mathbf{U}^T x$。问题：需要 $O(n^2)$ 的特征分解，滤波器非局部化。</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2016 — Defferrard et al. (ChebNet)</div>
+        <div class="timeline-title">切比雪夫多项式加速</div>
+        <div class="timeline-desc">用 Chebyshev 多项式近似谱滤波器：$g_\theta(\mathbf{L}) = \sum_{k=0}^{K} \theta_k T_k(\tilde{\mathbf{L}})$。将 $O(n^2)$ 降至 $O(K|E|)$——K 阶局部化！</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2016 — Kipf & Welling (GCN)</div>
+        <div class="timeline-title">一阶近似 = 消息传递</div>
+        <div class="timeline-desc">将 ChebNet 简化到 $K=1$：$\mathbf{H}^{(l+1)} = \sigma(\tilde{\mathbf{D}}^{-1/2}\tilde{\mathbf{A}}\tilde{\mathbf{D}}^{-1/2}\mathbf{H}^{(l)}\mathbf{W}^{(l)})$。简单、高效、强大——点燃了 GNN 的热潮。</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">2017 — Gilmer et al. (MPNN)</div>
+        <div class="timeline-title">消息传递统一框架</div>
+        <div class="timeline-desc">将所有 GNN 统一为：消息 $\mathbf{m}_{u \to v}$、聚合 $\bigoplus$、更新 $\phi$。揭示了谱域和空间域方法的等价性。</div>
+      </div>
+    </div>
+
+    <h3 id="spatial-gnn">空间域 GNN 与注意力机制</h3>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>在计算机图形学的背景下，<span class="term">图注意力网络</span>（GAT），从技术上来说可以被认为是 MoNet 的一个特例，由本书作者之一引入（Veličković et al., 2018）。GAT 将 MoNet 的注意力机制推广为也结合<strong>节点特征信息</strong>，不再仅仅依赖纯结构导出的相关性。它是目前使用最广泛的 GNN 架构之一。</p>
+      </div>
+      <div class="en">
+        GAT (Veličković et al., 2018) generalizes MoNet's attention mechanism to also incorporate node feature information. It is one of the most popular GNN architectures currently in use.
+      </div>
+    </div>
+
+    <div class="callout callout-math">
+      <h4>📐 GAT 注意力机制推导</h4>
+      <div class="math-block">
+        <p><strong>注意力系数</strong>（节点 $i$ 对邻居 $j$ 的注意力）：</p>
+        $$e_{ij} = \text{LeakyReLU}\!\left(\mathbf{a}^T [\mathbf{W}\mathbf{h}_i \| \mathbf{W}\mathbf{h}_j]\right)$$
+        $$\alpha_{ij} = \text{softmax}_j(e_{ij}) = \frac{\exp(e_{ij})}{\sum_{k \in \mathcal{N}(i)} \exp(e_{ik})}$$
+      </div>
+      <div class="math-block">
+        <p><strong>多头注意力输出</strong>：</p>
+        $$\mathbf{h}_i' = \Big\|_{k=1}^{K} \sigma\!\left(\sum_{j \in \mathcal{N}(i)} \alpha_{ij}^{(k)} \mathbf{W}^{(k)} \mathbf{h}_j\right)$$
+        <div class="math-explain">
+          <p>$\|$ 表示拼接，$K$ 是注意力头数。关键创新：注意力权重 $\alpha_{ij}$ 同时依赖源节点和目标节点的特征（而非仅依赖结构）。</p>
+          <p><strong>GAT vs MoNet</strong>：MoNet 的注意力基于节点的几何坐标；GAT 的注意力基于学习到的特征。在有丰富特征的场景（如分子、社交网络）中，GAT 通常更优。</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bilingual">
+      <div class="zh">
+        <p>同样值得提及的是，<strong>PointNet</strong>（Qi et al., 2017）——学习集合上的函数（Zaheer et al., 2017）——在 Leo Guibas 的斯坦福团队中为 3D 点云分析而并行开发。后续工作包括 <span class="term">Dynamic Graph CNN</span>（DGCNN, Wang et al., 2019b），它使用最近邻图捕获点云的局部结构，关键特征是图在层之间<strong>动态更新</strong>。这使 DGCNN 成为"<span class="term">潜图学习</span>"（latent graph learning）的首批体现之一。</p>
+      </div>
+      <div class="en">
+        PointNet (Qi et al., 2017) and DGCNN (Wang et al., 2019b) — where the graph is constructed on-the-fly and updated between layers — were among the first incarnations of 'latent graph learning'.
+      </div>
+    </div>
+
+    <h4 id="code-gnn-evolution">💻 代码：从 GCN 到 GAT 的演化</h4>
+
+    <div class="code-container">
+      <div class="code-header">
+        <span>Python — GNN 架构演化：GCN → GAT 的关键差异</span>
+        <button class="copy-btn" onclick="copyCode(this)">复制</button>
+      </div>
+<pre><code><span style="color:var(--code-comment)"># GNN 演化：从固定聚合到注意力聚合</span>
+<span style="color:var(--code-keyword)">import</span> torch
+<span style="color:var(--code-keyword)">import</span> torch.nn <span style="color:var(--code-keyword)">as</span> nn
+<span style="color:var(--code-keyword)">import</span> torch.nn.functional <span style="color:var(--code-keyword)">as</span> F
+
+<span style="color:var(--code-comment)"># === 1. GCN Layer (Kipf & Welling, 2016) ===</span>
+<span style="color:var(--code-keyword)">class</span> <span style="color:var(--code-function)">GCNLayer</span>(nn.Module):
+    <span style="color:var(--code-string)">"""固定权重聚合：每个邻居权重 = 1/sqrt(d_i * d_j)"""</span>
+    <span style="color:var(--code-keyword)">def</span> <span style="color:var(--code-function)">__init__</span>(self, in_dim, out_dim):
+        super().__init__()
+        self.W = nn.Linear(in_dim, out_dim, bias=<span style="color:var(--code-keyword)">False</span>)
+
+    <span style="color:var(--code-keyword)">def</span> <span style="color:var(--code-function)">forward</span>(self, h, adj):
+        <span style="color:var(--code-comment)"># 归一化邻接矩阵: D^{-1/2} A D^{-1/2}</span>
+        deg = adj.sum(dim=-<span style="color:var(--code-number)">1</span>, keepdim=<span style="color:var(--code-keyword)">True</span>).clamp(min=<span style="color:var(--code-number)">1</span>)
+        norm = (deg ** -<span style="color:var(--code-number)">0.5</span>)
+        adj_norm = norm * adj * norm.transpose(-<span style="color:var(--code-number)">1</span>, -<span style="color:var(--code-number)">2</span>)
+        <span style="color:var(--code-comment)"># 消息传递 = 矩阵乘法</span>
+        <span style="color:var(--code-keyword)">return</span> F.relu(self.W(adj_norm @ h))
+
+<span style="color:var(--code-comment)"># === 2. GAT Layer (Veličković et al., 2018) ===</span>
+<span style="color:var(--code-keyword)">class</span> <span style="color:var(--code-function)">GATLayer</span>(nn.Module):
+    <span style="color:var(--code-string)">"""可学习注意力：每个邻居权重根据特征动态计算"""</span>
+    <span style="color:var(--code-keyword)">def</span> <span style="color:var(--code-function)">__init__</span>(self, in_dim, out_dim, n_heads=<span style="color:var(--code-number)">4</span>):
+        super().__init__()
+        self.n_heads = n_heads
+        self.head_dim = out_dim // n_heads
+        self.W = nn.Linear(in_dim, out_dim, bias=<span style="color:var(--code-keyword)">False</span>)
+        <span style="color:var(--code-comment)"># 注意力参数: a^T [Wh_i || Wh_j]</span>
+        self.attn = nn.Parameter(torch.randn(n_heads, <span style="color:var(--code-number)">2</span> * self.head_dim))
+
+    <span style="color:var(--code-keyword)">def</span> <span style="color:var(--code-function)">forward</span>(self, h, adj):
+
+<!-- === ENRICHMENT: ancient_symmetry === -->
+<div class="enrichment-block">
+  <div class="enrichment-qa">
+    <h4>🔍 深入理解：古代对称性思想如何影响现代 GDL？</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：柏拉图研究正多面体和现代 GNN 有什么关系？不是隔了 2000 多年吗？</p>
+      <div class="answer">
+        <p>💡 专家：思想传承比你想象的更直接！柏拉图体的研究奠定了<strong>用对称性理解结构</strong>的范式。</p>
+        <p><strong>柏拉图的核心洞察</strong>：</p>
+        <ul>
+          <li>"美"和"完美"源于<strong>对称性</strong>（symmetria = "同一度量"）</li>
+          <li>只有 5 种正多面体，因为它们是<strong>最对称的</strong>（每个面、每条边、每个顶点都一样）</li>
+          <li>这 5 种形状代表物质世界的基本构件（火、土、气、水、以太）</li>
+        </ul>
+        <p><strong>现代 GDL 的呼应</strong>：</p>
+        <table>
+          <thead>
+            <tr><th>柏拉图的思想</th><th>GDL 的对应</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>"对称性 = 美 = 秩序"</td>
+              <td>对称性 = 泛化能力 = 效率</td>
+            </tr>
+            <tr>
+              <td>正多面体的旋转对称群（$A_4, S_4, A_5$）</td>
+              <td>SO(3)-等变网络（球谐函数）</td>
+            </tr>
+            <tr>
+              <td>对偶多面体（立方体 ↔ 八面体）</td>
+              <td>图对偶（Poincaré 对偶）</td>
+            </tr>
+            <tr>
+              <td>用几何理解物质</td>
+              <td>用几何（图/流形）理解数据</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>具体例子</strong>：分子对称性</p>
+        <ul>
+          <li><strong>正四面体</strong>（$T_d$ 对称）：甲烷（CH₄）→ 分子 GNN 需要捕捉这个对称性</li>
+          <li><strong>正八面体</strong>（$O_h$ 对称）：六氟化硫（SF₆）→ 化学键构型预测</li>
+          <li><strong>正二十面体</strong>（$I_h$ 对称）：富勒烯（C₆₀, "巴基球"）→ 最高对称性的碳分子</li>
+        </ul>
+        <p>如果 GNN 不尊重这些对称性，需要在<strong>每个旋转角度</strong>都采集数据 → 数据需求爆炸。SO(3)-等变网络自动满足旋转对称 → 大幅减少数据需求。</p>
+      </div>
+    </div>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：Kepler 的"六角雪花"研究为什么重要？不就是观察雪花吗？</p>
+      <div class="answer">
+        <p>💡 专家：Kepler 的贡献在于<strong>从对称性推断结构</strong>——这正是现代材料科学和晶体学的思维方式！</p>
+        <p><strong>Kepler 的推理（1611）</strong>：</p>
+        <ol>
+          <li><strong>观察</strong>：雪花总是六角对称（$D_6$ 群）</li>
+          <li><strong>假设</strong>：这种对称性源于水分子的<strong>六角密堆积</strong>（hexagonal close packing）</li>
+          <li><strong>结论</strong>：宏观对称性 → 微观结构（虽然他不知道"分子"是什么）</li>
+        </ol>
+        <p><strong>现代验证</strong>：</p>
+        <ul>
+          <li>冰的晶体结构确实是六角密堆（$P6_3/mmc$ 空间群）</li>
+          <li>$D_6$ 对称性来自氢键的方向性（每个氧原子形成 4 个氢键，呈四面体排列，投影到平面上是六角）</li>
+        </ul>
+        <p><strong>GDL 的对应思维</strong>：</p>
+        <div class="math-block">
+          Kepler: 宏观对称（雪花形状）→ 推断微观结构（粒子排列）<br>
+          ↓<br>
+          GDL: 数据对称性（图的自同构）→ 设计网络架构（等变层）
+        </div>
+        <p><strong>实际应用</strong>：材料发现中的 GNN</p>
+        <ul>
+          <li>输入：晶体的空间群（对称性）</li>
+          <li>任务：预测材料性质（带隙、弹性模量、热导率）</li>
+          <li>方法：<strong>等变 GNN</strong>（CGCNN, ALIGNN）编码空间群对称性</li>
+          <li>优势：相同空间群的不同材料共享相似性质 → 泛化</li>
+        </ul>
+        <p><strong>历史趣闻</strong>：Kepler 的"球堆问题"（最密堆积方式）直到 2017 年才被计算机辅助证明（Thomas Hales）→ 从 1611 到 2017，跨越 406 年！</p>
+      </div>
+    </div>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：书上说"对称性在人类文明中无处不在"，除了数学和物理，艺术中的对称性重要吗？</p>
+      <div class="answer">
+        <p>💡 专家：非常重要！艺术中的对称性研究反过来影响了数学发展。</p>
+        <p><strong>艺术中的对称性模式</strong>：</p>
+        <table>
+          <thead>
+            <tr><th>文明</th><th>对称群</th><th>应用</th><th>数学对应</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>苏美尔/巴比伦</strong></td>
+              <td>$D_n$（二面体）</td>
+              <td>陶器纹样</td>
+              <td>旋转 + 反射</td>
+            </tr>
+            <tr>
+              <td><strong>古埃及</strong></td>
+              <td>平移群</td>
+              <td>壁画边界装饰</td>
+              <td>1D 平移对称</td>
+            </tr>
+            <tr>
+              <td><strong>伊斯兰艺术</strong></td>
+              <td>17种壁纸群</td>
+              <td>阿尔罕布拉宫（完整覆盖）</td>
+              <td>2D 晶体学群</td>
+            </tr>
+            <tr>
+              <td><strong>中国</strong></td>
+              <td>$C_n$（旋转）</td>
+              <td>瓷器、窗花</td>
+              <td>循环群</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>阿尔罕布拉宫的数学奇迹</strong>：</p>
+        <ul>
+          <li>13-14 世纪摩尔人建造，装饰图案<strong>覆盖了所有 17 种平面对称群</strong></li>
+          <li>比数学家正式分类（1891, Fedorov）早了 <strong>600 年</strong>！</li>
+          <li>艺术家通过直觉和试错，发现了群论的结构</li>
+        </ul>
+        <p><strong>GDL 的连接</strong>：</p>
+        <ul>
+          <li><strong>纹理生成</strong>：StyleGAN 生成对称纹理 → 需要等变生成器</li>
+          <li><strong>建筑设计</strong>：生成对称的建筑平面图 → 群等变 VAE</li>
+          <li><strong>可解释性</strong>：艺术家的直觉"对称 = 美" → 神经网络也学到了这一点（对称性偏置提升生成质量）</li>
+        </ul>
+        <p><strong>Hermann Weyl 的名言</strong>（1952）：</p>
+        <blockquote style="font-style: italic; padding: 12px; border-left: 3px solid var(--accent); background: var(--bg-secondary); margin: 12px 0;">
+          "Symmetry, as wide or as narrow as you may define its meaning, is one idea by which man through the ages has tried to comprehend and create order, beauty, and perfection."
+        </blockquote>
+        <p>→ 对称性是人类理解世界的<strong>普遍范式</strong>，从艺术到科学，从古代到 AI。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="enrichment-intuition">
+    <h4>🎯 直觉理解：对称性 = "换个角度看还是一样"</h4>
+    <p><strong>生活类比</strong>：</p>
+    <ul>
+      <li><strong>人脸</strong>：左右对称（镜像对称，$\mathbb{Z}_2$）→ 你左右翻转自拍，朋友还能认出你</li>
+      <li><strong>车轮</strong>：旋转对称（$SO(2)$）→ 转任意角度，轮子"看起来"一样</li>
+      <li><strong>瓷砖地板</strong>：平移对称（$\mathbb{Z}^2$）→ 往任意方向走一格，图案重复</li>
+      <li><strong>分子</strong>：旋转 + 镜像（点群，如 $C_{3v}$）→ 化学性质不依赖于怎么放</li>
+    </ul>
+    <p><strong>对称性的"力量"</strong>：</p>
+    <ol>
+      <li><strong>减少信息</strong>：如果物体对称，你只需要描述"一半"（左边 = 右边）</li>
+      <li><strong>预测不变量</strong>：对称操作不改变的量（守恒律）</li>
+      <li><strong>分类结构</strong>：不同对称性 → 不同类型（柏拉图体只有 5 种，因为对称性约束）</li>
+    </ol>
+    <p><strong>GNN 中的体现</strong>：</p>
+    <ul>
+      <li><strong>图同构</strong>：重新编号节点，图"看起来"一样 → GNN 应该给出相同输出（置换不变）</li>
+      <li><strong>分子旋转</strong>：旋转分子，能量不变 → SO(3)-等变 GNN 自动满足</li>
+      <li><strong>蛋白质折叠</strong>：氨基酸序列的局部对称性 → AlphaFold 的注意力模式</li>
+    </ul>
+  </div>
+
+  <div class="enrichment-application">
+    <h4>🏥 医疗机器人应用：利用解剖学对称性</h4>
+    <p><strong>场景</strong>：人体有近似的<strong>左右对称性</strong>（bilateral symmetry）→ 能否利用这个先验？</p>
+    <p><strong>应用 1：对侧器官的知识迁移</strong></p>
+    <ul>
+      <li><strong>问题</strong>：左肾手术训练数据少，右肾数据多</li>
+      <li><strong>解决</strong>：用<strong>镜像增强</strong> + <strong>$\mathbb{Z}_2$-等变网络</strong>
+        <ul>
+          <li>左肾图像 = 右肾图像的镜像 flip</li>
+          <li>网络设计：$f(\text{flip}(x)) = \text{flip}(f(x))$（镜像等变）</li>
+          <li>结果：左肾和右肾共享参数 → 数据需求减半</li>
+        </ul>
+      </li>
+    </ul>
+    <p><strong>应用 2：对称性检测疾病</strong></p>
+    <ul>
+      <li><strong>原理</strong>：病变会<strong>打破对称性</strong>
+        <ul>
+          <li>健康大脑：左右半球对称（灰质/白质体积）</li>
+          <li>中风：单侧损伤 → 不对称</li>
+        </ul>
+      </li>
+      <li><strong>方法</strong>：
+        <ol>
+          <li>分割左右半球</li>
+          <li>对齐（配准）</li>
+          <li>计算对称性指标：$S = \frac{\|I_L - \text{flip}(I_R)\|}{\|I_L\|}$</li>
+          <li>异常检测：$S > \text{阈值}$ → 病变</li>
+        </ol>
+      </li>
+    </ul>
+    <p><strong>应用 3：手术规划的对称性约束</strong></p>
+    <ul>
+      <li><strong>场景</strong>：颅颌面手术（比如下颌骨重建）</li>
+      <li><strong>目标</strong>：术后脸部尽量对称</li>
+      <li><strong>优化</strong>：
+        <div class="math-block">
+          $\min_{\text{重建参数}} \|I_{\text{术后}} - \text{flip}(I_{\text{术后}})\|^2 + \lambda \cdot \text{物理约束}$
+        </div>
+        （最小化不对称性 + 满足生物力学约束）
+      </li>
+      <li><strong>GNN 角色</strong>：快速预测"给定重建方案 → 术后对称性"（替代慢速 FEM）</li>
+    </ul>
+    <p><strong>PhysRobot 连接</strong>：仿真时利用对称性加速计算——如果手术在左侧器官，可以镜像使用右侧器官的仿真参数（前提：材料性质对称）。</p>
+  </div>
+
+  <div class="enrichment-qa">
+    <h4>🔍 补充：现代数学如何形式化"对称性"？</h4>
+    <div class="qa-pair">
+      <p class="question">❓ 小白：古人说的"对称"和现代群论的"对称"是一回事吗？</p>
+      <div class="answer">
+        <p>💡 专家：本质相同，但<strong>精确程度</strong>天差地别：</p>
+        <table>
+          <thead>
+            <tr><th>时代</th><th>对称性的理解</th><th>局限</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>古代</strong></td>
+              <td>几何直觉（"看起来一样"）</td>
+              <td>模糊，难以系统化</td>
+            </tr>
+            <tr>
+              <td><strong>Galois (1830s)</strong></td>
+              <td>置换群（多项式根的对称性）</td>
+              <td>只适用于离散对象</td>
+            </tr>
+            <tr>
+              <td><strong>Lie (1870s)</strong></td>
+              <td>连续群（微分方程的对称性）</td>
+              <td>需要微分几何工具</td>
+            </tr>
+            <tr>
+              <td><strong>Klein (1872)</strong></td>
+              <td>几何 = 群作用下的不变量</td>
+              <td>统一框架（Erlangen Program）</td>
+            </tr>
+            <tr>
+              <td><strong>Noether (1918)</strong></td>
+              <td>对称性 ↔ 守恒律</td>
+              <td>物理意义</td>
+            </tr>
+            <tr>
+              <td><strong>现代 (GDL)</strong></td>
+              <td>等变函数空间</td>
+              <td>计算实现</td>
+            </tr>
+          </tbody>
+        </table>
+        <p><strong>群论的核心定义</strong>：</p>
+        <div class="math-block">
+          群 $G$ = 一组变换 + 封闭运算<br>
+          满足：<br>
+          1. <strong>封闭性</strong>：$g_1, g_2 \in G \Rightarrow g_1 \circ g_2 \in G$<br>
+          2. <strong>结合律</strong>：$(g_1 \circ g_2) \circ g_3 = g_1 \circ (g_2 \circ g_3)$<br>
+          3. <strong>单位元</strong>：$\exists e \in G, \; e \circ g = g$<br>
+          4. <strong>逆元</strong>：$\forall g \in G, \; \exists g^{-1}, \; g \circ g^{-1} = e$
+        </div>
+        <p><strong>例子</strong>：</p>
+        <ul>
+          <li><strong>$D_6$（雪花）</strong>：6 次旋转 + 6 个镜像反射 = 12 个元素</li>
+          <li><strong>SO(3)（3D 旋转）</strong>：无限元素（连续群），参数化为 3 个欧拉角</li>
+          <li><strong>$\Sigma_n$（图置换）</strong>：$n!$ 个元素（所有节点重排）</li>
+        </ul>
+        <p>古人的"对称"是直觉，现代群论是<strong>计算机可执行的形式化</strong> → 这才让 GDL 成为可能。</p>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- === END ENRICHMENT: ancient_symmetry === -->
+
+        N = h.size(<span style="color:var(--code-number)">0</span>)
+        <span style="color:var(--code-comment)"># 线性投影: [N, in] -> [N, heads, head_dim]</span>
+        Wh = self.W(h).view(N, self.n_heads, self.head_dim)
+
+        <span style="color:var(--code-comment)"># 计

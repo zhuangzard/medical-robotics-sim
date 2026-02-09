@@ -1,0 +1,92 @@
+<!-- Enrichment CSS - to be injected into each chapter's <head> -->
+<style>
+/* ========== Enrichment Blocks ========== */
+.enrichment-block {
+  margin: 2.5rem 0;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+  border-left: 4px solid #3b82f6;
+  border-radius: 0 12px 12px 0;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+[data-theme="dark"] .enrichment-block {
+  background: linear-gradient(135deg, #1a2332 0%, #1e293b 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.enrichment-block h4 {
+  margin-top: 0;
+  font-size: 1.2rem;
+  color: #1e40af;
+}
+[data-theme="dark"] .enrichment-block h4 {
+  color: #93c5fd;
+}
+
+.enrichment-qa { margin-bottom: 1.5rem; }
+
+.qa-pair {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(255,255,255,0.7);
+  border-radius: 10px;
+  transition: transform 0.2s;
+}
+.qa-pair:hover { transform: translateX(4px); }
+[data-theme="dark"] .qa-pair {
+  background: rgba(0,0,0,0.25);
+}
+
+.question {
+  font-weight: 700;
+  color: #2563eb;
+  margin-bottom: 0.75rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+[data-theme="dark"] .question { color: #60a5fa; }
+
+.answer {
+  line-height: 1.9;
+  color: #374151;
+  font-size: 1rem;
+}
+[data-theme="dark"] .answer { color: #d1d5db; }
+.answer p { margin: 0.5rem 0; }
+
+.enrichment-intuition {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(251,191,36,0.1);
+  border-radius: 10px;
+  border-left: 3px solid #f59e0b;
+  line-height: 1.8;
+}
+[data-theme="dark"] .enrichment-intuition {
+  background: rgba(251,191,36,0.05);
+}
+
+.enrichment-application {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(16,185,129,0.1);
+  border-radius: 10px;
+  border-left: 3px solid #10b981;
+  line-height: 1.8;
+}
+[data-theme="dark"] .enrichment-application {
+  background: rgba(16,185,129,0.05);
+}
+
+.enrichment-summary {
+  margin: 1.2rem 0;
+  padding: 1.2rem;
+  background: rgba(139,92,246,0.1);
+  border-radius: 10px;
+  border-left: 3px solid #8b5cf6;
+  line-height: 1.8;
+}
+[data-theme="dark"] .enrichment-summary {
+  background: rgba(139,92,246,0.05);
+}
+</style>
